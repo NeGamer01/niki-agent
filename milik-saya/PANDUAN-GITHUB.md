@@ -45,6 +45,22 @@ git branch -M main
 git push -u origin main
 ```
 
+Catatan clone dari bundle: hasil clone dari file bundle menjadikan
+file bundle itu sebagai `origin`. Dalam kasus itu ganti alamatnya,
+bukan add:
+
+```bash
+git remote set-url origin https://github.com/NeGamer01/niki-agent.git
+git push -u origin main
+```
+
+Saat push lewat HTTPS, GitHub tidak lagi menerima kata sandi akun —
+gunakan username `NeGamer01` dan **Personal Access Token (PAT)**
+sebagai kata sandi. Buat PAT di GitHub: Settings → Developer settings
+→ Personal access tokens → Fine-grained tokens → hanya repo
+`niki-agent`, permission Contents: Read and write. Token itu rahasia:
+jangan kirim ke siapa pun lewat chat, termasuk ke Muse.
+
 Ganti `NeGamer01` dengan username GitHub kamu. Push pertama besar
 (repo ±344 MB sebelum kompresi) — biarkan sampai selesai, jangan
 ditutup di tengah.
