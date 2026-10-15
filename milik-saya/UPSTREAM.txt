@@ -1,0 +1,10 @@
+Upstream : https://github.com/NousResearch/hermes-agent
+Commit   : 3b043e19005fea400a8e556334526ef1d21679e4
+Tanggal commit upstream : 2026-10-15 07:39:25 -0700
+Di-clone : 2026-10-15 (WIB)
+Lisensi  : MIT License — Copyright (c) 2025 Nous Research (lihat file LICENSE di akar repo)
+Cara ambil: git clone --depth 1 (salinan kerja penuh; riwayat git lengkap bisa diambil dengan git fetch --unshallow)
+
+Verifikasi 1:1:
+- Semua file upstream TIDAK diubah. Satu-satunya tambahan adalah folder milik-saya/ ini.
+- Cek sendiri: jalankan  git status --short  — hasil yang benar hanya menampilkan folder milik-saya/ sebagai tambahan (untracked), tanpa satu pun file upstream berstatus modified.
