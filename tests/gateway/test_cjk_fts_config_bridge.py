@@ -8,26 +8,26 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-import hermes_yaml as yaml
+import niki_yaml as yaml
 
 import gateway.run as gateway_run
 
 
 def _write_home(tmp_path: Path, sessions_cfg: dict, env_text: str = "") -> Path:
-    hermes_home = tmp_path / ".hermes"
-    hermes_home.mkdir()
-    (hermes_home / "config.yaml").write_text(
+    niki_home = tmp_path / ".niki"
+    niki_home.mkdir()
+    (niki_home / "config.yaml").write_text(
         yaml.safe_dump({"sessions": sessions_cfg}), encoding="utf-8"
     )
-    (hermes_home / ".env").write_text(env_text, encoding="utf-8")
-    return hermes_home
+    (niki_home / ".env").write_text(env_text, encoding="utf-8")
+    return niki_home
 
 
 def test_cjk_fts_bridged_from_config(tmp_path, monkeypatch):
     home = _write_home(tmp_path, {"cjk_fts": False})
-    monkeypatch.setattr(gateway_run, "_hermes_home", home)
-    monkeypatch.setenv("HERMES_CJK_FTS", "1")
+    monkeypatch.setattr(gateway_run, "_niki_home", home)
+    monkeypatch.setenv("NIKI_CJK_FTS", "1")
     gateway_run._reload_runtime_env_preserving_config_authority()
-    assert os.environ["HERMES_CJK_FTS"] == "False"
+    assert os.environ["NIKI_CJK_FTS"] == "False"
 
 

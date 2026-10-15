@@ -106,7 +106,7 @@ fn get_mode(state: tauri::State<'_, Arc<AppState>>) -> AppMode {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // Tracing → bootstrap-installer.log under HERMES_HOME/logs/ so install
+    // Tracing → bootstrap-installer.log under NIKI_HOME/logs/ so install
     // failures leave a trail for support. Console output also goes here in
     // debug builds.
     let _guard = paths::init_logging();
@@ -122,15 +122,15 @@ pub fn run() {
     // late: by then the process has already been registered as a regular
     // Dock application.
     if handoff_before_appkit(cfg!(target_os = "macos"), mode, force_setup) {
-        let install_root = paths::hermes_home().join("hermes-agent");
-        if bootstrap::hermes_is_installed(&install_root) {
+        let install_root = paths::niki_home().join("niki-agent");
+        if bootstrap::niki_is_installed(&install_root) {
             match bootstrap::spawn_installed_desktop(&install_root) {
                 Ok(()) => {
                     // Brief grace so the spawned app is registered before we
-                    // exit (mirrors launch_hermes_desktop).
+                    // exit (mirrors launch_niki_desktop).
                     std::thread::sleep(std::time::Duration::from_millis(200));
                     tracing::info!(
-                        "hermes already installed — relaunched desktop; exiting installer"
+                        "niki already installed — relaunched desktop; exiting installer"
                     );
                     return;
                 }
@@ -182,10 +182,10 @@ pub fn run() {
             // Update lifecycle
             update::start_update,
             // Hand-off
-            bootstrap::launch_hermes_desktop,
+            bootstrap::launch_niki_desktop,
             // Diagnostics
             paths::get_log_path,
-            paths::get_hermes_home,
+            paths::get_niki_home,
             paths::open_log_dir,
         ])
         .run(tauri::generate_context!())

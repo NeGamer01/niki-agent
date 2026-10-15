@@ -49,7 +49,7 @@ from gateway.platforms.whatsapp_common import WhatsAppBehaviorMixin, _get_wsecre
 from gateway.platforms.access_policy_mixin import OPTIN_TRUTHY as _OPTIN_TRUTHY
 from gateway.platforms.media_cache import ext_for_mime
 from gateway import rich_sent_store
-from hermes_constants import get_hermes_dir
+from niki_constants import get_niki_dir
 
 logger = logging.getLogger(__name__)
 
@@ -152,8 +152,8 @@ def _optional_module(name: str, unavailable_log: str) -> Any:
         return None
 
 
-# Under the hermes dir so it survives restarts/reloads — same as the Baileys bridge.
-_INBOUND_MEDIA_CACHE = Path(get_hermes_dir("platforms/whatsapp_cloud/media", "whatsapp_cloud/media"))
+# Under the niki dir so it survives restarts/reloads — same as the Baileys bridge.
+_INBOUND_MEDIA_CACHE = Path(get_niki_dir("platforms/whatsapp_cloud/media", "whatsapp_cloud/media"))
 
 
 def check_whatsapp_cloud_requirements() -> bool:
@@ -267,7 +267,7 @@ class WhatsAppCloudAdapter(WhatsAppBehaviorMixin, BasePlatformAdapter):
     async def connect(self, *, is_reconnect: bool = False) -> bool:
         for ok, code, message in (
             (check_whatsapp_cloud_requirements(), "whatsapp_cloud_deps_missing",
-             "aiohttp and httpx are required for whatsapp_cloud — reinstall hermes-agent."),
+             "aiohttp and httpx are required for whatsapp_cloud — reinstall niki-agent."),
             (self._phone_number_id and self._access_token, "whatsapp_cloud_unconfigured",
              "WHATSAPP_CLOUD_PHONE_NUMBER_ID and WHATSAPP_CLOUD_ACCESS_TOKEN are required."),
         ):

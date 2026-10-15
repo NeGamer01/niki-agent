@@ -34,7 +34,7 @@ RUN apt-get -o Acquire::Retries=3 update && \
     rm -rf /var/lib/apt/lists/*
 
 # Display stack: identical package set to the Niki -desktop image (Dockerfile,
-# HERMES_BOT_DESKTOP=1) so tools/bot_desktop/launcher.sh finds the same binaries.
+# NIKI_BOT_DESKTOP=1) so tools/bot_desktop/launcher.sh finds the same binaries.
 # Components are launched individually by the launcher, never xfce4-session.
 RUN apt-get -o Acquire::Retries=3 update && \
     apt-get -o Acquire::Retries=3 install -y --no-install-recommends \
@@ -81,14 +81,14 @@ RUN pip install --no-cache-dir "pillow>=10" && python3 -c "from PIL import Image
 # AT-SPI bus wants a real user session. `pn` may sudo for ad-hoc installs.
 RUN echo "pn ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/pn && chmod 0440 /etc/sudoers.d/pn && \
     mkdir -p /tmp/.X11-unix && chmod 1777 /tmp/.X11-unix && \
-    mkdir -p /tmp/hermes-runtime && chown pn:pn /tmp/hermes-runtime && chmod 0700 /tmp/hermes-runtime
+    mkdir -p /tmp/niki-runtime && chown pn:pn /tmp/niki-runtime && chmod 0700 /tmp/niki-runtime
 
 # Runtime dir for dbus/Xvnc; containers have no logind to create it. Both /tmp
 # paths above are fixed by the X11 protocol / seeded per container, never shared.
-ENV XDG_RUNTIME_DIR=/tmp/hermes-runtime
+ENV XDG_RUNTIME_DIR=/tmp/niki-runtime
 # Dockerfile ENV reaches `docker exec` only. When this image is the target of the
 # ssh backend (sshd added on top), a login session gets its environment from PAM,
 # so the browser location must also live where pam_env reads it or agent-browser
 # reports "Chrome not found" over ssh while working under docker exec.
-RUN printf 'PLAYWRIGHT_BROWSERS_PATH=/opt/playwright\nXDG_RUNTIME_DIR=/tmp/hermes-runtime\n' >> /etc/environment
+RUN printf 'PLAYWRIGHT_BROWSERS_PATH=/opt/playwright\nXDG_RUNTIME_DIR=/tmp/niki-runtime\n' >> /etc/environment
 CMD ["sleep", "infinity"]

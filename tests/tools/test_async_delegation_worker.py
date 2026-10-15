@@ -6,8 +6,8 @@ import time
 import pytest
 import psutil
 
-from hermes_state import SessionDB
-from hermes_state_runtime import RuntimeStoreError
+from niki_state import SessionDB
+from niki_state_runtime import RuntimeStoreError
 from tools import async_delegation as ledger
 
 

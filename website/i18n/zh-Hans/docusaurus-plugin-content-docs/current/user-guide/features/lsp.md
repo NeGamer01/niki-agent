@@ -59,8 +59,8 @@ haskell-language-server 等服务器在启动时就会求值项目的构建文�
 
 因此，除以下情况外，Niki 将所有工作区视为不受信任：
 
-- 你让 Niki 指向的目录所在的 git 工作树：启动 Niki 的目录（`cd my-app && hermes`）、
-  `hermes -w` 创建的工作树、桌面端或 TUI 会话打开的项目，或网关的 `terminal.cwd`，或
+- 你让 Niki 指向的目录所在的 git 工作树：启动 Niki 的目录（`cd my-app && niki`）、
+  `niki -w` 创建的工作树、桌面端或 TUI 会话打开的项目，或网关的 `terminal.cwd`，或
 - `lsp.trusted_workspaces` 中列出的目录（及其下任意子目录）。
 
 agent 在终端里执行 `cd` 不会改变会话的工作区。定时任务和 Kanban worker 不会自动获得
@@ -77,7 +77,7 @@ clojure-lsp、haskell-language-server、lua-language-server、terraform-ls、
 prisma、astro、vue-language-server（它会加载项目 `tsconfig.json` 中
 `vueCompilerOptions.plugins` 指定的插件），以及你在 `lsp.servers` 下声明的任何服务器。诊断日志会记录
 `skipped: untrusted workspace …; add it to lsp.trusted_workspaces`，
-`hermes lsp status` 会把这些服务器标记为 `[trusted workspaces only]`。
+`niki lsp status` 会把这些服务器标记为 `[trusted workspaces only]`。
 
 | 服务器 | 不受信任的工作区 |
 |---|---|
@@ -132,25 +132,25 @@ lsp:
 | Java | `jdtls` | 手动 |
 
 对于"手动"条目，请通过该语言对应的工具链管理器安装服务器（rustup、ghcup、opam、brew 等）。
-Niki 会自动检测 PATH 上或 `<HERMES_HOME>/lsp/bin/` 中的二进制文件。
+Niki 会自动检测 PATH 上或 `<NIKI_HOME>/lsp/bin/` 中的二进制文件。
 
 部分服务器需要与 npm 不会自动拉取的对等依赖一同安装。当前的典型情况是
 `typescript-language-server`，它要求 `typescript` SDK 可从同一 `node_modules`
-目录树中导入——当你运行 `hermes lsp install typescript` 或首次使用时触发自动安装时，
+目录树中导入——当你运行 `niki lsp install typescript` 或首次使用时触发自动安装时，
 Niki 会同时安装这两个包。
 
 ## CLI
 
 ```
-hermes lsp status          # 服务状态 + 各服务器安装状态
-hermes lsp list            # 注册表，可选 --installed-only
-hermes lsp install <id>    # 主动安装单个服务器
-hermes lsp install-all     # 尝试安装所有已知安装方式的服务器
-hermes lsp restart         # 关闭正在运行的客户端
-hermes lsp which <id>      # 打印解析后的二进制路径
+niki lsp status          # 服务状态 + 各服务器安装状态
+niki lsp list            # 注册表，可选 --installed-only
+niki lsp install <id>    # 主动安装单个服务器
+niki lsp install-all     # 尝试安装所有已知安装方式的服务器
+niki lsp restart         # 关闭正在运行的客户端
+niki lsp which <id>      # 打印解析后的二进制路径
 ```
 
-`hermes lsp status` 是最佳起点——它显示哪些语言当前可获得语义诊断，
+`niki lsp status` 是最佳起点——它显示哪些语言当前可获得语义诊断，
 哪些语言还需要安装二进制文件。
 
 ## 配置
@@ -168,7 +168,7 @@ lsp:
   wait_timeout: 5.0
 
   # 处理缺失服务器二进制文件的策略。
-  #   auto    — 通过 npm/pip/go install 安装到 <HERMES_HOME>/lsp/bin
+  #   auto    — 通过 npm/pip/go install 安装到 <NIKI_HOME>/lsp/bin
   #   manual  — 仅使用已在 PATH 上的二进制文件
   install_strategy: auto
 
@@ -204,8 +204,8 @@ lsp:
 
 ## 安装位置
 
-当 `install_strategy: auto` 时，Niki 将二进制文件安装到 `<HERMES_HOME>/lsp/bin/`。
-NPM 包安装到 `<HERMES_HOME>/lsp/node_modules/`，bin 符号链接位于上一级目录。
+当 `install_strategy: auto` 时，Niki 将二进制文件安装到 `<NIKI_HOME>/lsp/bin/`。
+NPM 包安装到 `<NIKI_HOME>/lsp/node_modules/`，bin 符号链接位于上一级目录。
 Go 二进制文件通过 `go install` 安装，`GOBIN` 指向暂存目录。
 
 任何内容都不会安装到 `/usr/local/`、`~/.local/` 或其他共享位置——暂存目录完全由
@@ -241,16 +241,16 @@ lsp:
 
 ## 故障排查
 
-**`hermes lsp status` 显示某服务器为"missing"**
+**`niki lsp status` 显示某服务器为"missing"**
 
-该二进制文件不在 PATH 上，也不在 `<HERMES_HOME>/lsp/bin/` 中。运行
-`hermes lsp install <server_id>` 尝试自动安装，或通过该语言的常规工具链手动安装。
+该二进制文件不在 PATH 上，也不在 `<NIKI_HOME>/lsp/bin/` 中。运行
+`niki lsp install <server_id>` 尝试自动安装，或通过该语言的常规工具链手动安装。
 
-**`hermes lsp status` 中出现 `Backend warnings` 部分**
+**`niki lsp status` 中出现 `Backend warnings` 部分**
 
 部分服务器以薄包装层的形式调用外部 CLI 进行实际诊断——它们能正常启动并接受请求，
 但在辅助二进制文件缺失时不会报错。最常见的情况是 `bash-language-server`，
-它将诊断委托给 `shellcheck`。当 `hermes lsp status` 显示 `Backend warnings` 部分时，
+它将诊断委托给 `shellcheck`。当 `niki lsp status` 显示 `Backend warnings` 部分时，
 请通过系统包管理器安装对应工具：
 
 ```
@@ -259,11 +259,11 @@ brew install shellcheck     # macOS
 scoop install shellcheck    # Windows
 ```
 
-同样的警告会在服务器启动时记录一次到 `~/.hermes/logs/agent.log`。
+同样的警告会在服务器启动时记录一次到 `~/.niki/logs/agent.log`。
 
 **服务器已启动但从不返回诊断结果**
 
-检查 `~/.hermes/logs/agent.log` 中的 `[agent.lsp.client]` 条目——语言服务器的
+检查 `~/.niki/logs/agent.log` 中的 `[agent.lsp.client]` 条目——语言服务器的
 stderr 输出和协议错误均记录于此。部分服务器（尤其是 rust-analyzer）需要完成
 全项目索引后才会输出单文件诊断；服务器启动后的第一次编辑可能没有诊断结果，
 后续编辑才会获取到。
@@ -271,7 +271,7 @@ stderr 输出和协议错误均记录于此。部分服务器（尤其是 rust-a
 **服务器崩溃**
 
 崩溃的服务器会被加入损坏集合，在本次会话剩余时间内不再重试。运行
-`hermes lsp restart` 清除该集合；下次编辑时会重新启动。
+`niki lsp restart` 清除该集合；下次编辑时会重新启动。
 
 **编辑位于任何 git 仓库之外的文件**
 

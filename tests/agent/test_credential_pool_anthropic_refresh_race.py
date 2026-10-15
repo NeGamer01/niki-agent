@@ -16,7 +16,7 @@ rotates the pair and invalidates the old refresh token." Before the PR, ``"anthr
 and the *only* on-failure recovery path
 (``CredentialPool._sync_anthropic_entry_from_credentials_file``) was
 hard-scoped to ``entry.source == "claude_code"``. Entries sourced from
-Niki's own PKCE login (``manual:hermes_pkce`` / ``hermes_pkce``) got no
+Niki's own PKCE login (``manual:niki_pkce`` / ``niki_pkce``) got no
 recovery at all and were marked exhausted on a lost race, even though a
 fresh, valid token pair existed on disk (written by the winner). The old
 dashboard source ``manual:dashboard_pkce`` is now retired with the removed
@@ -64,7 +64,7 @@ def _entry(*, id: str, access_token: str, refresh_token: str, source: str) -> Po
 def _fake_pool_store(monkeypatch):
     """Back write/read_credential_pool with a shared in-memory dict.
 
-    This stands in for ``~/.hermes/auth.json`` so the two "process-local"
+    This stands in for ``~/.niki/auth.json`` so the two "process-local"
     CredentialPool instances used by the race tests can actually see each
     other's persisted writes (exactly what the real cross-process recovery
     path depends on), without touching the real filesystem.
@@ -119,8 +119,8 @@ class _SingleUseTokenServer:
 
 
 
-def test_concurrent_hermes_pkce_refresh_loses_credential_despite_valid_token_on_disk(monkeypatch):
-    """Two 'Niki processes' race to refresh the same stale hermes_pkce
+def test_concurrent_niki_pkce_refresh_loses_credential_despite_valid_token_on_disk(monkeypatch):
+    """Two 'Niki processes' race to refresh the same stale niki_pkce
     refresh token. The winner gets a valid new pair. The loser -- despite a
     fresh, valid credential now existing -- has no recovery path and is
     marked exhausted, because ``_sync_anthropic_entry_from_credentials_file``
@@ -140,7 +140,7 @@ def test_concurrent_hermes_pkce_refresh_loses_credential_despite_valid_token_on_
         id="pool-entry",
         access_token="stale-at",
         refresh_token="stale-rt",
-        source="manual:hermes_pkce",
+        source="manual:niki_pkce",
     )
 
     # Simulate two independent OS processes, each with its own in-memory
@@ -186,12 +186,12 @@ def test_concurrent_hermes_pkce_refresh_loses_credential_despite_valid_token_on_
         "regression: the losing process's CredentialPool._refresh_entry() "
         "returned None (unrecoverable) after losing the single-use-token "
         "race, even though a fresh valid Anthropic credential exists on "
-        "disk. hermes_pkce-sourced entries must adopt the winner's token "
+        "disk. niki_pkce-sourced entries must adopt the winner's token "
         "via _sync_anthropic_entry_from_pool_store(), same as claude_code."
     )
     loser_entry_after = loser_pool.entries()[0]
     assert loser_entry_after.last_status != STATUS_EXHAUSTED, (
-        "regression: the losing process marked its Anthropic hermes_pkce "
+        "regression: the losing process marked its Anthropic niki_pkce "
         "credential STATUS_EXHAUSTED after a lost refresh race, even "
         "though the account is not actually exhausted -- a sibling Niki "
         "process holds a perfectly valid rotated token. This causes "
@@ -205,7 +205,7 @@ def test_concurrent_claude_code_refresh_recovers_via_credentials_file(monkeypatc
     """Contrast case: entry.source == 'claude_code' DOES recover from a lost
     race, because ``_sync_anthropic_entry_from_credentials_file`` re-reads
     ``~/.claude/.credentials.json`` on failure. This asymmetry is itself
-    evidence that hermes_pkce/dashboard-sourced credentials were simply
+    evidence that niki_pkce/dashboard-sourced credentials were simply
     never given the same treatment, not that recovery is impossible.
     """
     server = _SingleUseTokenServer()

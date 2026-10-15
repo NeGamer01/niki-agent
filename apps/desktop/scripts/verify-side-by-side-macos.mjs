@@ -32,7 +32,7 @@ assert.deepEqual(
   cases.map(row => row.label),
   ['stable', 'canary', 'commit-a', 'commit-b']
 )
-const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hermes-sxs-macos-'))
+const root = fs.mkdtempSync(path.join(os.tmpdir(), 'niki-sxs-macos-'))
 const home = path.join(root, 'home')
 fs.mkdirSync(home)
 const env = {
@@ -40,12 +40,12 @@ const env = {
   HOME: home,
   CFFIXED_USER_HOME: home,
   TMPDIR: root,
-  HERMES_HOME: path.join(home, '.hermes'),
-  HERMES_RUNTIME_DIR: path.join(root, 'runtime')
+  NIKI_HOME: path.join(home, '.niki'),
+  NIKI_RUNTIME_DIR: path.join(root, 'runtime')
 }
 for (const key of Object.keys(env)) {
   if (
-    /^(HERMES_(BUILD_COMMIT|PAYLOAD_TAG|PAYLOAD_VERSION|DESKTOP_)|ELECTRON_RUN_AS_NODE|NODE_OPTIONS|BUILD_NUMBER)/.test(
+    /^(NIKI_(BUILD_COMMIT|PAYLOAD_TAG|PAYLOAD_VERSION|DESKTOP_)|ELECTRON_RUN_AS_NODE|NODE_OPTIONS|BUILD_NUMBER)/.test(
       key
     )
   )
@@ -114,7 +114,7 @@ try {
       console.log(JSON.stringify({identity,config}));
     `
         ],
-        { env: { ...env, HERMES_DESKTOP_VARIANT: 'bundled', ...flavor } }
+        { env: { ...env, NIKI_DESKTOP_VARIANT: 'bundled', ...flavor } }
       )
     )
     const { identity, config } = facts
@@ -229,7 +229,7 @@ try {
       platform: 'node',
       format: 'esm',
       external: ['electron'],
-      define: { __HERMES_PRODUCT_IDENTITY__: JSON.stringify(identity) }
+      define: { __NIKI_PRODUCT_IDENTITY__: JSON.stringify(identity) }
     })
     const row = {
       label,

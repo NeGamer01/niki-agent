@@ -38,7 +38,7 @@ def _extract_paths_from_terminal(args: dict[str, Any]) -> set[str]:
     paths: set[str] = set()
     cmd = args.get("command") or ""
     if isinstance(cmd, str) and cmd:
-        # Tokenise the command — catches `touch /tmp/hermes-x/test_foo.py`.
+        # Tokenise the command — catches `touch /tmp/niki-x/test_foo.py`.
         # ``posix`` follows the host so Windows backslash paths survive
         # (``shlex.split(posix=True)`` would eat them as escapes).
         # Non-posix mode keeps quote characters in tokens, so strip a fully
@@ -151,7 +151,7 @@ Subcommands:
 
 Categories: temp | test | research | download | chrome-profile | cron-output | other
 
-All operations are scoped to HERMES_HOME and /tmp/hermes-*.  # no-tmp: ok — legacy scratch scope this plugin cleans up
+All operations are scoped to NIKI_HOME and /tmp/niki-*.  # no-tmp: ok — legacy scratch scope this plugin cleans up
 Test files are auto-tracked on write_file / terminal and auto-cleaned at session end.
 """
 
@@ -198,7 +198,7 @@ def _cmd_track(argv: list[str]) -> str:
         return f"Unknown category '{category}'. Allowed: {sorted(dg.ALLOWED_CATEGORIES)}"
     if dg.track(path_arg, category, silent=True):
         return f"Tracked {path_arg} as '{category}'."
-    return f"Not tracked (already present, missing, or outside HERMES_HOME): {path_arg}"
+    return f"Not tracked (already present, missing, or outside NIKI_HOME): {path_arg}"
 
 
 def _cmd_forget(argv: list[str]) -> str:

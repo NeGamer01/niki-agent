@@ -34,10 +34,10 @@ test('windowsQuote doubles embedded quotes', () => {
 test('terminalScriptEnv drops PATH in any casing and keeps the rest', () => {
   const env = terminalScriptEnv(
     { Path: 'C:\\junk', PATH: '/junk', PYTHONPATH: '/repo', PYTHONUTF8: '1' },
-    '/home/b/.hermes'
+    '/home/b/.niki'
   )
 
-  assert.deepEqual(env, { PYTHONPATH: '/repo', PYTHONUTF8: '1', HERMES_HOME: '/home/b/.hermes' })
+  assert.deepEqual(env, { PYTHONPATH: '/repo', PYTHONUTF8: '1', NIKI_HOME: '/home/b/.niki' })
 })
 
 test('terminalScriptEnv skips empty values and an absent home', () => {
@@ -46,10 +46,10 @@ test('terminalScriptEnv skips empty values and an absent home', () => {
 
 test('buildTerminalScript execs the resolved runtime with its env', () => {
   const script = buildTerminalScript({
-    args: ['-m', 'hermes_cli.main', '--tui', '--resume', 'sess'],
-    command: '/home/b/.hermes/hermes-agent/venv/bin/python',
+    args: ['-m', 'niki_cli.main', '--tui', '--resume', 'sess'],
+    command: '/home/b/.niki/niki-agent/venv/bin/python',
     cwd: "/home/b/o'brien",
-    env: { PYTHONPATH: '/home/b/.hermes/hermes-agent' },
+    env: { PYTHONPATH: '/home/b/.niki/niki-agent' },
     platform: 'darwin'
   })
 
@@ -58,8 +58,8 @@ test('buildTerminalScript execs the resolved runtime with its env', () => {
     [
       '#!/bin/sh',
       `cd '/home/b/o'\\''brien' || exit 1`,
-      `export PYTHONPATH='/home/b/.hermes/hermes-agent'`,
-      `exec '/home/b/.hermes/hermes-agent/venv/bin/python' '-m' 'hermes_cli.main' '--tui' '--resume' 'sess'`,
+      `export PYTHONPATH='/home/b/.niki/niki-agent'`,
+      `exec '/home/b/.niki/niki-agent/venv/bin/python' '-m' 'niki_cli.main' '--tui' '--resume' 'sess'`,
       ''
     ].join('\n')
   )
@@ -68,7 +68,7 @@ test('buildTerminalScript execs the resolved runtime with its env', () => {
 test('buildTerminalScript emits a cmd script on Windows', () => {
   const script = buildTerminalScript({
     args: ['--tui', '--resume', 'sess'],
-    command: 'C:\\hermes\\venv\\Scripts\\hermes.exe',
+    command: 'C:\\niki\\venv\\Scripts\\niki.exe',
     cwd: 'C:\\Users\\b',
     env: { PYTHONUTF8: '1' },
     platform: 'win32'
@@ -78,7 +78,7 @@ test('buildTerminalScript emits a cmd script on Windows', () => {
     '@echo off',
     'cd /d "C:\\Users\\b"',
     'set "PYTHONUTF8=1"',
-    '"C:\\hermes\\venv\\Scripts\\hermes.exe" "--tui" "--resume" "sess"',
+    '"C:\\niki\\venv\\Scripts\\niki.exe" "--tui" "--resume" "sess"',
     ''
   ])
 })

@@ -1,7 +1,7 @@
 """Read-only native picker history; enumeration never adopts a transcript."""
-from hermes_state_local_migration import validate_legacy_row
-from hermes_state_mutation_binding import authorize_history
-from hermes_state_runtime import RuntimeStoreError
+from niki_state_local_migration import validate_legacy_row
+from niki_state_mutation_binding import authorize_history
+from niki_state_runtime import RuntimeStoreError
 
 
 def stored_picker_sessions(authority, actor, *, limit, include_hidden=False):

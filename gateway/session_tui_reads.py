@@ -42,14 +42,14 @@ def tui_read(policy, name: str, arg: str):
 
 def _stored_id(authority, ref) -> str:
     with contextlib.suppress(Exception):
-        from hermes_state_local import local_receipt
+        from niki_state_local import local_receipt
         return local_receipt(authority.db, ref.session_id)['entry']['session_id'] or ref.session_id
     return ref.session_id
 
 
 def _status(authority, ref, live, policy, agent, arg) -> str:
     """``tui_gateway/methods_session.py`` ``session.status`` on main, for the owner's session."""
-    from hermes_cli.status_report import build_status_fields, status_lines
+    from niki_cli.status_report import build_status_fields, status_lines
     from tui_gateway import server
     stored = _stored_id(authority, ref)
     row = {}
@@ -112,7 +112,7 @@ def _context(authority, ref, live, policy, agent, arg) -> str:
 
 def _cron(authority, ref, live, policy, agent, arg) -> str:
     """The classic CLI's ``/cron`` / ``/cron list`` text (main's TUI ran it in the slash worker)."""
-    from hermes_cli.cli_cron_lines import cron_list_lines, cron_overview_lines
+    from niki_cli.cli_cron_lines import cron_list_lines, cron_overview_lines
     mode = _cron_read(arg)
     lines = cron_overview_lines() if mode == 'overview' else cron_list_lines(include_disabled=mode == 'list-all')
     return '\n'.join(lines).strip('\n')
@@ -136,7 +136,7 @@ async def context_breakdown(connection, ref, params) -> dict:
     transcript, built in the session's workspace. Before the agent exists: empty categories plus the
     session's stored usage (the contract's pre-build shape)."""
     from gateway.session_busy_controls import authorize
-    from hermes_state_runtime import RuntimeStoreError
+    from niki_state_runtime import RuntimeStoreError
     if set(params) - {'session_id', 'profile'} or not isinstance(ref.session_id, str) or not ref.session_id:
         raise RuntimeStoreError('invalid_params')
     authorize(connection, ref, params, 'session:read')

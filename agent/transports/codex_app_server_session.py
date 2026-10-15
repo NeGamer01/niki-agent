@@ -23,7 +23,7 @@ from agent.transports.codex_app_server import (
     CodexAppServerClient, CodexAppServerError, CodexAppServerTransportError,
 )
 from agent.transports.codex_event_projector import CodexEventProjector, ProjectionResult
-from agent.transports.hermes_tools_mcp_server import HERMES_TOOLS_MCP_SERVER_NAME
+from agent.transports.niki_tools_mcp_server import NIKI_TOOLS_MCP_SERVER_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ _TIER_UNKNOWN = object()  # thread resumed: the tier it carries is not known
 
 # Niki' tools.terminal.security_mode -> Codex permissions profile id.
 # Missing config -> workspace-write (Codex's own default).
-_HERMES_TO_CODEX_PERMISSION_PROFILE = {
+_NIKI_TO_CODEX_PERMISSION_PROFILE = {
     "auto": "workspace-write", "approval-required": "read-only-with-approval",
     "unrestricted": "full-access", "yolo": "full-access",  # yolo: backstop alias used by some skills/tests
 }
@@ -240,8 +240,8 @@ class CodexAppServerSession:
         # Niki' prior transcript, appended to developerInstructions ONLY when a thread is started from
         # scratch: a resumed thread already holds the conversation (agent/codex_runtime_history_seed.py).
         self._history_seed = history_seed
-        self._permission_profile = permission_profile or _HERMES_TO_CODEX_PERMISSION_PROFILE.get(
-            os.environ.get("HERMES_TERMINAL_SECURITY_MODE", "auto"), "workspace-write"
+        self._permission_profile = permission_profile or _NIKI_TO_CODEX_PERMISSION_PROFILE.get(
+            os.environ.get("NIKI_TERMINAL_SECURITY_MODE", "auto"), "workspace-write"
         )
         self._approval_callback = approval_callback
         self._on_event = on_event  # Display hook (kawaii spinner ticks etc.)
@@ -266,7 +266,7 @@ class CodexAppServerSession:
             return self._thread_id
         if self._client is None:
             self._client = self._client_factory(codex_bin=self._codex_bin, codex_home=self._codex_home)
-            self._client.initialize(client_name="hermes", client_title="Niki Agent", client_version=_get_hermes_version())
+            self._client.initialize(client_name="niki", client_title="Niki Agent", client_version=_get_niki_version())
         # Permissions are NOT sent on thread/start: codex gates ``thread/start.permissions``
         # behind experimentalApi + a matching ``[permissions]`` table in ~/.codex/config.toml.
         # Niki supplies the agent identity through its own system prompt; ``personality: "none"`` strips
@@ -715,9 +715,9 @@ class CodexAppServerSession:
         client.respond(rid, handler(self, params))
 
     def _respond_elicitation(self, params: dict) -> dict:
-        """MCP elicitation: auto-accept our own hermes-tools server (opted in by enabling the runtime;
+        """MCP elicitation: auto-accept our own niki-tools server (opted in by enabling the runtime;
         exposes nothing codex's shell can't do); decline others so the user opts in via codex's own flow."""
-        action = "accept" if (params.get("serverName") or "") == HERMES_TOOLS_MCP_SERVER_NAME else "decline"
+        action = "accept" if (params.get("serverName") or "") == NIKI_TOOLS_MCP_SERVER_NAME else "decline"
         return {"action": action, "content": None, "_meta": None}
 
     _SERVER_REQUEST_HANDLERS: dict[str, Callable[..., dict]] = {
@@ -839,11 +839,11 @@ def _has_turn_aborted_marker(text: str) -> bool:
     return bool(text) and any(marker in text for marker in _TURN_ABORTED_MARKERS)
 
 
-def _get_hermes_version() -> str:
+def _get_niki_version() -> str:
     """Best-effort Niki version string for codex's userAgent line."""
     try:
         from importlib.metadata import version
 
-        return version("hermes-agent")
+        return version("niki-agent")
     except Exception:  # pragma: no cover
         return "0.0.0"

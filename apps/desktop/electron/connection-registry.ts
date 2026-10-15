@@ -71,7 +71,7 @@ export interface RegistryConnection {
   user?: string
   port?: number
   keyPath?: string
-  remoteHermesPath?: string
+  remoteNikiPath?: string
   remoteProfile?: string
 }
 
@@ -175,7 +175,7 @@ export function agentHandle(profile: string, connectionLabel: string, duplicated
  * profile names).
  *
  * NOTE: the renderer's socket registry uses the twin implementation in
- * apps/shared/src/backend-scope.ts (`@hermes/shared`) — tsconfig project
+ * apps/shared/src/backend-scope.ts (`@niki/shared`) — tsconfig project
  * boundaries prevent a single physical module here. The two are pinned
  * byte-identical by the cross-copy contract test in
  * connection-registry.test.ts; change BOTH or that test fails.
@@ -229,7 +229,7 @@ export interface ResolvedConnectionSshDescriptor {
   host?: string
   keyPath?: string
   port?: number
-  remoteHermesPath?: string
+  remoteNikiPath?: string
   remoteProfile?: string
   user?: string
 }
@@ -428,7 +428,7 @@ export async function reuseMatchingPrimarySshBackend({
     !sourceFingerprint ||
     !activeSsh ||
     sourceFingerprint !== String(activeSsh.effectiveConfigFingerprint || '').trim() ||
-    String(source.remoteHermesPath || '').trim() !== String(activeSsh.remoteHermesPath || '').trim() ||
+    String(source.remoteNikiPath || '').trim() !== String(activeSsh.remoteNikiPath || '').trim() ||
     rootProfile(source.remoteProfile) !== rootProfile(activeSsh.remoteProfile)
   ) {
     return null
@@ -525,7 +525,7 @@ function normalizedSshTarget(route: { host?: unknown; port?: unknown; user?: unk
  * route's REMOTE descriptor — so the forced-local child pools under the
  * `conn:local::<profile>` form instead (colons are invalid in profile names,
  * so it cannot collide). A concrete named profile that does not exist on
- * this machine is refused instead of spawned. `default` is `$HERMES_HOME`
+ * this machine is refused instead of spawned. `default` is `$NIKI_HOME`
  * itself, so it always exists here and is never refused. A per-profile
  * remote override still delegates to the legacy profile route.
  */
@@ -553,7 +553,7 @@ export function resolveRegistryLocalRoute(
     // A concrete named profile that does not exist on this machine is
     // remote-only. Spawning it locally is the #90477 loop, so refuse. An
     // unprofiled call is enumeration, not a dial. `default` lives at
-    // $HERMES_HOME, not profiles/default, so This device -> default always
+    // $NIKI_HOME, not profiles/default, so This device -> default always
     // force-locals. A profile that exists locally still force-locals so
     // "This device" does not dial the remote.
     if (concrete && profileKey !== 'default' && opts.localProfileExists === false) {
@@ -703,7 +703,7 @@ export function shouldRetrySshInventory(
 
 const PROFILE_NAME_RE = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/
 
-/** Turn `ls ~/.hermes/profiles` output into roster names. Always includes
+/** Turn `ls ~/.niki/profiles` output into roster names. Always includes
  *  `default`. Drops rollback snapshots and junk lines. */
 export function parseRemoteProfileListing(text: string): string[] {
   const names = new Set<string>(['default'])
@@ -854,7 +854,7 @@ export interface UpdateEligibility {
 
 /**
  * Whether "Update all instances" may drive this connection. Niki Cloud
- * instances are platform-managed — we never run `hermes update` against them.
+ * instances are platform-managed — we never run `niki update` against them.
  * Local, remote, and ssh sources are all eligible (reachability and busy
  * checks happen at dispatch time, not here).
  */
@@ -929,7 +929,7 @@ export interface ConnectionInput {
   user?: string
   port?: number | string
   keyPath?: string
-  remoteHermesPath?: string
+  remoteNikiPath?: string
   remoteProfile?: string
 }
 
@@ -998,7 +998,7 @@ export function normalizeConnectionInput(input: ConnectionInput, registry: Conne
       user: input.user,
       port: input.port,
       keyPath: input.keyPath,
-      remoteHermesPath: input.remoteHermesPath,
+      remoteNikiPath: input.remoteNikiPath,
       remoteProfile: input.remoteProfile
     })
 
@@ -1096,7 +1096,7 @@ export function normalizeConnectionInput(input: ConnectionInput, registry: Conne
  * editor doesn't carry survive a save. Renaming a migrated cloud entry must
  * not drop its `org` (downstream update-fanout uses it to skip
  * platform-managed instances), and renaming an ssh entry must not drop
- * `remoteHermesPath`/`remoteProfile`. Only fields the payload explicitly
+ * `remoteNikiPath`/`remoteProfile`. Only fields the payload explicitly
  * carries (non-undefined) override; `token` is deliberately NOT merged here —
  * the caller owns secret handling.
  */
@@ -1126,7 +1126,7 @@ export function mergeConnectionInput(input: ConnectionInput, existing?: null | R
 
   inherit('host')
   inherit('keyPath')
-  inherit('remoteHermesPath')
+  inherit('remoteNikiPath')
   inherit('remoteProfile')
   // Headers inherit like other dial fields: an edit payload that omits the
   // field keeps the stored set; an explicit payload (even {}) is
@@ -1168,7 +1168,7 @@ export function connectionDialFieldsChanged(before: RegistryConnection, after: R
     'user',
     'port',
     'keyPath',
-    'remoteHermesPath',
+    'remoteNikiPath',
     'remoteProfile'
   ]
 
@@ -1712,7 +1712,7 @@ export function reconcileRegistryDrift(
       //
       // Known by target is not enough, though: the router tags the live
       // window by the FULL route identity (matchingConnectionId also compares
-      // keyPath, remoteHermesPath and remoteProfile). A v1 route carrying a
+      // keyPath, remoteNikiPath and remoteProfile). A v1 route carrying a
       // keyPath the registered entry never had resolves to no connectionId,
       // the renderer treats the untagged window as the unscoped local backend
       // ("This device") and the roster force-spawns a phantom local child.
@@ -1725,7 +1725,7 @@ export function reconcileRegistryDrift(
       const { host: _host, user: _user, port: _port, ...identityFields } = sshFields
       const aligned: RegistryConnection = { ...registered }
       delete aligned.keyPath
-      delete aligned.remoteHermesPath
+      delete aligned.remoteNikiPath
       delete aligned.remoteProfile
       Object.assign(aligned, identityFields)
 

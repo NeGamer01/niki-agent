@@ -1,7 +1,7 @@
 """The linux relaunch gate must compare canonical paths, not spellings.
 
 ``--install-root`` keeps whatever spelling the app's Niki root had (a symlinked
-``~/.hermes/hermes-agent``, or ``/home`` on Fedora/ostree where it is a link to
+``~/.niki/niki-agent``, or ``/home`` on Fedora/ostree where it is a link to
 ``/var/home``), while ``--relaunch-target`` comes from ``process.execPath`` /
 ``/proc/<pid>/exe`` and is already resolved.  A raw prefix compare then reads the
 binary the rebuild just replaced as a foreign AppImage/deb and refuses to relaunch.
@@ -53,7 +53,7 @@ def test_target_outside_the_checkout_is_still_skew(tmp_path):
     (tmp_path / "link").symlink_to(real)
     foreign = tmp_path / "opt" / "Niki"
     foreign.mkdir(parents=True)
-    (foreign / "hermes").touch()
-    assert _gate(tmp_path / "link", foreign / "hermes") == "skew"
+    (foreign / "niki").touch()
+    assert _gate(tmp_path / "link", foreign / "niki") == "skew"
     # A sibling directory sharing the prefix must not be mistaken for the checkout either.
     assert _gate(tmp_path / "link", Path(str(unpacked) + "-evil") / "Niki") == "skew"

@@ -1,5 +1,5 @@
 import { type OwnerScope, ownerScoped, profileScoped } from '@/api/client'
-import { hermesApi } from '@/hermes'
+import { nikiApi } from '@/niki'
 
 /**
  * GPT-Live voice chat: the full-duplex voice frontend that DELEGATES to Niki.
@@ -80,7 +80,7 @@ const CONTEXT_MAX_FRAGMENTS = 80
 
 export async function fetchVoiceLiveStatus(): Promise<null | VoiceLiveStatus> {
   try {
-    const response = await hermesApi<{ ok: boolean } & VoiceLiveStatus>({
+    const response = await nikiApi<{ ok: boolean } & VoiceLiveStatus>({
       ...profileScoped(),
       path: '/api/audio/voice-live/status'
     })
@@ -323,7 +323,7 @@ export class VoiceLiveSession {
       throw new Error('Missing local SDP offer')
     }
 
-    const response = await hermesApi<{
+    const response = await nikiApi<{
       ok: boolean
       session?: { id: string }
       transport?: { sdp: string; type: string }

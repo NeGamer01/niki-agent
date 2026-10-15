@@ -1,7 +1,7 @@
 # ATURAN SAYA (umum)
 
 <!-- Aturan umum ini untuk dipasang sebagai kepribadian/aturan instans -->
-<!-- agen milikmu (disalin ke SOUL.md / profil di folder ~/.hermes kamu -->
+<!-- agen milikmu (disalin ke SOUL.md / profil di folder ~/.niki kamu -->
 <!-- setelah install — lihat PANDUAN-INSTALL-SEMUA-PLATFORM.md). -->
 <!-- Edit bebas: ini milikmu, bukan aturan dari upstream. -->
 

@@ -41,7 +41,7 @@ from uuid import uuid4
 import pytest
 
 from agent.prompt_cache_scope import resolve_prompt_cache_scope
-from hermes_state import SessionDB
+from niki_state import SessionDB
 from run_agent import AIAgent
 
 # The bridge stamps its rows with the ``source`` carried by ``bridge.chat``
@@ -49,7 +49,7 @@ from run_agent import AIAgent
 # not match.  Keeping them different here is deliberate — the scope has to
 # resolve under the source the row actually landed on.
 BRIDGE_ROW_SOURCE = "api_server"
-BRIDGE_PLATFORM = "hermes_bridge"
+BRIDGE_PLATFORM = "niki_bridge"
 
 ROOM = "room-7c1f"
 PROFILE = "default"

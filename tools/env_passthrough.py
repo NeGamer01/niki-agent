@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 from typing import Iterable
-from hermes_cli.config import cfg_get, read_raw_config
+from niki_cli.config import cfg_get, read_raw_config
 
 logger = logging.getLogger(__name__)
 
@@ -43,9 +43,9 @@ def _get_allowed() -> set[str]:
 _config_passthrough: dict[str, frozenset[str]] = {}
 
 
-def _is_hermes_provider_credential(name: str) -> bool:
+def _is_niki_provider_credential(name: str) -> bool:
     """True if ``name`` is a Niki-managed provider credential per
-    ``_HERMES_PROVIDER_ENV_BLOCKLIST`` or a dynamic Niki-internal secret
+    ``_NIKI_PROVIDER_ENV_BLOCKLIST`` or a dynamic Niki-internal secret
     (AUXILIARY_*_API_KEY / _BASE_URL, GATEWAY_RELAY_*). Skill-declared
     ``required_environment_variables`` must not override this — that was the
     GHSA-rhgp-j443-p4rf bypass (a skill registered ``OPENAI_API_KEY`` and received it
@@ -53,7 +53,7 @@ def _is_hermes_provider_credential(name: str) -> bool:
     registerable. Fails closed when the blocklist cannot be imported."""
     try:
         from tools.environments.local_env_policy import (
-            _is_hermes_internal_secret, _is_provider_env_blocklisted)
+            _is_niki_internal_secret, _is_provider_env_blocklisted)
     except Exception as e:
         logger.warning(
             "env passthrough: provider credential blocklist import failed; "
@@ -62,7 +62,7 @@ def _is_hermes_provider_credential(name: str) -> bool:
     # Case-folded membership too: the remote-exec env builder resolves each
     # registered name via os.getenv(), which is case-insensitive on Windows, so
     # ``openai_api_key`` would tunnel the real OPENAI_API_KEY into children.
-    return _is_hermes_internal_secret(name) or _is_provider_env_blocklisted(name)
+    return _is_niki_internal_secret(name) or _is_provider_env_blocklisted(name)
 
 
 def register_env_passthrough(var_names: Iterable[str]) -> None:
@@ -72,7 +72,7 @@ def register_env_passthrough(var_names: Iterable[str]) -> None:
     (web_search, web_extract, …); third-party keys pass normally."""
     for name in _accepted((n.strip() for n in var_names), (
         "env passthrough: refusing to register Niki provider "
-        "credential %r (blocked by _HERMES_PROVIDER_ENV_BLOCKLIST). "
+        "credential %r (blocked by _NIKI_PROVIDER_ENV_BLOCKLIST). "
         "Skills must not override the execute_code sandbox's "
         "credential scrubbing; see GHSA-rhgp-j443-p4rf."
     )):
@@ -86,7 +86,7 @@ def _accepted(names, refusal_msg: str):
     for name in names:
         if not name:
             continue
-        if _is_hermes_provider_credential(name):
+        if _is_niki_provider_credential(name):
             logger.warning(refusal_msg, name)
             continue
         yield name
@@ -96,10 +96,10 @@ def _load_config_passthrough() -> frozenset[str]:
     """Load ``tools.env_passthrough`` from config.yaml (cached). Same credential
     filter as register_env_passthrough: operator config must not tunnel provider
     credentials into sandbox children either (GHSA-rhgp-j443-p4rf)."""
-    from hermes_constants import hermes_home_key
+    from niki_constants import niki_home_key
 
     try:
-        home_key = hermes_home_key()
+        home_key = niki_home_key()
     except (RuntimeError, OSError):
         # No resolvable home (stripped environ in a sandbox child): nothing to scope by.
         home_key = ""
@@ -113,7 +113,7 @@ def _load_config_passthrough() -> frozenset[str]:
         result.update(_accepted((i.strip() for i in items if isinstance(i, str)), (
             "env passthrough: refusing to register Niki "
             "provider credential %r from config.yaml (blocked "
-            "by _HERMES_PROVIDER_ENV_BLOCKLIST). Operator "
+            "by _NIKI_PROVIDER_ENV_BLOCKLIST). Operator "
             "configuration must not override the execute_code "
             "sandbox's credential scrubbing; see "
             "GHSA-rhgp-j443-p4rf."
@@ -130,14 +130,14 @@ def is_env_passthrough(var_name: str) -> bool:
     registered later declares the name in its ``required_env`` or manifest), so the refusal applied at registration
     is re-applied here, where every child builder consumes the allowlist."""
     return ((var_name in _get_allowed() or var_name in _load_config_passthrough())
-            and not _is_hermes_provider_credential(var_name))
+            and not _is_niki_provider_credential(var_name))
 
 
 def get_all_passthrough() -> frozenset[str]:
     """Return the union of skill-registered and config-based passthrough vars, minus names
     that have become Niki-managed credentials since they were accepted."""
     return frozenset(name for name in frozenset(_get_allowed()) | _load_config_passthrough()
-                     if not _is_hermes_provider_credential(name))
+                     if not _is_niki_provider_credential(name))
 
 
 def resolve_passthrough_value(name: str, fallback: str | None = None) -> str | None:
@@ -162,7 +162,7 @@ def resolve_passthrough_value(name: str, fallback: str | None = None) -> str | N
 def scoped_passthrough_additions(present: Iterable[str]) -> dict[str, str]:
     """Declared passthrough names the bound profile secret scope supplies but the env being
     filtered (*present*) lacks. A routed profile's ``.env`` and hydrated sources never enter
-    ``os.environ`` (``load_hermes_dotenv`` skips the process-global load for a routed home), so a
+    ``os.environ`` (``load_niki_dotenv`` skips the process-global load for a routed home), so a
     name-by-name filter over the process env can only forward a declared name the LAUNCH profile
     also happens to define — the served profile's own value has no way in (#114209). Reads the
     bound scope alone: never ``os.environ``, never another profile. Empty without a scope, so

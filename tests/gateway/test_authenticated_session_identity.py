@@ -55,9 +55,9 @@ def oidc():
 
 
 def connection(authority, session, monkeypatch):
-    from hermes_cli import web_server as web
-    from hermes_cli.dashboard_auth.routes import api_auth_ws_ticket
-    from hermes_cli.web_server_chat import _ws_auth_reason
+    from niki_cli import web_server as web
+    from niki_cli.dashboard_auth.routes import api_auth_ws_ticket
+    from niki_cli.web_server_chat import _ws_auth_reason
     from gateway.session_controls import AuthorityConnection
     # Exercise the production ticket endpoint and upgrade stamp, not a made-up Principal.
     monkeypatch.setattr(web.app.state, 'auth_required', True, raising=False)
@@ -74,8 +74,8 @@ async def test_bundled_provider_issuer_subject_owns_durable_receipts(tmp_path, m
     from gateway.session_authority import initialize_session_authority
     from gateway.session_local import create_local_session
     from gateway.session_contract import Principal
-    from hermes_cli.web_server_sessions import _session_mutation_context
-    from hermes_state_runtime import RuntimeStoreError
+    from niki_cli.web_server_sessions import _session_mutation_context
+    from niki_state_runtime import RuntimeStoreError
     from plugins.dashboard_auth.basic import BasicAuthProvider, hash_password
 
     monkeypatch.setattr(run, '_load_gateway_config', lambda: {'platform_toolsets': {'cli': []}})
@@ -91,9 +91,9 @@ async def test_bundled_provider_issuer_subject_owns_durable_receipts(tmp_path, m
                       'query_string': ('ticket=' + ticket).encode(), 'client': ('127.0.0.1', 1)},
                      None, None)
         assert auth(ws)[0] is None
-        result = factory(authority, object(), ws._hermes_auth_identity).actor
+        result = factory(authority, object(), ws._niki_auth_identity).actor
         # HTTP mutation must use precisely the WS ownership/retry key.
-        monkeypatch.setattr('hermes_state._default_db_path', lambda: authority.db.db_path)
+        monkeypatch.setattr('niki_state._default_db_path', lambda: authority.db.db_path)
         assert _session_mutation_context(request, None)[1].subject == result.subject
         return result
 
@@ -142,7 +142,7 @@ async def test_private_native_subject_preserves_existing_creation_and_mutation_r
     from gateway.session_contract import Principal
     from gateway.session_local import create_local_session
     from gateway.session_mutations import mutate_session
-    from hermes_state_runtime import RuntimeStoreError
+    from niki_state_runtime import RuntimeStoreError
 
     monkeypatch.setattr(run, '_load_gateway_config', lambda: {'platform_toolsets': {'cli': []}})
     store = SessionStore(tmp_path / 'sessions', GatewayConfig())

@@ -1,4 +1,4 @@
-# Nous-approved MCP catalog entry.
+# Niki-approved MCP catalog entry.
 # Presence in this directory = approval. Merged via PR review.
 manifest_version: 1
 
@@ -34,7 +34,7 @@ suggest:
 
 post_install: |
   On first connection Niki opens a browser to authorize with Figma
-  (or run `hermes mcp login figma`). Approve access, then restart the
+  (or run `niki mcp login figma`). Approve access, then restart the
   session so tools load.
 
   Figma walks OAuth DCR by exact client_name. Niki registers as

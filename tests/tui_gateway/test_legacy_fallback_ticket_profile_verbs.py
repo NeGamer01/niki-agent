@@ -2,7 +2,7 @@
 
 Only ``@_profile_scoped`` handlers and two hand-fixed ones read the connection's profile; the
 account connector path (``_profile_home(request.profile)`` with no ``profile``) and billing (which
-ignores ``profile`` and resolves the Nous token through the runtime scope) ran in the launch
+ignores ``profile`` and resolves the Niki token through the runtime scope) ran in the launch
 profile, so bee's Ink connected accounts and charged top-ups on default's portal account.
 """
 import threading
@@ -18,8 +18,8 @@ def homes(tmp_path, monkeypatch):
     launch = tmp_path / 'root'
     bee = launch / 'profiles' / 'bee'
     bee.mkdir(parents=True)
-    monkeypatch.setenv('HERMES_HOME', str(launch))
-    monkeypatch.setattr(server, '_hermes_home', launch)
+    monkeypatch.setenv('NIKI_HOME', str(launch))
+    monkeypatch.setattr(server, '_niki_home', launch)
     return server, launch, bee
 
 
@@ -34,20 +34,20 @@ def _call(server, profile_id, method, params):
 
 
 def test_secondary_ticket_runs_connectors_and_billing_in_its_own_profile(homes, monkeypatch):
-    import hermes_cli.nous_billing
+    import niki_cli.niki_billing
     import tools.connectors
     import tools.connectors.managed
-    from hermes_constants import get_hermes_home
+    from niki_constants import get_niki_home
     server, launch, bee = homes
     seen = []
 
     def rec(label):
-        seen.append((label, Path(str(get_hermes_home())).resolve()))
+        seen.append((label, Path(str(get_niki_home())).resolve()))
 
     monkeypatch.setattr(tools.connectors, 'connectors_available', lambda *a, **k: True)
     monkeypatch.setattr(tools.connectors.managed, 'managed_client',
                         lambda: types.SimpleNamespace(list_connectors=lambda: rec('list') or []))
-    monkeypatch.setattr(hermes_cli.nous_billing, 'post_charge', lambda **k: rec('charge') or {'chargeId': 'c'})
+    monkeypatch.setattr(niki_cli.niki_billing, 'post_charge', lambda **k: rec('charge') or {'chargeId': 'c'})
     for method, params in (('connectors.list', {'owner': {'type': 'account'}}), ('billing.charge', {'amount_usd': 5})):
         _call(server, bee, method, params)
     assert {label for label, _ in seen} == {'list', 'charge'}, seen

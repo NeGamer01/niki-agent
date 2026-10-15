@@ -51,7 +51,7 @@ That's the whole flow. The server starts and stops with Niki, restarts
 survive app restarts, and switching back to a cloud provider is one click
 in the model picker.
 
-From a terminal, `hermes model` → **Local models** runs the same setup: it
+From a terminal, `niki model` → **Local models** runs the same setup: it
 lists the catalog priced for your machine (★ marks the recommendation),
 installs the pinned engine, downloads the model with live progress, starts
 the server, and makes the model your default. Models already on disk are

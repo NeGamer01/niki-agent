@@ -2,8 +2,8 @@
   "version": 1,
   "updated_at": "2026-10-13T18:12:26Z",
   "metadata": {
-    "source": "hermes-agent repo",
-    "docs": "https://hermes-agent.nousresearch.com/docs/reference/model-catalog"
+    "source": "niki-agent repo",
+    "docs": "https://github.com/NeGamer01/niki-agent/docs/reference/model-catalog"
   },
   "providers": {
     "openrouter": {
@@ -303,9 +303,9 @@
         }
       ]
     },
-    "nous": {
+    "niki": {
       "metadata": {
-        "display_name": "Nous Portal",
+        "display_name": "Niki Portal",
         "note": "The entry labeled \"default\": true is the model Niki silently lands on when the user never picked one."
       },
       "models": [

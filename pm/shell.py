@@ -72,13 +72,13 @@ def windows_bash_candidates(on_path: str | None, env: Mapping[str, str]) -> list
     precedes Git on most PATHs (#116818)."""
     programfiles = env.get("ProgramFiles", r"C:\Program Files")
     candidates = []
-    if env.get("HERMES_GIT_BASH_PATH"):
-        candidates.append(env["HERMES_GIT_BASH_PATH"])
+    if env.get("NIKI_GIT_BASH_PATH"):
+        candidates.append(env["NIKI_GIT_BASH_PATH"])
     roots = [ntpath.join(programfiles, "Git")]
     if env.get("ProgramFiles(x86)"):
         roots.append(ntpath.join(env["ProgramFiles(x86)"], "Git"))
     if env.get("LOCALAPPDATA"):
-        roots.extend((ntpath.join(env["LOCALAPPDATA"], "hermes", "git"),
+        roots.extend((ntpath.join(env["LOCALAPPDATA"], "niki", "git"),
                       ntpath.join(env["LOCALAPPDATA"], "Programs", "Git")))
     for root in roots:
         candidates.extend((ntpath.join(root, "bin", "bash.exe"),

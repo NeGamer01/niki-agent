@@ -1,4 +1,4 @@
-"""Code-flow grid sweep (NOUS-368, wave 1): three pre-existing automatic gateway diagnostics that
+"""Code-flow grid sweep (NIKI-368, wave 1): three pre-existing automatic gateway diagnostics that
 bypassed the warning boundary. absent/false = legacy bytes; true suppresses ONLY the diagnostic;
 requested outcomes (an in-chat /restart's own ack, the requested background result) are untouched."""
 from __future__ import annotations
@@ -18,7 +18,7 @@ from tests.gateway.restart_test_helpers import make_restart_runner, make_restart
 def _configure(tmp_path, monkeypatch, setting):
     home = tmp_path / f"home-{setting}"
     home.mkdir()
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("NIKI_HOME", str(home))
     display = {} if setting is None else {"suppress_warning_notifications": setting}
     (home / "config.yaml").write_text(json.dumps({"display": display}))
     return home

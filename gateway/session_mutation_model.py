@@ -3,14 +3,14 @@ import asyncio
 import json
 from dataclasses import asdict, replace
 
-from hermes_state_runtime import RuntimeStoreError
+from niki_state_runtime import RuntimeStoreError
 
 
 async def prepare_model(authority, live, payload, prepared):
     from gateway.session_policy import restore_policy, launch_key, bind_launch_key
     from gateway.session_policy_credentials import recover_config_secrets
-    from hermes_cli.model_switch import apply_model_selection, selection_route_changed, switch_model
-    from hermes_cli.config import get_compatible_custom_providers
+    from niki_cli.model_switch import apply_model_selection, selection_route_changed, switch_model
+    from niki_cli.config import get_compatible_custom_providers
     old = restore_policy(prepared['snapshot']['receipt']['policy'])
     config = old.config(authority)
     _, runtime = authority.runner._resolve_session_agent_runtime(source=live.source, session_key=live.route)
@@ -82,7 +82,7 @@ def _alias_credential(authority, result):
     ``api_key: "${VAR}"`` is the pointer ``VAR``; ``(None, None, None)`` when it declares none."""
     from pathlib import Path
     from gateway.run import _load_gateway_config
-    from hermes_cli.config import _env_ref_var_name, read_user_config_raw
+    from niki_cli.config import _env_ref_var_name, read_user_config_raw
     name = result.resolved_via_alias if result.success else ''
     path = Path(authority.db.db_path).resolve().parent / 'config.yaml'
     raw = read_user_config_raw(path) if name else {}
@@ -109,7 +109,7 @@ def _alias_credential(authority, result):
 
 def _persisted_selection_context(authority, snapshot, old):
     from agent.usage_anchor import persisted_anchor_tokens
-    from hermes_cli.model_selection_guards import SelectionContext
+    from niki_cli.model_selection_guards import SelectionContext
     target = snapshot.get('target') or snapshot['receipt']['session_id']
     tokens = persisted_anchor_tokens(authority.db, target, authority.db.get_messages_as_conversation(target))
     return SelectionContext(context_tokens=tokens, current_model=old.model or None) if tokens else None
@@ -123,8 +123,8 @@ async def _selection_guard_refusal(authority, live, payload, snapshot, old, resu
     token (target re-resolved elsewhere, another switch landed, a turn settled) gets a fresh
     refusal, never a silent apply."""
     import hashlib
-    from hermes_cli.model_selection_guards import combined_message, selection_context_for_agent, selection_warnings
-    from hermes_cli.route_identity import normalize_route_base_url
+    from niki_cli.model_selection_guards import combined_message, selection_context_for_agent, selection_warnings
+    from niki_cli.route_identity import normalize_route_base_url
     lookup = (getattr(authority.runner, '_resident_agent_for', None)
               or getattr(authority.runner, '_cached_agent_for', None))
     agent = lookup(live.route) if live is not None and callable(lookup) else None

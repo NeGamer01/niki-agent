@@ -28,7 +28,7 @@ Niki calls this **no-agent mode**. It's the cron system minus the LLM.
 
 - **No LLM call.** Zero tokens, zero agent loop, zero model spend.
 - **Script is the job.** The script decides whether to alert. Emit output → message gets sent. Emit nothing → silent tick.
-- **Bash or Python.** `.sh` / `.bash` files run under `bash` from `PATH` when available, otherwise `/bin/bash`; any other extension runs under the current Python interpreter. A Python script can also pin a **user-managed venv** via `--interpreter` (see [Using your own Python environment](#using-your-own-python-environment)). Paths must resolve inside `~/.hermes/scripts/` (relative, absolute, or `~` forms are OK if they stay in that directory). Cron scripts do **not** inherit provider credentials from the Niki process environment.
+- **Bash or Python.** `.sh` / `.bash` files run under `bash` from `PATH` when available, otherwise `/bin/bash`; any other extension runs under the current Python interpreter. A Python script can also pin a **user-managed venv** via `--interpreter` (see [Using your own Python environment](#using-your-own-python-environment)). Paths must resolve inside `~/.niki/scripts/` (relative, absolute, or `~` forms are OK if they stay in that directory). Cron scripts do **not** inherit provider credentials from the Niki process environment.
 - **Same scheduler.** Lives in `cronjob` alongside LLM jobs — pausing, resuming, listing, logs, and delivery targeting all work the same way.
 
 ## When to Use It
@@ -51,7 +51,7 @@ The real win of no-agent mode is that the agent itself can set up the watchdog f
 
 > **You:** ping me on telegram if RAM is over 85% every 5 minutes
 >
-> **Niki:** *(writes `~/.hermes/scripts/memory-watchdog.sh`, then calls `cronjob(...)` with `no_agent=true`)*
+> **Niki:** *(writes `~/.niki/scripts/memory-watchdog.sh`, then calls `cronjob(...)` with `no_agent=true`)*
 >
 > Set up. Runs every 5 min, alerts Telegram only when RAM is over 85%. Script: `memory-watchdog.sh`. Job ID: `abc123`.
 
@@ -60,7 +60,7 @@ Under the hood, the agent makes two tool calls:
 ```python
 # 1. Write the check script
 write_file(
-    path="~/.hermes/scripts/memory-watchdog.sh",
+    path="~/.niki/scripts/memory-watchdog.sh",
     content='''#!/usr/bin/env bash
 ram_pct=$(free | awk '/^Mem:/ {printf "%d", $3 * 100 / $2}')
 if [ "$ram_pct" -ge 85 ]; then
@@ -97,7 +97,7 @@ The agent can pause, resume, edit, and remove jobs the same way it creates them:
 >
 > **Niki:** *(calls `cronjob(action='pause', job_id='abc123')`)*
 >
-> Paused. Resume with "turn it back on" or via `hermes cron resume abc123`.
+> Paused. Resume with "turn it back on" or via `niki cron resume abc123`.
 
 > **You:** change it to every 15 minutes
 >
@@ -111,7 +111,7 @@ Prefer the shell? The CLI path gives you the same result with three commands:
 
 ```bash
 # 1. Write your script
-cat > ~/.hermes/scripts/memory-watchdog.sh <<'EOF'
+cat > ~/.niki/scripts/memory-watchdog.sh <<'EOF'
 #!/usr/bin/env bash
 # Alert when RAM usage is over 85%. Silent otherwise.
 RAM_PCT=$(free | awk '/^Mem:/ {printf "%d", $3 * 100 / $2}')
@@ -120,18 +120,18 @@ if [ "$RAM_PCT" -ge 85 ]; then
 fi
 # Empty stdout = silent run; no message sent.
 EOF
-chmod +x ~/.hermes/scripts/memory-watchdog.sh
+chmod +x ~/.niki/scripts/memory-watchdog.sh
 
 # 2. Schedule it
-hermes cron create "every 5m" \
+niki cron create "every 5m" \
   --no-agent \
   --script memory-watchdog.sh \
   --deliver telegram \
   --name "memory-watchdog"
 
 # 3. Verify
-hermes cron list
-hermes cron run <job_id>    # fire it once to test
+niki cron list
+niki cron run <job_id>    # fire it once to test
 ```
 
 That's the whole thing. No prompt, no skill, no model.
@@ -151,7 +151,7 @@ The "silent when empty" behavior is the key to the classic watchdog pattern: the
 
 ## Script Rules
 
-Scripts must resolve inside `~/.hermes/scripts/`. This is enforced at run time — relative names, absolute paths, and `~`-prefixed paths are accepted when the resolved target stays in that directory; path traversal and symlink escapes are rejected. The same directory is shared with the pre-check script gate used by LLM jobs.
+Scripts must resolve inside `~/.niki/scripts/`. This is enforced at run time — relative names, absolute paths, and `~`-prefixed paths are accepted when the resolved target stays in that directory; path traversal and symlink escapes are rejected. The same directory is shared with the pre-check script gate used by LLM jobs.
 
 Interpreter choice is by file extension:
 
@@ -170,18 +170,18 @@ You can point the job at a **user-managed venv** instead with `--interpreter`:
 
 ```bash
 # 1. Create a venv you own — it survives Niki reinstalls/rebuilds.
-uv venv ~/venvs/hermes-reporting --python 3.11
-uv pip install --python ~/venvs/hermes-reporting/bin/python openpyxl
+uv venv ~/venvs/niki-reporting --python 3.11
+uv pip install --python ~/venvs/niki-reporting/bin/python openpyxl
 
 # 2. Schedule the job with that interpreter.
-hermes cron create "0 8 * * *" \
+niki cron create "0 8 * * *" \
   --no-agent \
   --script daily-report.py \
-  --interpreter ~/venvs/hermes-reporting/bin/python \
+  --interpreter ~/venvs/niki-reporting/bin/python \
   --deliver telegram
 ```
 
-Like `--model`, this is a user-owned setting: set it with `hermes cron create/edit`; the agent's `cronjob` tool can't.
+Like `--model`, this is a user-owned setting: set it with `niki cron create/edit`; the agent's `cronjob` tool can't.
 
 Rules:
 
@@ -191,17 +191,17 @@ Rules:
 - Applies **only to Python scripts**. `.sh` / `.bash` always run under bash regardless.
 - The job-level setting applies to both `script` and `monitor_script` when they are Python files.
 - It is validated **at run time**, not at creation — a cron job is long-lived, and the venv may be rebuilt or moved between when you create the job and when it fires. A missing or non-executable interpreter produces a clear script failure that is delivered like any other error.
-- To clear it later: `hermes cron edit <job_id> --interpreter ""`.
+- To clear it later: `niki cron edit <job_id> --interpreter ""`.
 
 ## Schedule Syntax
 
 Same as all other cron jobs:
 
 ```bash
-hermes cron create "every 5m"        # interval
-hermes cron create "every 2h"
-hermes cron create "0 9 * * *"       # standard cron: 9am daily
-hermes cron create "30m"             # one-shot: run once in 30 minutes
+niki cron create "every 5m"        # interval
+niki cron create "every 2h"
+niki cron create "0 9 * * *"       # standard cron: 9am daily
+niki cron create "30m"             # one-shot: run once in 30 minutes
 ```
 
 See the [cron feature reference](../user-guide/features/cron.md) for the full syntax.
@@ -217,21 +217,21 @@ See the [cron feature reference](../user-guide/features/cron.md) for the full sy
 --deliver discord:#ops
 --deliver slack:#engineering
 --deliver signal:+15551234567
---deliver local                          # just save to ~/.hermes/cron/output/
+--deliver local                          # just save to ~/.niki/cron/output/
 ```
 
-No running gateway is required at script-run time for bot-token platforms (Telegram, Discord, Slack, Signal, SMS, WhatsApp) — the tool calls each platform's REST endpoint directly using the credentials already in `~/.hermes/.env` / `~/.hermes/config.yaml`.
+No running gateway is required at script-run time for bot-token platforms (Telegram, Discord, Slack, Signal, SMS, WhatsApp) — the tool calls each platform's REST endpoint directly using the credentials already in `~/.niki/.env` / `~/.niki/config.yaml`.
 
 ## Editing and Lifecycle
 
 ```bash
-hermes cron list                                    # see all jobs
-hermes cron pause <job_id>                          # stop firing, keep definition
-hermes cron resume <job_id>
-hermes cron edit <job_id> --schedule "every 10m"    # adjust cadence
-hermes cron edit <job_id> --agent                   # flip to LLM mode
-hermes cron edit <job_id> --no-agent --script …     # flip back
-hermes cron remove <job_id>                         # delete it
+niki cron list                                    # see all jobs
+niki cron pause <job_id>                          # stop firing, keep definition
+niki cron resume <job_id>
+niki cron edit <job_id> --schedule "every 10m"    # adjust cadence
+niki cron edit <job_id> --agent                   # flip to LLM mode
+niki cron edit <job_id> --no-agent --script …     # flip back
+niki cron remove <job_id>                         # delete it
 ```
 
 Everything that works on LLM jobs (pause, resume, manual trigger, delivery target changes) works on no-agent jobs too.
@@ -239,7 +239,7 @@ Everything that works on LLM jobs (pause, resume, manual trigger, delivery targe
 ## Worked Example: Disk Space Alert
 
 ```bash
-cat > ~/.hermes/scripts/disk-alert.sh <<'EOF'
+cat > ~/.niki/scripts/disk-alert.sh <<'EOF'
 #!/usr/bin/env bash
 # Alert when / or /home is over 90% full.
 THRESHOLD=90
@@ -249,9 +249,9 @@ df -h / /home 2>/dev/null | awk -v t="$THRESHOLD" '
   }
 '
 EOF
-chmod +x ~/.hermes/scripts/disk-alert.sh
+chmod +x ~/.niki/scripts/disk-alert.sh
 
-hermes cron create "*/15 * * * *" \
+niki cron create "*/15 * * * *" \
   --no-agent \
   --script disk-alert.sh \
   --deliver telegram \

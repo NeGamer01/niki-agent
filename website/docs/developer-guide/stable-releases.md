@@ -344,10 +344,10 @@ and only then advances the R2 head.
 ## Canary and one-off desktop identities
 
 `release.py --canary` builds the separate canary application. Its package
-identity and CLI command (`hermes-canary`) differ from stable; the existing
+identity and CLI command (`niki-canary`) differ from stable; the existing
 canary feed updates that application only. One-off builds use
 `release.py --build-commit REV --remote REMOTE` (add `--publish` to dispatch).
-Their application identity and CLI command (`hermes-<7-character-sha>`) include
+Their application identity and CLI command (`niki-<7-character-sha>`) include
 the pinned commit. Two different commit builds do not replace each other.
 
 Branding is selected from those build inputs, not from runtime settings:
@@ -486,7 +486,7 @@ claim tag object's immutable tagger timestamp (`year.hourOfYear.secondOfHour.0`)
 independently of the SemVer payload tag.
 Missing baseline
 artifacts are a blocker, not permission to fabricate or skip acceptance.
-See [the bundled update contract](https://github.com/NousResearch/hermes-agent/blob/main/tests/install/BUNDLED_UPDATES.md).
+See [the bundled update contract](https://github.com/NeGamer01/niki-agent/blob/main/tests/install/BUNDLED_UPDATES.md).
 
 ## Explicit exclusions and policy
 

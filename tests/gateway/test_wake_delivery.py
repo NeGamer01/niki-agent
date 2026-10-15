@@ -30,7 +30,7 @@ class PushAdapter:
 class ApiServerLikeAdapter:
     supports_async_delivery = False
 
-    def __init__(self, host="0.0.0.0", port=0, key="test-key", model="hermes"):
+    def __init__(self, host="0.0.0.0", port=0, key="test-key", model="niki"):
         self._host = host
         self._port = port
         self._api_key = key
@@ -132,7 +132,7 @@ def test_persist_delegation_delivery_appends_delivery_row(tmp_path):
     from pathlib import Path
 
     from gateway.wake import persist_delegation_delivery
-    from hermes_state import SessionDB
+    from niki_state import SessionDB
 
     db = SessionDB(db_path=Path(tmp_path) / "state.db")
     sid = "raw-hq-sid"

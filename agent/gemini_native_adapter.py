@@ -26,9 +26,9 @@ from agent.gemini_schema import prepare_gemini_tool_parameters, sanitize_gemini_
 
 logger = logging.getLogger(__name__)
 
-from hermes_cli.version_info import get_version_info
+from niki_cli.version_info import get_version_info
 
-_API_CLIENT = f"hermes-agent/{get_version_info().base_version}"  # client context per Gemini's partner-integration guidance
+_API_CLIENT = f"niki-agent/{get_version_info().base_version}"  # client context per Gemini's partner-integration guidance
 
 DEFAULT_GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
 # A Vertex AI express-mode base, when the user configures one explicitly: aiplatform serves the
@@ -53,7 +53,7 @@ _STANDARD_KEY_GUIDANCE = (
     "'Standard' Google Cloud keys for the Gemini API on June 19, 2026, and all Standard keys stop working in "
     "September 2026. Open https://aistudio.google.com/api-keys, check the key's type and status, and create a "
     "replacement Gemini API key (or, as a temporary bridge, restrict the Standard key to "
-    "generativelanguage.googleapis.com). Then update GEMINI_API_KEY / GOOGLE_API_KEY in ~/.hermes/.env, "
+    "generativelanguage.googleapis.com). Then update GEMINI_API_KEY / GOOGLE_API_KEY in ~/.niki/.env, "
     "delete any leftover Windows/system copy of those variables, and restart. A stale shell key can hide "
     "the .env value. Details: https://ai.google.dev/gemini-api/docs/api-key"
 )
@@ -89,7 +89,7 @@ _FINISH_REASON_MAP = {
 _HTTP_ERROR_CODES = {401: "gemini_unauthorized", 429: "gemini_rate_limited", 404: "gemini_model_not_found"}
 _MISSING_KEY_ERROR = (
     "Gemini native client requires an API key, but none was provided. Set GOOGLE_API_KEY or GEMINI_API_KEY in your "
-    "environment / ~/.hermes/.env (get one at https://aistudio.google.com/app/apikey), or run `hermes setup` to "
+    "environment / ~/.niki/.env (get one at https://aistudio.google.com/app/apikey), or run `niki setup` to "
     "configure the Google provider."
 )
 
@@ -865,8 +865,8 @@ class GeminiNativeClient:
     """Minimal OpenAI-SDK-compatible facade (``client.chat.completions.create(**kwargs)``) over Gemini's native REST API."""
 
     # For agent/auxiliary_client.py: a complete client, never re-dispatched through a wire adapter.
-    # (No HERMES_SKIP_ASYNC_WRAP — the async path has a real conversion, AsyncGeminiNativeClient.)
-    HERMES_SKIP_TRANSPORT_WRAP = True
+    # (No NIKI_SKIP_ASYNC_WRAP — the async path has a real conversion, AsyncGeminiNativeClient.)
+    NIKI_SKIP_TRANSPORT_WRAP = True
     # Seams for a subclass that speaks the same wire under another credential (an OAuth bearer on the
     # per-user-quota methods): RPC method names, the missing-credential text, and ``_auth_headers``.
     GENERATE_METHOD, STREAM_METHOD = "generateContent", "streamGenerateContent"

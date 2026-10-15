@@ -28,7 +28,7 @@ See also: [WeCom Callback](./wecom-callback.md) for inbound webhook setup.
 #### Recommended: Scan-to-Create (one command)
 
 ```bash
-hermes gateway setup
+niki gateway setup
 ```
 
 Select **WeCom** and scan the QR code with your WeCom mobile app. Niki will automatically create a bot application with the correct permissions and save the credentials.
@@ -47,7 +47,7 @@ If scan-to-create is not available, the wizard falls back to manual input:
 2. Navigate to **Applications** → **Create Application** → **AI Bot**
 3. Configure the bot name and description
 4. Copy the **Bot ID** and **Secret** from the credentials page
-5. Run `hermes gateway setup`, select **WeCom**, and enter the credentials when prompted
+5. Run `niki gateway setup`, select **WeCom**, and enter the credentials when prompted
 
 :::warning
 Keep the Bot Secret private. Anyone with it can impersonate your bot.
@@ -58,7 +58,7 @@ Keep the Bot Secret private. Anyone with it can impersonate your bot.
 #### Option A: Interactive Setup (Recommended)
 
 ```bash
-hermes gateway setup
+niki gateway setup
 ```
 
 Select **WeCom** and follow the prompts. The wizard will guide you through:
@@ -68,7 +68,7 @@ Select **WeCom** and follow the prompts. The wizard will guide you through:
 
 #### Option B: Manual Configuration
 
-Add the following to `~/.hermes/.env`:
+Add the following to `~/.niki/.env`:
 
 ```bash
 WECOM_BOT_ID=your-bot-id
@@ -84,7 +84,7 @@ WECOM_HOME_CHANNEL=chat_id
 ### Step 3: Start the gateway
 
 ```bash
-hermes gateway
+niki gateway
 ```
 
 ## Features
@@ -219,7 +219,7 @@ WeCom encrypts some inbound media attachments with AES-256-CBC. The adapter hand
 - When an inbound media item includes an `aeskey` field, the adapter downloads the encrypted bytes and decrypts them using AES-256-CBC with PKCS#7 padding.
 - The AES key is the base64-decoded value of the `aeskey` field (must be exactly 32 bytes).
 - The IV is derived from the first 16 bytes of the key.
-- This requires the `cryptography` Python package (`hermes pm repair`).
+- This requires the `cryptography` Python package (`niki pm repair`).
 
 No configuration is needed — decryption happens transparently when encrypted media is received.
 
@@ -298,13 +298,13 @@ Inbound messages are deduplicated using message IDs with a 5-minute window and a
 |---------|-----|
 | `WECOM_BOT_ID and WECOM_SECRET are required` | Set both env vars or configure in setup wizard |
 | `WeCom startup failed: aiohttp not installed` | Install aiohttp: `python -c "import pm; pm.sync_venv(['messaging'], explicit=True)"` |
-| `WeCom startup failed: httpx not installed` | Install httpx: `hermes pm repair` |
+| `WeCom startup failed: httpx not installed` | Install httpx: `niki pm repair` |
 | `invalid secret (errcode=40013)` | Verify the secret matches your bot's credentials |
 | `Timed out waiting for subscribe acknowledgement` | Check network connectivity to `openws.work.weixin.qq.com` |
 | Bot doesn't respond in groups | Check `group_policy` setting and ensure the group ID is in `group_allow_from` |
 | Bot ignores certain users in a group | Check per-group `allow_from` lists in the `groups` config section |
-| Media decryption fails | Install `cryptography`: `hermes pm repair` |
-| `cryptography is required for WeCom media decryption` | The inbound media is AES-encrypted. Install: `hermes pm repair` |
+| Media decryption fails | Install `cryptography`: `niki pm repair` |
+| `cryptography is required for WeCom media decryption` | The inbound media is AES-encrypted. Install: `niki pm repair` |
 | Voice messages sent as files | WeCom only supports AMR format for native voice. Other formats are auto-downgraded to file. |
 | `File too large` error | WeCom has a 20 MB absolute limit on all file uploads. Compress or split the file. |
 | Images sent as files | Images > 10 MB exceed the native image limit and are auto-downgraded to file attachments. |

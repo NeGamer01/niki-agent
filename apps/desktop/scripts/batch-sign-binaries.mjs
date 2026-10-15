@@ -437,7 +437,7 @@ async function main() {
     console.error('usage: batch-sign-binaries.mjs <dir>')
     process.exit(2)
   }
-  const result = await batchSignAppTree(root, process.env.HERMES_PRODUCT_EXE || path.join(root, 'Niki.exe'))
+  const result = await batchSignAppTree(root, process.env.NIKI_PRODUCT_EXE || path.join(root, 'Niki.exe'))
   if (result.skipped) process.exit(0)
 }
 

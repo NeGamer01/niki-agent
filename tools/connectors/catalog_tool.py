@@ -22,8 +22,8 @@ SEARCH_LIMIT = 10
 
 NOT_HERE = (
     "manage_catalog is available only in the Niki desktop app, where the approval card can be drawn. "
-    "Tell the user to install from a terminal instead: `hermes plugins install <id>` for a plugin, "
-    "`hermes skills install <id>` for a skill."
+    "Tell the user to install from a terminal instead: `niki plugins install <id>` for a plugin, "
+    "`niki skills install <id>` for a skill."
 )
 
 NOTE = (
@@ -148,19 +148,19 @@ def install(items: list[dict[str, str]], *, session_id: Optional[str], tool_call
 def search(query: str, kind: Optional[str], *, installer: Any = None) -> dict[str, Any]:
     """Runs on the tool call's thread, in this chat's profile scope, so ``installed`` is this
     chat's profile's."""
-    from hermes_constants import get_hermes_home, profile_name_for_home
+    from niki_constants import get_niki_home, profile_name_for_home
 
     rows: list[dict[str, Any]] = []
     if kind in (None, "plugin"):
         rows += _plugin_rows(query)
     if kind in (None, "skill") and query.strip():
         rows += _skill_rows(query)
-    return {"results": rows, "installed_in": profile_name_for_home(get_hermes_home())}
+    return {"results": rows, "installed_in": profile_name_for_home(get_niki_home())}
 
 
 def _plugin_rows(query: str) -> list[dict[str, Any]]:
-    from hermes_cli.plugin_catalog import filter_entries, load_catalog_live
-    from hermes_cli.plugins_cmd import PluginOperationError, _read_install_metadata
+    from niki_cli.plugin_catalog import filter_entries, load_catalog_live
+    from niki_cli.plugins_cmd import PluginOperationError, _read_install_metadata
     from tools.connectors.catalog import _display
 
     try:

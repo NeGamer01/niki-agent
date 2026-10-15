@@ -16,11 +16,11 @@ _VALID_MODAL_MODES = {"auto", "direct", "managed"}
 
 
 def managed_nous_tools_enabled(*, force_fresh: bool = False) -> bool:
-    """Coarse gate: entitled to the Nous Tool Gateway (paid Portal access OR a live free
+    """Coarse gate: entitled to the Niki Tool Gateway (paid Portal access OR a live free
     pool). Fails closed on unknown/error — never blocks startup. Callers narrow per category
     via ``tool_gateway_entitled_for``; ``force_fresh`` is for flows needing a just-bought grant."""
     try:
-        from hermes_cli.nous_account import get_nous_portal_account_info
+        from niki_cli.niki_account import get_nous_portal_account_info
         # Branched call, not ``force_fresh=force_fresh``: tests stub the reader with zero-arg lambdas.
         account_info = (get_nous_portal_account_info(force_fresh=True) if force_fresh
                         else get_nous_portal_account_info())
@@ -29,11 +29,11 @@ def managed_nous_tools_enabled(*, force_fresh: bool = False) -> bool:
         return False
 
 
-def nous_tool_gateway_unavailable_message(capability: str = "the Nous Tool Gateway", *,
+def niki_tool_gateway_unavailable_message(capability: str = "the Niki Tool Gateway", *,
                                           force_fresh: bool = False) -> str:
-    """Return account-aware guidance for an unavailable Nous Tool Gateway path."""
+    """Return account-aware guidance for an unavailable Niki Tool Gateway path."""
     try:
-        from hermes_cli.nous_account import (
+        from niki_cli.niki_account import (
             format_nous_portal_entitlement_message, get_nous_portal_account_info)
         message = format_nous_portal_entitlement_message(
             get_nous_portal_account_info(force_fresh=force_fresh), capability=capability,
@@ -42,8 +42,8 @@ def nous_tool_gateway_unavailable_message(capability: str = "the Nous Tool Gatew
             return message
     except Exception:
         pass
-    return (f"{capability} is unavailable. Run `hermes model` to refresh your "
-            "Nous Portal login and billing status.")
+    return (f"{capability} is unavailable. Run `niki model` to refresh your "
+            "Niki Portal login and billing status.")
 
 
 def normalize_browser_cloud_provider(value: object | None) -> str:
@@ -103,22 +103,22 @@ def _scoped_credential(name: str) -> str:
 
 
 def _dotenv_value(env_var: str) -> str:
-    """``.env`` value via ``hermes_cli.config.get_env_value`` (``""`` when unavailable)."""
+    """``.env`` value via ``niki_cli.config.get_env_value`` (``""`` when unavailable)."""
     try:
-        from hermes_cli.config import get_env_value
+        from niki_cli.config import get_env_value
         return str(get_env_value(env_var) or "").strip()
     except Exception:  # pragma: no cover — config is in-repo
         return ""
 
 
 def _env_source_suppressed(provider_id: str, env_var: str) -> bool:
-    """``hermes auth remove <provider>`` records ``env:<VAR>`` in ``suppressed_sources`` and promises
-    the variable is ignored until ``hermes auth add``; a value still living in a long-running
+    """``niki auth remove <provider>`` records ``env:<VAR>`` in ``suppressed_sources`` and promises
+    the variable is ignored until ``niki auth add``; a value still living in a long-running
     gateway's process environment (inherited across update restarts) must honor that too."""
     if not provider_id:
         return False
     try:
-        from hermes_cli.auth import is_source_suppressed
+        from niki_cli.auth import is_source_suppressed
         return is_source_suppressed(provider_id, f"env:{env_var}")
     except Exception:  # pragma: no cover — auth store unreadable: keep prior behavior
         return False
@@ -128,12 +128,12 @@ def resolve_provider_secret(env_var: str, provider_id: str, config_value: str = 
                             env_getter=None) -> str:
     """Resolve a voice-provider API key (single owner for STT/TTS lookup). Order: explicit
     ``config_value`` -> profile secret scope / env -> ``.env`` via ``env_getter`` (or
-    ``hermes_cli.config.get_env_value``) -> credential pool for ``provider_id``. Under an
+    ``niki_cli.config.get_env_value``) -> credential pool for ``provider_id``. Under an
     active multiplex turn the profile scope is authoritative: a miss returns ``""`` rather
     than borrowing another profile's env or pool. Never raises. The env/.env tier is skipped
     entirely while ``env:<env_var>`` is suppressed for ``provider_id`` (#116155).
 
-    Resolution order (fixes #68003 — keys added via ``hermes auth add <provider>`` were invisible to the
+    Resolution order (fixes #68003 — keys added via ``niki auth add <provider>`` were invisible to the
     voice tools, which only consulted env/.env):
     """
     key = str(config_value or "").strip()
@@ -172,7 +172,7 @@ def resolve_openai_audio_api_key() -> str:
     latter). Must go through the secret scope: a raw ``os.environ`` read could bill another
     profile's account under multiplex.
 
-    Outside a multiplexed turn, ``OPENAI_API_KEY`` additionally falls back to the credential pool (``hermes
+    Outside a multiplexed turn, ``OPENAI_API_KEY`` additionally falls back to the credential pool (``niki
     auth add openai-api``) via ``resolve_provider_secret`` — same #68003 fix as the other voice providers.
     The dedicated voice-tools override remains env/scope-only.
     """
@@ -183,16 +183,16 @@ def resolve_openai_audio_api_key() -> str:
 def prefers_gateway(config_section: str) -> bool:
     """True when ``<section>.use_gateway`` is set in config.yaml. Never raises."""
     try:
-        from hermes_cli.config import load_config
+        from niki_cli.config import load_config
         section = (load_config() or {}).get(config_section)
         return isinstance(section, dict) and is_truthy_value(section.get("use_gateway"))
     except Exception:
         return False
 
 
-# Provider value the managed "Nous Subscription" picker rows write for every category;
+# Provider value the managed "Niki Subscription" picker rows write for every category;
 # any other name = that vendor direct; no key = legacy autodetect.
-NOUS_MANAGED_PROVIDER = "nous"
+NIKI_MANAGED_PROVIDER = "niki"
 # Per-capability keys that also count as "this category has been configured".
 _EXTRA_SELECTION_KEYS = {"web": ("search_backend", "extract_backend")}
 # Key(s) carrying the category's provider selection. ``browser.backend`` is the DRIVER
@@ -204,7 +204,7 @@ _DEFAULT_NAME_KEYS = ("provider", "backend", "cloud_provider")
 def _raw_section(section: str) -> dict[str, Any] | None:
     """The RAW (unmerged) config.yaml mapping for ``section``, or None."""
     try:
-        from hermes_cli.config import read_raw_config_readonly
+        from niki_cli.config import read_raw_config_readonly
         cfg = read_raw_config_readonly() or {}
         raw = cfg.get(section) if isinstance(cfg, dict) else None
         return raw if isinstance(raw, dict) else None
@@ -213,17 +213,17 @@ def _raw_section(section: str) -> dict[str, Any] | None:
 
 
 def read_selection(section: str) -> str | None:
-    """THE single runtime read of the persisted `hermes tools` selection: ``"nous"`` (managed
+    """THE single runtime read of the persisted `niki tools` selection: ``"niki"`` (managed
     gateway row), a vendor name (direct, own credentials), or ``None`` (never configured ->
     legacy autodetect allowed). Reads the RAW config.yaml so key presence means "actually
     written", not "schema default"; a raw ``local`` is therefore a real user selection.
     Legacy shim: ``use_gateway: true`` was only ever written by the managed row, so it maps
-    to ``"nous"`` regardless of the name key. Never raises."""
+    to ``"niki"`` regardless of the name key. Never raises."""
     raw = _raw_section(section)
     if raw is None:
         return None
     if is_truthy_value(raw.get("use_gateway")):
-        return NOUS_MANAGED_PROVIDER
+        return NIKI_MANAGED_PROVIDER
     for key in _SELECTION_NAME_KEYS.get(section, _DEFAULT_NAME_KEYS):
         text = str(raw.get(key)).strip().lower() if raw.get(key) is not None else ""
         if text:
@@ -235,9 +235,9 @@ def read_selection(section: str) -> str | None:
 
 def read_web_capability_selection(capability: Optional[str] = None) -> str | None:
     """Stored selection that decides ONE web capability (``"search"`` / ``"extract"``):
-    ``web.<capability>_backend`` when set (``"nous"`` = managed gateway, a vendor name =
+    ``web.<capability>_backend`` when set (``"niki"`` = managed gateway, a vendor name =
     that vendor direct), else the shared :func:`read_selection`. Lets search and extract
-    each choose between the user's own key and the Nous Tool Gateway."""
+    each choose between the user's own key and the Niki Tool Gateway."""
     if capability:
         raw = _raw_section("web") or {}
         pin = str(raw.get(f"{capability}_backend") or "").strip().lower()
@@ -266,7 +266,7 @@ REMOVED_BACKENDS: dict[str, dict[str, str]] = {}
 # Backends that once shipped in-tree but were removed. A config that still points at one otherwise fails
 # silently at the FIRST tool call with a generic "no registered provider has that name" — no migration, no
 # startup notice (reported after the Tavily removal in #99199). Both the startup config check
-# (hermes_cli.config.validate_config_structure) and selection_error() consult this map so the user learns
+# (niki_cli.config.validate_config_structure) and selection_error() consult this map so the user learns
 # what actually happened and what to do. Declared data, one policy — add future removals here, never as
 # one-off string checks at call sites.
 # Currently empty: the Tavily removal (#99199) that introduced this registry was reverted by the #99731
@@ -281,8 +281,8 @@ def removed_backend_note(section: str, name: str) -> Optional[str]:
 def selection_error(section: str, selection_name: str, failure: str) -> str:
     """The uniform honest-error contract for a selected-but-broken provider."""
     failure = removed_backend_note(section, selection_name) or failure
-    return (f"{section} is configured to use {selection_name} (set via hermes "
-            f"tools), but {failure}. Run 'hermes tools' to change it.")
+    return (f"{section} is configured to use {selection_name} (set via niki "
+            f"tools), but {failure}. Run 'niki tools' to change it.")
 
 
 def fal_key_is_configured() -> bool:

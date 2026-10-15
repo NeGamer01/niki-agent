@@ -432,9 +432,9 @@ function SkillCard({
               </div>
             )}
             <div className={styles.installHint}>
-              <code>{skill.installCmd || `hermes skills install ${skillCatalogInstallIdentifier(skill) || skill.name}`}</code>
+              <code>{skill.installCmd || `niki skills install ${skillCatalogInstallIdentifier(skill) || skill.name}`}</code>
               <CopyButton
-                text={skill.installCmd || `hermes skills install ${skillCatalogInstallIdentifier(skill) || skill.name}`}
+                text={skill.installCmd || `niki skills install ${skillCatalogInstallIdentifier(skill) || skill.name}`}
               />
             </div>
             {onPick ? (
@@ -523,7 +523,7 @@ export default function SkillsDashboard() {
   // app (Niki desktop's Bot Mode agent editor) as a skill PICKER. Site
   // chrome is hidden via a CSS class and every card gains an
   // "+ Add to this Agent" button that posts
-  //   { type: 'hermes-skill-pick', name, identifier, installCmd, source }
+  //   { type: 'niki-skill-pick', name, identifier, installCmd, source }
   // to the parent window. The HOST performs the actual install through its
   // own gateway (skills.manage) — the page never installs anything, so
   // there is no origin to trust in this direction; parents must validate
@@ -537,10 +537,10 @@ export default function SkillsDashboard() {
       if (typeof window === "undefined" || window.parent === window) return;
       window.parent.postMessage(
         {
-          type: "hermes-skill-pick",
+          type: "niki-skill-pick",
           name: skill.name,
           identifier: skillCatalogInstallIdentifier(skill) || skill.name,
-          installCmd: skill.installCmd || `hermes skills install ${skillCatalogInstallIdentifier(skill) || skill.name}`,
+          installCmd: skill.installCmd || `niki skills install ${skillCatalogInstallIdentifier(skill) || skill.name}`,
           source: skill.source,
         },
         "*"

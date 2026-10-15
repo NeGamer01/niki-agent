@@ -11,14 +11,14 @@ export const enBoot = {
       loadingSessions: 'Loading recent sessions',
       retryingRemoteBackend: 'Reconnecting to the remote Niki backend…',
       startingDesktopConnection: 'Starting desktop connection',
-      startingHermesDesktop: 'Starting Niki Desktop…'
+      startingNikiDesktop: 'Starting Niki Desktop…'
     },
     errors: {
       backgroundExited:
         'The service that runs your chats closed unexpectedly. Restart it to keep going — your chats and settings are safe.',
       backgroundExitedDuringStartup: 'Niki stopped right after it started.',
       backendStopped: 'Niki stopped working in the background',
-      restartHermes: 'Restart Niki',
+      restartNiki: 'Restart Niki',
       openLogs: 'Open logs',
       desktopBootFailed: "Niki couldn't start",
       gatewayConnectionLost: 'Niki lost its connection',
@@ -63,11 +63,11 @@ export const enBoot = {
         `Signs out of the saved remote browser session, then opens ${signInLabel}. Use local gateway to switch to the bundled backend instead.`,
       signOutAndSignIn: 'Sign out & sign in',
       remoteFailureHint: 'Check the gateway URL and sign-in under Gateway settings, or switch to the local gateway.',
-      cloudDownTitle: 'Nous Cloud agent is down',
+      cloudDownTitle: 'Niki Cloud agent is down',
       cloudDownDescription:
-        'The Nous-managed cloud agent this gateway connects to is returning a server error. It cannot be restarted from here — check its status, switch to the local gateway, or get support.',
+        'The Niki-managed cloud agent this gateway connects to is returning a server error. It cannot be restarted from here — check its status, switch to the local gateway, or get support.',
       cloudDownHint:
-        'The buttons below open the Nous Portal (instance status and controls) and our Discord for support.',
+        'The buttons below open the Niki Portal (instance status and controls) and our Discord for support.',
       cloudDownCheckPortal: 'Check Portal status',
       cloudDownDiscord: 'Get help on Discord',
       hideRecentLogs: 'Hide recent logs',
@@ -93,7 +93,7 @@ export const enBoot = {
       since: time => `Waiting since ${time}`,
       lastChecked: time => `Last checked ${time}`,
       recoveryHint:
-        'This usually clears in a few minutes. If it does not: quit Niki, end leftover git or hermes processes (or restart the computer), then open Niki again.',
+        'This usually clears in a few minutes. If it does not: quit Niki, end leftover git or niki processes (or restart the computer), then open Niki again.',
       checkAgain: 'Check again',
       quit: 'Quit Niki',
       openLogs: 'Open logs',

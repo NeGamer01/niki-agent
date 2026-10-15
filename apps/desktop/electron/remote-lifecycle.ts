@@ -11,14 +11,14 @@
  *   - reuse an existing desktop-dedicated dashboard via a lockfile + an
  *     AUTHENTICATED /api/status probe (pid liveness alone is insufficient),
  *   - spawn a fresh detached `--isolated --port 0` dashboard and scrape its
- *     `HERMES_DASHBOARD_READY port=<n>` readiness line,
+ *     `NIKI_DASHBOARD_READY port=<n>` readiness line,
  *   - adopt the token the dashboard actually serves (served-token adoption),
  *   - clean up a stale dashboard only when it is provably ours.
  *
  * No `import 'electron'` so it's unit-testable with `node --test`. main.ts wires
- * the real SshConnection, fetch, adoptServedDashboardToken, and waitForHermes in.
+ * the real SshConnection, fetch, adoptServedDashboardToken, and waitForNiki in.
  *
- * The minted HERMES_DASHBOARD_SESSION_TOKEN is the SPAWN credential. After
+ * The minted NIKI_DASHBOARD_SESSION_TOKEN is the SPAWN credential. After
  * readiness the caller runs served-token adoption against the tunneled baseUrl
  * and the SERVED token's fingerprint is what lands in the lockfile — so the
  * reuse probe checks the credential that actually authenticates /api/ws, not
@@ -39,10 +39,10 @@ const LOCKFILE_SCHEMA_VERSION = 2
 // args, served-token reconciliation). A mismatch forces a clean respawn.
 const PROTOCOL_VERSION = 1
 const READY_RE = READY_IN_MERGED_OUTPUT_RE // the remote log is `>> log 2>&1`: merged, not line-accurate
-const REMOTE_LOCK_DIR = '~/.hermes/desktop-ssh'
+const REMOTE_LOCK_DIR = '~/.niki/desktop-ssh'
 const SUPPORTED_REMOTE_OS = new Set(['Linux', 'Darwin'])
 // On a busy remote host a healthy cold boot can take 60-150s before the
-// freshly spawned `hermes serve --isolated` prints its READY line (event-loop
+// freshly spawned `niki serve --isolated` prints its READY line (event-loop
 // stalls of 5-27s each during spawn storms are routine). The historical 45s
 // budget gave up milliseconds before a healthy backend announced ready and
 // surfaced a timeout toast (issue #94642). A roomier default absorbs the
@@ -69,12 +69,12 @@ function classifySshReuseProof(proof, spawnNonce) {
 
 /**
  * Resolve the remote ready-port deadline. Honors the
- * HERMES_DESKTOP_REMOTE_READY_TIMEOUT_MS env override (for users on busy
+ * NIKI_DESKTOP_REMOTE_READY_TIMEOUT_MS env override (for users on busy
  * hosts whose cold boots routinely exceed the default), clamped to a sane
  * floor so a bad value can't make boot flakier than the default.
  */
 function resolveReadyTimeoutMs(env = process.env) {
-  const parsed = Number(env.HERMES_DESKTOP_REMOTE_READY_TIMEOUT_MS)
+  const parsed = Number(env.NIKI_DESKTOP_REMOTE_READY_TIMEOUT_MS)
 
   if (Number.isFinite(parsed) && parsed > 0) {
     return Math.max(MIN_READY_TIMEOUT_MS, Math.round(parsed))
@@ -191,20 +191,20 @@ function expandRemotePath(p) {
   return shq(p)
 }
 
-// Resolve the remote hermes executable. An EXPLICIT path is honored strictly
+// Resolve the remote niki executable. An EXPLICIT path is honored strictly
 // (throws a path-naming error if not executable — never silently falls back to a
 // different install). A BLANK path auto-detects: login-shell `command -v` (a
 // non-login `ssh host cmd` PATH misses user installs), then known install paths.
-async function locateHermes(ssh, remoteHermesPath) {
+async function locateNiki(ssh, remoteNikiPath) {
   const resolveLauncher = async (candidate: string) => {
-    // Return the candidate path directly. The hermes binary or wrapper script
+    // Return the candidate path directly. The niki binary or wrapper script
     // is executable and handles argument forwarding (e.g. `exec <python> <script> "$@"`)
     // correctly on its own. Previously, this function followed `exec` wrappers and
     // returned only the python interpreter, which broke:
     //   - version checking: `<python> --version` printed "Python x.y.z" instead of
     //     the Niki version, and
     //   - capability probing: `<python> serve --help` failed entirely.
-    // See https://github.com/NousResearch/hermes-agent/issues/74411
+    // See https://github.com/NeGamer01/niki-agent/issues/74411
     return candidate
   }
 
@@ -219,25 +219,25 @@ async function locateHermes(ssh, remoteHermesPath) {
     }
   }
 
-  if (remoteHermesPath) {
-    if (await isExecutable(remoteHermesPath)) {
-      return resolveLauncher(remoteHermesPath)
+  if (remoteNikiPath) {
+    if (await isExecutable(remoteNikiPath)) {
+      return resolveLauncher(remoteNikiPath)
     }
 
     const err: any = new Error(
-      `The Niki path you set is not an executable on the remote host: "${remoteHermesPath}". ` +
-        'Check the path (it must be the full path to the `hermes` binary on the remote, e.g. ' +
-        '~/hermes-agent/.venv/bin/hermes), or clear it to auto-detect.'
+      `The Niki path you set is not an executable on the remote host: "${remoteNikiPath}". ` +
+        'Check the path (it must be the full path to the `niki` binary on the remote, e.g. ' +
+        '~/niki-agent/.venv/bin/niki), or clear it to auto-detect.'
     )
 
-    err.kind = 'hermes-not-found'
+    err.kind = 'niki-not-found'
     throw err
   }
 
   const candidates: string[] = []
 
   try {
-    const found = (await ssh.exec(`bash -lc ${shq('command -v hermes')}`)).trim()
+    const found = (await ssh.exec(`bash -lc ${shq('command -v niki')}`)).trim()
 
     if (found) {
       candidates.push(found.split('\n').pop().trim())
@@ -248,9 +248,9 @@ async function locateHermes(ssh, remoteHermesPath) {
 
   // Fallback candidates when the login-shell probe misses: the installer's
   // command locations (scripts/install.sh) — per-user, root/FHS, legacy venv.
-  candidates.push('~/.local/bin/hermes')
-  candidates.push('/usr/local/bin/hermes')
-  candidates.push('~/.hermes/hermes-agent/venv/bin/hermes')
+  candidates.push('~/.local/bin/niki')
+  candidates.push('/usr/local/bin/niki')
+  candidates.push('~/.niki/niki-agent/venv/bin/niki')
 
   for (const candidate of candidates) {
     if (!candidate) {
@@ -263,23 +263,23 @@ async function locateHermes(ssh, remoteHermesPath) {
   }
 
   const err: any = new Error(
-    'Niki is not installed on the remote host (could not find a `hermes` executable). ' +
-      'Install it on the remote with:  curl -fsSL https://hermes-agent.nousresearch.com/install.sh | sh  ' +
+    'Niki is not installed on the remote host (could not find a `niki` executable). ' +
+      'Install it on the remote with:  curl -fsSL https://raw.githubusercontent.com/NeGamer01/niki-agent/main/scripts/install.sh | sh  ' +
       '— or set the Niki path explicitly in the SSH connection settings.'
   )
 
-  err.kind = 'hermes-not-found'
+  err.kind = 'niki-not-found'
   throw err
 }
 
-// Probe the resolved binary's version string (first line of `<hermes> --version`,
-// e.g. "Niki Agent v0.18.2 ..."), or '' on failure. Surfaces WHICH hermes a
+// Probe the resolved binary's version string (first line of `<niki> --version`,
+// e.g. "Niki Agent v0.18.2 ..."), or '' on failure. Surfaces WHICH niki a
 // connection uses, so a stale/unexpected install is visible.
-async function probeHermesVersion(ssh, hermesPath) {
+async function probeNikiVersion(ssh, nikiPath) {
   try {
     // Watchdogged: a hung remote CLI must die remotely instead of orphaning
     // when the local ssh child is SIGKILLed (#110478).
-    const out = (await ssh.exec(withRemoteTimeout(`${expandRemotePath(hermesPath)} --version 2>&1`))).trim()
+    const out = (await ssh.exec(withRemoteTimeout(`${expandRemotePath(nikiPath)} --version 2>&1`))).trim()
 
     return (out.split('\n')[0] || '').trim()
   } catch {
@@ -304,14 +304,14 @@ async function probeRemotePlatform(ssh) {
   return { os: osName, arch }
 }
 
-// The HERMES_HOME the remote dashboard will use (explicit env wins, else
-// ~/.hermes). Recorded in the lockfile so a future reuse can tell it's the same
+// The NIKI_HOME the remote dashboard will use (explicit env wins, else
+// ~/.niki). Recorded in the lockfile so a future reuse can tell it's the same
 // state store; best-effort.
-async function probeRemoteHermesHome(ssh) {
+async function probeRemoteNikiHome(ssh) {
   try {
-    const out = (await ssh.exec('echo "${HERMES_HOME:-$HOME/.hermes}"')).trim().split('\n').pop()
+    const out = (await ssh.exec('echo "${NIKI_HOME:-$HOME/.niki}"')).trim().split('\n').pop()
 
-    return out || '~/.hermes'
+    return out || '~/.niki'
   } catch (cause) {
     const error: any = new Error('Could not resolve the remote Niki home.')
     error.kind = 'transient-transport-error'
@@ -327,7 +327,7 @@ async function probeRemoteHermesHome(ssh) {
  * (remote-update-marker-programs.ts); it never imports the changing checkout.
  * Absence or a confirmed-dead claim (owner and delegate) is clear, and a dead
  * claim is unlinked under `<marker>.lock` unless the checkout lock is still
- * held (HELD: a killed updater's child is still running). `hermesPath`, once
+ * held (HELD: a killed updater's child is still running). `nikiPath`, once
  * located, adds its checkout to the probed ones. Every parse, read, lock, or
  * transport uncertainty fails closed so a Desktop relaunch cannot start
  * `serve` beside an updater that survived the old app process.
@@ -343,14 +343,14 @@ async function probeRemoteHermesHome(ssh) {
  * Python compiles the whole program before running it and the gate never reads
  * stdin, so argv stays a few dozen bytes however the judge grows.
  */
-async function assertRemoteInstallUpdateClear(ssh, hermesHome, hermesPath = '') {
-  const marker = expandRemotePath(`${remoteInstallRoot(hermesHome)}/.hermes-update-in-progress`)
-  const hermes = hermesPath ? ` '' ${expandRemotePath(hermesPath)}` : ''
+async function assertRemoteInstallUpdateClear(ssh, nikiHome, nikiPath = '') {
+  const marker = expandRemotePath(`${remoteInstallRoot(nikiHome)}/.niki-update-in-progress`)
+  const niki = nikiPath ? ` '' ${expandRemotePath(nikiPath)}` : ''
   let observation = ''
 
   try {
     observation =
-      String(await ssh.exec(`python3 - ${marker}${hermes}`, { stdinData: REMOTE_MARKER_GATE_PY }))
+      String(await ssh.exec(`python3 - ${marker}${niki}`, { stdinData: REMOTE_MARKER_GATE_PY }))
         .trim()
         .split(/\r?\n/)
         .pop() || ''
@@ -379,8 +379,8 @@ async function assertRemoteInstallUpdateClear(ssh, hermesHome, hermesPath = '') 
   throw error
 }
 
-async function listRemoteHermesProfiles(ssh) {
-  const home = assertSafeRemoteHome(await probeRemoteHermesHome(ssh))
+async function listRemoteNikiProfiles(ssh) {
+  const home = assertSafeRemoteHome(await probeRemoteNikiHome(ssh))
   const dir = expandRemotePath(`${home}/profiles`)
   let listing = ''
 
@@ -397,12 +397,12 @@ async function listRemoteHermesProfiles(ssh) {
 }
 
 async function readRemoteInstallId(ssh) {
-  // The stable backend identity the roster collapses on (`hermes_cli/install_identity.py`:
+  // The stable backend identity the roster collapses on (`niki_cli/install_identity.py`:
   // `<install root>/install_id`, opaque hex). Read from the INSTALL root, so an ssh connection
   // pinned to `<root>/profiles/<name>` reports the same id as one pointed at the root — they are
   // one backend. Read-only: a missing file is left missing (minting identity is the install's job,
   // never a visiting client's) and simply means "no id", exactly as an older backend reports.
-  const root = remoteInstallRoot(assertSafeRemoteHome(await probeRemoteHermesHome(ssh)))
+  const root = remoteInstallRoot(assertSafeRemoteHome(await probeRemoteNikiHome(ssh)))
   const file = expandRemotePath(`${root}/install_id`)
   let out = ''
 
@@ -516,7 +516,7 @@ async function readLockfile(ssh, ownershipId) {
     return lockfileSkew('log-path-mismatch')
   }
 
-  for (const field of ['profile', 'hermesPath', 'hermesHome', 'logPath', 'startedAt']) {
+  for (const field of ['profile', 'nikiPath', 'nikiHome', 'logPath', 'startedAt']) {
     if (typeof parsed[field] !== 'string' || parsed[field].length > 1024) {
       return lockfileSkew(`malformed-field ${field}`)
     }
@@ -653,27 +653,27 @@ async function pidIsOurDashboard(
   ssh,
   pid,
   spawnNonce,
-  hermesPath = '',
-  hermesHome = '',
+  nikiPath = '',
+  nikiHome = '',
   ownershipId = '',
   profile = ''
 ) {
-  if (!pid || !/^[0-9a-f]{16}$/.test(String(spawnNonce || '')) || !hermesPath) {
+  if (!pid || !/^[0-9a-f]{16}$/.test(String(spawnNonce || '')) || !nikiPath) {
     return false
   }
 
   const script =
     'import os,shlex,subprocess,sys\n' +
     `pid=${Number(pid)}\n` +
-    `expected=os.path.expanduser(${shq(hermesPath)})\n` +
+    `expected=os.path.expanduser(${shq(nikiPath)})\n` +
     // The installer-facing launcher is intentionally preserved for invocation
-    // (#74411), but it may `exec python <install-dir>/hermes`, leaving neither
-    // launcher nor HERMES_HOME-derived entrypoint in argv. The ownership-scoped
+    // (#74411), but it may `exec python <install-dir>/niki`, leaving neither
+    // launcher nor NIKI_HOME-derived entrypoint in argv. The ownership-scoped
     // token path + random nonce + exact profile below are the alternative proof.
-    `hermes_home=os.path.expanduser(${shq(hermesHome)}) if ${shq(hermesHome)} else ""\n` +
+    `niki_home=os.path.expanduser(${shq(nikiHome)}) if ${shq(nikiHome)} else ""\n` +
     'expected_entries={expected}\n' +
-    'if hermes_home:\n' +
-    ' expected_entries.add(os.path.join(hermes_home,"hermes-agent","venv","bin","hermes"))\n' +
+    'if niki_home:\n' +
+    ' expected_entries.add(os.path.join(niki_home,"niki-agent","venv","bin","niki"))\n' +
     `expected_token=os.path.expanduser(${shq(ownershipId ? spawnTokenPath(ownershipId, spawnNonce) : '')})\n` +
     `expected_profile=${shq(profile)}\n` +
     `nonce=${shq(spawnNonce)}\n` +
@@ -738,8 +738,8 @@ async function cleanupStale(ssh, ownershipId, lock, pidAlive = true) {
       ssh,
       lock.pid,
       lock.spawnNonce,
-      lock.hermesPath,
-      lock.hermesHome,
+      lock.nikiPath,
+      lock.nikiHome,
       ownershipId,
       lock.profile
     ))
@@ -818,14 +818,14 @@ function buildOwnedStaleTerminationCommand(lock, ownershipId) {
   // expandRemotePath() output is already a shell-quoted fragment; embed it
   // raw so $HOME expands at assignment. Double-quoting stores the quote
   // characters in the variable and every identity match below REFUSEs.
-  const expectedPath = expandRemotePath(lock.hermesPath)
-  const expectedHome = lock.hermesHome ? expandRemotePath(lock.hermesHome) : "''"
+  const expectedPath = expandRemotePath(lock.nikiPath)
+  const expectedHome = lock.nikiHome ? expandRemotePath(lock.nikiHome) : "''"
   const expectedToken = expandRemotePath(spawnTokenPath(ownershipId, lock.spawnNonce))
   const nonce = shq(lock.spawnNonce)
   const profile = shq(lock.profile || '')
   const command = `$(ps -ww -o command= -p ${pid} 2>/dev/null || true)`
 
-  const executableMatch = lock.hermesHome
+  const executableMatch = lock.nikiHome
     ? `case "$cmd" in *"$path"*|*"$home"*) ;; *) printf REFUSED; exit 0;; esac; `
     : `case "$cmd" in *"$path"*) ;; *) printf REFUSED; exit 0;; esac; `
 
@@ -858,8 +858,8 @@ function lockMatchesManagedUpdateScope(lock, expected) {
     lock.startedAt === expected.startedAt &&
     lock.creationTime === expected.creationTime &&
     lock.profile === expected.profile &&
-    lock.hermesPath === expected.hermesPath &&
-    lock.hermesHome === expected.hermesHome
+    lock.nikiPath === expected.nikiPath &&
+    lock.nikiHome === expected.nikiHome
   )
 }
 
@@ -872,9 +872,9 @@ function buildOwnedTerminationCommand(lock, ownershipId) {
 import os,select,shlex,signal,subprocess,sys,time
 pid=${pid}
 expected_creation=${py(lock.creationTime)}
-expected_path=os.path.expanduser(${py(lock.hermesPath)})
-hermes_home=os.path.expanduser(${py(lock.hermesHome)})
-expected_entries={expected_path,os.path.join(hermes_home,"hermes-agent","venv","bin","hermes")}
+expected_path=os.path.expanduser(${py(lock.nikiPath)})
+niki_home=os.path.expanduser(${py(lock.nikiHome)})
+expected_entries={expected_path,os.path.join(niki_home,"niki-agent","venv","bin","niki")}
 expected_token=os.path.expanduser(${py(expectedToken)})
 expected_profile=${py(lock.profile)}
 nonce=${py(lock.spawnNonce)}
@@ -976,16 +976,16 @@ finally:
 
 // Run `command` under the updaters' marker lock: REMOTE_MARKER_GATE_PY holds
 // `<marker>.lock` (the sidecar Python update_lock and marker.sh flock), clears a
-// dead claim while `hermes`'s checkout lock is free, and refuses (exit 75) a
+// dead claim while `niki`'s checkout lock is free, and refuses (exit 75) a
 // live, unreadable, or checkout-held one, then keeps the
 // lock across the spawn and the initial lockfile publication. The descriptor
 // is close-on-exec and passed only to the outer shell; each detached child
 // closes it before execing Niki. markerPath is expandRemotePath() output — a
 // complete shell word ("$HOME"'/…' or '/abs/…') embedded raw so $HOME expands
-// remotely; a second shq() would hand python the quote characters. `hermes`
+// remotely; a second shq() would hand python the quote characters. `niki`
 // is the same kind of word (expandRemotePath of the located executable).
-function withRemoteUpdateMutex(command, markerPath, hermes) {
-  return `python3 -c ${shq(REMOTE_MARKER_GATE_PY)} ${markerPath} ${shq(command)} ${hermes}`
+function withRemoteUpdateMutex(command, markerPath, niki) {
+  return `python3 -c ${shq(REMOTE_MARKER_GATE_PY)} ${markerPath} ${shq(command)} ${niki}`
 }
 
 /**
@@ -1032,8 +1032,8 @@ async function terminateOwnedDashboardForUpdate(ssh, expected) {
       ssh,
       lock.pid,
       lock.spawnNonce,
-      lock.hermesPath,
-      lock.hermesHome,
+      lock.nikiPath,
+      lock.nikiHome,
       ownershipId,
       lock.profile
     ))
@@ -1059,8 +1059,8 @@ async function terminateOwnedDashboardForUpdate(ssh, expected) {
       ssh,
       lock.pid,
       lock.spawnNonce,
-      lock.hermesPath,
-      lock.hermesHome,
+      lock.nikiPath,
+      lock.nikiHome,
       ownershipId,
       lock.profile
     ))
@@ -1107,8 +1107,8 @@ async function terminateOwnedDashboardForUpdate(ssh, expected) {
 // Detach so the backend survives the SSH channel closing: setsid (Linux)
 // starts a new session; macOS has no setsid, so fall back to nohup (HUP-immune;
 // fd-detachment is already handled by </dev/null + redirect + &).
-function buildSpawnCommand(hermesPath, profile, opts: any = {}) {
-  const hermes = expandRemotePath(hermesPath)
+function buildSpawnCommand(nikiPath, profile, opts: any = {}) {
+  const niki = expandRemotePath(nikiPath)
   // The roster/SSH bridge hands us the profile verbatim: a non-slug value must never
   // cross into the remote spawn argv, where the CLI used to str()-coerce it into a
   // phantom profiles/0/ directory (#88842).
@@ -1128,7 +1128,7 @@ function buildSpawnCommand(hermesPath, profile, opts: any = {}) {
   const tokenArg = tokenFilePath ? ` --ssh-session-token-file ${expandRemotePath(tokenFilePath)}` : ''
   const ownerArg = opts.spawnNonce ? ` --ssh-owner-nonce ${validateSpawnNonce(opts.spawnNonce)}` : ''
   const subCmd = `serve --isolated --host 127.0.0.1 --port 0${tokenArg}${ownerArg}`
-  const marker = expandRemotePath(`${remoteInstallRoot(opts.hermesHome || '~/.hermes')}/.hermes-update-in-progress`)
+  const marker = expandRemotePath(`${remoteInstallRoot(opts.nikiHome || '~/.niki')}/.niki-update-in-progress`)
 
   // The marker judge, ownership reservation, process creation, and initial
   // lockfile publication are one remote command under the marker lock, so a
@@ -1141,12 +1141,12 @@ function buildSpawnCommand(hermesPath, profile, opts: any = {}) {
 
   const dashCmd =
     `ulimit -n ${REMOTE_NOFILE_SOFT_LIMIT} 2>/dev/null || true; ` +
-    `exec env HERMES_DESKTOP=1 ${hermes} ${profileArgs}${subCmd}`
+    `exec env NIKI_DESKTOP=1 ${niki} ${profileArgs}${subCmd}`
 
   const detachedShell: string = `eval "exec $1>&-"; ${dashCmd} </dev/null >> ${logPath} 2>&1 & echo $!`
   // The inner shell backgrounds Niki and reports its PID; backgrounding the
   // launcher too adds its unrelated PID to the value published in the lock.
-  const detachedSpawn: string = `child=$("$(command -v setsid || echo nohup)" sh -c ${shq(detachedShell)} hermes-update-child "$1")`
+  const detachedSpawn: string = `child=$("$(command -v setsid || echo nohup)" sh -c ${shq(detachedShell)} niki-update-child "$1")`
 
   if (!opts.ownershipId || !opts.lockMetadata) {
     return withRemoteUpdateMutex(
@@ -1154,7 +1154,7 @@ function buildSpawnCommand(hermesPath, profile, opts: any = {}) {
         `${detachedSpawn}; ` +
         `${markerAbsent} || { kill "$child" 2>/dev/null || true; wait "$child" 2>/dev/null || true; exit 75; }; echo "$child"`,
       marker,
-      hermes
+      niki
     )
   }
 
@@ -1196,18 +1196,18 @@ function buildSpawnCommand(hermesPath, profile, opts: any = {}) {
       `printf '%s' "$lock_json" > "$temporary_lock" && mv -f "$temporary_lock" "$lock" || { kill "$child" 2>/dev/null || true; wait "$child" 2>/dev/null || true; exit 76; }; ` +
       `echo "$child"`,
     marker,
-    hermes
+    niki
   )
 }
 
-async function remoteSupportsSshOwnership(ssh, hermesPath) {
-  const hermes = expandRemotePath(hermesPath)
+async function remoteSupportsSshOwnership(ssh, nikiPath) {
+  const niki = expandRemotePath(nikiPath)
 
   // The watchdog wraps the inner `serve --help` so the hung CLI is its direct
   // child and dies remotely instead of orphaning (#110478). The `$( (` space
   // is load-bearing: without it the shell parses `$((` as arithmetic expansion.
   const out = await ssh.exec(
-    `help="$( ${withRemoteTimeout(`${hermes} serve --help 2>&1`)} )"; ` +
+    `help="$( ${withRemoteTimeout(`${niki} serve --help 2>&1`)} )"; ` +
       `printf '%s' "$help" | grep -q ssh-session-token-file && ` +
       `printf '%s' "$help" | grep -q ssh-owner-nonce && echo YES || echo NO`
   )
@@ -1283,9 +1283,9 @@ async function scrapeReadyPort(ssh, logPath, { timeoutMs = resolveReadyTimeoutMs
 
 async function spawnRemoteDashboard(
   ssh,
-  { hermesPath, profile, token, ownershipId, hermesHome = '~/.hermes', assertInstallClear = async () => {} }
+  { nikiPath, profile, token, ownershipId, nikiHome = '~/.niki', assertInstallClear = async () => {} }
 ) {
-  if (!(await remoteSupportsSshOwnership(ssh, hermesPath))) {
+  if (!(await remoteSupportsSshOwnership(ssh, nikiPath))) {
     const err: any = new Error(
       'The remote Niki install does not support --ssh-session-token-file and --ssh-owner-nonce. ' +
         'Update Niki on the remote host to continue using Desktop SSH mode.'
@@ -1348,11 +1348,11 @@ async function spawnRemoteDashboard(
     // process creation. The caller's probe imports no changing checkout code.
     await assertInstallClear()
     out = await ssh.exec(
-      buildSpawnCommand(hermesPath, profile, {
+      buildSpawnCommand(nikiPath, profile, {
         spawnNonce,
         tokenFilePath,
         logPath,
-        hermesHome,
+        nikiHome,
         ownershipId,
         reservationNonce: spawnNonce,
         lockMetadata: {
@@ -1360,8 +1360,8 @@ async function spawnRemoteDashboard(
           spawnNonce,
           port: 0,
           profile,
-          hermesPath,
-          hermesHome,
+          nikiPath,
+          nikiHome,
           logPath,
           tokenFingerprint: fingerprintToken(token),
           protocolVersion: PROTOCOL_VERSION,
@@ -1448,7 +1448,7 @@ async function openForward(deps, remotePort, attempts = 3) {
 
 /**
  * Establish (or reuse) a remote dashboard and a tunnel to it. `deps` injects the
- * opened SshConnection, forward/pickLocalPort/waitForHermes, a token-gated
+ * opened SshConnection, forward/pickLocalPort/waitForNiki, a token-gated
  * probeReuseProof, and adoptServedToken. Returns the connection descriptor
  * { baseUrl, token, tokenFingerprint, remotePort, localPort, pid, reused, platform }.
  */
@@ -1493,11 +1493,11 @@ async function connect(deps) {
   const {
     ssh,
     profile: requestedProfile = '',
-    remoteHermesPath = '',
+    remoteNikiPath = '',
     ownershipId,
     forward,
     pickLocalPort,
-    waitForHermes,
+    waitForNiki,
     probeReuseProof,
     adoptServedToken,
     rememberLog = () => {},
@@ -1517,14 +1517,14 @@ async function connect(deps) {
   assertBootstrapNotSuperseded(signal)
   const platform = deps.platform ?? (await probeRemotePlatform(ssh))
   log(`remote platform ${platform.os}/${platform.arch}`)
-  const hermesHome = await probeRemoteHermesHome(ssh)
-  await assertRemoteInstallUpdateClear(ssh, hermesHome)
-  const hermesPath = await locateHermes(ssh, remoteHermesPath)
-  log(`located hermes at ${hermesPath}`)
-  const hermesVersion = await probeHermesVersion(ssh, hermesPath)
+  const nikiHome = await probeRemoteNikiHome(ssh)
+  await assertRemoteInstallUpdateClear(ssh, nikiHome)
+  const nikiPath = await locateNiki(ssh, remoteNikiPath)
+  log(`located niki at ${nikiPath}`)
+  const nikiVersion = await probeNikiVersion(ssh, nikiPath)
 
-  if (hermesVersion) {
-    log(`remote hermes version: ${hermesVersion}`)
+  if (nikiVersion) {
+    log(`remote niki version: ${nikiVersion}`)
   }
 
   const reuseToken = deps.reuseToken || ''
@@ -1559,8 +1559,8 @@ async function connect(deps) {
         ssh,
         lock.pid,
         lock.spawnNonce,
-        lock.hermesPath,
-        lock.hermesHome,
+        lock.nikiPath,
+        lock.nikiHome,
         ownershipId,
         lock.profile
       ))
@@ -1572,8 +1572,8 @@ async function connect(deps) {
       lock.profile === profile &&
       Boolean(reuseToken) &&
       lock.tokenFingerprint === fingerprintToken(reuseToken) &&
-      lock.hermesPath === hermesPath &&
-      lock.hermesHome === hermesHome
+      lock.nikiPath === nikiPath &&
+      lock.nikiHome === nikiHome
 
     if (reusable) {
       const creationTime = lock.creationTime || (await remoteProcessCreationTime(ssh, lock.pid))
@@ -1584,7 +1584,7 @@ async function connect(deps) {
       }
 
       assertBootstrapNotSuperseded(signal)
-      await assertRemoteInstallUpdateClear(ssh, hermesHome, hermesPath)
+      await assertRemoteInstallUpdateClear(ssh, nikiHome, nikiPath)
       const localPort = await openForward(deps, lock.port)
 
       try {
@@ -1603,7 +1603,7 @@ async function connect(deps) {
         if (reuseClassification === 'authenticated-stale') {
           assertBootstrapNotSuperseded(signal)
           await cancelForwardSafe(deps, localPort, lock.port)
-          await assertRemoteInstallUpdateClear(ssh, hermesHome, hermesPath)
+          await assertRemoteInstallUpdateClear(ssh, nikiHome, nikiPath)
           await cleanupStale(ssh, ownershipId, lock)
         } else if (reuseClassification === 'authenticated-ok') {
           const token = await adoptOwnedServedToken(
@@ -1627,12 +1627,12 @@ async function connect(deps) {
             pid: lock.pid,
             reused: true,
             platform,
-            hermesPath,
-            hermesVersion,
+            nikiPath,
+            nikiVersion,
             ownershipId,
             spawnNonce: lock.spawnNonce,
             logPath: lock.logPath,
-            hermesHome,
+            nikiHome,
             startedAt: lock.startedAt,
             creationTime: lock.creationTime || ''
           }
@@ -1647,22 +1647,22 @@ async function connect(deps) {
       }
     } else {
       assertBootstrapNotSuperseded(signal)
-      await assertRemoteInstallUpdateClear(ssh, hermesHome, hermesPath)
+      await assertRemoteInstallUpdateClear(ssh, nikiHome, nikiPath)
       await cleanupStale(ssh, ownershipId, lock, pidAlive)
     }
   }
 
   assertBootstrapNotSuperseded(signal)
-  await assertRemoteInstallUpdateClear(ssh, hermesHome, hermesPath)
+  await assertRemoteInstallUpdateClear(ssh, nikiHome, nikiPath)
   const spawnToken = mintToken()
 
   const spawned = await spawnRemoteDashboard(ssh, {
-    hermesPath,
+    nikiPath,
     profile,
     token: spawnToken,
     ownershipId,
-    hermesHome,
-    assertInstallClear: () => assertRemoteInstallUpdateClear(ssh, hermesHome, hermesPath)
+    nikiHome,
+    assertInstallClear: () => assertRemoteInstallUpdateClear(ssh, nikiHome, nikiPath)
   })
 
   if (spawned.existing) {
@@ -1694,8 +1694,8 @@ async function connect(deps) {
     pid,
     port: 0,
     profile,
-    hermesPath,
-    hermesHome,
+    nikiPath,
+    nikiHome,
     logPath,
     tokenFingerprint: fingerprintToken(spawnToken),
     protocolVersion: PROTOCOL_VERSION,
@@ -1728,7 +1728,7 @@ async function connect(deps) {
     localPort = await openForward(deps, remotePort)
     assertBootstrapNotSuperseded(signal)
     const baseUrl = `http://127.0.0.1:${localPort}`
-    await waitForHermes(baseUrl, spawnToken)
+    await waitForNiki(baseUrl, spawnToken)
     assertBootstrapNotSuperseded(signal)
 
     const token = await adoptOwnedServedToken(adoptServedToken, baseUrl, spawnToken, ssh, pid, 'remote dashboard')
@@ -1747,12 +1747,12 @@ async function connect(deps) {
       pid,
       reused: false,
       platform,
-      hermesPath,
-      hermesVersion,
+      nikiPath,
+      nikiVersion,
       ownershipId,
       spawnNonce,
       logPath,
-      hermesHome,
+      nikiHome,
       startedAt: ownedSpawn.startedAt,
       creationTime: ownedSpawn.creationTime || ''
     }
@@ -1799,8 +1799,8 @@ export {
   fingerprintToken,
   isForwardBindCollision,
   isLockfileSkew,
-  listRemoteHermesProfiles,
-  locateHermes,
+  listRemoteNikiProfiles,
+  locateNiki,
   LOCKFILE_SCHEMA_VERSION,
   lockfilePath,
   MIN_READY_TIMEOUT_MS,
@@ -1808,8 +1808,8 @@ export {
   openForward,
   ownershipDirectory,
   pidIsOurDashboard,
-  probeHermesVersion,
-  probeRemoteHermesHome,
+  probeNikiVersion,
+  probeRemoteNikiHome,
   probeRemotePlatform,
   PROTOCOL_VERSION,
   readLockfile,

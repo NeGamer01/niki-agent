@@ -25,7 +25,7 @@ class _Client:
 
 @pytest.mark.asyncio
 async def test_image_prompt_is_staged_in_profile_cache_and_submitted_as_attachment(tmp_path, monkeypatch):
-    monkeypatch.setenv('HERMES_HOME', str(tmp_path))
+    monkeypatch.setenv('NIKI_HOME', str(tmp_path))
     from gateway.platforms.base import get_image_cache_dir
     agent = GatewayACPAgent()
     agent._gateway = _Client(agent)
@@ -47,7 +47,7 @@ async def test_image_prompt_is_staged_in_profile_cache_and_submitted_as_attachme
 
 @pytest.mark.asyncio
 async def test_text_only_prompt_keeps_plain_submit(tmp_path, monkeypatch):
-    monkeypatch.setenv('HERMES_HOME', str(tmp_path))
+    monkeypatch.setenv('NIKI_HOME', str(tmp_path))
     agent = GatewayACPAgent()
     agent._gateway = _Client(agent)
     agent._snapshots['s'] = {}

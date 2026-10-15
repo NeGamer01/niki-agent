@@ -21,9 +21,9 @@ def test_staged_uv_prepares_pm_before_any_tool_download(tmp_path):
     assert uv, "this bootstrap contract requires real uv"
     repo = Path(__file__).resolve().parents[2]
     stage = tmp_path / "source"
-    for name in ("pm", "hermes_cli"):
+    for name in ("pm", "niki_cli"):
         shutil.copytree(repo / name, stage / name, ignore=shutil.ignore_patterns("__pycache__"))
-    shutil.copy2(repo / "hermes_constants.py", stage / "hermes_constants.py")
+    shutil.copy2(repo / "niki_constants.py", stage / "niki_constants.py")
     home = tmp_path / "home"
     store = home / "tools"
     target = current_target()
@@ -40,7 +40,7 @@ def test_staged_uv_prepares_pm_before_any_tool_download(tmp_path):
     }}))
     env = {key: value for key, value in os.environ.items()
            if not key.startswith(("PYTHON", "UV_"))}
-    env.update(HERMES_HOME=str(home), HERMES_RUNTIME_DIR=str(store))
+    env.update(NIKI_HOME=str(home), NIKI_RUNTIME_DIR=str(store))
     code = """
 import sys, subprocess
 from pathlib import Path
@@ -89,16 +89,16 @@ def test_pm_cli_verifies_tls_with_platform_trust(tmp_path, monkeypatch):
 
     home = tmp_path / "home"
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
-    monkeypatch.setenv("HERMES_HOME", str(home))
-    monkeypatch.setenv("HERMES_RUNTIME_DIR", str(home / "tools"))
+    monkeypatch.setenv("NIKI_HOME", str(home))
+    monkeypatch.setenv("NIKI_RUNTIME_DIR", str(home / "tools"))
     uv = shutil.which("uv")
     assert uv
     python = prepare_runtime(Path(uv), Path(sys.executable), tmp_path / "runtime")
     source = Path(__file__).resolve().parents[2]
     repo = tmp_path / "source"
-    for name in ("pm", "hermes_cli"):
+    for name in ("pm", "niki_cli"):
         shutil.copytree(source / name, repo / name, ignore=shutil.ignore_patterns("__pycache__"))
-    shutil.copy2(source / "hermes_constants.py", repo / "hermes_constants.py")
+    shutil.copy2(source / "niki_constants.py", repo / "niki_constants.py")
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     subject = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "PM test CA")])
     now = datetime.now(UTC)

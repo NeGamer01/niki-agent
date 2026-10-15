@@ -79,14 +79,14 @@ When you need to run commands, use the 'terminal' tool with your bash command.
 
 Complete the user's task step by step."""
 
-HERMES_SYSTEM_PREFIX = (
+NIKI_SYSTEM_PREFIX = (
     "You are a function calling AI model. You are provided with function signatures within <tools> </tools> XML tags. "
     "You may call one or more functions to assist with the user query. If available tools are not relevant in assisting "
     "with user query, just respond in natural conversational language. Don't make assumptions about what values to plug "
     "into functions. After calling & executing the functions, you will be provided with function results within "
     "<tool_response> </tool_response> XML tags. Here are the available tools:\n"
 )
-HERMES_SYSTEM_SUFFIX = (
+NIKI_SYSTEM_SUFFIX = (
     "For each function call return a JSON object, with the following pydantic model json schema for each:\n"
     "{'title': 'FunctionCall', 'type': 'object', 'properties': {'name': {'title': 'Name', 'type': 'string'}, "
     "'arguments': {'title': 'Arguments', 'type': 'object'}}, 'required': ['name', 'arguments']}\n"
@@ -214,9 +214,9 @@ class MiniSWERunner:
             j += 1
         return ("\n".join(tool_responses), j - 1) if tool_responses else (None, i)
 
-    def _convert_to_hermes_format(self, messages: list[dict[str, Any]], user_query: str) -> list[dict[str, Any]]:
+    def _convert_to_niki_format(self, messages: list[dict[str, Any]], user_query: str) -> list[dict[str, Any]]:
         """Convert the OpenAI-style message list to the Niki trajectory format used by batch_runner.py."""
-        system_msg = HERMES_SYSTEM_PREFIX + f"<tools>\n{self._format_tools_for_system_message()}\n</tools>\n" + HERMES_SYSTEM_SUFFIX
+        system_msg = NIKI_SYSTEM_PREFIX + f"<tools>\n{self._format_tools_for_system_message()}\n</tools>\n" + NIKI_SYSTEM_SUFFIX
         trajectory = [{"from": "system", "value": system_msg}, {"from": "human", "value": user_query}]
         i = 1  # first user message already added
         while i < len(messages):
@@ -302,7 +302,7 @@ class MiniSWERunner:
                 print(f"⚠️  Reached max iterations ({self.max_iterations})")
         finally:
             self._cleanup_env()
-        return {"conversations": self._convert_to_hermes_format(messages, task), "completed": completed, "api_calls": api_call_count,
+        return {"conversations": self._convert_to_niki_format(messages, task), "completed": completed, "api_calls": api_call_count,
                 "metadata": {"model": self.model, "env_type": self.env_type, "timestamp": datetime.now().isoformat()}}
 
     def run_batch(self, prompts: list[str], output_file: str) -> list[dict[str, Any]]:

@@ -7,7 +7,7 @@ next prompt, which the session's FIFO runs after any turn in flight.
 """
 from __future__ import annotations
 
-from hermes_cli.gateway_client import GatewayClientError, GatewayRPCError
+from niki_cli.gateway_client import GatewayClientError, GatewayRPCError
 
 # Reports the owner answers for a local session (``gateway/session_commands.py::_READ_COMMANDS``).
 _READS = frozenset({'context', 'usage', 'status', 'version'})
@@ -69,7 +69,7 @@ async def _steer(agent, session_id, text):
 
 
 async def _mutate(agent, client, session_id, command, arg):
-    from hermes_cli.gateway_mutations import slash_mutation
+    from niki_cli.gateway_mutations import slash_mutation
     operation, payload = ('reset', {}) if command == 'new' else slash_mutation('/' + command, arg)
     confirm = agent._model_confirmer(session_id) if operation == 'model' else None
     result = await agent._mutations.apply(client, session_id, operation, payload, confirm=confirm)

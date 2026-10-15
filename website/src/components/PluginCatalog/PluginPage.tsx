@@ -252,7 +252,7 @@ export default function PluginPage({ data }: { data: PluginPageData }) {
                 {plugin.version && <Fact label="Version"><code>{plugin.version}</code></Fact>}
                 {plugin.subdir && <Fact label="Path in repo"><code>{plugin.subdir}</code></Fact>}
                 <Fact label="Requires">
-                  <code>hermes {plugin.requiresHermes || "(any version)"}</code>
+                  <code>niki {plugin.requiresNiki || "(any version)"}</code>
                 </Fact>
                 <Fact label="Platforms">
                   {plugin.platforms?.length ? plugin.platforms.map(platformLabel).join(", ") : "Linux, macOS, Windows"}

@@ -18,11 +18,11 @@ async def probe():
     from gateway.platforms.api_server import APIServerAdapter
     from gateway.session_context import get_session_env
     from gateway.wake import persist_delegation_delivery
-    from hermes_state import SessionDB
+    from niki_state import SessionDB
     from tools.delegate_tool_dispatch import _resolve_async_wake_sid
     import gateway.session_context as sc
 
-    db = SessionDB(db_path=Path(os.environ["HERMES_HOME"]) / "state.db")
+    db = SessionDB(db_path=Path(os.environ["NIKI_HOME"]) / "state.db")
     db.create_session("parent", source="api_server")
     db.append_message("parent", "user", "request")
     db.append_message("parent", "assistant", "acknowledged")
@@ -37,7 +37,7 @@ async def probe():
         agent.session_id = kwargs.get("session_id")
         agent.session_prompt_tokens = agent.session_completion_tokens = agent.session_total_tokens = 0
         def run(**turn):
-            sid = get_session_env("HERMES_SESSION_CHAT_ID", "")
+            sid = get_session_env("NIKI_SESSION_CHAT_ID", "")
             args = [sid]
             if len(inspect.signature(_resolve_async_wake_sid).parameters) > 1:
                 args.append(sc.session_history_delivery_supported())

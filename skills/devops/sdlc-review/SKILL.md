@@ -6,7 +6,7 @@ author: Jakub Wolniewicz (@frizikk) + Niki Agent
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  niki:
     tags: [kanban, review, quality, verification]
     category: devops
     requires_toolsets: [kanban]

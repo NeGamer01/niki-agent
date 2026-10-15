@@ -43,11 +43,11 @@ def _process_claude_code_refresh_worker(
     result_queue,
 ) -> None:
     """Refresh one shared Claude Code credential from an independent process."""
-    os.environ["HERMES_HOME"] = profile_home
+    os.environ["NIKI_HOME"] = profile_home
 
     from agent import anthropic_credentials as anthropic_mod
     from agent import credential_pool as credential_pool_mod
-    from hermes_cli import auth as auth_mod
+    from niki_cli import auth as auth_mod
 
     shared_path = Path(shared_credentials_path)
     server_path = Path(server_state_path)
@@ -168,17 +168,17 @@ class _SingleUseTokenServer:
 
 
 @pytest.fixture
-def hermes_home(tmp_path, monkeypatch):
-    """Real, throwaway HERMES_HOME so _auth_store_lock and
+def niki_home(tmp_path, monkeypatch):
+    """Real, throwaway NIKI_HOME so _auth_store_lock and
     write_credential_pool/read_credential_pool exercise the genuine
     file-lock + on-disk persistence path, not a mock.
     """
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("NIKI_HOME", str(tmp_path))
     return tmp_path
 
 
 def test_high_concurrency_anthropic_refresh_no_lost_updates_no_deadlock(
-    hermes_home, monkeypatch
+    niki_home, monkeypatch
 ):
     """CONCURRENCY 'Niki processes' race the same stale refresh token
     against the real cross-process lock + real on-disk pool persistence.
@@ -196,7 +196,7 @@ def test_high_concurrency_anthropic_refresh_no_lost_updates_no_deadlock(
     )
 
     shared_stale_entry = _entry(
-        id="pool-entry", refresh_token="stale-rt", source="manual:hermes_pkce"
+        id="pool-entry", refresh_token="stale-rt", source="manual:niki_pkce"
     )
     pools = [
         CredentialPool("anthropic", [dc_replace(shared_stale_entry)])
@@ -252,7 +252,7 @@ def test_high_concurrency_anthropic_refresh_no_lost_updates_no_deadlock(
 @pytest.mark.live_system_guard_bypass
 @pytest.mark.platforms("windows")
 def test_distinct_profiles_share_one_claude_refresh_without_duplicate_post(
-    hermes_home,
+    niki_home,
 ):
     """Independent profiles must serialize a shared Claude Code refresh.
 
@@ -260,7 +260,7 @@ def test_distinct_profiles_share_one_claude_refresh_without_duplicate_post(
     dedicated lock keyed to the shared Claude credentials file can prevent the
     second process from POSTing the already-spent refresh token.
     """
-    shared_credentials_path = hermes_home / "shared-claude-credentials.json"
+    shared_credentials_path = niki_home / "shared-claude-credentials.json"
     shared_credentials_path.write_text(
         json.dumps({
             "claudeAiOauth": {
@@ -271,13 +271,13 @@ def test_distinct_profiles_share_one_claude_refresh_without_duplicate_post(
         }),
         encoding="utf-8",
     )
-    server_state_path = hermes_home / "fake-token-server.json"
+    server_state_path = niki_home / "fake-token-server.json"
     server_state_path.write_text(
         json.dumps({"calls": [], "spent": [], "rotation": 0}),
         encoding="utf-8",
     )
 
-    profile_homes = [hermes_home / "profile-a", hermes_home / "profile-b"]
+    profile_homes = [niki_home / "profile-a", niki_home / "profile-b"]
     for profile_home in profile_homes:
         profile_home.mkdir(parents=True)
         (profile_home / "auth.json").write_text(

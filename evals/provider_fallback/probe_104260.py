@@ -11,12 +11,12 @@ sandbox = tempfile.TemporaryDirectory(prefix="hermes-104260-")
 os.environ.clear()
 os.environ.update(
     HOME=sandbox.name,
-    HERMES_HOME=sandbox.name + "/hermes",
+    NIKI_HOME=sandbox.name + "/niki",
     PATH="/usr/bin:/bin",
     PYTHONDONTWRITEBYTECODE="1",
-    HERMES_DISABLE_MODEL_METADATA_FETCH="1",
+    NIKI_DISABLE_MODEL_METADATA_FETCH="1",
 )
-Path(os.environ["HERMES_HOME"]).mkdir()
+Path(os.environ["NIKI_HOME"]).mkdir()
 os.chdir(sandbox.name)
 sys.path.insert(0, REPO)
 import socket
@@ -127,7 +127,7 @@ config = {
     },
 }
 # JSON is valid YAML; only the temporary Niki home is written.
-Path(os.environ["HERMES_HOME"], "config.yaml").write_text(
+Path(os.environ["NIKI_HOME"], "config.yaml").write_text(
     json.dumps(config), encoding="utf-8"
 )
 from agent import auxiliary_client as aux

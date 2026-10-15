@@ -16,7 +16,7 @@ import time
 
 from agent.managed_worker import accept_result, encode_frame, read_frame
 from gateway.session_worker_reservation import reserve_admission_worker
-from hermes_state_runtime import RuntimeStoreError
+from niki_state_runtime import RuntimeStoreError
 
 # The interpreter only imports psutil before it introduces itself; a child silent this long
 # is wedged (loader/stdio stall), not slow.
@@ -389,7 +389,7 @@ def _prompt_frame(authority, ref, row, worker, frame):
 
 
 def _worker_env(authority):
-    """Child env for the OWNING profile under multiplex: its HERMES_HOME plus its ``.env``
+    """Child env for the OWNING profile under multiplex: its NIKI_HOME plus its ``.env``
     secrets over a scrubbed base, never the launch profile's process environment (the same
     rule MCP stdio children and shell hooks follow) — except for the launch profile's own
     worker, whose scope legitimately includes its frozen launch env. Single-profile gateways
@@ -410,7 +410,7 @@ def _worker_env(authority):
     # The scrub removes credentials, not settings: the launch profile's TERMINAL_* policy and
     # its ``.env`` settings would otherwise reach the secondary's worker (cron/kanban rule).
     # Strip the RAW environ before the constructor injects this turn's own session/bridge context:
-    # a launch ``.env`` name (HERMES_SESSION_ID...) must not erase a value derived for this turn.
+    # a launch ``.env`` name (NIKI_SESSION_ID...) must not erase a value derived for this turn.
     env = build_subprocess_env(base=strip_launch_profile_env(os.environ.copy(), home), scrub_secrets=True)
     secrets = build_profile_secret_scope(home)
     if routed:
@@ -420,8 +420,8 @@ def _worker_env(authority):
     else:
         secrets = {**_launch_env_only_credentials(home, env), **secrets}
     env.update({k: v for k, v in secrets.items() if v is not None})
-    env['HERMES_HOME'] = str(home)
-    from hermes_constants import apply_subprocess_home_env
+    env['NIKI_HOME'] = str(home)
+    from niki_constants import apply_subprocess_home_env
     apply_subprocess_home_env(env)
     return env
 
@@ -435,10 +435,10 @@ def _launch_env_only_credentials(home, env):
     (``AUXILIARY_*_API_KEY``, relay auth) never reach a child. Only the launch home's worker calls
     this; a routed home's worker sees its own files only."""
     from tools.environments.local import _scrub_credentials
-    from tools.environments.local_env_policy import _is_hermes_internal_secret
+    from tools.environments.local_env_policy import _is_niki_internal_secret
     from tui_gateway.launch_profile_policy import launch_secret_scope
     missing = {k: v for k, v in launch_secret_scope(home).items()
-               if k not in env and not _is_hermes_internal_secret(k)}
+               if k not in env and not _is_niki_internal_secret(k)}
     plain = _scrub_credentials(dict(missing), inherit_credentials=False)
     return {k: v for k, v in missing.items() if k not in plain}
 

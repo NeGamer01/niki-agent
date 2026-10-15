@@ -23,9 +23,9 @@ def _by_label(sources):
 
 
 def test_manifest_matches_what_the_prompt_actually_loads(project, tmp_path_factory):
-    """Every context type present at once; the ladder picks .hermes.md, the chain lists both AGENTS files,
+    """Every context type present at once; the ladder picks .niki.md, the chain lists both AGENTS files,
     CLAUDE.md/.cursorrules/.cursor/rules/*.mdc are shadowed, an empty file never wins, SOUL.md rides along."""
-    (project / ".hermes.md").write_text("hermes rules")
+    (project / ".niki.md").write_text("niki rules")
     (project / "AGENTS.md").write_text("root agents rules")
     sub = project / "pkg"
     sub.mkdir()
@@ -43,7 +43,7 @@ def test_manifest_matches_what_the_prompt_actually_loads(project, tmp_path_facto
 
     statuses = {s["label"]: s["status"] for s in sources}
     assert statuses == {
-        ".hermes.md": "loaded", "../AGENTS.md": "shadowed", "AGENTS.override.md": "empty", "AGENTS.md": "shadowed",
+        ".niki.md": "loaded", "../AGENTS.md": "shadowed", "AGENTS.override.md": "empty", "AGENTS.md": "shadowed",
         "CLAUDE.md": "shadowed", ".cursorrules": "shadowed", ".cursor/rules/a.mdc": "shadowed", "SOUL.md": "loaded",
     }
     for src in sources:
@@ -51,8 +51,8 @@ def test_manifest_matches_what_the_prompt_actually_loads(project, tmp_path_facto
         assert src["loaded"] == (bool(body) and body in prompt), src
     assert all(s["est_tokens"] > 0 for s in sources if s["chars"])
 
-    # Same walk, other winner: drop .hermes.md and the whole AGENTS chain loads while the rest stays shadowed.
-    (project / ".hermes.md").unlink()
+    # Same walk, other winner: drop .niki.md and the whole AGENTS chain loads while the rest stays shadowed.
+    (project / ".niki.md").unlink()
     statuses = {s["label"]: s["status"] for s in list_context_file_sources(cwd=str(sub), home_override=home)}
     prompt = build_context_files_prompt(cwd=str(sub), home_override=home)
     assert statuses["../AGENTS.md"] == statuses["AGENTS.md"] == "loaded" and "root agents rules" in prompt

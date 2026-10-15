@@ -42,8 +42,8 @@ SETUP_PID=$!
 log "launched $APP_BIN (pid $SETUP_PID)"
 cleanup() {
   kill "$SETUP_PID" 2>/dev/null || true
-  if [ -d "$HOME/.hermes/logs" ]; then
-    cp -R "$HOME/.hermes/logs" "$PROOF_DIR/bootstrap-logs"
+  if [ -d "$HOME/.niki/logs" ]; then
+    cp -R "$HOME/.niki/logs" "$PROOF_DIR/bootstrap-logs"
   fi
 }
 trap cleanup EXIT
@@ -98,7 +98,7 @@ click_install() {
 }
 
 # Use the same source-launcher selection as the later read-only checkpoint:
-# PM installs publish .hermes/bin/hermes; older releases use venv/bin/hermes.
+# PM installs publish .niki/bin/niki; older releases use venv/bin/niki.
 # The first packaged app can land before the products stage finishes (and can
 # be rebuilt again). Wait for native bootstrap completion, not install.sh's
 # marker (historical releases predate it, and it precedes the native handoff).
@@ -115,7 +115,7 @@ installed_app() {
   done
   return 1
 }
-BOOTSTRAP_LOG="$HOME/.hermes/logs/bootstrap-installer.log"
+BOOTSTRAP_LOG="$HOME/.niki/logs/bootstrap-installer.log"
 bootstrap_completed() {
   [ -f "$BOOTSTRAP_LOG" ] || return 1
   local line
@@ -127,7 +127,7 @@ bootstrap_completed() {
 install_complete() {
   bootstrap_completed \
     && [ -d "$INSTALL_DIR/.git" ] \
-    && source_hermes "$INSTALL_DIR" >/dev/null 2>&1 \
+    && source_niki "$INSTALL_DIR" >/dev/null 2>&1 \
     && installed_app
 }
 # The bootstrap parks on an error screen instead of exiting when a stage

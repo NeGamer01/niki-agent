@@ -14,7 +14,7 @@ Pixel art w/ era palettes (NES, Game Boy, PICO-8).
 
 | | |
 |---|---|
-| Source | Optional — install with `hermes skills install official/creative/pixel-art` |
+| Source | Optional — install with `niki skills install official/creative/pixel-art` |
 | Path | `optional-skills/creative/pixel-art` |
 | Version | `2.0.0` |
 | Author | dodo-reach |
@@ -152,12 +152,12 @@ pixel_art("in.png", "out.png", preset="snes", palette="PICO_8", block=6)
 ```python
 import sys
 import os
-sys.path.insert(0, os.path.expanduser("~/.hermes/skills/creative/pixel-art/scripts"))
+sys.path.insert(0, os.path.expanduser("~/.niki/skills/creative/pixel-art/scripts"))
 from pixel_art import pixel_art
 from pixel_art_video import pixel_art_video
 
 # 1. Convert to pixel art
-out = os.path.expanduser("~/.hermes/cache/scratch")
+out = os.path.expanduser("~/.niki/cache/scratch")
 pixel_art("/path/to/photo.jpg", f"{out}/pixel.png", preset="nes")
 
 # 2. Animate (optional)
@@ -175,7 +175,7 @@ pixel_art_video(
 ### CLI
 
 ```bash
-cd ~/.hermes/skills/creative/pixel-art/scripts
+cd ~/.niki/skills/creative/pixel-art/scripts
 
 python pixel_art.py in.jpg out.png --preset gameboy
 python pixel_art.py in.jpg out.png --preset snes --palette PICO_8 --block 6

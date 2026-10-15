@@ -16,7 +16,7 @@ version: 1.0.0
 author: Niki Agent
 license: MIT
 metadata:
-  hermes:
+  niki:
     tags: [arxiv, research]
     related_skills: []
 ---

@@ -92,7 +92,7 @@ def voice_live_turn_note(context: str = "") -> str:
 
 def _voice_section() -> dict[str, Any]:
     try:
-        from hermes_cli.config import load_config
+        from niki_cli.config import load_config
         voice = load_config().get("voice")
     except Exception:
         return {}
@@ -115,7 +115,7 @@ def _resolve_credentials(live: dict[str, Any]) -> tuple[str, str]:
     """``(api_key, base_url)`` — ``voice.gpt_live.api_key`` first, else the same OpenAI audio
     chain the STT/TTS providers use (``VOICE_TOOLS_OPENAI_KEY`` → ``OPENAI_API_KEY`` → pool).
 
-    The Nous-managed audio proxy does not carry ``/live/sessions``; this mode is direct-key only.
+    The Niki-managed audio proxy does not carry ``/live/sessions``; this mode is direct-key only.
     """
     from tools.tool_backend_helpers import resolve_openai_audio_api_key
     api_key = str(live.get("api_key") or "").strip() or resolve_openai_audio_api_key()

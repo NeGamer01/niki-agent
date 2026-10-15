@@ -2,11 +2,11 @@
 name: comps-analysis
 description: Build comparable-company valuation workbooks in Excel.
 version: 1.0.0
-author: Anthropic (adapted by Nous Research)
+author: Anthropic (adapted by NeGamer01)
 license: Apache-2.0
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  niki:
     tags: [finance, valuation, comps, excel, openpyxl, modeling, investment-banking]
     related_skills: [excel-author, pptx-author, dcf-model, lbo-model]
 ---

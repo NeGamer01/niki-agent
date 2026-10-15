@@ -1,10 +1,10 @@
 name: cloudflare-workers-ai-provider
-repo: https://github.com/AhmetArif0/hermes-cloudflare-workers-ai-provider
+repo: https://github.com/AhmetArif0/niki-cloudflare-workers-ai-provider
 sha: f6821d058d504ee6324b0d3217564b93124c09f9
 subdir: cloudflare-workers-ai-provider
 description: >-
   Cloudflare Workers AI as a Niki model provider (`--provider workers-ai`, or Cloudflare Workers AI
-  in `hermes model`, which asks for the token and the account's base URL): the 16 Workers AI models
+  in `niki model`, which asks for the token and the account's base URL): the 16 Workers AI models
   with function calling and 64K+ context, Cloudflare's context windows (a custom endpoint lists no
   models and assumes 256K for the 128K gpt-oss), reasoning effort in the form each model accepts, and
   a clear message when a free-plan account picks a paid-plan model. Not affiliated with Cloudflare.
@@ -16,10 +16,10 @@ description: >-
 maintainer: AhmetArif0
 tier: community
 category: models
-requires_hermes: ">=0.21.5"
-docs_url: https://github.com/AhmetArif0/hermes-cloudflare-workers-ai-provider
+requires_niki: ">=0.21.5"
+docs_url: https://github.com/AhmetArif0/niki-cloudflare-workers-ai-provider
 version: "1.0.0"
-image: https://raw.githubusercontent.com/AhmetArif0/hermes-cloudflare-workers-ai-provider/f6821d058d504ee6324b0d3217564b93124c09f9/docs/card.png
+image: https://raw.githubusercontent.com/AhmetArif0/niki-cloudflare-workers-ai-provider/f6821d058d504ee6324b0d3217564b93124c09f9/docs/card.png
 platforms: []
 capabilities:
   provides_tools: []

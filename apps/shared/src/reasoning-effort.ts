@@ -1,5 +1,5 @@
 /** Niki' reasoning levels, in ascending order — mirrors the backend's
- *  VALID_REASONING_EFFORTS (hermes_constants.py). `none` is not a level: it's
+ *  VALID_REASONING_EFFORTS (niki_constants.py). `none` is not a level: it's
  *  thinking disabled. */
 export const REASONING_EFFORTS = ['minimal', 'low', 'medium', 'high', 'xhigh', 'max', 'ultra'] as const
 

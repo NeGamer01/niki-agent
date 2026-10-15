@@ -5,7 +5,7 @@ description: "PM tool pins, Python environments, optional dependencies, and inst
 
 # Package management
 
-`hermes pm` manages Niki tool binaries and Python dependency environments.
+`niki pm` manages Niki tool binaries and Python dependency environments.
 It is not the application updater. Use the installation's
 [update method](../getting-started/updating.md) to update Niki itself.
 
@@ -23,7 +23,7 @@ Each file has a separate role:
 | Payload `manifest.json` | Relative payload layout and the completed launch contract from the bundle builder. |
 | `install-stamp.json` | Build provenance and the declared distribution/update owner. |
 
-A lockfile entry does not prove that a package is installed. `hermes pm doctor`
+A lockfile entry does not prove that a package is installed. `niki pm doctor`
 compares the installed state with the lock and checks the realized bytes.
 Startup uses a cheaper check. It does not query upstream versions on every launch.
 For self-managed source installs, the pre-import launcher compares PM's recorded
@@ -49,7 +49,7 @@ The original command keeps the update lock while waiting; a missing or failed
 completion result cannot report success. Correlated PM failures remain in the
 update receipt, and interrupted restarts retain their fleet obligation.
 Dependency or build failures never retry through pip or a source re-download.
-Use `hermes pm repair` for damaged dependency files. See the developer
+Use `niki pm repair` for damaged dependency files. See the developer
 [source completion ownership note](../developer-guide/source-update-completion.md).
 
 ## Source installs and packaged builds
@@ -82,7 +82,7 @@ virtual environments. The prepared result binds the source, target and paths;
 missing or changed inputs fail consumption rather than trigger a download.
 Reprepare after a move or input change. Signing and notarization can still use
 the network. See the
-[desktop build guide](https://github.com/NousResearch/hermes-agent/blob/main/apps/desktop/BUILDING.md)
+[desktop build guide](https://github.com/NeGamer01/niki-agent/blob/main/apps/desktop/BUILDING.md)
 for native compiler requirements and release verification limits.
 
 A packaged application's base payload is immutable. Niki runs its backend
@@ -102,8 +102,8 @@ provides its runtime through derivations. See the
 
 ## Writable state
 
-The platform default data root is `~/.hermes` on POSIX and
-`%LOCALAPPDATA%\hermes` on Windows. `HERMES_HOME` and profiles can change
+The platform default data root is `~/.niki` on POSIX and
+`%LOCALAPPDATA%\niki` on Windows. `NIKI_HOME` and profiles can change
 which data root a process uses.
 
 | State | Default location |
@@ -174,7 +174,7 @@ sidecar remains separately owned. See the
 dependencies remain usable when this setting is false.
 
 ```bash
-hermes config set security.allow_lazy_installs false
+niki config set security.allow_lazy_installs false
 ```
 
 Explicit install commands are distinct from on-demand installation. However,
@@ -192,7 +192,7 @@ requires trust in that plugin and its dependencies.
 PM owns the pinned `bws` and `iron-proxy` packages in
 `pm/security_packages.py`. Their versions, artifact URLs, and SHA-256 hashes
 come from `pm/lock.json`. Downloads and publication use the shared tool store,
-not private installers under `$HERMES_HOME/bin`.
+not private installers under `$NIKI_HOME/bin`.
 
 For iron-proxy, PM also acquires pinned signature files and checks that the
 release checksums cover the pinned archive. Package staging calls the
@@ -217,7 +217,7 @@ Use an ordinary terminal outside the packaged Niki app. Leave any existing
 Python virtual environment first. On Windows, use native PowerShell with Git.
 On ARM64, PM prepares Visual Studio C++ tools, Clang, native Rust, and static
 OpenSSL development libraries before every dependency build from a checkout:
-setup, `activate.ps1`, `install.ps1`, `hermes update`, and repair alike. It
+setup, `activate.ps1`, `install.ps1`, `niki update`, and repair alike. It
 reuses existing installations and installs missing prerequisites. Missing
 Visual Studio components need administrator rights: an interactive install
 asks through a UAC prompt, while CI, ssh and scheduled runs need an
@@ -238,8 +238,8 @@ interpreter such as Nix Python. No `CC` default is needed for the current pin.
 Clone the repository and select your branch before preparing dependencies:
 
 ```bash
-git clone https://github.com/NousResearch/hermes-agent.git
-cd hermes-agent
+git clone https://github.com/NeGamer01/niki-agent.git
+cd niki-agent
 ```
 
 For isolated development, select a separate data home before the first PM
@@ -248,20 +248,20 @@ command. Keep the same values when returning to this checkout.
 Bash, from the repository root:
 
 ```bash
-export HERMES_HOME="$HOME/hermes-dev-data"
-export HERMES_RUNTIME_DIR="$HERMES_HOME/tools"
+export NIKI_HOME="$HOME/niki-dev-data"
+export NIKI_RUNTIME_DIR="$NIKI_HOME/tools"
 source ./activate
 ```
 
 PowerShell, from the repository root:
 
 ```powershell
-$env:HERMES_HOME = Join-Path $HOME 'hermes-dev-data'
-$env:HERMES_RUNTIME_DIR = Join-Path $env:HERMES_HOME 'tools'
+$env:NIKI_HOME = Join-Path $HOME 'niki-dev-data'
+$env:NIKI_RUNTIME_DIR = Join-Path $env:NIKI_HOME 'tools'
 . .\activate.ps1
 ```
 
-`HERMES_RUNTIME_DIR` in these examples is a process-local development override.
+`NIKI_RUNTIME_DIR` in these examples is a process-local development override.
 It makes the bootstrap and PM use the same writable store. Do not persist a
 path into an installed MSIX or macOS bundle. Activation runs the setup script's
 runtime-only path to provision tools and sync the `all` Python extra. It does
@@ -298,7 +298,7 @@ against the managed Python on the next invocation; subsequent invocations reuse 
 `pm.venv_is_current()` checks through an existing PM worker, even when lazy
 installs are disabled. It never bootstraps PM for a probe. If the manager
 runtime is unavailable, it returns false without downloading tools or
-dependencies. Run an explicit `hermes pm install` to prepare PM first.
+dependencies. Run an explicit `niki pm install` to prepare PM first.
 
 Native bundles and Docker images stage this same PM lock through the shared
 runtime builder. Termux supplies its verified offline wheelhouse to that
@@ -325,13 +325,13 @@ assuming that a Zsh startup file has Bash semantics; fish has its own
 Each activation invokes PM's install/sync path and trusts the recorded tool
 digest instead of re-hashing every entry. PM still installs a missing tool and
 rebuilds a stale dependency generation; a deliberate install keeps the byte
-check. Run `python -m pm.cli install` or `hermes update` to re-check realized
+check. Run `python -m pm.cli install` or `niki update` to re-check realized
 bytes. A setup failure returns an error before changing the activated shell
 environment, including when re-sourcing an already active environment.
 
 After sync, activation prepends installed PM tools to `PATH` and sets
 `PYTHONPATH` to this checkout and its selected dependency tree. It also
-defines `hermes` as a shell function for this worktree. The function runs
+defines `niki` as a shell function for this worktree. The function runs
 this checkout's CLI and hides the installed command, including an MSIX alias.
 It runs only while the shell is inside this worktree and refuses outside it,
 so a sibling worktree does not inherit the command. The prompt gains a prefix
@@ -343,14 +343,14 @@ and removes the function and the prompt prefix.
 It does not uninstall packages or stop processes that you started.
 
 To run one command or script in that environment without activating a shell,
-prefix it with `scripts/run-in-hermes-env`. It applies the same environment to
+prefix it with `scripts/run-in-niki-env`. It applies the same environment to
 that command only, syncing first when there is none to inherit or the inherited
 one is stale, and leaves your shell untouched. `scripts/run_tests.sh` re-runs
 itself this way, and the repo's Python scripts hand themselves to it from their
 shebang.
 
 ```bash
-scripts/run-in-hermes-env python scripts/release.py --help
+scripts/run-in-niki-env python scripts/release.py --help
 ```
 
 Verify the interpreter and source before doing work:
@@ -360,7 +360,7 @@ python -c "import sys, pm; print(sys.executable); print(pm.__file__)"
 python -c "import httpx; print(httpx.__file__)"
 node --version
 npm --version
-hermes --version
+niki --version
 ```
 
 `python` must resolve to the PM store interpreter. `pm.__file__` must point
@@ -370,14 +370,14 @@ attention, even if `source ./activate` itself returned successfully.
 
 ### Work on this source tree
 
-`hermes` is this worktree's CLI while the shell is inside it. Outside the
+`niki` is this worktree's CLI while the shell is inside it. Outside the
 worktree the function refuses, so it cannot run another checkout's tree or
 fall through to an installed command:
 
 ```bash
-hermes setup
-hermes
-hermes --tui
+niki setup
+niki
+niki --tui
 python -m pm.cli status
 ```
 
@@ -396,7 +396,7 @@ npm run dev --workspace apps/desktop
 The website is separate: `npm ci --prefix website`, then
 `npm run build:fast --prefix website`. PM activation supplies tools, not these
 `node_modules` directories or built assets. Native desktop builds have additional
-requirements in the [desktop build guide](https://github.com/NousResearch/hermes-agent/blob/main/apps/desktop/BUILDING.md).
+requirements in the [desktop build guide](https://github.com/NeGamer01/niki-agent/blob/main/apps/desktop/BUILDING.md).
 
 ### Refresh dependencies without changing branches
 
@@ -410,7 +410,7 @@ python -m pm.cli install
 
 After a standalone sync, reactivate the environment. Restart affected processes.
 Use `python -m pm.cli doctor` for tool diagnostics and `python -m pm.cli status`
-for the latest sync receipt. Do not run `hermes update` just to refresh a
+for the latest sync receipt. Do not run `niki update` just to refresh a
 feature branch: it is an application update and can change the source branch.
 
 Managed tool names and Python extra names are different interfaces:
@@ -429,24 +429,24 @@ before starting another Python process.
 ### Syncing after you edit pyproject.toml
 
 1. Edit `pyproject.toml`. Pin every dependency as the
-   [Dependency Pinning Policy](https://github.com/NousResearch/hermes-agent/blob/main/pm/AGENTS.md#dependency-pinning-policy)
+   [Dependency Pinning Policy](https://github.com/NeGamer01/niki-agent/blob/main/pm/AGENTS.md#dependency-pinning-policy)
    requires. Express platform limits with PEP 508 markers, or gate a whole
-   extra in `[tool.hermes.extras-platforms]`.
+   extra in `[tool.niki.extras-platforms]`.
 2. Relock:
 
    ```bash
-   hermes pm lock
+   niki pm lock
    ```
 
    This re-resolves `uv.lock` from `pyproject.toml` with the same settings CI
    checks, including the 3-day `exclude-newer` release-age check. It changes no
    environment. When the lock is already current, it says so and writes
-   nothing. (`hermes pm lock --bump NAME VERSION` is a different operation: it
+   nothing. (`niki pm lock --bump NAME VERSION` is a different operation: it
    pins a managed tool in `pm/lock.json` and does not touch `uv.lock`.)
 3. Source the activation script again (`source ./activate`, or
    `. .\activate.ps1` in PowerShell) to sync the application venv and the test
    interpreter to the new lock. Activation covers `[all]`. If you added an
-   opt-in extra outside `[all]`, `hermes pm lock` prints the command that also
+   opt-in extra outside `[all]`, `niki pm lock` prints the command that also
    puts it in the test interpreter, for example
    `source ./activate --test-extras all,NAME`.
 4. Commit `pyproject.toml` and `uv.lock` together.
@@ -458,7 +458,7 @@ selected generation.
 ### Test and editor environments
 
 `source ./activate` (or `. .\activate.ps1` in PowerShell) and both direct
-`setup-hermes` scripts prepare an isolated test interpreter from the locked
+`setup-niki` scripts prepare an isolated test interpreter from the locked
 `dev` and `test` dependency groups. `scripts/run_tests.sh` uses that interpreter,
 re-activating if the checkout or its dependency inputs changed. The application
 venv, installers, and bundles select neither group. The developer default
@@ -467,7 +467,7 @@ activation or `-TestExtras anthropic` to PowerShell;
 those arguments select runtime extras *in the test interpreter only*.
 
 In an isolated environment where activation is unavailable (for example, a Nix
-dev shell), a caller can explicitly supply `HERMES_PYTHON` with pytest, or build
+dev shell), a caller can explicitly supply `NIKI_PYTHON` with pytest, or build
 an independent disposable environment:
 
 ```bash
@@ -480,8 +480,8 @@ remove only that disposable environment first. Then run `scripts/run_tests.sh`
 tests and never enters a packaged runtime.
 
 For editor debugging, select that independent interpreter, set the working
-directory to this checkout, and launch `hermes` as the script. Keep its
-`HERMES_HOME` separate from production. Terminal activation does not configure
+directory to this checkout, and launch `niki` as the script. Keep its
+`NIKI_HOME` separate from production. Terminal activation does not configure
 an editor that was already running. Do not point an editor at a transient PM
 generation or a signed application's Python executable.
 
@@ -519,17 +519,17 @@ sandboxes do not manage Niki itself.
 ## Commands
 
 ```bash
-hermes pm --help
-hermes pm doctor
-hermes pm status
-hermes pm install
-hermes pm install chromium
+niki pm --help
+niki pm doctor
+niki pm status
+niki pm install
+niki pm install chromium
 ```
 
 | Command | Effect |
 |---|---|
 | `pm install [names...]` | Install named packages. With no names, provision required tools plus Python, put those tools on PATH, and then sync the `all` extra. A bare install also installs the default optional tools (`agent-browser` and Chromium, `cua-driver`); a failed download of these prints a warning and does not fail the install. Naming a package you declined earlier undoes that choice. |
-| `pm install --without NAME` | Do a bare install without the default optional package `NAME` (`agent-browser` or `cua-driver`), and record that choice. Later bare installs and `hermes update` also leave it out. The installers' `--skip-browser` / `-SkipBrowser` and `--skip-computer-use` / `-SkipComputerUse` use this. |
+| `pm install --without NAME` | Do a bare install without the default optional package `NAME` (`agent-browser` or `cua-driver`), and record that choice. Later bare installs and `niki update` also leave it out. The installers' `--skip-browser` / `-SkipBrowser` and `--skip-computer-use` / `-SkipComputerUse` use this. |
 | `pm install --tools-only` | Install that tool closure and put it on PATH, then stop. The venv sync does not run. |
 | `pm env [names...]` | Print installed packages' PM-contributed environment values as JSON. It does not install missing packages, though a cold Niki launch may prepare its own Python runtime first. |
 | `pm doctor` | Check installed tool identities, files, and digests against the lock. |
@@ -559,7 +559,7 @@ not substitutes for an installed application's update mechanism.
 
 The complete desktop builder also builds the JavaScript surfaces, generates
 launchers, and invokes native packaging. Maintainers can read
-[Building the Desktop Installers](https://github.com/NousResearch/hermes-agent/blob/main/apps/desktop/BUILDING.md).
+[Building the Desktop Installers](https://github.com/NeGamer01/niki-agent/blob/main/apps/desktop/BUILDING.md).
 
 ## Network retries
 
@@ -588,17 +588,17 @@ install from that lock, and installing or enabling a plugin never re-checks
 dates, so package mirrors that publish no upload times work. Set a mirror with `index-url` in `pip.conf`,
 which Niki passes to uv, or with `UV_INDEX_URL`.
 
-`hermes pm lock` is the one step that applies the check. Run against a mirror
+`niki pm lock` is the one step that applies the check. Run against a mirror
 without upload times, it stops with `has no publish time`; use
 `https://pypi.org/simple` for that step.
 
 ## Diagnostics
 
 - **Slow Python dependency builds:** PM's streamed uv commands enable verbose output. Bundle and build logs show package activity and build-backend stdout/stderr while the build runs, not only after failure.
-- **Missing or outdated tool:** read `hermes pm doctor`, then use an explicit PM install on a writable installation.
+- **Missing or outdated tool:** read `niki pm doctor`, then use an explicit PM install on a writable installation.
 - **New environment requires restart:** restart the affected Niki process. Do not add a second site-packages tree to its live imports.
-- **Dependency conflict:** read `hermes pm status`. Correct the plugin requirements before retrying admission.
-- **Damaged Python dependencies:** run `hermes pm repair`, then restart Niki. Repair replays the selected generation's saved workspace and lock without parsing plugin configuration. An unreadable record or missing saved lock fails without selecting a reduced dependency set. Before a generation exists, repair uses the shipped or committed lock and recorded feature set.
+- **Dependency conflict:** read `niki pm status`. Correct the plugin requirements before retrying admission.
+- **Damaged Python dependencies:** run `niki pm repair`, then restart Niki. Repair replays the selected generation's saved workspace and lock without parsing plugin configuration. An unreadable record or missing saved lock fails without selecting a reduced dependency set. Before a generation exists, repair uses the shipped or committed lock and recorded feature set.
 - **Interrupted dependency install:** startup requests the same PM repair before dependency activation. Automatic attempts are bounded; `pm repair` retries explicitly. A failed repair preserves the previous selection and its retry marker.
 - **Damaged Python executable or application source:** repair or reinstall through the package owner. PM cannot run without those files. Signed payload files are never modified by dependency repair.
 - **Unknown package or extra:** use the declared name. `pm install` takes package names, not Python extra names or pip specifications.

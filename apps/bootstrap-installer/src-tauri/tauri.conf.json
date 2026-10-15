@@ -2,7 +2,7 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Niki",
   "version": "0.0.0",
-  "identifier": "com.nousresearch.hermes.setup",
+  "identifier": "com.negamer01.niki.setup",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://127.0.0.1:5175",
@@ -36,8 +36,8 @@
     "category": "DeveloperTool",
     "shortDescription": "Niki",
     "longDescription": "Installs Niki Agent on your machine. Drives scripts/install.ps1 (Windows) and scripts/install.sh (macOS/Linux).",
-    "publisher": "Nous Research",
-    "copyright": "Copyright © 2026 Nous Research",
+    "publisher": "NeGamer01",
+    "copyright": "Copyright © 2026 NeGamer01",
     "targets": [
       "app",
       "dmg",

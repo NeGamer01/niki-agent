@@ -310,7 +310,7 @@ class TestGenerate:
         cap, and a path the credential-read guard denies (before its existence is probed)."""
         from plugins.image_gen import krea
 
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("NIKI_HOME", str(tmp_path))
         monkeypatch.setattr(krea, "_MAX_LOCAL_REFERENCE_BYTES", 10)
         for name in ("a.png", "b.png"):
             (tmp_path / name).write_bytes(b"\x89PNG\r\n")
@@ -536,27 +536,27 @@ class TestPollRetryPolicy:
 
 
 # ---------------------------------------------------------------------------
-# Managed Nous gateway path
+# Managed Niki gateway path
 # ---------------------------------------------------------------------------
 
 
 def _managed_cfg(
     origin: str = "https://krea-gateway.example.com",
-    token: str = "nous-tok-abc",
+    token: str = "niki-tok-abc",
 ):
     from types import SimpleNamespace
 
     return SimpleNamespace(
         vendor="krea",
         gateway_origin=origin,
-        nous_user_token=token,
+        niki_user_token=token,
         managed_mode=True,
     )
 
 
 class TestManagedGateway:
     def test_managed_submit_uses_gateway_origin_and_nous_token(self, monkeypatch):
-        """Managed mode submits to the gateway origin with the Nous token."""
+        """Managed mode submits to the gateway origin with the Niki token."""
         import plugins.image_gen.krea as krea_mod
         from plugins.image_gen.krea import KreaImageGenProvider
 
@@ -580,14 +580,14 @@ class TestManagedGateway:
             "https://krea-gateway.example.com/generate/image/krea/krea-2/medium"
         )
         headers = mock_post.call_args.kwargs["headers"]
-        assert headers["Authorization"] == "Bearer nous-tok-abc"
+        assert headers["Authorization"] == "Bearer niki-tok-abc"
         # Idempotency key drives the gateway's per-generation billing boundary.
         assert headers["x-idempotency-key"]
-        # Poll is bound to the same gateway + Nous token.
+        # Poll is bound to the same gateway + Niki token.
         poll_url = mock_get.call_args[0][0]
         assert poll_url.startswith("https://krea-gateway.example.com/jobs/")
         poll_headers = mock_get.call_args.kwargs["headers"]
-        assert poll_headers["Authorization"] == "Bearer nous-tok-abc"
+        assert poll_headers["Authorization"] == "Bearer niki-tok-abc"
 
 
     def test_managed_429_concurrency_hint(self, monkeypatch):

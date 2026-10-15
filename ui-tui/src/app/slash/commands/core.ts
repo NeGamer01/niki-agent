@@ -1,4 +1,4 @@
-import { forceRedraw, type MouseTrackingMode } from '@hermes/ink'
+import { forceRedraw, type MouseTrackingMode } from '@niki/ink'
 
 import { DASHBOARD_TUI_MODE, NO_CONFIRM_DESTRUCTIVE } from '../../../config/env.js'
 import { dailyFortune, randomFortune } from '../../../content/fortunes.js'
@@ -128,7 +128,7 @@ export const coreCommands: SlashCommand[] = [
 
   {
     aliases: ['exit'],
-    help: 'exit hermes',
+    help: 'exit niki',
     name: 'quit',
     run: (_arg, ctx) => {
       // In the hosted dashboard chat there is no in-page restart path after
@@ -159,7 +159,7 @@ export const coreCommands: SlashCommand[] = [
       }
 
       ctx.transcript.sys(t('slashCmd.core.update.exiting'))
-      // Exit code 42 signals the Python wrapper to exec `hermes update`.
+      // Exit code 42 signals the Python wrapper to exec `niki update`.
       // Use dieWithCode for proper cleanup (gateway kill + Ink unmount).
       setTimeout(() => ctx.session.dieWithCode(42), 100)
     }
@@ -556,7 +556,7 @@ export const coreCommands: SlashCommand[] = [
         const index = String(i + 1)
 
         const tag =
-          m.role === 'user' ? t('slashCmd.core.history.youTag', index) : t('slashCmd.core.history.hermesTag', index)
+          m.role === 'user' ? t('slashCmd.core.history.youTag', index) : t('slashCmd.core.history.nikiTag', index)
 
         const toolCount = m.tools?.length ?? 0
 

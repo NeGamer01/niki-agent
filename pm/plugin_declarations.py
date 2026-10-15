@@ -19,7 +19,7 @@ def native_manifest_file(plugin_dir: Path) -> Path | None:
 
 
 def read_native_manifest(path: Path) -> dict:
-    import hermes_yaml as yaml
+    import niki_yaml as yaml
 
     try:
         data = yaml.safe_load(path.read_text(encoding="utf-8-sig"))
@@ -33,9 +33,9 @@ def read_native_manifest(path: Path) -> dict:
 
 
 def manifest_version_error(manifest: dict, name: str) -> str | None:
-    from hermes_cli.plugins_manifest import SUPPORTED_MANIFEST_VERSION, requires_hermes_error
+    from niki_cli.plugins_manifest import SUPPORTED_MANIFEST_VERSION, requires_niki_error
 
-    reason = requires_hermes_error(manifest)
+    reason = requires_niki_error(manifest)
     if reason:
         return f"Plugin '{name}' {reason}"
     version = manifest.get("manifest_version")
@@ -98,7 +98,7 @@ def applicable_requirements(specs: tuple[str, ...] | list[str]) -> tuple[str, ..
     from packaging.utils import canonicalize_name
 
     return tuple(spec for spec in specs
-                 if not (req := Requirement(spec)).url and canonicalize_name(req.name) != "hermes-agent")
+                 if not (req := Requirement(spec)).url and canonicalize_name(req.name) != "niki-agent")
 
 
 def unsupported_requirements(specs: tuple[str, ...] | list[str]) -> tuple[str, ...]:
@@ -125,7 +125,7 @@ def read_python_declaration(plugin_dir: Path) -> PythonDeclaration:
         except FileNotFoundError:
             pass
         else:
-            from hermes_cli.agent_plugins import read_agent_plugin_manifest
+            from niki_cli.agent_plugins import read_agent_plugin_manifest
 
             manifest, _diagnostics = read_agent_plugin_manifest(plugin_dir)
             files.append(portable)

@@ -49,7 +49,7 @@ def _hex_rgb(h: str) -> tuple[int, int, int]:
 def _get_skin():
     """Active skin config, or None when unavailable (lazy import avoids cycles)."""
     try:
-        from hermes_cli.skin_engine import get_active_skin
+        from niki_cli.skin_engine import get_active_skin
         return get_active_skin()
     except Exception:
         return None
@@ -921,7 +921,7 @@ class KawaiiSpinner:
         skin = _get_skin()
         wings = skin.get_spinner_wings() if skin else []
         while self.running:
-            if os.getenv("HERMES_SPINNER_PAUSE"):
+            if os.getenv("NIKI_SPINNER_PAUSE"):
                 time.sleep(0.1)
                 continue
             frame = self.spinner_frames[self.frame_idx % len(self.spinner_frames)]

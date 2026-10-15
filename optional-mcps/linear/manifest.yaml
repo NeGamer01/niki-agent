@@ -1,4 +1,4 @@
-# Nous-approved MCP catalog entry.
+# Niki-approved MCP catalog entry.
 # Presence in this directory = approval. Merged via PR review.
 manifest_version: 1
 
@@ -43,4 +43,4 @@ post_install: |
   After auth, restart your Niki session so the Linear tools are loaded.
 
   You can re-run the tool checklist any time with:
-    hermes mcp configure linear
+    niki mcp configure linear

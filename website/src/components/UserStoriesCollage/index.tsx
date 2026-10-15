@@ -295,15 +295,15 @@ export default function UserStoriesCollage(): React.JSX.Element {
       <div className={styles.footer}>
         Built something with Niki?{' '}
         <a
-          href="https://github.com/NousResearch/hermes-agent/edit/main/website/src/data/userStories.json"
+          href="https://github.com/NeGamer01/niki-agent/edit/main/website/src/data/userStories.json"
           target="_blank"
           rel="noopener noreferrer"
         >
           Add your story to this page
         </a>{' '}
         by editing <code>userStories.json</code>, or post it in the{' '}
-        <a href="https://discord.gg/NousResearch" target="_blank" rel="noopener noreferrer">
-          Nous Research Discord
+        <a href="https://discord.gg/NeGamer01" target="_blank" rel="noopener noreferrer">
+          NeGamer01 Discord
         </a>{' '}
         and we&apos;ll pick it up.
       </div>

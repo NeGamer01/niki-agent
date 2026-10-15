@@ -32,7 +32,7 @@ PATH_DOC = "/.well-known/oauth-authorization-server/mcp-issuer"
     pytest.param(f"{RESOURCE}#/.well-known/openid-configuration", id="fragment"),
 ])
 async def test_origin_issued_metadata_shim_does_not_read_non_discovery_response(url):
-    from tools.mcp_oauth_provider import HermesProviderMixin
+    from tools.mcp_oauth_provider import NikiProviderMixin
 
     class ResourceResponse:
         status_code = 200
@@ -41,10 +41,10 @@ async def test_origin_issued_metadata_shim_does_not_read_non_discovery_response(
         async def aread(self):
             raise AssertionError("normal MCP resource response must not be consumed as OAuth metadata")
 
-    provider = HermesProviderMixin.__new__(HermesProviderMixin)
+    provider = NikiProviderMixin.__new__(NikiProviderMixin)
     response = ResourceResponse()
 
-    assert await provider._hermes_accept_origin_issued_metadata(response) is response
+    assert await provider._niki_accept_origin_issued_metadata(response) is response
 
 
 def _asm(issuer):
@@ -84,12 +84,12 @@ async def _run_flow(tmp_path, monkeypatch, issuer_doc):
     from mcp.shared.auth import OAuthClientMetadata
     from pydantic import AnyUrl
 
-    from tools.mcp_oauth import HermesTokenStorage, _authorization_code_result
-    from tools.mcp_oauth_manager import _HERMES_PROVIDER_CLS, reset_manager_for_tests
+    from tools.mcp_oauth import NikiTokenStorage, _authorization_code_result
+    from tools.mcp_oauth_manager import _NIKI_PROVIDER_CLS, reset_manager_for_tests
     from tools.mcp_tool import sdk_httpx
 
     httpx = sdk_httpx()
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("NIKI_HOME", str(tmp_path))
     reset_manager_for_tests()
     seen = {}
 
@@ -100,8 +100,8 @@ async def _run_flow(tmp_path, monkeypatch, issuer_doc):
     async def callback():
         return _authorization_code_result("code-1", seen["state"], iss=AS_ORIGIN)
 
-    storage = HermesTokenStorage("srv")
-    provider = _HERMES_PROVIDER_CLS(
+    storage = NikiTokenStorage("srv")
+    provider = _NIKI_PROVIDER_CLS(
         server_name="srv", server_url=RESOURCE, storage=storage,
         client_metadata=OAuthClientMetadata(redirect_uris=[AnyUrl("http://127.0.0.1:1/cb")], client_name="Niki Agent"),
         redirect_handler=redirect, callback_handler=callback)

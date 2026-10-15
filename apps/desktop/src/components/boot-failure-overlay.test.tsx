@@ -28,8 +28,8 @@ function failBoot() {
 }
 
 function stubDesktop(config: Record<string, unknown>, overrides: Record<string, unknown> = {}) {
-  const original = window.hermesDesktop
-  Object.defineProperty(window, 'hermesDesktop', {
+  const original = window.nikiDesktop
+  Object.defineProperty(window, 'nikiDesktop', {
     configurable: true,
     value: {
       getRecentLogs: async () => ({ lines: [] }),
@@ -50,7 +50,7 @@ function stubDesktop(config: Record<string, unknown>, overrides: Record<string, 
     }
   })
 
-  return () => Object.defineProperty(window, 'hermesDesktop', { configurable: true, value: original })
+  return () => Object.defineProperty(window, 'nikiDesktop', { configurable: true, value: original })
 }
 
 const remoteToken = {
@@ -272,7 +272,7 @@ describe('BootFailureOverlay', () => {
         cloud: { status: cloudStatus, login: cloudLogin, agentSignIn: cloudAgentSignIn },
         oauthLoginConnectionConfig: nativeLogin,
         oauthLogoutConnectionConfig: logout,
-        probeConnectionConfig: vi.fn().mockResolvedValue({ providers: [{ id: 'nous', type: 'oauth' }] })
+        probeConnectionConfig: vi.fn().mockResolvedValue({ providers: [{ id: 'niki', type: 'oauth' }] })
       }
     )
 
@@ -291,10 +291,10 @@ describe('BootFailureOverlay', () => {
     }
   })
 
-  it('shows the Nous Cloud down recovery when the backend flags isCloudBackendDown', async () => {
+  it('shows the Niki Cloud down recovery when the backend flags isCloudBackendDown', async () => {
     const restore = stubDesktop(remoteToken)
     $desktopBoot.set({
-      error: 'Nous Cloud agent ares-3009.agents.nousresearch.com is down (HTTP 503: server-side fault).',
+      error: 'Niki Cloud agent ares-3009.agents.nousresearch.com is down (HTTP 503: server-side fault).',
       fakeMode: false,
       isCloudBackendDown: true,
       message: 'boot failed',
@@ -310,7 +310,7 @@ describe('BootFailureOverlay', () => {
       render(<BootFailureOverlay />)
       // Cloud-specific title + actionable recovery instead of the generic
       // remote-failure copy.
-      expect(await screen.findByText(/Nous Cloud agent is down/i)).toBeTruthy()
+      expect(await screen.findByText(/Niki Cloud agent is down/i)).toBeTruthy()
       // Portal and Discord are dedicated action buttons (localized labels
       // can't drift the URLs, which live in code).
       expect(screen.getByRole('button', { name: /check portal status/i })).toBeTruthy()
@@ -322,7 +322,7 @@ describe('BootFailureOverlay', () => {
       expect(screen.getByRole('button', { name: /use local gateway/i })).toBeTruthy()
       // The electron-built error message (portal / local mode / Discord) is
       // still surfaced in the error box.
-      expect(screen.getByText(/ares-3009\.agents\.nousresearch\.com/i)).toBeTruthy()
+      expect(screen.getByText(/ares-3009\.agents\.negamer01\.com/i)).toBeTruthy()
     } finally {
       restore()
     }
@@ -361,7 +361,7 @@ describe('BootFailureOverlay', () => {
 
       fireEvent.click(screen.getByRole('button', { name: /reinstall the app/i }))
       await waitFor(() =>
-        expect(openExternal).toHaveBeenCalledWith('https://hermes-agent.nousresearch.com/docs/user-guide/desktop')
+        expect(openExternal).toHaveBeenCalledWith('https://github.com/NeGamer01/niki-agent/docs/user-guide/desktop')
       )
     } finally {
       restore()

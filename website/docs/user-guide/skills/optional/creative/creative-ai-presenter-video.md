@@ -14,7 +14,7 @@ Make a verified AI presenter video from script + image.
 
 | | |
 |---|---|
-| Source | Optional — install with `hermes skills install official/creative/ai-presenter-video` |
+| Source | Optional — install with `niki skills install official/creative/ai-presenter-video` |
 | Path | `optional-skills/creative/ai-presenter-video` |
 | Version | `1.0.0` |
 | Author | cclank (https://github.com/cclank/lanshu-create-ai-presenter-video), ported by Niki Agent |
@@ -50,11 +50,11 @@ the whisper/STT tooling, ffmpeg for everything deterministic).
 ## Niki adaptations (read first)
 
 - **Skill dir resolution** — upstream hardcoded its own agent's skills path.
-  In Niki the loader expands `${HERMES_SKILL_DIR}` to this skill's installed
+  In Niki the loader expands `${NIKI_SKILL_DIR}` to this skill's installed
   directory, so every command below uses that token directly:
 
   ```bash
-  SKILL_DIR="${HERMES_SKILL_DIR}"
+  SKILL_DIR="${NIKI_SKILL_DIR}"
   ```
 
   Shell variables do not persist between tool calls — re-paste the assignment

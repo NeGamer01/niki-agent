@@ -18,7 +18,7 @@ Inspired by Prime-Agent's `/heartbeat`. The Niki adaptation keeps the strict mes
 
 They look similar but serve different jobs:
 
-| | `/heartbeat` | [`hermes cron`](./cron) |
+| | `/heartbeat` | [`niki cron`](./cron) |
 |---|---|---|
 | Runs in | **This conversation** — full context, memory of the discussion | A fresh isolated session per tick |
 | Survives process restart | State survives (SessionDB); gateway watches resume automatically after restart | Yes — fully durable scheduler |
@@ -37,7 +37,7 @@ Rule of thumb: if the recurring prompt needs the conversation's context, use `/h
 | `/heartbeat resume` | Resume (re-anchors the timer — no instant stale fire). |
 | `/heartbeat clear` | Remove the heartbeat. |
 
-`/hb` is an alias. Works on the CLI, the TUI / Desktop app, and gateway platforms (on Slack, use `/hermes heartbeat …`).
+`/hb` is an alias. Works on the CLI, the TUI / Desktop app, and gateway platforms (on Slack, use `/niki heartbeat …`).
 
 ## Behavior details
 

@@ -47,7 +47,7 @@ description: "调试 Python：pdb REPL + debugpy 远程（DAP）"
 
 - 测试失败，但 traceback 无法说明某个值为何出错
 - 需要逐步执行某个函数并观察集合的变化
-- 长期运行的进程（hermes gateway、tui_gateway）出现异常且无法重启
+- 长期运行的进程（niki gateway、tui_gateway）出现异常且无法重启
 - 事后分析（post-mortem）：异常在类生产代码中触发，需要检查崩溃现场的局部变量
 - 子进程 / 子进程（Python `_SlashWorker`、PTY bridge worker）才是实际的 bug 所在
 
@@ -161,7 +161,7 @@ sys.excepthook = excepthook
 ### 安装
 
 使用独立开发检出和数据目录，不要修改正在运行的生产环境。
-按照 [PM 开发流程](https://hermes-agent.nousresearch.com/docs/reference/package-management#developer-workflow)
+按照 [PM 开发流程](https://github.com/NeGamer01/niki-agent/docs/reference/package-management#developer-workflow)
 激活该检出——PowerShell 使用 `. .\activate.ps1`。`dev` extra 已包含 debugpy，
 但 PM 激活不会同步它（`all` 不含该 extra）。通过 `terminal`，用该检出准备好的
 Python 构建全新的调试/测试环境：
@@ -173,7 +173,7 @@ python -m pm.build_env --source . --out .venv --group dev --group test
 ```
 
 输出目录必须不存在。重建前停止其进程，并明确删除仅用于调试的可丢弃环境。
-调试目标使用相同的独立 `HERMES_HOME`。`.venv/bin/python` 就是刚构建的独立环境，
+调试目标使用相同的独立 `NIKI_HOME`。`.venv/bin/python` 就是刚构建的独立环境，
 不是猜测的应用 venv，下面的模式都通过它运行。不要向正在运行的生产环境安装
 debugpy；请在准备好的调试目标复现，或安排在开发环境重启。
 
@@ -270,7 +270,7 @@ send({"type": "request", "command": "configurationDone"})
   "connect": { "host": "127.0.0.1", "port": 5678 },
   "justMyCode": false,
   "pathMappings": [
-    { "localRoot": "${workspaceFolder}", "remoteRoot": "<hermes-agent-repo>" }
+    { "localRoot": "${workspaceFolder}", "remoteRoot": "<niki-agent-repo>" }
   ]
 }
 ```
@@ -302,10 +302,10 @@ nc 127.0.0.1 4444
 参见方案 3。wrapper 会捕获子进程输出，交互式 pdb 请直接运行 pytest。
 
 ### `run_agent.py` / CLI — 一次性运行
-在准备好的调试检出中，在可疑行附近添加 `breakpoint()`，然后运行 `python hermes`。
+在准备好的调试检出中，在可疑行附近添加 `breakpoint()`，然后运行 `python niki`。
 控制权将在暂停点返回到你的终端。
 
-### `tui_gateway` 子进程（由 `hermes --tui` 启动）
+### `tui_gateway` 子进程（由 `niki --tui` 启动）
 gateway 作为 Node TUI 的子进程运行。可选方案：
 
 **A. 修改 gateway 源码：**
@@ -315,7 +315,7 @@ import debugpy
 debugpy.listen(("127.0.0.1", 5678))
 debugpy.wait_for_client()
 ```
-从准备好的调试检出启动 `python hermes --tui`。TUI 将显示为冻结状态（其后端正在等待）。
+从准备好的调试检出启动 `python niki --tui`。TUI 将显示为冻结状态（其后端正在等待）。
 附加客户端后，执行在你 `continue` 时恢复。先检查子进程的解释器和导入路径，
 不要假定它继承了调试环境。
 

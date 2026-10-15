@@ -1,7 +1,7 @@
 """Models.dev registry integration — primary database for providers and models.
 
 Resolution: in-memory cache (fresh, or stale served while one background daemon
-thread refreshes) → disk cache (~/.hermes/models_dev_cache.json, any age) →
+thread refreshes) → disk cache (~/.niki/models_dev_cache.json, any age) →
 network only when no cache exists. Failed refreshes back off 5 min process-wide.
 Refreshes use ETag conditional GET when a servable registry is held. Hot paths
 pass ``allow_network=False`` and never do I/O. A corrupt/empty disk cache is
@@ -19,7 +19,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from utils import atomic_json_write, atomic_write_text
 
-from hermes_constants import openrouter_variant_base
+from niki_constants import openrouter_variant_base
 
 import requests
 
@@ -133,13 +133,13 @@ PROVIDER_TO_MODELS_DEV: dict[str, str] = {
 _MODELS_DEV_TO_PROVIDER: Optional[dict[str, list[str]]] = None
 
 
-def _models_dev_to_hermes_ids(mdev_id: str) -> list[str]:
+def _models_dev_to_niki_ids(mdev_id: str) -> list[str]:
     """Return the Niki provider ids that map to *mdev_id* (may be [])."""
     global _MODELS_DEV_TO_PROVIDER
     if _MODELS_DEV_TO_PROVIDER is None:
         _MODELS_DEV_TO_PROVIDER = {}
-        for hermes_id, mapped in PROVIDER_TO_MODELS_DEV.items():
-            _MODELS_DEV_TO_PROVIDER.setdefault(mapped, []).append(hermes_id)
+        for niki_id, mapped in PROVIDER_TO_MODELS_DEV.items():
+            _MODELS_DEV_TO_PROVIDER.setdefault(mapped, []).append(niki_id)
     return _MODELS_DEV_TO_PROVIDER.get(mdev_id, [])
 
 
@@ -202,23 +202,23 @@ _UNKNOWN_CATALOG_PROVIDER_WARNED: set = set()  # (provider, alias) warned once p
 def _cfg_get(*keys: str, default: Any, config: Optional[dict[str, Any]] = None) -> Any:
     """``cfg_get`` over the read-only config; *default* on any failure."""
     try:
-        from hermes_cli.config import cfg_get, load_config_readonly
+        from niki_cli.config import cfg_get, load_config_readonly
         return cfg_get(config if config is not None else load_config_readonly(), *keys, default=default)
     except Exception:
         return default
 
 
-def _hermes_path(name: str) -> Path:
-    from hermes_constants import get_hermes_home
-    return get_hermes_home() / name
+def _niki_path(name: str) -> Path:
+    from niki_constants import get_niki_home
+    return get_niki_home() / name
 
 
 def _get_cache_path() -> Path:
-    return _hermes_path("models_dev_cache.json")
+    return _niki_path("models_dev_cache.json")
 
 
 def _get_etag_path() -> Path:
-    return _hermes_path("models_dev_cache.etag")
+    return _niki_path("models_dev_cache.etag")
 
 
 def _quietly(what: str, fn, default=None):
@@ -238,9 +238,9 @@ def _load_etag() -> str:
 def _save_etag(etag: str) -> None:
     def write() -> None:
         etag_path = _get_etag_path()
-        from hermes_constants import mkdir_under_hermes_home
+        from niki_constants import mkdir_under_niki_home
 
-        mkdir_under_hermes_home(etag_path.parent)
+        mkdir_under_niki_home(etag_path.parent)
         atomic_write_text(etag_path, etag)
     _quietly("save models.dev ETag", write)
 
@@ -676,7 +676,7 @@ def _provider_override_section(provider: str, *, config: Optional[dict[str, Any]
     if not overrides or not provider_key:
         return None
     # Forward (Niki → models.dev id) and reverse (caller passed a models.dev id, config keyed by Niki id) aliases.
-    candidates = [provider_key, PROVIDER_TO_MODELS_DEV.get(provider_key), *_models_dev_to_hermes_ids(provider_key)]
+    candidates = [provider_key, PROVIDER_TO_MODELS_DEV.get(provider_key), *_models_dev_to_niki_ids(provider_key)]
     return next((section for section in (overrides.get(key) if key else None for key in candidates) if isinstance(section, dict)), None)
 
 
@@ -803,7 +803,7 @@ def _relay_vision_marker_metadata(provider: str, model: str) -> Optional[dict[st
     ``-vision`` token is the vendor's own capability marker; without it ``image_input_mode: auto`` treats
     the model as text-only and detours images through the lossy describe path (#96066). Every other field
     keeps the unknown-model defaults, so only vision is claimed."""
-    from hermes_cli.models import opencode_provider_family
+    from niki_cli.models import opencode_provider_family
 
     if "-vision" not in (model or "").strip().lower() or opencode_provider_family(provider) is None:
         return None
@@ -882,7 +882,7 @@ def get_model_capabilities(
 def list_provider_models(provider: str, *, allow_network: bool = True) -> list[str]:
     """All model IDs for a provider ([] if unknown). ``allow_network`` defaults to True: the model
     picker is interactive and a fresh catalog is worth a short wait."""
-    from hermes_cli.models import normalize_provider
+    from niki_cli.models import normalize_provider
     provider = normalize_provider(provider) or provider
     models = _get_provider_models(provider, allow_network=allow_network)
     return [mid for mid in models if not _should_hide_from_provider_catalog(provider, mid)] if models is not None else []

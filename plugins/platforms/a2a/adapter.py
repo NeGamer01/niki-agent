@@ -82,9 +82,9 @@ def _default_agent_name() -> str:
         return name
     try:
         import socket
-        return f"hermes-{socket.gethostname()}"
+        return f"niki-{socket.gethostname()}"
     except Exception:
-        return "hermes-agent"
+        return "niki-agent"
 
 
 def _clean_slug(value: str) -> str:
@@ -102,21 +102,21 @@ def _join_url(base: str, prefix: str) -> str:
 
 def _active_profile_name() -> str:
     try:
-        from hermes_cli.profiles import get_active_profile_name
+        from niki_cli.profiles import get_active_profile_name
         return get_active_profile_name() or "default"
     except Exception:
-        return os.getenv("HERMES_PROFILE", "default") or "default"
+        return os.getenv("NIKI_PROFILE", "default") or "default"
 
 
 def _profile_home(profile: str) -> Optional[str]:
     with contextlib.suppress(Exception):
-        from hermes_cli.profiles import get_profile_dir
+        from niki_cli.profiles import get_profile_dir
         return str(get_profile_dir(profile))
     if profile and profile != "default":
-        return os.path.expanduser(f"~/.hermes/profiles/{profile}")
+        return os.path.expanduser(f"~/.niki/profiles/{profile}")
     with contextlib.suppress(Exception):
-        from hermes_cli.config import get_hermes_home
-        return str(get_hermes_home())
+        from niki_cli.config import get_niki_home
+        return str(get_niki_home())
     return None
 
 
@@ -357,7 +357,7 @@ class A2AAdapter(BasePlatformAdapter):
         raw = extra.get("agents") or extra.get("served_agents")
         if raw is None:
             try:
-                from hermes_cli.config import load_config
+                from niki_cli.config import load_config
                 cfg = load_config() or {}
             except Exception:
                 cfg = {}

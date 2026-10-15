@@ -71,7 +71,7 @@ test('nativeRemovalInstructions names the steward per kind and OS', () => {
   assert.match(nativeRemovalInstructions('nix', 'darwin'), /flake or profile/)
 
   for (const platform of ['linux', 'darwin', 'win32']) {
-    const steps = nativeRemovalInstructions('external', platform, '/usr/lib/hermes/hermes')
+    const steps = nativeRemovalInstructions('external', platform, '/usr/lib/niki/niki')
     assert.match(steps, /with that package manager/)
     assert.doesNotMatch(steps, /Delete|Trash/)
   }
@@ -87,8 +87,8 @@ test('nativeRemovalInstructions names the steward per kind and OS', () => {
     /\/home\/x\/Apps\/Niki\.AppImage/
   )
   assert.match(
-    nativeRemovalInstructions('bundled', 'linux', '/opt/hermes/linux-unpacked'),
-    /app directory at \/opt\/hermes\/linux-unpacked/
+    nativeRemovalInstructions('bundled', 'linux', '/opt/niki/linux-unpacked'),
+    /app directory at \/opt\/niki\/linux-unpacked/
   )
   assert.match(nativeRemovalInstructions('bundled', 'linux'), /wherever you saved it/)
 })
@@ -139,8 +139,8 @@ test('resolveRemovableAppPath finds the install dir on Windows', () => {
     'C:\\Users\\x\\AppData\\Local\\Programs\\Niki'
   )
   assert.equal(
-    resolveRemovableAppPath('C:\\Users\\x\\AppData\\Local\\hermes-desktop\\Niki.exe', 'win32'),
-    'C:\\Users\\x\\AppData\\Local\\hermes-desktop'
+    resolveRemovableAppPath('C:\\Users\\x\\AppData\\Local\\niki-desktop\\Niki.exe', 'win32'),
+    'C:\\Users\\x\\AppData\\Local\\niki-desktop'
   )
 })
 
@@ -150,15 +150,15 @@ test('resolveRemovableAppPath returns null for an unrecognized Windows dir', () 
 
 test('resolveRemovableAppPath uses APPIMAGE on Linux when set', () => {
   assert.equal(
-    resolveRemovableAppPath('/tmp/.mount_HermesXXXX/hermes', 'linux', { APPIMAGE: '/home/x/Apps/Niki.AppImage' }),
+    resolveRemovableAppPath('/tmp/.mount_NikiXXXX/niki', 'linux', { APPIMAGE: '/home/x/Apps/Niki.AppImage' }),
     '/home/x/Apps/Niki.AppImage'
   )
 })
 
 test('resolveRemovableAppPath finds the unpacked dir on Linux', () => {
-  assert.equal(resolveRemovableAppPath('/opt/hermes/linux-unpacked/hermes', 'linux', {}), '/opt/hermes/linux-unpacked')
+  assert.equal(resolveRemovableAppPath('/opt/niki/linux-unpacked/niki', 'linux', {}), '/opt/niki/linux-unpacked')
   // A system-package install (/usr/bin) → null, left to apt/dnf.
-  assert.equal(resolveRemovableAppPath('/usr/bin/hermes', 'linux', {}), null)
+  assert.equal(resolveRemovableAppPath('/usr/bin/niki', 'linux', {}), null)
 })
 
 test('resolveRemovableAppPath returns null for an empty exe path', () => {
@@ -191,7 +191,7 @@ test.skipIf(process.platform === 'win32').each(['gui', 'lite', 'full'] as const)
       fs.mkdirSync(sibling)
       fs.writeFileSync(
         recorder,
-        `require('node:fs').writeFileSync(${JSON.stringify(resultFile)}, JSON.stringify({argv:process.argv.slice(2), home:process.env.HERMES_HOME, pythonPath:process.env.PYTHONPATH, cwd:process.cwd()}))`
+        `require('node:fs').writeFileSync(${JSON.stringify(resultFile)}, JSON.stringify({argv:process.argv.slice(2), home:process.env.NIKI_HOME, pythonPath:process.env.PYTHONPATH, cwd:process.cwd()}))`
       )
       fs.writeFileSync(
         script,
@@ -202,17 +202,17 @@ test.skipIf(process.platform === 'win32').each(['gui', 'lite', 'full'] as const)
           agentRoot: root,
           uninstallArgs: [recorder, ...uninstallArgsForMode(mode)],
           appPath: mode === 'lite' ? null : app,
-          hermesHome: root
+          nikiHome: root
         })
       )
       child = spawn('bash', [script], {
-        env: { ...process.env, PYTHONPATH: 'inherited', HERMES_HOME: root },
+        env: { ...process.env, PYTHONPATH: 'inherited', NIKI_HOME: root },
         stdio: 'ignore'
       })
       await once(child, 'close')
       assert.equal(child.exitCode, 0)
       assert.deepEqual(JSON.parse(fs.readFileSync(resultFile, 'utf8')), {
-        argv: ['-m', 'hermes_cli.uninstall', '--mode', mode],
+        argv: ['-m', 'niki_cli.uninstall', '--mode', mode],
         home: root,
         pythonPath: mode === 'gui' ? 'inherited' : `${root}:inherited`,
         cwd: root
@@ -234,20 +234,20 @@ test.skipIf(process.platform === 'win32').each(['gui', 'lite', 'full'] as const)
 test('buildPosixCleanupScript waits for the PID, runs the uninstall module, removes bundle', (): void => {
   const script = buildPosixCleanupScript({
     desktopPid: 4321,
-    pythonExe: '/home/x/.hermes/hermes-agent/venv/bin/python',
+    pythonExe: '/home/x/.niki/niki-agent/venv/bin/python',
     pythonPath: null,
-    agentRoot: '/home/x/.hermes/hermes-agent',
-    uninstallArgs: ['-m', 'hermes_cli.uninstall', '--mode', 'gui'],
-    appPath: '/opt/hermes/linux-unpacked',
-    hermesHome: '/home/x/.hermes'
+    agentRoot: '/home/x/.niki/niki-agent',
+    uninstallArgs: ['-m', 'niki_cli.uninstall', '--mode', 'gui'],
+    appPath: '/opt/niki/linux-unpacked',
+    nikiHome: '/home/x/.niki'
   })
 
   assert.match(script, /^#!\/usr\/bin\/env bash\n/)
   assert.match(script, /pid=4321/)
   assert.match(script, /kill -0 "\$pid"/)
-  assert.match(script, /'-m' 'hermes_cli\.uninstall' '--mode' 'gui'/)
-  assert.match(script, /rm -rf '\/opt\/hermes\/linux-unpacked'/)
-  assert.match(script, /export HERMES_HOME='\/home\/x\/\.hermes'/)
+  assert.match(script, /'-m' 'niki_cli\.uninstall' '--mode' 'gui'/)
+  assert.match(script, /rm -rf '\/opt\/niki\/linux-unpacked'/)
+  assert.match(script, /export NIKI_HOME='\/home\/x\/\.niki'/)
 })
 
 // --- buildWindowsCleanupScript ---
@@ -256,18 +256,18 @@ test('buildWindowsCleanupScript waits (bounded) for PID, runs uninstall, rmdir b
   const script = buildWindowsCleanupScript({
     desktopPid: 9988,
     pythonExe: 'C:\\Python313\\python.exe',
-    pythonPath: 'C:\\hermes',
-    agentRoot: 'C:\\hermes',
-    uninstallArgs: ['-m', 'hermes_cli.uninstall', '--mode', 'full'],
+    pythonPath: 'C:\\niki',
+    agentRoot: 'C:\\niki',
+    uninstallArgs: ['-m', 'niki_cli.uninstall', '--mode', 'full'],
     appPath: 'C:\\Users\\x\\AppData\\Local\\Programs\\Niki',
-    hermesHome: 'C:\\Users\\x\\AppData\\Local\\hermes'
+    nikiHome: 'C:\\Users\\x\\AppData\\Local\\niki'
   })
 
   assert.match(script, /@echo off/)
   assert.match(script, /set "PID=9988"/)
-  // PYTHONPATH set so a system python can import hermes_cli from source.
-  assert.match(script, /set "PYTHONPATH=C:\\hermes;%PYTHONPATH%"/)
-  assert.match(script, /"C:\\Python313\\python.exe" "-m" "hermes_cli\.uninstall" "--mode" "full"/)
+  // PYTHONPATH set so a system python can import niki_cli from source.
+  assert.match(script, /set "PYTHONPATH=C:\\niki;%PYTHONPATH%"/)
+  assert.match(script, /"C:\\Python313\\python.exe" "-m" "niki_cli\.uninstall" "--mode" "full"/)
   // Bounded wait-loop (no infinite loop), whole-token PID match (no substring).
   assert.match(script, /if %waited% geq 60 goto waited_done/)
   assert.match(script, /findstr \/r \/c:" %PID% "/)
@@ -284,9 +284,9 @@ test('buildWindowsCleanupScript omits PYTHONPATH + rmdir when not needed (gui, n
     pythonExe: 'C:\\h\\venv\\Scripts\\python.exe',
     pythonPath: null,
     agentRoot: 'C:\\h',
-    uninstallArgs: ['-m', 'hermes_cli.uninstall', '--mode', 'gui'],
+    uninstallArgs: ['-m', 'niki_cli.uninstall', '--mode', 'gui'],
     appPath: null,
-    hermesHome: 'C:\\h'
+    nikiHome: 'C:\\h'
   })
 
   assert.doesNotMatch(script, /rmdir/)

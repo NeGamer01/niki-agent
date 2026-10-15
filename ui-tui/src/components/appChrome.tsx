@@ -1,6 +1,6 @@
-import { Box, type ScrollBoxHandle, stringWidth, Text } from '@hermes/ink'
-import { compactNumber } from '@hermes/shared/format'
-import type { Usage } from '@hermes/shared/gateway-events'
+import { Box, type ScrollBoxHandle, stringWidth, Text } from '@niki/ink'
+import { compactNumber } from '@niki/shared/format'
+import type { Usage } from '@niki/shared/gateway-events'
 import { useStore } from '@nanostores/react'
 import { type ReactNode, type RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import unicodeSpinners from 'unicode-animations'
@@ -246,7 +246,7 @@ export function displayStatus(status: string): string {
     return s.running
   }
 
-  if (status === 'summoning hermes…') {
+  if (status === 'summoning niki…') {
     return s.summoning
   }
 
@@ -645,7 +645,7 @@ export function StatusRule({
   const sessionCountText = liveSessionCount > 0 ? statusSessionCountLabel(liveSessionCount) : ''
   const compressions = typeof usage.compressions === 'number' ? usage.compressions : 0
 
-  // Dev-only readout (HERMES_DEV_CREDITS). The server omits the key entirely unless the
+  // Dev-only readout (NIKI_DEV_CREDITS). The server omits the key entirely unless the
   // flag is on, so this segment self-hides for normal users. micros→cents is allowed money
   // math (display formatting) — never parseFloat a *_usd. Signed: a mid-session top-up that
   // raises remaining nets a negative Δ (honest).
@@ -697,7 +697,7 @@ export function StatusRule({
     subagentCount === 1 ? T.status.resumesWhenSubagentFinishes : T.status.resumesWhenSubagentsFinish(subagentCount)
 
   const showResumeHint = !busy && subagentCount > 0 && fits(SEP + stringWidth(resumeHintText))
-  // Dev-gated readout (HERMES_DEV_CREDITS), lowest priority,
+  // Dev-gated readout (NIKI_DEV_CREDITS), lowest priority,
   // so it consumes tail budget LAST and drops first on a narrow terminal.
   const showDevCredits = !!devCreditsText && fits(SEP + stringWidth(devCreditsText))
 

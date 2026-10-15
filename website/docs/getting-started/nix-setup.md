@@ -24,9 +24,9 @@ Niki Agent ships a Nix flake, a NixOS module, and a Home Manager module.
 :::info What's different from the standard install
 The `curl | bash` installer manages Python, Node, and dependencies itself. The Nix flake replaces all of that — every Python dependency is a Nix derivation built by [uv2nix](https://github.com/pyproject-nix/uv2nix), and runtime tools (Node.js, git, ripgrep, ffmpeg) are wrapped into the binary's PATH. There is no runtime pip, no venv activation, no `npm install`.
 
-**For non-NixOS users**, this only changes the install step. Everything after (`hermes setup`, `hermes gateway install`, config editing) works identically to the standard install.
+**For non-NixOS users**, this only changes the install step. Everything after (`niki setup`, `niki gateway install`, config editing) works identically to the standard install.
 
-**For NixOS module users**, the entire lifecycle is different: configuration lives in `configuration.nix`, secrets go through sops-nix/agenix, the service is a systemd unit, and CLI config commands are blocked. You manage hermes the same way you manage any other NixOS service.
+**For NixOS module users**, the entire lifecycle is different: configuration lives in `configuration.nix`, secrets go through sops-nix/agenix, the service is a systemd unit, and CLI config commands are blocked. You manage niki the same way you manage any other NixOS service.
 :::
 
 ## Runtime pins
@@ -63,25 +63,25 @@ No clone needed. Nix fetches, builds, and runs everything:
 
 ```bash
 # Run the desktop app
-nix run github:NousResearch/hermes-agent#desktop
+nix run github:NeGamer01/niki-agent#desktop
 
 # Or install persistently
-nix profile install github:NousResearch/hermes-agent#desktop
+nix profile install github:NeGamer01/niki-agent#desktop
 
 # run the tui
-nix run github:NousResearch/hermes-agent -- setup
-nix run github:NousResearch/hermes-agent -- --tui
+nix run github:NeGamer01/niki-agent -- setup
+nix run github:NeGamer01/niki-agent -- --tui
 
 # or install it in your profile
-nix profile install github:NousResearch/hermes-agent
-hermes setup
-hermes --tui
+nix profile install github:NeGamer01/niki-agent
+niki setup
+niki --tui
 ```
 
-After `nix profile install`, `hermes`, `hermes-agent`, and `hermes-acp` are on your PATH. From here, the workflow is identical to the [standard installation](./installation.md) — `hermes setup` walks you through provider selection, `hermes gateway install` sets up a launchd (macOS) or systemd user service, and config lives in `~/.hermes/`.
+After `nix profile install`, `niki`, `niki-agent`, and `niki-acp` are on your PATH. From here, the workflow is identical to the [standard installation](./installation.md) — `niki setup` walks you through provider selection, `niki gateway install` sets up a launchd (macOS) or systemd user service, and config lives in `~/.niki/`.
 
 :::warning Messaging platforms (Discord, Telegram, Slack)
-The default package includes ALL libraries hermes-agent might need. if you want a smaller variant, check the other flake outputs. 
+The default package includes ALL libraries niki-agent might need. if you want a smaller variant, check the other flake outputs. 
 
 The `default` package adds ~700 MB to the closure. If you only need messaging platforms, `#messaging` adds just ~33 MB.
 
@@ -91,10 +91,10 @@ The `default` package adds ~700 MB to the closure. If you only need messaging pl
 <summary><strong>Running from a local clone</strong></summary>
 
 ```bash
-git clone https://github.com/NousResearch/hermes-agent.git
-cd hermes-agent
+git clone https://github.com/NeGamer01/niki-agent.git
+cd niki-agent
 nix develop
-hermes setup
+niki setup
 ```
 
 </details>
@@ -116,14 +116,14 @@ This module needs NixOS. Niki is an agent for one person. If you want an agent f
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    hermes-agent.url = "github:NousResearch/hermes-agent";
+    niki-agent.url = "github:NeGamer01/niki-agent";
   };
 
-  outputs = { nixpkgs, hermes-agent, ... }: {
+  outputs = { nixpkgs, niki-agent, ... }: {
     nixosConfigurations.your-host = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
-        hermes-agent.nixosModules.default
+        niki-agent.nixosModules.default
         ./configuration.nix
       ];
     };
@@ -136,54 +136,54 @@ This module needs NixOS. Niki is an agent for one person. If you want an agent f
 ```nix
 # configuration.nix
 { config, ... }: {
-  services.hermes-agent = {
+  services.niki-agent = {
     enable = true;
     settings.model.default = "anthropic/claude-sonnet-4";
-    environmentFiles = [ config.sops.secrets."hermes-env".path ];
+    environmentFiles = [ config.sops.secrets."niki-env".path ];
     addToSystemPackages = true;
   };
 }
 ```
 
-That's it. `nixos-rebuild switch` creates the `hermes` user, generates `config.yaml`, wires up secrets, and starts the gateway — a long-running service that connects the agent to messaging platforms (Telegram, Discord, etc.) and listens for incoming messages.
+That's it. `nixos-rebuild switch` creates the `niki` user, generates `config.yaml`, wires up secrets, and starts the gateway — a long-running service that connects the agent to messaging platforms (Telegram, Discord, etc.) and listens for incoming messages.
 
 :::warning Secrets are required
 The `environmentFiles` line above assumes you have [sops-nix](https://github.com/Mic92/sops-nix) or [agenix](https://github.com/ryantm/agenix) configured. The file should contain at least one LLM provider key (e.g., `OPENROUTER_API_KEY=sk-or-...`). See [Secrets Management](#secrets-management) for full setup. If you don't have a secrets manager yet, you can use a plain file as a starting point — just ensure it's not world-readable:
 
 ```bash
-echo "OPENROUTER_API_KEY=sk-or-your-key" | sudo install -m 0600 -o hermes /dev/stdin /var/lib/hermes/env
+echo "OPENROUTER_API_KEY=sk-or-your-key" | sudo install -m 0600 -o niki /dev/stdin /var/lib/niki/env
 ```
 
 ```nix
-services.hermes-agent.environmentFiles = [ "/var/lib/hermes/env" ];
+services.niki-agent.environmentFiles = [ "/var/lib/niki/env" ];
 ```
 :::
 
 :::tip addToSystemPackages
-Setting `addToSystemPackages = true` does two things: puts the `hermes` CLI on your system PATH **and** sets `HERMES_HOME` system-wide so the interactive CLI shares state (sessions, skills, cron) with the gateway service. Without it, running `hermes` in your shell creates a separate `~/.hermes/` directory.
+Setting `addToSystemPackages = true` does two things: puts the `niki` CLI on your system PATH **and** sets `NIKI_HOME` system-wide so the interactive CLI shares state (sessions, skills, cron) with the gateway service. Without it, running `niki` in your shell creates a separate `~/.niki/` directory.
 :::
 
 ### Container-aware CLI
 
 :::info
-When `container.enable = true` and `addToSystemPackages = true`, **every** `hermes` command on the host automatically routes into the managed container. This means your interactive CLI session runs inside the same environment as the gateway service — with access to all container-installed packages and tools.
+When `container.enable = true` and `addToSystemPackages = true`, **every** `niki` command on the host automatically routes into the managed container. This means your interactive CLI session runs inside the same environment as the gateway service — with access to all container-installed packages and tools.
 
-- The routing is transparent: `hermes chat`, `hermes sessions list`, `hermes --version`, etc. all exec into the container under the hood
+- The routing is transparent: `niki chat`, `niki sessions list`, `niki --version`, etc. all exec into the container under the hood
 - All CLI flags are forwarded as-is
 - If the container isn't running, the CLI retries briefly (5s with a spinner for interactive use, 10s silently for scripts) then fails with a clear error — no silent fallback
-- For developers working on the hermes codebase, set `HERMES_DEV=1` to bypass container routing and run the local checkout directly
+- For developers working on the niki codebase, set `NIKI_DEV=1` to bypass container routing and run the local checkout directly
 
-Set `container.hostUsers` to create a `~/.hermes` symlink to the service state directory, so the host CLI and the container share sessions, config, and memories:
+Set `container.hostUsers` to create a `~/.niki` symlink to the service state directory, so the host CLI and the container share sessions, config, and memories:
 
 ```nix
-services.hermes-agent = {
+services.niki-agent = {
   container.enable = true;
   container.hostUsers = [ "your-username" ];
   addToSystemPackages = true;
 };
 ```
 
-Users listed in `hostUsers` are automatically added to the `hermes` group for file permission access.
+Users listed in `hostUsers` are automatically added to the `niki` group for file permission access.
 
 **Podman users:** The NixOS service runs the container as root. Docker users get access via the `docker` group socket, but Podman's rootful containers require sudo. Grant passwordless sudo for your container runtime:
 
@@ -197,7 +197,7 @@ security.sudo.extraRules = [{
 }];
 ```
 
-The CLI auto-detects when sudo is needed and uses it transparently. Without this, you'll need to run `sudo hermes chat` manually.
+The CLI auto-detects when sudo is needed and uses it transparently. Without this, you'll need to run `sudo niki chat` manually.
 :::
 
 ### Verify It Works
@@ -206,14 +206,14 @@ After `nixos-rebuild switch`, check that the service is running:
 
 ```bash
 # Check service status
-systemctl status hermes-agent
+systemctl status niki-agent
 
 # Watch logs (Ctrl+C to stop)
-journalctl -u hermes-agent -f
+journalctl -u niki-agent -f
 
 # If addToSystemPackages is true, test the CLI
-hermes --version
-hermes config       # shows the generated config
+niki --version
+niki config       # shows the generated config
 ```
 
 ### Choosing a Deployment Mode
@@ -232,7 +232,7 @@ To enable container mode, add one line:
 
 ```nix
 {
-  services.hermes-agent = {
+  services.niki-agent = {
     enable = true;
     container.enable = true;
     # ... rest of config is identical
@@ -258,14 +258,14 @@ The `settings` option accepts an arbitrary attrset that is rendered as `config.y
 
 ```nix
 # base.nix
-services.hermes-agent.settings = {
+services.niki-agent.settings = {
   model.default = "anthropic/claude-sonnet-4";
   toolsets = [ "all" ];
   terminal = { backend = "local"; timeout = 180; };
 };
 
 # personality.nix
-services.hermes-agent.settings = {
+services.niki-agent.settings = {
   display = { compact = false; personality = "kawaii"; };
   memory = { memory_enabled = true; user_profile_enabled = true; };
 };
@@ -286,7 +286,7 @@ Run `nix build .#configKeys && cat result` to see every leaf config key extracte
 
 ```nix
 { config, ... }: {
-  services.hermes-agent = {
+  services.niki-agent = {
     enable = true;
     container.enable = true;
 
@@ -310,12 +310,12 @@ Run `nix build .#configKeys && cat result` to see every leaf config key extracte
     };
 
     # ── Secrets ────────────────────────────────────────────────────────
-    environmentFiles = [ config.sops.secrets."hermes-env".path ];
+    environmentFiles = [ config.sops.secrets."niki-env".path ];
 
     # ── Documents ──────────────────────────────────────────────────────
-    # USER.md is memory, so it goes to HERMES_HOME. Workspace files use
+    # USER.md is memory, so it goes to NIKI_HOME. Workspace files use
     # `documents`, and that option needs an explicit `workingDirectory`.
-    hermesHomeFiles = {
+    nikiHomeFiles = {
       "memories/USER.md" = ./documents/USER.md;
     };
 
@@ -350,10 +350,10 @@ Run `nix build .#configKeys && cat result` to see every leaf config key extracte
 If you'd rather manage `config.yaml` entirely outside Nix, use `configFile`:
 
 ```nix
-services.hermes-agent.configFile = /etc/hermes/config.yaml;
+services.niki-agent.configFile = /etc/niki/config.yaml;
 ```
 
-This bypasses `settings` entirely — no merge, no generation. The file is copied as-is to `$HERMES_HOME/config.yaml` on each activation.
+This bypasses `settings` entirely — no merge, no generation. The file is copied as-is to `$NIKI_HOME/config.yaml` on each activation.
 
 ### Customization Cheatsheet
 
@@ -363,8 +363,8 @@ Quick reference for the most common things Nix users want to customize:
 |---|---|---|
 | Change the LLM model | `settings.model.default` | `"anthropic/claude-sonnet-4"` |
 | Use a different provider endpoint | `settings.model.base_url` | `"https://openrouter.ai/api/v1"` |
-| Add API keys | `environmentFiles` | `[ config.sops.secrets."hermes-env".path ]` |
-| Give the agent an identity | `hermesHomeFiles."SOUL.md"` | `"You are a terse ops assistant."` |
+| Add API keys | `environmentFiles` | `[ config.sops.secrets."niki-env".path ]` |
+| Give the agent an identity | `nikiHomeFiles."SOUL.md"` | `"You are a terse ops assistant."` |
 | Add project context to the workspace | `documents."AGENTS.md"` | `./documents/AGENTS.md` |
 | Run the backend for the desktop app or the dashboard | `backend.mode` | `"serve"` or `"dashboard"` |
 | Add MCP tool servers | `mcpServers.<name>` | See [MCP Servers](#mcp-servers) |
@@ -375,8 +375,8 @@ Quick reference for the most common things Nix users want to customize:
 | Share state between host CLI and container | `container.hostUsers` | `[ "sidbin" ]` |
 | Make extra tools available to the agent | `extraPackages` | `[ pkgs.pandoc pkgs.imagemagick ]` |
 | Use a custom base image | `container.image` | `"ubuntu:24.04"` |
-| Override the hermes package | `package` | `inputs.hermes-agent.packages.${system}.default.override { ... }` |
-| Change state directory | `stateDir` | `"/opt/hermes"` |
+| Override the niki package | `package` | `inputs.niki-agent.packages.${system}.default.override { ... }` |
+| Change state directory | `stateDir` | `"/opt/niki"` |
 | Set the agent's working directory | `workingDirectory` | `"/home/user/projects"` |
 
 ---
@@ -387,20 +387,20 @@ Quick reference for the most common things Nix users want to customize:
 Values in Nix expressions end up in `/nix/store`, which is world-readable. Always use `environmentFiles` with a secrets manager.
 :::
 
-Both `environment` (non-secret vars) and `environmentFiles` (secret files) are merged into `$HERMES_HOME/.env` at activation time (`nixos-rebuild switch`). Niki reads this file on every startup, so changes take effect with a `systemctl restart hermes-agent` — no container recreation needed.
+Both `environment` (non-secret vars) and `environmentFiles` (secret files) are merged into `$NIKI_HOME/.env` at activation time (`nixos-rebuild switch`). Niki reads this file on every startup, so changes take effect with a `systemctl restart niki-agent` — no container recreation needed.
 
 ### sops-nix
 
 ```nix
 {
   sops = {
-    defaultSopsFile = ./secrets/hermes.yaml;
+    defaultSopsFile = ./secrets/niki.yaml;
     age.keyFile = "/home/user/.config/sops/age/keys.txt";
-    secrets."hermes-env" = { format = "yaml"; };
+    secrets."niki-env" = { format = "yaml"; };
   };
 
-  services.hermes-agent.environmentFiles = [
-    config.sops.secrets."hermes-env".path
+  services.niki-agent.environmentFiles = [
+    config.sops.secrets."niki-env".path
   ];
 }
 ```
@@ -408,8 +408,8 @@ Both `environment` (non-secret vars) and `environmentFiles` (secret files) are m
 The secrets file contains key-value pairs:
 
 ```yaml
-# secrets/hermes.yaml (encrypted with sops)
-hermes-env: |
+# secrets/niki.yaml (encrypted with sops)
+niki-env: |
     OPENROUTER_API_KEY=sk-or-...
     TELEGRAM_BOT_TOKEN=123456:ABC...
     ANTHROPIC_API_KEY=sk-ant-...
@@ -419,10 +419,10 @@ hermes-env: |
 
 ```nix
 {
-  age.secrets.hermes-env.file = ./secrets/hermes-env.age;
+  age.secrets.niki-env.file = ./secrets/niki-env.age;
 
-  services.hermes-agent.environmentFiles = [
-    config.age.secrets.hermes-env.path
+  services.niki-agent.environmentFiles = [
+    config.age.secrets.niki-env.path
   ];
 }
 ```
@@ -433,8 +433,8 @@ For platforms requiring OAuth (e.g., Discord), use `authFile` to seed credential
 
 ```nix
 {
-  services.hermes-agent = {
-    authFile = config.sops.secrets."hermes/auth.json".path;
+  services.niki-agent = {
+    authFile = config.sops.secrets."niki/auth.json".path;
     # authFileForceOverwrite = true;  # overwrite on every activation
   };
 }
@@ -452,9 +452,9 @@ Niki reads files from two directories. Thus there are two options. Use the optio
 
 ```nix
 {
-  services.hermes-agent = {
+  services.niki-agent = {
     # documents needs this option. Read the note below.
-    workingDirectory = "/var/lib/hermes/workspace";
+    workingDirectory = "/var/lib/niki/workspace";
     documents = {
       "AGENTS.md" = ./documents/AGENTS.md;   # path reference, copied from Nix store
       "notes/oncall.md" = "Page #infra before restarting anything.";
@@ -471,11 +471,11 @@ files in a directory that you did not select. A directory with the same path as
 the default is a correct selection, and it satisfies the rule.
 :::
 
-`hermesHomeFiles` installs into **`HERMES_HOME`**. Niki reads the identity file and the memory files of the agent from that directory. `SOUL.md` and `memories/` work only from there. A `SOUL.md` in `documents` makes a workspace file. Niki does not load that file as the identity:
+`nikiHomeFiles` installs into **`NIKI_HOME`**. Niki reads the identity file and the memory files of the agent from that directory. `SOUL.md` and `memories/` work only from there. A `SOUL.md` in `documents` makes a workspace file. Niki does not load that file as the identity:
 
 ```nix
 {
-  services.hermes-agent.hermesHomeFiles = {
+  services.niki-agent.nikiHomeFiles = {
     "SOUL.md" = "You are a helpful AI assistant.";
     "memories/USER.md" = ./documents/USER.md;
   };
@@ -484,7 +484,7 @@ the default is a correct selection, and it satisfies the rule.
 
 Each value is a string or a path. A key in either option can contain subdirectories, and the module makes the parent directories. Each activation installs the files again.
 
-`hermesHomeFiles` needs no `workingDirectory`, because the module owns the `HERMES_HOME` directory. Most users want `hermesHomeFiles`.
+`nikiHomeFiles` needs no `workingDirectory`, because the module owns the `NIKI_HOME` directory. Most users want `nikiHomeFiles`.
 
 ---
 
@@ -496,7 +496,7 @@ The `mcpServers` option declaratively configures [MCP (Model Context Protocol)](
 
 ```nix
 {
-  services.hermes-agent.mcpServers = {
+  services.niki-agent.mcpServers = {
     filesystem = {
       command = "npx";
       args = [ "-y" "@modelcontextprotocol/server-filesystem" "/data/workspace" ];
@@ -511,14 +511,14 @@ The `mcpServers` option declaratively configures [MCP (Model Context Protocol)](
 ```
 
 :::tip
-Environment variables in `env` values are resolved from `$HERMES_HOME/.env` at runtime. Use `environmentFiles` to inject secrets — never put tokens directly in Nix config.
+Environment variables in `env` values are resolved from `$NIKI_HOME/.env` at runtime. Use `environmentFiles` to inject secrets — never put tokens directly in Nix config.
 :::
 
 ### HTTP Transport (Remote Servers)
 
 ```nix
 {
-  services.hermes-agent.mcpServers.remote-api = {
+  services.niki-agent.mcpServers.remote-api = {
     url = "https://mcp.example.com/v1/mcp";
     headers.Authorization = "Bearer \${MCP_REMOTE_API_KEY}";
     timeout = 180;
@@ -532,30 +532,30 @@ Set `auth = "oauth"` for servers using OAuth 2.1. Niki implements the full PKCE 
 
 ```nix
 {
-  services.hermes-agent.mcpServers.my-oauth-server = {
+  services.niki-agent.mcpServers.my-oauth-server = {
     url = "https://mcp.example.com/mcp";
     auth = "oauth";
   };
 }
 ```
 
-Tokens are stored in `$HERMES_HOME/mcp-tokens/<server-name>.json` and persist across restarts and rebuilds.
+Tokens are stored in `$NIKI_HOME/mcp-tokens/<server-name>.json` and persist across restarts and rebuilds.
 
 <details>
 <summary><strong>Initial OAuth authorization on headless servers</strong></summary>
 
 The first OAuth authorization requires a browser-based consent flow. In a headless deployment, Niki prints the authorization URL to stdout/logs instead of opening a browser.
 
-**Option A: Interactive bootstrap** — run the flow once via `docker exec` (container) or `sudo -u hermes` (native):
+**Option A: Interactive bootstrap** — run the flow once via `docker exec` (container) or `sudo -u niki` (native):
 
 ```bash
 # Container mode
-docker exec -it hermes-agent \
-  hermes mcp add my-oauth-server --url https://mcp.example.com/mcp --auth oauth
+docker exec -it niki-agent \
+  niki mcp add my-oauth-server --url https://mcp.example.com/mcp --auth oauth
 
 # Native mode
-sudo -u hermes HERMES_HOME=/var/lib/hermes/.hermes \
-  hermes mcp add my-oauth-server --url https://mcp.example.com/mcp --auth oauth
+sudo -u niki NIKI_HOME=/var/lib/niki/.niki \
+  niki mcp add my-oauth-server --url https://mcp.example.com/mcp --auth oauth
 ```
 
 The container uses `--network=host`, so the OAuth callback listener on `127.0.0.1` is reachable from the host browser.
@@ -563,10 +563,10 @@ The container uses `--network=host`, so the OAuth callback listener on `127.0.0.
 **Option B: Pre-seed tokens** — complete the flow on a workstation, then copy tokens:
 
 ```bash
-hermes mcp add my-oauth-server --url https://mcp.example.com/mcp --auth oauth
-scp ~/.hermes/mcp-tokens/my-oauth-server{,.client}.json \
-    server:/var/lib/hermes/.hermes/mcp-tokens/
-# Ensure: chown hermes:hermes, chmod 0600
+niki mcp add my-oauth-server --url https://mcp.example.com/mcp --auth oauth
+scp ~/.niki/mcp-tokens/my-oauth-server{,.client}.json \
+    server:/var/lib/niki/.niki/mcp-tokens/
+# Ensure: chown niki:niki, chmod 0600
 ```
 
 </details>
@@ -577,7 +577,7 @@ Some MCP servers can request LLM completions from the agent:
 
 ```nix
 {
-  services.hermes-agent.mcpServers.analysis = {
+  services.niki-agent.mcpServers.analysis = {
     command = "npx";
     args = [ "-y" "analysis-server" ];
     sampling = {
@@ -595,20 +595,20 @@ Some MCP servers can request LLM completions from the agent:
 
 ## Managed Mode
 
-When hermes runs via the NixOS module, the following CLI commands are **blocked** with a descriptive error pointing you to `configuration.nix`:
+When niki runs via the NixOS module, the following CLI commands are **blocked** with a descriptive error pointing you to `configuration.nix`:
 
 | Blocked command | Why |
 |---|---|
-| `hermes setup` | Config is declarative — edit `settings` in your Nix config |
-| `hermes config edit` | Config is generated from `settings` |
-| `hermes config set <key> <value>` | Config is generated from `settings` |
-| `hermes gateway install` | The systemd service is managed by NixOS |
-| `hermes gateway uninstall` | The systemd service is managed by NixOS |
+| `niki setup` | Config is declarative — edit `settings` in your Nix config |
+| `niki config edit` | Config is generated from `settings` |
+| `niki config set <key> <value>` | Config is generated from `settings` |
+| `niki gateway install` | The systemd service is managed by NixOS |
+| `niki gateway uninstall` | The systemd service is managed by NixOS |
 
 This prevents drift between what Nix declares and what's on disk. Detection uses two signals:
 
-1. **The `HERMES_MANAGED` environment variable.** The service sets it, and the gateway process reads it.
-2. **The `.managed` marker file** in `HERMES_HOME`. The activation script writes it, and an interactive shell reads it. Thus the CLI also blocks a command such as `docker exec -it hermes-agent hermes config set ...`.
+1. **The `NIKI_MANAGED` environment variable.** The service sets it, and the gateway process reads it.
+2. **The `.managed` marker file** in `NIKI_HOME`. The activation script writes it, and an interactive shell reads it. Thus the CLI also blocks a command such as `docker exec -it niki-agent niki config set ...`.
 
 Both signals hold the name of the system that manages the install. Thus the refusal names the correct rebuild command. The NixOS module gives `sudo nixos-rebuild switch`. The Home Manager module gives `home-manager switch`.
 
@@ -618,15 +618,15 @@ Both signals hold the name of the system that manages the install. Thus the refu
 
 The flake also exports `homeManagerModules.default`. Niki is an agent for one person. The credentials, the memory, the sessions and the cron jobs all belong to that person. Thus a user service is the correct shape on a personal machine. It runs on each distribution that Home Manager supports, and not only on NixOS.
 
-The option set is the same set that the NixOS module uses. It is `services.hermes-agent`, with the same `settings`, `environmentFiles`, `documents`, `mcpServers`, `extraPlugins` and `backend` options. Each example above works here without a change. Only the necessary parts are different:
+The option set is the same set that the NixOS module uses. It is `services.niki-agent`, with the same `settings`, `environmentFiles`, `documents`, `mcpServers`, `extraPlugins` and `backend` options. Each example above works here without a change. Only the necessary parts are different:
 
 | | NixOS module | Home Manager module |
 |---|---|---|
 | Runs as | a system user that you declare, with `user`, `group` and `createUser` | you |
-| State directory | `stateDir` and `/.hermes` | `hermesHome`, set directly. The default is `~/.hermes`. |
+| State directory | `stateDir` and `/.niki` | `nikiHome`, set directly. The default is `~/.niki`. |
 | Service | `systemd.services` | `systemd.user.services` on Linux, `launchd.agents` on macOS |
-| CLI on the PATH | `addToSystemPackages`, which exports `HERMES_HOME` for the full system | `programs.hermes-agent.enable`, which exports it for your session only |
-| Desktop application | not supported, because a system service cannot own a user session | `programs.hermes-agent.desktop.enable` |
+| CLI on the PATH | `addToSystemPackages`, which exports `NIKI_HOME` for the full system | `programs.niki-agent.enable`, which exports it for your session only |
+| Desktop application | not supported, because a system service cannot own a user session | `programs.niki-agent.desktop.enable` |
 | Container mode | supported | not supported, because it needs root and the Docker socket |
 
 ### Add the Flake Input
@@ -637,7 +637,7 @@ The option set is the same set that the NixOS module uses. It is `services.herme
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
-    hermes-agent.url = "github:NousResearch/hermes-agent";
+    niki-agent.url = "github:NeGamer01/niki-agent";
   };
 }
 ```
@@ -646,18 +646,18 @@ Then import the module into your Home Manager configuration. The configuration c
 
 ```nix
 {
-  imports = [ hermes-agent.homeManagerModules.default ];
+  imports = [ niki-agent.homeManagerModules.default ];
 
-  services.hermes-agent = {
+  services.niki-agent = {
     enable = true;
     gateway.enable = true;
     settings.model.default = "anthropic/claude-sonnet-4";
-    environmentFiles = [ config.sops.secrets."hermes-env".path ];
+    environmentFiles = [ config.sops.secrets."niki-env".path ];
   };
 }
 ```
 
-`home-manager switch` makes `~/.hermes`, writes `config.yaml`, builds `.env` and starts the gateway as a user service.
+`home-manager switch` makes `~/.niki`, writes `config.yaml`, builds `.env` and starts the gateway as a user service.
 
 :::warning Enable linger, or the service stops at logout
 CAUTION: Enable linger for your account. Without linger, systemd stops the user manager when your last session ends, and the gateway stops with it. Home Manager cannot set linger, because linger is a property of the account:
@@ -677,11 +677,11 @@ macOS has no equivalent option. A `launchd` agent with `RunAtLoad` starts at log
 
 ### Running the Desktop / Dashboard Backend
 
-`gateway.enable` runs the messaging gateway for Telegram, Discord, Slack and the other platforms. A Niki Desktop **remote** connection and the web dashboard connect to a *different* process, which is `hermes serve` or `hermes dashboard`. (A Desktop running on the same host attaches to the gateway itself via `hermes gateway ensure`.) `backend.mode` runs that process with the gateway:
+`gateway.enable` runs the messaging gateway for Telegram, Discord, Slack and the other platforms. A Niki Desktop **remote** connection and the web dashboard connect to a *different* process, which is `niki serve` or `niki dashboard`. (A Desktop running on the same host attaches to the gateway itself via `niki gateway ensure`.) `backend.mode` runs that process with the gateway:
 
 ```nix
 {
-  services.hermes-agent = {
+  services.niki-agent = {
     enable = true;
     gateway.enable = true;      # messaging platforms
     backend.mode = "dashboard"; # + the browser dashboard on 127.0.0.1:9119
@@ -690,7 +690,7 @@ macOS has no equivalent option. A `launchd` agent with `RunAtLoad` starts at log
 }
 ```
 
-`serve` runs without a user interface. It gives the `/api/ws` and `/api/pty` sockets that Niki Desktop connects to, and it does not build the web application. `dashboard` gives all of that, and also serves the browser admin panel. Both processes use one `HERMES_HOME` with the gateway. Thus the sessions, the skills, the memory and the cron jobs are the same for all of them. `backend.mode` works in the same way on the NixOS module, but not in container mode.
+`serve` runs without a user interface. It gives the `/api/ws` and `/api/pty` sockets that Niki Desktop connects to, and it does not build the web application. `dashboard` gives all of that, and also serves the browser admin panel. Both processes use one `NIKI_HOME` with the gateway. Thus the sessions, the skills, the memory and the cron jobs are the same for all of them. `backend.mode` works in the same way on the NixOS module, but not in container mode.
 
 :::warning Binding to an address other than loopback
 The default address is `127.0.0.1`. Each other address starts the authentication gate of the dashboard. The server also refuses each request with a `Host` header that is different from the address that the server bound to. This is a defence against DNS rebinding. Bind to the name or the address that your client uses.
@@ -700,15 +700,15 @@ The default address is `127.0.0.1`. Each other address starts the authentication
 
 ```bash
 # Linux
-systemctl --user status hermes-agent
-journalctl --user -u hermes-agent -f
+systemctl --user status niki-agent
+journalctl --user -u niki-agent -f
 
 # macOS
-launchctl list | grep hermes
-tail -f ~/Library/Logs/hermes-agent.log
+launchctl list | grep niki
+tail -f ~/Library/Logs/niki-agent.log
 
-hermes --version
-hermes config     # shows the configuration that Nix wrote
+niki --version
+niki config     # shows the configuration that Nix wrote
 ```
 
 ---
@@ -719,25 +719,25 @@ hermes config     # shows the configuration that Nix wrote
 This section is only relevant if you're using `container.enable = true`. Skip it for native mode deployments.
 :::
 
-When container mode is enabled, hermes runs inside a persistent Ubuntu container with the Nix-built binary bind-mounted read-only from the host:
+When container mode is enabled, niki runs inside a persistent Ubuntu container with the Nix-built binary bind-mounted read-only from the host:
 
 ```
 Host                                    Container
 ────                                    ─────────
-/nix/store/...-hermes-agent-0.1.0  ──►  /nix/store/... (ro)
-~/.hermes -> /var/lib/hermes/.hermes       (symlink bridge, per hostUsers)
-/var/lib/hermes/                    ──►  /data/          (rw)
+/nix/store/...-niki-agent-0.1.0  ──►  /nix/store/... (ro)
+~/.niki -> /var/lib/niki/.niki       (symlink bridge, per hostUsers)
+/var/lib/niki/                    ──►  /data/          (rw)
   ├── current-package -> /nix/store/...    (symlink, updated each rebuild)
   ├── .gc-root -> /nix/store/...           (prevents nix-collect-garbage)
   ├── .container-identity                  (sha256 hash, triggers recreation)
-  ├── .hermes/                             (HERMES_HOME)
+  ├── .niki/                             (NIKI_HOME)
   │   ├── .env                             (merged from environment + environmentFiles)
   │   ├── config.yaml                      (Nix-generated, deep-merged by activation)
   │   ├── .managed                         (marker file)
   │   ├── .container-mode                  (routing metadata: backend, exec_user, etc.)
   │   ├── state.db, sessions/, memories/   (runtime state)
   │   └── mcp-tokens/                      (OAuth tokens for MCP servers)
-  ├── home/                                ──►  /home/hermes    (rw)
+  ├── home/                                ──►  /home/niki    (rw)
   └── workspace/                           (agent working directory)
       ├── AGENTS.md                        (from the documents option)
       └── (agent-created files)
@@ -745,13 +745,13 @@ Host                                    Container
 Container writable layer (apt/pip/npm):   /usr, /usr/local, /tmp
 ```
 
-The Nix-built binary works inside the Ubuntu container because `/nix/store` is bind-mounted — it brings its own interpreter and all dependencies, so there's no reliance on the container's system libraries. The container entrypoint resolves through a `current-package` symlink: `/data/current-package/bin/hermes gateway run --replace`. On `nixos-rebuild switch`, only the symlink is updated — the container keeps running.
+The Nix-built binary works inside the Ubuntu container because `/nix/store` is bind-mounted — it brings its own interpreter and all dependencies, so there's no reliance on the container's system libraries. The container entrypoint resolves through a `current-package` symlink: `/data/current-package/bin/niki gateway run --replace`. On `nixos-rebuild switch`, only the symlink is updated — the container keeps running.
 
 ### What Persists Across What
 
-| Event | Container recreated? | `/data` (state) | `/home/hermes` | Writable layer (`apt`/`pip`/`npm`) |
+| Event | Container recreated? | `/data` (state) | `/home/niki` | Writable layer (`apt`/`pip`/`npm`) |
 |---|---|---|---|---|
-| `systemctl restart hermes-agent` | No | Persists | Persists | Persists |
+| `systemctl restart niki-agent` | No | Persists | Persists | Persists |
 | `nixos-rebuild switch` (code change) | No (symlink updated) | Persists | Persists | Persists |
 | Host reboot | No | Persists | Persists | Persists |
 | `nix-collect-garbage` | No (GC root) | Persists | Persists | Persists |
@@ -759,71 +759,71 @@ The Nix-built binary works inside the Ubuntu container because `/nix/store` is b
 | Volume/options change | **Yes** | Persists | Persists | **Lost** |
 | `environment`/`environmentFiles` change | No | Persists | Persists | Persists |
 
-The container is only recreated when its **identity hash** changes. The hash covers: schema version, image, `extraVolumes`, `extraOptions`, and the entrypoint script. Changes to environment variables, settings, documents, or the hermes package itself do **not** trigger recreation.
+The container is only recreated when its **identity hash** changes. The hash covers: schema version, image, `extraVolumes`, `extraOptions`, and the entrypoint script. Changes to environment variables, settings, documents, or the niki package itself do **not** trigger recreation.
 
 :::warning Writable layer loss
-When the identity hash changes (image upgrade, new volumes, new container options), the container is destroyed and recreated from a fresh pull of `container.image`. Any `apt install`, `pip install`, or `npm install` packages in the writable layer are lost. State in `/data` and `/home/hermes` is preserved (these are bind mounts).
+When the identity hash changes (image upgrade, new volumes, new container options), the container is destroyed and recreated from a fresh pull of `container.image`. Any `apt install`, `pip install`, or `npm install` packages in the writable layer are lost. State in `/data` and `/home/niki` is preserved (these are bind mounts).
 
-If the agent relies on specific packages, consider baking them into a custom image (`container.image = "my-registry/hermes-base:latest"`) or scripting their installation in the agent's SOUL.md.
+If the agent relies on specific packages, consider baking them into a custom image (`container.image = "my-registry/niki-base:latest"`) or scripting their installation in the agent's SOUL.md.
 :::
 
 ### GC Root Protection
 
-The `preStart` script creates a GC root at `${stateDir}/.gc-root` pointing to the current hermes package. This prevents `nix-collect-garbage` from removing the running binary. If the GC root somehow breaks, restarting the service recreates it.
+The `preStart` script creates a GC root at `${stateDir}/.gc-root` pointing to the current niki package. This prevents `nix-collect-garbage` from removing the running binary. If the GC root somehow breaks, restarting the service recreates it.
 
 ---
 
 ## Plugins
 
-The NixOS module supports declarative plugin installation — no imperative `hermes plugins install` needed.
+The NixOS module supports declarative plugin installation — no imperative `niki plugins install` needed.
 
 ### Directory Plugins (`extraPlugins`)
 
-For plugins that are just a source tree with `plugin.yaml` + `__init__.py` (e.g., [hermes-lcm](https://github.com/stephenschoettler/hermes-lcm)):
+For plugins that are just a source tree with `plugin.yaml` + `__init__.py` (e.g., [niki-lcm](https://github.com/stephenschoettler/niki-lcm)):
 
 ```nix
-services.hermes-agent.extraPlugins = [
+services.niki-agent.extraPlugins = [
   (pkgs.fetchFromGitHub {
     owner = "stephenschoettler";
-    repo = "hermes-lcm";
+    repo = "niki-lcm";
     rev = "v0.7.0";
     hash = "sha256-...";
   })
 ];
 ```
 
-Plugins are symlinked into `$HERMES_HOME/plugins/` at activation time. Niki discovers them via its normal directory scan. Removing a plugin from the list and running `nixos-rebuild switch` removes the symlink.
+Plugins are symlinked into `$NIKI_HOME/plugins/` at activation time. Niki discovers them via its normal directory scan. Removing a plugin from the list and running `nixos-rebuild switch` removes the symlink.
 
 ### Entry-Point Plugins (`extraPythonPackages`)
 
-For pip-packaged plugins that register via `[project.entry-points."hermes_agent.plugins"]` (e.g., [rtk-hermes](https://github.com/ogallotti/rtk-hermes)):
+For pip-packaged plugins that register via `[project.entry-points."niki_agent.plugins"]` (e.g., [rtk-niki](https://github.com/ogallotti/rtk-niki)):
 
 ```nix
-services.hermes-agent.extraPythonPackages = [
-  (config.services.hermes-agent.package.python.pkgs.buildPythonPackage {
-    pname = "rtk-hermes";
+services.niki-agent.extraPythonPackages = [
+  (config.services.niki-agent.package.python.pkgs.buildPythonPackage {
+    pname = "rtk-niki";
     version = "1.0.0";
     src = pkgs.fetchFromGitHub {
       owner = "ogallotti";
-      repo = "rtk-hermes";
+      repo = "rtk-niki";
       rev = "v1.0.0";
       hash = "sha256-...";
     };
     format = "pyproject";
-    build-system = [ config.services.hermes-agent.package.python.pkgs.setuptools ];
+    build-system = [ config.services.niki-agent.package.python.pkgs.setuptools ];
   })
 ];
 ```
 
-The package's `site-packages` is added to PYTHONPATH in the hermes wrapper. `importlib.metadata` discovers the entry point at session start.
+The package's `site-packages` is added to PYTHONPATH in the niki wrapper. `importlib.metadata` discovers the entry point at session start.
 
 ### Optional Dependency Groups (`extraDependencyGroups`)
 
-For optional extras declared in hermes-agent's `pyproject.toml`, use `extraDependencyGroups` to include them in the sealed venv at build time. This is required for any extra not in the default `[all]` set — on Nix, runtime installation into the read-only store is not possible.
+For optional extras declared in niki-agent's `pyproject.toml`, use `extraDependencyGroups` to include them in the sealed venv at build time. This is required for any extra not in the default `[all]` set — on Nix, runtime installation into the read-only store is not possible.
 
 ```nix
 # Enable Discord, Telegram, Slack
-services.hermes-agent.extraDependencyGroups = [ "messaging" ];
+services.niki-agent.extraDependencyGroups = [ "messaging" ];
 ```
 
 These groups join the core dependency resolution at build time. Conflicting
@@ -848,7 +848,7 @@ requirements can still fail that resolution. The table lists common groups;
 | `firecrawl` | Firecrawl web search |
 | `fal` | FAL image generation |
 
-Memory providers that live in the [plugin catalog](../user-guide/features/plugins.md) rather than in the Niki tree (e.g. Hindsight) are not extras. Install them like any catalog plugin with `hermes plugins install hindsight`, or declaratively via [`extraPlugins`](#directory-plugins-extraplugins) pointing at the plugin's source tree.
+Memory providers that live in the [plugin catalog](../user-guide/features/plugins.md) rather than in the Niki tree (e.g. Hindsight) are not extras. Install them like any catalog plugin with `niki plugins install hindsight`, or declaratively via [`extraPlugins`](#directory-plugins-extraplugins) pointing at the plugin's source tree.
 
 Or use the pre-built `#messaging` or `#full` flake packages instead of per-extra configuration (see [Quick Start](#quick-start-any-nix-user)).
 
@@ -866,9 +866,9 @@ Or use the pre-built `#messaging` or `#full` flake packages instead of per-extra
 A directory plugin with third-party Python dependencies needs both options:
 
 ```nix
-services.hermes-agent = {
+services.niki-agent = {
   extraPlugins = [ my-plugin-src ];          # plugin source
-  extraPythonPackages = [ config.services.hermes-agent.package.python.pkgs.redis ];  # its Python dep
+  extraPythonPackages = [ config.services.niki-agent.package.python.pkgs.redis ];  # its Python dep
   extraPackages = [ pkgs.redis ];            # system binary it needs
 };
 ```
@@ -879,12 +879,12 @@ External flakes can override the package directly:
 
 ```nix
 {
-  inputs.hermes-agent.url = "github:NousResearch/hermes-agent";
-  outputs = { hermes-agent, nixpkgs, ... }: {
-    nixpkgs.overlays = [ hermes-agent.overlays.default ];
+  inputs.niki-agent.url = "github:NeGamer01/niki-agent";
+  outputs = { niki-agent, nixpkgs, ... }: {
+    nixpkgs.overlays = [ niki-agent.overlays.default ];
     # Then:
-    #   pkgs.hermes-agent.override { extraPythonPackages = [...]; }
-    #   pkgs.hermes-agent.override { extraDependencyGroups = [ "voice" ]; }
+    #   pkgs.niki-agent.override { extraPythonPackages = [...]; }
+    #   pkgs.niki-agent.override { extraDependencyGroups = [ "voice" ]; }
   };
 }
 ```
@@ -894,14 +894,14 @@ External flakes can override the package directly:
 Plugins still need to be enabled in `config.yaml`. Add them via the declarative settings:
 
 ```nix
-services.hermes-agent.settings.plugins.enabled = [
-  "hermes-lcm"
+services.niki-agent.settings.plugins.enabled = [
+  "niki-lcm"
   "rtk-rewrite"
 ];
 ```
 
 :::note
-A build-time collision check prevents plugin packages from shadowing core hermes dependencies. If a plugin provides a package already in the sealed venv, `nixos-rebuild` fails with a clear error.
+A build-time collision check prevents plugin packages from shadowing core niki dependencies. If a plugin provides a package already in the sealed venv, `nixos-rebuild` fails with a clear error.
 :::
 
 ---
@@ -911,16 +911,16 @@ A build-time collision check prevents plugin packages from shadowing core hermes
 ### Dev Shell
 
 The flake provides an editable Python environment with the lock-derived interpreter
-and the `dev` dependency group. `HERMES_PYTHON` points to its interpreter. It does not install
+and the `dev` dependency group. `NIKI_PYTHON` points to its interpreter. It does not install
 Python dependencies into a repository-local `.venv`. The shell also provides
 Node.js and runtime tools. Its npm hook refreshes JS workspaces when their inputs change.
 
 ```bash
-cd hermes-agent
+cd niki-agent
 nix develop
-"$HERMES_PYTHON" -c "import sys; print(sys.executable); print(sys.version)"
-hermes setup
-hermes chat
+"$NIKI_PYTHON" -c "import sys; print(sys.executable); print(sys.version)"
+niki setup
+niki chat
 ```
 
 ### direnv (Recommended)
@@ -928,7 +928,7 @@ hermes chat
 The included `.envrc` activates the dev shell automatically:
 
 ```bash
-cd hermes-agent
+cd niki-agent
 direnv allow    # one-time
 # Nix reuses its built Python environment; the npm hook checks JS inputs.
 ```
@@ -945,7 +945,7 @@ nix flake check
 nix build .#checks.x86_64-linux.package-contents   # binaries exist + version
 nix build .#checks.x86_64-linux.entry-points-sync  # pyproject.toml ↔ Nix package sync
 nix build .#checks.x86_64-linux.cli-commands        # gateway/config subcommands
-nix build .#checks.x86_64-linux.managed-guard       # HERMES_MANAGED blocks mutation
+nix build .#checks.x86_64-linux.managed-guard       # NIKI_MANAGED blocks mutation
 nix build .#checks.x86_64-linux.bundled-skills      # skills present in package
 nix build .#checks.x86_64-linux.config-roundtrip    # merge script preserves user keys
 ```
@@ -955,11 +955,11 @@ nix build .#checks.x86_64-linux.config-roundtrip    # merge script preserves use
 
 | Check | What it tests |
 |---|---|
-| `package-contents` | `hermes` and `hermes-agent` binaries exist and `hermes --version` runs |
+| `package-contents` | `niki` and `niki-agent` binaries exist and `niki --version` runs |
 | `entry-points-sync` | Every `[project.scripts]` entry in `pyproject.toml` has a wrapped binary in the Nix package |
-| `cli-commands` | `hermes --help` exposes `gateway` and `config` subcommands |
-| `managed-guard` | `HERMES_MANAGED=true hermes config set ...` prints the NixOS error |
-| `bundled-skills` | Skills directory exists, contains SKILL.md files, `HERMES_BUNDLED_SKILLS` is set in wrapper |
+| `cli-commands` | `niki --help` exposes `gateway` and `config` subcommands |
+| `managed-guard` | `NIKI_MANAGED=true niki config set ...` prints the NixOS error |
+| `bundled-skills` | Skills directory exists, contains SKILL.md files, `NIKI_BUNDLED_SKILLS` is set in wrapper |
 | `config-roundtrip` | 7 merge scenarios: fresh install, Nix override, user key preservation, mixed merge, MCP additive merge, nested deep merge, idempotency |
 
 </details>
@@ -972,14 +972,14 @@ nix build .#checks.x86_64-linux.config-roundtrip    # merge script preserves use
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `enable` | `bool` | `false` | Enable the hermes-agent service |
-| `package` | `package` | `hermes-agent` | The hermes-agent package to use |
-| `user` | `str` | `"hermes"` | System user |
-| `group` | `str` | `"hermes"` | System group |
+| `enable` | `bool` | `false` | Enable the niki-agent service |
+| `package` | `package` | `niki-agent` | The niki-agent package to use |
+| `user` | `str` | `"niki"` | System user |
+| `group` | `str` | `"niki"` | System group |
 | `createUser` | `bool` | `true` | Auto-create user/group |
-| `stateDir` | `str` | `"/var/lib/hermes"` | State directory (`HERMES_HOME` parent) |
+| `stateDir` | `str` | `"/var/lib/niki"` | State directory (`NIKI_HOME` parent) |
 | `workingDirectory` | `str` | `"${stateDir}/workspace"` | Agent working directory |
-| `addToSystemPackages` | `bool` | `false` | Add `hermes` CLI to system PATH and set `HERMES_HOME` system-wide |
+| `addToSystemPackages` | `bool` | `false` | Add `niki` CLI to system PATH and set `NIKI_HOME` system-wide |
 
 ### Configuration
 
@@ -992,7 +992,7 @@ nix build .#checks.x86_64-linux.config-roundtrip    # merge script preserves use
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `environmentFiles` | `listOf str` | `[]` | Paths to env files with secrets. Merged into `$HERMES_HOME/.env` at activation time |
+| `environmentFiles` | `listOf str` | `[]` | Paths to env files with secrets. Merged into `$NIKI_HOME/.env` at activation time |
 | `environment` | `attrsOf str` | `{}` | Non-secret env vars. **Visible in Nix store** — do not put secrets here |
 | `authFile` | `null` or `path` | `null` | OAuth credentials seed. Only copied on first deploy |
 | `authFileForceOverwrite` | `bool` | `false` | Always overwrite `auth.json` from `authFile` on activation |
@@ -1002,7 +1002,7 @@ nix build .#checks.x86_64-linux.config-roundtrip    # merge script preserves use
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `documents` | `attrsOf (either str path)` | `{}` | Workspace files. Each key is a path relative to `workingDirectory`. You must set that option to use this one. |
-| `hermesHomeFiles` | `attrsOf (either str path)` | `{}` | Files that go into `HERMES_HOME`. `SOUL.md` and `memories/` must be here, or Niki does not load them. |
+| `nikiHomeFiles` | `attrsOf (either str path)` | `{}` | Files that go into `NIKI_HOME`. `SOUL.md` and `memories/` must be here, or Niki does not load them. |
 
 ### MCP Servers
 
@@ -1025,15 +1025,15 @@ nix build .#checks.x86_64-linux.config-roundtrip    # merge script preserves use
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `extraArgs` | `listOf str` | `[]` | Extra args for `hermes gateway` |
-| `extraPackages` | `listOf package` | `[]` | Extra packages available to the agent. Added to the hermes user's per-user profile so terminal commands, skills, and cron jobs all see them |
-| `extraPlugins` | `listOf package` | `[]` | Directory plugin packages to symlink into `$HERMES_HOME/plugins/`. Each must contain `plugin.yaml` |
+| `extraArgs` | `listOf str` | `[]` | Extra args for `niki gateway` |
+| `extraPackages` | `listOf package` | `[]` | Extra packages available to the agent. Added to the niki user's per-user profile so terminal commands, skills, and cron jobs all see them |
+| `extraPlugins` | `listOf package` | `[]` | Directory plugin packages to symlink into `$NIKI_HOME/plugins/`. Each must contain `plugin.yaml` |
 | `extraPythonPackages` | `listOf package` | `[]` | Python packages added to PYTHONPATH for entry-point plugin discovery. Use the selected package’s `python.pkgs` |
 | `extraDependencyGroups` | `listOf str` | `[]` | pyproject.toml optional extras to include in the sealed venv (e.g. `["voice"]`). Resolved by uv — no collisions |
 | `restart` | `str` | `"always"` | The systemd `Restart=` policy. macOS does not use it. |
 | `restartSec` | `int` | `5` | The systemd `RestartSec=` value. macOS does not use it. |
 
-### Backend (`hermes serve` / `hermes dashboard`)
+### Backend (`niki serve` / `niki dashboard`)
 
 This option runs the process that a remote Niki Desktop connection and the web dashboard connect to, with the gateway. You cannot use it with `container.enable`.
 
@@ -1048,48 +1048,48 @@ This option runs the process that a remote Niki Desktop connection and the web d
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `hermesHome` | `str` | `"${config.home.homeDirectory}/.hermes"` | `HERMES_HOME` directly. The NixOS module builds it from `stateDir`. |
+| `nikiHome` | `str` | `"${config.home.homeDirectory}/.niki"` | `NIKI_HOME` directly. The NixOS module builds it from `stateDir`. |
 | `gateway.enable` | `bool` | `false` | Run the messaging gateway. On the NixOS module the gateway is the service, so that module has no such option. |
 
-### `programs.hermes-agent` (Home Manager only)
+### `programs.niki-agent` (Home Manager only)
 
 Home Manager separates "install this application for me" from "run this
-daemon". `services.hermes-agent` keeps the state, the configuration and the
-daemons. `programs.hermes-agent` installs what you use, and reads
-`hermesHome` and the backend address from the services.
+daemon". `services.niki-agent` keeps the state, the configuration and the
+daemons. `programs.niki-agent` installs what you use, and reads
+`nikiHome` and the backend address from the services.
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `enable` | `bool` | `false` | Add the `hermes` CLI to `home.packages`, and export `HERMES_HOME` for your shells |
-| `package` | `package` | `services.hermes-agent.package` | The package to install. The default applies `extraPythonPackages` and `extraDependencyGroups` from the services, so both are one build. |
+| `enable` | `bool` | `false` | Add the `niki` CLI to `home.packages`, and export `NIKI_HOME` for your shells |
+| `package` | `package` | `services.niki-agent.package` | The package to install. The default applies `extraPythonPackages` and `extraDependencyGroups` from the services, so both are one build. |
 | `desktop.enable` | `bool` | `false` | Add the Niki Desktop application, with a launcher entry on Linux |
-| `desktop.package` | `package` | `package.hermesDesktop` | The desktop package. The default follows `package`, so the application and the services run one Niki runtime. |
+| `desktop.package` | `package` | `package.nikiDesktop` | The desktop package. The default follows `package`, so the application and the services run one Niki runtime. |
 
 ```nix
-programs.hermes-agent = {
+programs.niki-agent = {
   enable = true;
   desktop.enable = true;
 };
 
-services.hermes-agent = {
+services.niki-agent = {
   enable = true;
   backend.mode = "serve";
-  backend.sessionTokenFile = config.sops.secrets."hermes/desktop-token".path;
+  backend.sessionTokenFile = config.sops.secrets."niki/desktop-token".path;
 };
 ```
 
-The launcher carries `HERMES_HOME` itself. A desktop menu reads no shell
-profile, so the value that `programs.hermes-agent.enable` exports with
+The launcher carries `NIKI_HOME` itself. A desktop menu reads no shell
+profile, so the value that `programs.niki-agent.enable` exports with
 `home.sessionVariables` reaches an interactive shell only. Without the
-value in the launcher, the application opens `~/.hermes` while the
-services use `hermesHome`, and you see no sessions and no keys.
+value in the launcher, the application opens `~/.niki` while the
+services use `nikiHome`, and you see no sessions and no keys.
 
 With `backend.sessionTokenFile`, the application connects to the backend
 of the service instead of starting one of its own. Both sides read the
 file at start time, so the token enters no Nix store path. Without the
 option, each side runs its own backend.
 
-`services.hermes-agent.installPackage` was removed by this split. A
+`services.niki-agent.installPackage` was removed by this split. A
 configuration that still sets it gets an error that names the
 replacement.
 
@@ -1102,7 +1102,7 @@ replacement.
 | `container.image` | `str` | `"ubuntu:24.04"` | Base image (pulled at runtime) |
 | `container.extraVolumes` | `listOf str` | `[]` | Extra volume mounts (`host:container:mode`) |
 | `container.extraOptions` | `listOf str` | `[]` | Extra args passed to `docker create` |
-| `container.hostUsers` | `listOf str` | `[]` | Interactive users who get a `~/.hermes` symlink to the service stateDir and are auto-added to the `hermes` group |
+| `container.hostUsers` | `listOf str` | `[]` | Interactive users who get a `~/.niki` symlink to the service stateDir and are auto-added to the `niki` group |
 
 ---
 
@@ -1111,9 +1111,9 @@ replacement.
 ### Native Mode
 
 ```
-/var/lib/hermes/                     # stateDir (owned by hermes:hermes, 0750)
-├── .hermes/                         # HERMES_HOME
-│   ├── SOUL.md                      # from hermesHomeFiles: the agent identity
+/var/lib/niki/                     # stateDir (owned by niki:niki, 0750)
+├── .niki/                         # NIKI_HOME
+│   ├── SOUL.md                      # from nikiHomeFiles: the agent identity
 │   ├── config.yaml                  # Nix-generated (deep-merged each rebuild)
 │   ├── .managed                     # Marker: CLI config mutation blocked
 │   ├── .env                         # Merged from environment + environmentFiles
@@ -1135,8 +1135,8 @@ replacement.
 ### Home Manager
 
 ```
-~/.hermes/                           # hermesHome (HERMES_HOME), 0700
-├── SOUL.md                          # from hermesHomeFiles
+~/.niki/                           # nikiHome (NIKI_HOME), 0700
+├── SOUL.md                          # from nikiHomeFiles
 ├── config.yaml                      # written by Nix, merged at each activation
 ├── .managed                         # marker: names the system that manages this
 ├── .env                             # written again from environment + environmentFiles
@@ -1155,8 +1155,8 @@ Same layout, mounted into the container:
 | Container path | Host path | Mode | Notes |
 |---|---|---|---|
 | `/nix/store` | `/nix/store` | `ro` | Niki binary + all Nix deps |
-| `/data` | `/var/lib/hermes` | `rw` | All state, config, workspace |
-| `/home/hermes` | `${stateDir}/home` | `rw` | Persistent agent home — `pip install --user`, tool caches |
+| `/data` | `/var/lib/niki` | `rw` | All state, config, workspace |
+| `/home/niki` | `${stateDir}/home` | `rw` | Persistent agent home — `pip install --user`, tool caches |
 | `/usr`, `/usr/local`, `/tmp` | (writable layer) | `rw` | `apt`/`pip`/`npm` installs — persists across restarts, lost on recreation | <!-- no-tmp: ok — documents the container's own writable layer -->
 
 ---
@@ -1165,7 +1165,7 @@ Same layout, mounted into the container:
 
 ```bash
 # Update the flake input (run from the directory containing flake.nix)
-cd /etc/nixos && nix flake update hermes-agent
+cd /etc/nixos && nix flake update niki-agent
 
 # Rebuild
 sudo nixos-rebuild switch          # for the NixOS module
@@ -1186,21 +1186,21 @@ All `docker` commands below work the same with `podman`. Substitute accordingly 
 
 ```bash
 # Both modes use the same systemd unit
-journalctl -u hermes-agent -f
+journalctl -u niki-agent -f
 
 # Container mode: also available directly
-docker logs -f hermes-agent
+docker logs -f niki-agent
 ```
 
 ### Container Inspection
 
 ```bash
-systemctl status hermes-agent
-docker ps -a --filter name=hermes-agent
-docker inspect hermes-agent --format='{{.State.Status}}'
-docker exec -it hermes-agent bash
-docker exec hermes-agent readlink /data/current-package
-docker exec hermes-agent cat /data/.container-identity
+systemctl status niki-agent
+docker ps -a --filter name=niki-agent
+docker inspect niki-agent --format='{{.State.Status}}'
+docker exec -it niki-agent bash
+docker exec niki-agent readlink /data/current-package
+docker exec niki-agent cat /data/.container-identity
 ```
 
 ### Force Container Recreation
@@ -1208,10 +1208,10 @@ docker exec hermes-agent cat /data/.container-identity
 If you need to reset the writable layer (fresh Ubuntu):
 
 ```bash
-sudo systemctl stop hermes-agent
-docker rm -f hermes-agent
-sudo rm /var/lib/hermes/.container-identity
-sudo systemctl start hermes-agent
+sudo systemctl stop niki-agent
+docker rm -f niki-agent
+sudo rm /var/lib/niki/.container-identity
+sudo systemctl start niki-agent
 ```
 
 ### Verify Secrets Are Loaded
@@ -1220,16 +1220,16 @@ If the agent starts but can't authenticate with the LLM provider, check that the
 
 ```bash
 # Native mode
-sudo -u hermes cat /var/lib/hermes/.hermes/.env
+sudo -u niki cat /var/lib/niki/.niki/.env
 
 # Container mode
-docker exec hermes-agent cat /data/.hermes/.env
+docker exec niki-agent cat /data/.niki/.env
 ```
 
 ### GC Root Verification
 
 ```bash
-nix-store --query --roots $(docker exec hermes-agent readlink /data/current-package)
+nix-store --query --roots $(docker exec niki-agent readlink /data/current-package)
 ```
 
 ### Common Issues
@@ -1237,11 +1237,11 @@ nix-store --query --roots $(docker exec hermes-agent readlink /data/current-pack
 | Symptom | Cause | Fix |
 |---|---|---|
 | `Cannot save configuration: managed by NixOS` | CLI guards active | Edit `configuration.nix` and `nixos-rebuild switch` |
-| `No adapter available for discord` (or telegram/slack) | Messaging deps missing from the sealed Nix venv | Install `#messaging` variant: `nix profile install ...#messaging`. For NixOS module: `extraDependencyGroups = [ "messaging" ]`. Read `journalctl -u hermes-agent` for `InstallError` or `requirements not met` and the underlying cause. |
+| `No adapter available for discord` (or telegram/slack) | Messaging deps missing from the sealed Nix venv | Install `#messaging` variant: `nix profile install ...#messaging`. For NixOS module: `extraDependencyGroups = [ "messaging" ]`. Read `journalctl -u niki-agent` for `InstallError` or `requirements not met` and the underlying cause. |
 | Container recreated unexpectedly | `extraVolumes`, `extraOptions`, or `image` changed | Expected — writable layer resets. Reinstall packages or use a custom image |
-| `hermes --version` shows old version | Container not restarted | `systemctl restart hermes-agent` |
-| Permission denied on `/var/lib/hermes` | State dir is `0750 hermes:hermes` | Use `docker exec` or `sudo -u hermes` |
-| `nix-collect-garbage` removed hermes | GC root missing | Restart the service (preStart recreates the GC root) |
-| `no container with name or ID "hermes-agent"` (Podman) | Podman rootful container not visible to regular user | Add passwordless sudo for podman (see [Container Mode](#container-mode) section) |
-| `unable to find user hermes` | Container still starting (entrypoint hasn't created user yet) | Wait a few seconds and retry — the CLI retries automatically |
-| Tool added via `extraPackages` not found in terminal | Requires `nixos-rebuild switch` to update the per-user profile | Rebuild and restart: `nixos-rebuild switch && systemctl restart hermes-agent` |
+| `niki --version` shows old version | Container not restarted | `systemctl restart niki-agent` |
+| Permission denied on `/var/lib/niki` | State dir is `0750 niki:niki` | Use `docker exec` or `sudo -u niki` |
+| `nix-collect-garbage` removed niki | GC root missing | Restart the service (preStart recreates the GC root) |
+| `no container with name or ID "niki-agent"` (Podman) | Podman rootful container not visible to regular user | Add passwordless sudo for podman (see [Container Mode](#container-mode) section) |
+| `unable to find user niki` | Container still starting (entrypoint hasn't created user yet) | Wait a few seconds and retry — the CLI retries automatically |
+| Tool added via `extraPackages` not found in terminal | Requires `nixos-rebuild switch` to update the per-user profile | Rebuild and restart: `nixos-rebuild switch && systemctl restart niki-agent` |

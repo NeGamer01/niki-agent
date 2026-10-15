@@ -8,7 +8,7 @@ import asyncio
 from contextlib import nullcontext
 from functools import partial
 
-from hermes_state_runtime import RuntimeStoreError, mutate_runtime_session
+from niki_state_runtime import RuntimeStoreError, mutate_runtime_session
 
 _METADATA = frozenset({'rename', 'archive', 'sidebar'})
 # Prepared off the commit like model, then published as a new frozen policy.
@@ -22,7 +22,7 @@ def _authorize_import(authority, actor, ref, params):
         raise RuntimeStoreError('profile_mismatch')
     if 'session:create' not in actor.capabilities:
         raise RuntimeStoreError('permission_denied')
-    from hermes_state_mutations import validate_action
+    from niki_state_mutations import validate_action
     validate_action('import', params['payload'])
     normalized, errors = authority.db._validate_import_payload(params['payload']['sessions'])
     if errors:
@@ -32,7 +32,7 @@ def _authorize_import(authority, actor, ref, params):
 
 def _authorize_control(authority, actor, ref, params):
     """Control authorization; True when the session is cold history the write must claim."""
-    from hermes_state_mutation_retirement import has_mutation_receipt
+    from niki_state_mutation_retirement import has_mutation_receipt
     if actor.profile_id != authority.profile_id or ref.profile_id != authority.profile_id:
         raise RuntimeStoreError('profile_mismatch')
     if 'session:control' not in actor.capabilities:
@@ -43,7 +43,7 @@ def _authorize_control(authority, actor, ref, params):
     if not has_mutation_receipt(authority.db, actor.subject, ref.session_id, params['request_id']):
         ref = _owner_ref(authority, ref, params)
         if ref.session_id not in authority.sessions:
-            from hermes_state_mutation_binding import authorize_history
+            from niki_state_mutation_binding import authorize_history
             with authority.db._read_ctx() as conn:
                 from gateway.session_local_migration import require_history_claim
                 require_history_claim(authority, conn, actor, ref.session_id)
@@ -60,7 +60,7 @@ def _owner_ref(authority, ref, params):
     if params.get('operation') != 'delete':
         return ref
     from gateway.session_contract import SessionRef
-    from hermes_state_local import local_lineage_owner
+    from niki_state_local import local_lineage_owner
     with authority.db._read_ctx() as conn:
         owner = local_lineage_owner(conn, ref.session_id)
     return ref if owner == ref.session_id else SessionRef(ref.profile_id, owner)
@@ -120,7 +120,7 @@ async def _mutate_session(authority, actor, ref, params, *, commit_lock=None):
     authority._require_admission_open()
 
     def authorize_write(conn):
-        from hermes_state_mutation_binding import authorize_history, import_history_control
+        from niki_state_mutation_binding import authorize_history, import_history_control
         if operation == 'import':
             import_history_control(conn, actor, imported_ids)
             return
@@ -202,7 +202,7 @@ async def write_mutation(authority, ref, params, editor_servers, *, principal_id
     if operation == 'delete':
         # After the synchronous projections (no yield before retirement), off the loop: the
         # retired-media owner check is a messages-table pass (exact retries repeat it too).
-        from hermes_state_media import collect_retired_media
+        from niki_state_media import collect_retired_media
         await asyncio.to_thread(collect_retired_media, authority.db)
     return result
 
@@ -260,7 +260,7 @@ def _project_committed(authority, ref, operation, result):
             ref.session_id, local_session_info(authority, ref), event_type='session.info')
     if operation == 'workspace':
         # Main's move drops the terminal environment so the next command starts in the new folder.
-        from hermes_state_local import local_receipt
+        from niki_state_local import local_receipt
         from tools.terminal_tool_lifecycle import cleanup_vm
         for sid in {ref.session_id, local_receipt(authority.db, ref.session_id)['entry']['session_id']}:
             cleanup_vm(sid)
@@ -275,7 +275,7 @@ def _project_committed(authority, ref, operation, result):
         evict(authority.sessions[ref.session_id].route)
         # Publish the prepared entry, not just its target ID, so fresh-reset and
         # per-session counters match cold recovery in this process too.
-        from hermes_state_local import local_receipt
+        from niki_state_local import local_receipt
         from gateway.session import SessionEntry
         store = authority.runner.session_store
         with store._lock:

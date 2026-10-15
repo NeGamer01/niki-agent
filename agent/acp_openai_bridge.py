@@ -42,7 +42,7 @@ __all__ = [
 
 
 class StreamChunks(list):
-    """Chunk list that also carries response-level attributes (e.g. ``hermes_projected_messages``)
+    """Chunk list that also carries response-level attributes (e.g. ``niki_projected_messages``)
     Niki reads off the ``create`` result; a plain list would drop them on the stream path."""
 
 

@@ -10,7 +10,7 @@ Only `SKILL.md` was modified. All 45 reference files are verbatim copies.
 
 | Change | Upstream | Niki |
 |--------|----------|--------|
-| Metadata namespace | `openclaw` | `hermes` |
+| Metadata namespace | `openclaw` | `niki` |
 | Trigger | `/baoyu-infographic` slash command | Natural language skill matching |
 | User config | EXTEND.md file (project/user/XDG paths) | Removed — not part of Niki infra |
 | User prompts | `AskUserQuestion` (batched) | `clarify` tool (batched, up to 5 questions) |

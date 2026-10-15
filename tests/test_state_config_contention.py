@@ -12,10 +12,10 @@ from threading import Event, Thread
 
 import pytest
 
-from hermes_cli import config
-from hermes_state_wal import apply_wal_with_fallback
+from niki_cli import config
+from niki_state_wal import apply_wal_with_fallback
 from utils import atomic_yaml_write
-import hermes_state_wal as wal
+import niki_state_wal as wal
 
 
 def test_partial_config_import_cannot_invert_config_and_module_locks(tmp_path):
@@ -26,7 +26,7 @@ def test_partial_config_import_cannot_invert_config_and_module_locks(tmp_path):
         import os, sqlite3, sys
 
         import providers
-        import hermes_state_wal as wal
+        import niki_state_wal as wal
 
         partial_ready = Event()
         opener_inside_resolve = Event()
@@ -34,7 +34,7 @@ def test_partial_config_import_cannot_invert_config_and_module_locks(tmp_path):
         original_resolve = wal.resolve_journal_mode
 
         def controlled_list_providers():
-            module = sys.modules["hermes_cli.config"]
+            module = sys.modules["niki_cli.config"]
             assert module.__spec__._initializing
             assert hasattr(module, "_CONFIG_LOCK") and hasattr(module, "load_config")
             partial_ready.set()
@@ -52,14 +52,14 @@ def test_partial_config_import_cannot_invert_config_and_module_locks(tmp_path):
         root = Path(os.environ["STATE_CONFIG_TEST_ROOT"]) / "cold-import"
         root.mkdir()
         os.environ["HOME"] = str(root)
-        os.environ["HERMES_HOME"] = str(root / ".hermes")
+        os.environ["NIKI_HOME"] = str(root / ".niki")
         database = root / "state.db"
         with sqlite3.connect(database) as connection:
             connection.execute("CREATE TABLE retained (value TEXT)")
         outcomes = []
 
         def importer():
-            import hermes_cli.config
+            import niki_cli.config
             outcomes.append("import-returned")
 
         def opener():
@@ -85,7 +85,7 @@ def test_partial_config_import_cannot_invert_config_and_module_locks(tmp_path):
         env={
             **os.environ,
             "HOME": str(tmp_path),
-            "HERMES_HOME": str(tmp_path / ".hermes"),
+            "NIKI_HOME": str(tmp_path / ".niki"),
             "STATE_CONFIG_TEST_ROOT": str(tmp_path),
         },
         capture_output=True,
@@ -108,7 +108,7 @@ def test_existing_database_does_not_wait_for_config_writer(
     tmp_path, monkeypatch, caplog, mode, require_wal, vulnerable
 ):
     monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path / ".hermes"))
+    monkeypatch.setenv("NIKI_HOME", str(tmp_path / ".niki"))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     monkeypatch.setattr(wal, "is_sqlite_wal_reset_vulnerable", lambda: vulnerable)
     config.save_config({"database": {"journal_mode": mode}, "marker": "before"})
@@ -172,7 +172,7 @@ def test_existing_database_does_not_wait_for_config_writer(
 
 @pytest.mark.parametrize("state", ["empty", "unknown", "required_wal"])
 def test_unestablished_or_strict_modes_still_wait_for_real_policy(tmp_path, monkeypatch, state):
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path / ".hermes"))
+    monkeypatch.setenv("NIKI_HOME", str(tmp_path / ".niki"))
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     monkeypatch.setattr(wal, "is_sqlite_wal_reset_vulnerable", lambda: False)
@@ -205,7 +205,7 @@ def test_unestablished_or_strict_modes_still_wait_for_real_policy(tmp_path, monk
 
 
 def test_deferred_mode_change_is_applied_after_writer_finishes(tmp_path, monkeypatch):
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path / ".hermes"))
+    monkeypatch.setenv("NIKI_HOME", str(tmp_path / ".niki"))
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     monkeypatch.setattr(wal, "is_sqlite_wal_reset_vulnerable", lambda: False)

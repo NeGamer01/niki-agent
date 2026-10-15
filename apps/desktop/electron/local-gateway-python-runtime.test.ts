@@ -13,7 +13,7 @@ afterEach(async () => { await fs.rm(dir, { recursive: true, force: true }) })
 
 // A POSIX script stands in for the installation launcher's --print-runtime-command boundary.
 async function launcher(body: string): Promise<string> {
-  const file = path.join(dir, 'hermes')
+  const file = path.join(dir, 'niki')
   await fs.writeFile(file, `#!/bin/sh\nprintf '%s\\n' "$@" > "${dir}/argv"\n${body}\n`, { mode: 0o755 })
 
   return file
@@ -28,7 +28,7 @@ test.skipIf(process.platform === 'win32')('an installed launcher backend mints w
   // The normal Windows install resolves to kind 'command' (the installation launcher).
   const python = process.execPath
   const command = await launcher(`printf '%s' '${JSON.stringify([python, '-I', '-c', 'bootstrap'])}'`)
-  const root = path.join(dir, 'hermes-agent')
+  const root = path.join(dir, 'niki-agent')
   await fs.mkdir(root)
 
   await expect(ticketRuntimeFor({ command, kind: 'command', shell: false, root, env: { PYTHONPATH: '/scrubbed', B: '2' } }))
@@ -53,7 +53,7 @@ test.skipIf(process.platform === 'win32')('a launcher without a usable runtime c
 
 test('backends with no interpreter to name stay refused', async () => {
   for (const backend of [
-    { command: 'hermes', kind: 'command', shell: false },
+    { command: 'niki', kind: 'command', shell: false },
     { command: '"python.cmd"', kind: 'python', shell: true }
   ]) {
     await expect(ticketRuntimeFor(backend)).rejects.toThrow('requires the installed Niki Python runtime')

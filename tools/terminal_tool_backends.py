@@ -19,13 +19,13 @@ from tools.environments.ssh import SSHEnvironment as _SSHEnvironment
 from tools.managed_tool_gateway import is_managed_tool_gateway_ready
 from tools.terminal_tool_config import _get_plugin_env_provider
 from tools.tool_backend_helpers import (has_direct_modal_credentials, managed_nous_tools_enabled,
-                                        nous_tool_gateway_unavailable_message, resolve_modal_backend_state)
+                                        niki_tool_gateway_unavailable_message, resolve_modal_backend_state)
 
 # Log-record parity with the origin module.
 logger = logging.getLogger("tools.terminal_tool")
 
 # Human reason for the most recent failed requirements check (None after a passing one). The CLI
-# startup notice and `hermes doctor` read it through terminal_backend_unavailable_reason() so the user
+# startup notice and `niki doctor` read it through terminal_backend_unavailable_reason() so the user
 # hears WHY the terminal tool is missing instead of discovering it on first use.
 _last_unavailable_reason: Optional[str] = None
 
@@ -111,9 +111,9 @@ def _get_modal_backend_state(modal_mode: object | None) -> dict[str, Any]:
 def _modal_unavailable_reason(modal_state: dict[str, Any]) -> tuple[str, str]:
     """(log message, ValueError message) for a modal_state with no selected backend.
     Single decision shared by the requirements checker and the env builder."""
-    gateway = nous_tool_gateway_unavailable_message("managed Modal execution")
+    gateway = niki_tool_gateway_unavailable_message("managed Modal execution")
     if modal_state["managed_mode_blocked"] or modal_state["mode"] == "managed":
-        tail = (("Nous Tool Gateway access is not currently available and no direct Modal credentials/config "
+        tail = (("Niki Tool Gateway access is not currently available and no direct Modal credentials/config "
                  f"were found. {gateway} Choose TERMINAL_MODAL_MODE=direct/auto to use direct Modal credentials.")
                 if modal_state["managed_mode_blocked"] else f"the managed tool gateway is unavailable. {gateway}")
         return (f"Modal backend selected with TERMINAL_MODAL_MODE=managed, but {tail}",
@@ -222,7 +222,7 @@ def _build_plugin_env(*, env_type, image, cwd, timeout, cc, task_id, **_):
         # Stamp the backend name so path-resolution and progress surfaces can identify plugin
         # backends without class-name sniffing. Test doubles may reject attributes.
         try:
-            env_obj._hermes_backend_name = provider.name.strip().lower()
+            env_obj._niki_backend_name = provider.name.strip().lower()
         except AttributeError:
             pass
         return env_obj
@@ -281,7 +281,7 @@ def _check_vercel(config: dict[str, Any]) -> bool:
                        "Use the default shared setting (51200 MB).")
     if importlib.util.find_spec("vercel") is None:
 
-        return _reject("vercel is required for the Vercel Sandbox terminal backend. Run hermes setup terminal and select Vercel Sandbox.")
+        return _reject("vercel is required for the Vercel Sandbox terminal backend. Run niki setup terminal and select Vercel Sandbox.")
     from agent.secret_scope import get_secret
     if get_secret("VERCEL_OIDC_TOKEN"):
         return True
@@ -308,7 +308,7 @@ def _ssh_pre(config: dict[str, Any]) -> bool:
     if config.get("ssh_host") and config.get("ssh_user"):
         return True
     return _reject("the SSH host and user are not configured (TERMINAL_SSH_HOST / TERMINAL_SSH_USER); "
-                   "run `hermes setup terminal` to enter them or pick the 'local' backend")
+                   "run `niki setup terminal` to enter them or pick the 'local' backend")
 
 
 def _daytona_post(config: dict[str, Any]) -> bool:
@@ -324,7 +324,7 @@ _BACKEND_SPECS: dict[str, dict[str, Any]] = {
     "singularity": {"binary": (lambda: shutil.which("apptainer") or shutil.which("singularity"), "--version", None)},
     "ssh": {"pre": _ssh_pre},
     "modal": {"pre": _modal_pre,
-              "module": ("modal", "modal is required for direct modal terminal backend. Run hermes setup terminal and select Modal.")},
+              "module": ("modal", "modal is required for direct modal terminal backend. Run niki setup terminal and select Modal.")},
     "vercel_sandbox": {"pre": _check_vercel},
     "daytona": {"post": _daytona_post},
 }

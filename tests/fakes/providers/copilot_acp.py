@@ -87,7 +87,7 @@ def crash(exit_code: int = 1, stderr: str = "fatal: agent crashed") -> dict[str,
     return {"type": "crash", "code": exit_code, "stderr": stderr}
 
 
-def hermes_tool_call(call_id: str, name: str, args: dict[str, Any]) -> str:
+def niki_tool_call(call_id: str, name: str, args: dict[str, Any]) -> str:
     """Text a model behind ACP emits to call a Niki tool (ACP has no OpenAI tools channel)."""
     body = {"id": call_id, "type": "function", "function": {"name": name, "arguments": json.dumps(args)}}
     return f"<tool_call>{json.dumps(body)}</tool_call>"
@@ -111,8 +111,8 @@ class AcpFake:
 
     def env(self) -> dict[str, str]:
         """Env vars that point Niki' copilot-acp client at this fake."""
-        return {"HERMES_COPILOT_ACP_COMMAND": str(self.launcher),
-                "HERMES_COPILOT_ACP_ARGS": f"--acp --stdio --state {self.state_dir}"}
+        return {"NIKI_COPILOT_ACP_COMMAND": str(self.launcher),
+                "NIKI_COPILOT_ACP_ARGS": f"--acp --stdio --state {self.state_dir}"}
 
     def records(self) -> list[dict[str, Any]]:
         path = self.state_dir / "transcript.jsonl"

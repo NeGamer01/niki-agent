@@ -14,7 +14,7 @@ Gateway to 400+ genomics and computational biology skills.
 
 | | |
 |---|---|
-| Source | Optional — install with `hermes skills install official/research/bioinformatics` |
+| Source | Optional — install with `niki skills install official/research/bioinformatics` |
 | Path | `optional-skills/research/bioinformatics` |
 | Version | `1.0.0` |
 | Author | Teknium (teknium1), Niki Agent |
@@ -50,18 +50,18 @@ This skill is a gateway to two open-source bioinformatics skill libraries. Inste
 2. Clone the relevant repo (shallow clone to save time):
    ```bash
    # bioSkills (reference material)
-   git clone --depth 1 https://github.com/GPTomics/bioSkills.git ~/.hermes/cache/scratch/bioSkills
+   git clone --depth 1 https://github.com/GPTomics/bioSkills.git ~/.niki/cache/scratch/bioSkills
 
    # ClawBio (runnable pipelines)
-   git clone --depth 1 https://github.com/ClawBio/ClawBio.git ~/.hermes/cache/scratch/ClawBio
+   git clone --depth 1 https://github.com/ClawBio/ClawBio.git ~/.niki/cache/scratch/ClawBio
    ```
 3. Read the specific skill:
    ```bash
    # bioSkills — each skill is at: <category>/<skill-name>/SKILL.md
-   cat ~/.hermes/cache/scratch/bioSkills/variant-calling/gatk-variant-calling/SKILL.md
+   cat ~/.niki/cache/scratch/bioSkills/variant-calling/gatk-variant-calling/SKILL.md
 
    # ClawBio — each skill is at: skills/<skill-name>/
-   cat ~/.hermes/cache/scratch/ClawBio/skills/pharmgx-reporter/README.md
+   cat ~/.niki/cache/scratch/ClawBio/skills/pharmgx-reporter/README.md
    ```
 4. Follow the fetched skill as reference material. These are NOT Niki-format skills — treat them as expert domain guides. They contain correct parameters, proper tool flags, and validated pipelines.
 

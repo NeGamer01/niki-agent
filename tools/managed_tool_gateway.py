@@ -1,4 +1,4 @@
-"""Generic managed-tool gateway helpers for Nous-hosted vendor passthroughs."""
+"""Generic managed-tool gateway helpers for Niki-hosted vendor passthroughs."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import os
 from dataclasses import dataclass
 from typing import Callable, Optional
 
-from hermes_constants import get_hermes_home
+from niki_constants import get_niki_home
 from tools.tool_backend_helpers import managed_nous_tools_enabled
 
 logger = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ _NOUS_ACCESS_TOKEN_REFRESH_SKEW_SECONDS = 120
 class ManagedToolGatewayConfig:
     vendor: str
     gateway_origin: str
-    nous_user_token: str
+    niki_user_token: str
     managed_mode: bool
 
 
@@ -32,30 +32,30 @@ def _clean(value: object) -> Optional[str]:
 
 
 def auth_json_path():
-    """Return the Niki auth store path, respecting HERMES_HOME overrides."""
-    return get_hermes_home() / "auth.json"
+    """Return the Niki auth store path, respecting NIKI_HOME overrides."""
+    return get_niki_home() / "auth.json"
 
 
 def _read_nous_provider_state() -> Optional[dict]:
-    """The profile's Nous state, or None. A free-tier identity counts only while guests are allowed:
-    with ``nous.guest: false`` it is invisible here, so no cached or refreshed token of it is ever
+    """The profile's Niki state, or None. A free-tier identity counts only while guests are allowed:
+    with ``niki.guest: false`` it is invisible here, so no cached or refreshed token of it is ever
     attached to a request.
 
     Resolves through the same profile-then-global-root fallback every other credential reader
     uses: a profile created with ``share_auth`` has no ``auth.json`` of its own and signs in with
-    the root identity. Reading only ``HERMES_HOME/auth.json`` made that profile look signed out to
+    the root identity. Reading only ``NIKI_HOME/auth.json`` made that profile look signed out to
     the connector gate alone, so ``manage_connections`` vanished from its tool list."""
     try:
-        from hermes_cli.auth import get_provider_auth_state
+        from niki_cli.auth import get_provider_auth_state
 
-        nous_provider = get_provider_auth_state("nous")
-        if not isinstance(nous_provider, dict):
+        niki_provider = get_provider_auth_state("niki")
+        if not isinstance(niki_provider, dict):
             return None
-        from hermes_cli.anon_auth import guest_allowed, is_guest_state
+        from niki_cli.anon_auth import guest_allowed, is_guest_state
 
-        if is_guest_state(nous_provider) and not guest_allowed():
+        if is_guest_state(niki_provider) and not guest_allowed():
             return None
-        return nous_provider
+        return niki_provider
     except Exception:
         return None
 
@@ -77,48 +77,48 @@ def _read_user_token_override() -> Optional[str]:
 def peek_nous_access_token() -> Optional[str]:
     """Cheap token probe: env override or cached auth-store token, no expiry check and no network —
     availability scans must stay off the synchronous OAuth refresh path (:func:`read_nous_access_token`)."""
-    from hermes_cli.anon_auth import held_connectors_token
+    from niki_cli.anon_auth import held_connectors_token
 
     return _read_user_token_override() or _clean(held_connectors_token(_read_nous_provider_state()))
 
 
 def read_nous_access_token() -> Optional[str]:
-    """Read a Nous Subscriber OAuth access token from auth store or env override.
+    """Read a Niki Subscriber OAuth access token from auth store or env override.
 
-    A read: with no Nous identity there is no bearer and the answer is None. The free-tier identity
+    A read: with no Niki identity there is no bearer and the answer is None. The free-tier identity
     is created by the boot bootstrap or the first hosted connector action, never on a token-read
     path (NS-845 Q1.2). A retired free-tier credential IS replaced here, once: that is the explicit
     dead-credential rule, shared with inference.
     """
     if explicit := _read_user_token_override():
         return explicit
-    nous_provider = _read_nous_provider_state() or {}
-    if not nous_provider:
+    niki_provider = _read_nous_provider_state() or {}
+    if not niki_provider:
         return None
-    from hermes_cli.anon_auth import held_connectors_token
+    from niki_cli.anon_auth import held_connectors_token
 
-    if fresh_token := _clean(held_connectors_token(nous_provider, skew_seconds=_NOUS_ACCESS_TOKEN_REFRESH_SKEW_SECONDS)):
+    if fresh_token := _clean(held_connectors_token(niki_provider, skew_seconds=_NOUS_ACCESS_TOKEN_REFRESH_SKEW_SECONDS)):
         return fresh_token
     cached_token = peek_nous_access_token()
     try:
-        from hermes_cli.auth import resolve_nous_access_token
+        from niki_cli.auth import resolve_nous_access_token
 
         if refreshed_token := _clean(resolve_nous_access_token(refresh_skew_seconds=_NOUS_ACCESS_TOKEN_REFRESH_SKEW_SECONDS)):
             return refreshed_token
     except Exception as exc:
         # Same dead-credential rule as inference (one place decides it: anon_auth): a retired free-tier
         # identity is replaced once, here, instead of handing back its stale token forever.
-        from hermes_cli.anon_auth import AnonCredentialDead
+        from niki_cli.anon_auth import AnonCredentialDead
 
         if isinstance(exc, AnonCredentialDead):
-            return _replace_dead_guest_token(nous_provider, str(exc.code or "anon_credential_dead"))
-        logger.debug("Nous access token refresh failed: %s", exc)
+            return _replace_dead_guest_token(niki_provider, str(exc.code or "anon_credential_dead"))
+        logger.debug("Niki access token refresh failed: %s", exc)
     return cached_token
 
 
 def _replace_dead_guest_token(dead_state: dict, code: str = "anon_credential_dead") -> Optional[str]:
-    from hermes_cli.anon_auth import ANON_ACCOUNT_LOCKED, clear_dead_guest, ensure_portal_identity
-    from hermes_cli.auth import resolve_nous_access_token
+    from niki_cli.anon_auth import ANON_ACCOUNT_LOCKED, clear_dead_guest, ensure_portal_identity
+    from niki_cli.auth import resolve_nous_access_token
 
     clear_dead_guest(code, dead_token=dead_state.get("anon_token"))
     # Same rule as inference: a locked account is retired but never silently replaced.
@@ -129,7 +129,7 @@ def _replace_dead_guest_token(dead_state: dict, code: str = "anon_credential_dea
             return None
         return _clean(resolve_nous_access_token(refresh_skew_seconds=_NOUS_ACCESS_TOKEN_REFRESH_SKEW_SECONDS))
     except Exception as exc:
-        logger.debug("Nous free tier replacement after a retired credential failed: %s", exc)
+        logger.debug("Niki free tier replacement after a retired credential failed: %s", exc)
         return None
 
 
@@ -151,10 +151,10 @@ def build_vendor_gateway_url(vendor: str) -> str:
 
 def _vendor_gateway(vendor: str, gateway_builder, token_reader) -> Optional[ManagedToolGatewayConfig]:
     gateway_origin = (gateway_builder or build_vendor_gateway_url)(vendor)
-    nous_user_token = (token_reader or read_nous_access_token)()
-    if not gateway_origin or not nous_user_token:
+    niki_user_token = (token_reader or read_nous_access_token)()
+    if not gateway_origin or not niki_user_token:
         return None
-    return ManagedToolGatewayConfig(vendor=vendor, gateway_origin=gateway_origin, nous_user_token=nous_user_token, managed_mode=True)
+    return ManagedToolGatewayConfig(vendor=vendor, gateway_origin=gateway_origin, niki_user_token=niki_user_token, managed_mode=True)
 
 
 def resolve_managed_tool_gateway(
@@ -167,7 +167,7 @@ def resolve_managed_tool_gateway(
 
 
 def resolve_free_search_gateway(token_reader: Optional[Callable[[], Optional[str]]] = None) -> Optional[ManagedToolGatewayConfig]:
-    """Perplexity ``search_type: "fast"`` is served to every Nous identity with no funding check, the
+    """Perplexity ``search_type: "fast"`` is served to every Niki identity with no funding check, the
     anonymous guest tier included, so it needs a token this profile may use (guest-disabled and refresh
     rules live in the reader), not paid entitlement or a registered account. Search only: every other
     vendor route goes through :func:`resolve_managed_tool_gateway`."""
@@ -177,7 +177,7 @@ def resolve_free_search_gateway(token_reader: Optional[Callable[[], Optional[str
 def is_managed_tool_gateway_ready(
     vendor: str, gateway_builder: Optional[Callable[[str], str]] = None,
     token_reader: Optional[Callable[[], Optional[str]]] = None) -> bool:
-    """True when a gateway URL and a likely-usable Nous token are present. Defaults to
+    """True when a gateway URL and a likely-usable Niki token are present. Defaults to
     :func:`peek_nous_access_token` (no OAuth refresh); callers about to make a real request use
     :func:`resolve_managed_tool_gateway` instead."""
     return resolve_managed_tool_gateway(vendor, gateway_builder=gateway_builder, token_reader=token_reader or peek_nous_access_token) is not None

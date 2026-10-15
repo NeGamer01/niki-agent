@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { HermesConnection } from '@/global'
-import type * as Niki from '@/hermes'
-import type { LocalCatalogModel, LocalModelsStatus } from '@/types/hermes'
+import type { NikiConnection } from '@/global'
+import type * as Niki from '@/niki'
+import type { LocalCatalogModel, LocalModelsStatus } from '@/types/niki'
 
 const backend = vi.hoisted(() => ({ catalog: vi.fn(), status: vi.fn() }))
 
-vi.mock('@/hermes', async importOriginal => ({
+vi.mock('@/niki', async importOriginal => ({
   ...(await importOriginal<typeof Niki>()),
   getLocalCatalog: () => backend.catalog(),
   getLocalModelsStatus: () => backend.status()
@@ -18,7 +18,7 @@ const row = (id: string, recommended: boolean): LocalCatalogModel =>
 const NO_RUNTIME = { models: [], runtime_installed: false } as unknown as LocalModelsStatus
 
 const connection = (mode: 'local' | 'remote', baseUrl = 'http://127.0.0.1:9') =>
-  ({ baseUrl, isFullscreen: false, mode }) as HermesConnection
+  ({ baseUrl, isFullscreen: false, mode }) as NikiConnection
 
 async function connectLocal() {
   const { $localModelsEnabled } = await import('./local-models-flag')

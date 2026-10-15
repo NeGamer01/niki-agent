@@ -6,15 +6,15 @@ import {
   JSON_RPC_METHOD_NOT_FOUND,
   JsonRpcGatewayError,
   reconnectBackoffDelayMs
-} from '@hermes/shared'
+} from '@niki/shared'
 import { useEffect, useRef } from 'react'
 
 import { canonicalOwnerProfile } from '@/api/canonical-protocol'
 import { createGatewayEventDedupe } from '@/app/gateway/gateway-event-dedupe'
 import { reportStartupLatency } from '@/app/gateway/report-startup-latency'
 import { shouldApplyPostBootProgressError } from '@/components/boot-failure-reauth'
-import type { DesktopBootProgress, HermesConnection, HermesWindowState } from '@/global'
-import { HermesGateway } from '@/hermes'
+import type { DesktopBootProgress, NikiConnection, NikiWindowState } from '@/global'
+import { NikiGateway } from '@/niki'
 import { translateNow } from '@/i18n'
 import { desktopDefaultCwd } from '@/lib/desktop-fs'
 import {
@@ -154,7 +154,7 @@ const BOOT_RETRY_BASE_DELAY_MS = 2_000
 // own connect timeout.
 
 /** Registry identity whose runtimes died with the primary connection. */
-export function primaryRuntimeConnectionId(connection: Pick<HermesConnection, 'connectionId' | 'mode'>): null | string {
+export function primaryRuntimeConnectionId(connection: Pick<NikiConnection, 'connectionId' | 'mode'>): null | string {
   const connectionId = connection.connectionId?.trim()
 
   if (connectionId) {
@@ -219,10 +219,10 @@ interface GatewayBootOptions {
   /** Server→client request from any registry socket; false = no handler (the channel answers -32601). */
   handleServerRequest: (request: ScopedServerRequest) => boolean
   onConnectionReady: (
-    connection: Awaited<ReturnType<NonNullable<typeof window.hermesDesktop>['getConnection']>> | null
+    connection: Awaited<ReturnType<NonNullable<typeof window.nikiDesktop>['getConnection']>> | null
   ) => void
-  onGatewayReady: (gateway: HermesGateway | null) => void
-  refreshHermesConfig: (force?: boolean, shouldPublish?: () => boolean) => Promise<void>
+  onGatewayReady: (gateway: NikiGateway | null) => void
+  refreshNikiConfig: (force?: boolean, shouldPublish?: () => boolean) => Promise<void>
   refreshSessions: (shouldPublish?: () => boolean) => Promise<void>
 }
 
@@ -232,7 +232,7 @@ export function useGatewayBoot({
   handleServerRequest,
   onConnectionReady,
   onGatewayReady,
-  refreshHermesConfig,
+  refreshNikiConfig,
   refreshSessions
 }: GatewayBootOptions) {
   useDefaultProfilePreference()
@@ -244,7 +244,7 @@ export function useGatewayBoot({
     handleServerRequest,
     onConnectionReady,
     onGatewayReady,
-    refreshHermesConfig,
+    refreshNikiConfig,
     refreshSessions
   })
 
@@ -254,13 +254,13 @@ export function useGatewayBoot({
     handleServerRequest,
     onConnectionReady,
     onGatewayReady,
-    refreshHermesConfig,
+    refreshNikiConfig,
     refreshSessions
   }
 
   useEffect(() => {
     let cancelled = false
-    const desktop = window.hermesDesktop
+    const desktop = window.nikiDesktop
 
     // Window-state IPC (fullscreen / traffic-light position) that lands while
     // no connection is published — mid-boot, or between a dropped primary and
@@ -268,9 +268,9 @@ export function useGatewayBoot({
     // chrome state into each descriptor at mint time, so a toggle that happens
     // AFTER the mint but BEFORE the renderer publishes it is newer than the
     // snapshot and would otherwise be lost until the next toggle (#108641).
-    let pendingWindowState: HermesWindowState | null = null
+    let pendingWindowState: NikiWindowState | null = null
 
-    const publish = (next: HermesConnection | null) => {
+    const publish = (next: NikiConnection | null) => {
       if (next && pendingWindowState) {
         next = { ...next, ...pendingWindowState }
         pendingWindowState = null
@@ -313,19 +313,19 @@ export function useGatewayBoot({
     // reconnect with backoff, and we nudge a reconnect on the OS/browser
     // signals that fire around wake (power resume, network online, the window
     // becoming visible).
-    let primaryConnection: HermesConnection | null = null
+    let primaryConnection: NikiConnection | null = null
     // Bumped whenever the primary route is recorded, so a reconnect whose
     // lookup started before a boot/connection apply cannot re-own the primary.
     let primaryRouteRevision = 0
 
-    const recordPrimaryConnection = (connection: HermesConnection) => {
+    const recordPrimaryConnection = (connection: NikiConnection) => {
       primaryConnection = connection
       primaryRouteRevision += 1
       setPrimaryGatewayConnection(connection)
     }
 
     let bootCompleted = false
-    // The other way a cold boot concludes. Main keeps startHermes() available
+    // The other way a cold boot concludes. Main keeps startNiki() available
     // after the renderer gave up, and every later getConnection() caller
     // re-enters it, replaying `backend.resolve` (running:true) then
     // `backend.remote` (error:null) onto a renderer whose boot is over. Without
@@ -551,7 +551,7 @@ export function useGatewayBoot({
         // A manual retry may finish after the user has moved to another route.
         if (!manual || (isActivePrimary() && gatewayActivationEpoch() === manual.activationEpoch)) {
           reconcileBusyStatesOnReconnect()
-          await callbacksRef.current.refreshHermesConfig().catch(() => undefined)
+          await callbacksRef.current.refreshNikiConfig().catch(() => undefined)
           await callbacksRef.current.refreshSessions().catch(() => undefined)
         }
       } catch (err) {
@@ -718,7 +718,7 @@ export function useGatewayBoot({
     // session id against the wrong backend — the HUD then falls back to the
     // default profile's last session (#82285). The override wins over the
     // stored preference; absent, behavior is unchanged.
-    async function getWindowBackend(startup = false): Promise<HermesConnection> {
+    async function getWindowBackend(startup = false): Promise<NikiConnection> {
       const profile = windowProfileOverride()
       const peer = isPeerInstanceWindow()
 
@@ -738,7 +738,7 @@ export function useGatewayBoot({
     }
 
     async function adoptPrimaryProfile(
-      connection: HermesConnection,
+      connection: NikiConnection,
       shouldPublish: () => boolean = () => true
     ): Promise<boolean> {
       // The resolved descriptor reflects the explicit startup default. The
@@ -873,7 +873,7 @@ export function useGatewayBoot({
 
         await Promise.all([
           seedDefaultCwd(ownsSwitch),
-          callbacksRef.current.refreshHermesConfig(false, ownsSwitch).catch(() => undefined),
+          callbacksRef.current.refreshNikiConfig(false, ownsSwitch).catch(() => undefined),
           callbacksRef.current.refreshSessions(ownsSwitch).catch(() => undefined)
         ])
 
@@ -921,7 +921,7 @@ export function useGatewayBoot({
         return
       }
 
-      // Soft switch / post-boot startHermes re-emits progress — ignore so the
+      // Soft switch / post-boot startNiki re-emits progress — ignore so the
       // cold-boot CONNECTING overlay stays down. A boot that ended in failure
       // is concluded too: replaying its steps would take the recovery overlay
       // back down. Post-boot errors are gated:
@@ -991,7 +991,7 @@ export function useGatewayBoot({
       }
     }
 
-    const gateway = adoptedFromHmr ? survivor!.gateway : new HermesGateway()
+    const gateway = adoptedFromHmr ? survivor!.gateway : new NikiGateway()
 
     // Every socket this window owns (the primary below, every registry
     // secondary via onEvent) funnels through this one gate before any store
@@ -1420,7 +1420,7 @@ export function useGatewayBoot({
         message: translateNow('boot.errors.backgroundExited'),
         durationMs: 0,
         action: {
-          label: translateNow('boot.errors.restartHermes'),
+          label: translateNow('boot.errors.restartNiki'),
           onClick: requestBackendRestart
         },
         secondaryAction: {
@@ -1555,7 +1555,7 @@ export function useGatewayBoot({
           // post-connect pass covers the remote backend default. Non-fatal: a
           // failed sync must not abort boot (the remembered cwd remains).
           seedDefaultCwd().catch(err => console.warn('Failed to sync default workspace cwd post-connect', err)),
-          callbacksRef.current.refreshHermesConfig(),
+          callbacksRef.current.refreshNikiConfig(),
           // Session-list population is never boot-fatal. The gateway WS is
           // already open by this point — a failed sidebar fetch (transient
           // blip, or an endpoint the fallback couldn't cover) must leave the
@@ -1636,7 +1636,7 @@ export function useGatewayBoot({
       // input doesn't sit disabled after the swap.
       reportPrimaryGatewayState(gateway.connectionState)
 
-      await callbacksRef.current.refreshHermesConfig().catch(() => undefined)
+      await callbacksRef.current.refreshNikiConfig().catch(() => undefined)
 
       if (cancelled) {
         return

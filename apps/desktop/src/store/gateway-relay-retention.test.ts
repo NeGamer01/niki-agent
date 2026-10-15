@@ -17,9 +17,9 @@ const gatewayMocks = vi.hoisted(() => ({
   setGatewayState: vi.fn()
 }))
 
-vi.mock('@/hermes', () => ({
+vi.mock('@/niki', () => ({
   setApiRequestConnection: vi.fn(),
-  HermesGateway: class {
+  NikiGateway: class {
     connectionState = 'closed'
     constructor() {
       gatewayMocks.constructions += 1
@@ -61,7 +61,7 @@ const agentConn = {
 }
 
 function installDesktop(): void {
-  ;(window as unknown as { hermesDesktop: unknown }).hermesDesktop = {
+  ;(window as unknown as { nikiDesktop: unknown }).nikiDesktop = {
     getConnection: vi.fn(async () => agentConn),
     getConnectionFor: vi.fn(async () => agentConn)
   }
@@ -77,7 +77,7 @@ beforeEach(() => {
 afterEach(() => {
   closeSecondaryGateways()
   vi.clearAllMocks()
-  delete (window as unknown as { hermesDesktop?: unknown }).hermesDesktop
+  delete (window as unknown as { nikiDesktop?: unknown }).nikiDesktop
 })
 
 describe('bot-relay gateway retention (#93594)', () => {

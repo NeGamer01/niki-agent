@@ -7,7 +7,7 @@ license: MIT
 platforms: [linux, macos]
 required_commands: [ffmpeg, ffprobe, python3]
 metadata:
-  hermes:
+  niki:
     tags: [video, presenter, avatar, lipsync, tts, captions, creative]
     category: creative
     homepage: https://github.com/cclank/lanshu-create-ai-presenter-video
@@ -35,11 +35,11 @@ the whisper/STT tooling, ffmpeg for everything deterministic).
 ## Niki adaptations (read first)
 
 - **Skill dir resolution** — upstream hardcoded its own agent's skills path.
-  In Niki the loader expands `${HERMES_SKILL_DIR}` to this skill's installed
+  In Niki the loader expands `${NIKI_SKILL_DIR}` to this skill's installed
   directory, so every command below uses that token directly:
 
   ```bash
-  SKILL_DIR="${HERMES_SKILL_DIR}"
+  SKILL_DIR="${NIKI_SKILL_DIR}"
   ```
 
   Shell variables do not persist between tool calls — re-paste the assignment

@@ -2,7 +2,7 @@
 webhook server for inbound, ``App.send()`` for proactive sends.
 
 Requires the ``teams`` extra (auto-installed by the gateway on first start, or
-``<hermes-venv>/bin/pip install microsoft-teams-apps aiohttp``) and credentials via env
+``<niki-venv>/bin/pip install microsoft-teams-apps aiohttp``) and credentials via env
 (TEAMS_CLIENT_ID / TEAMS_CLIENT_SECRET / TEAMS_TENANT_ID, optional TEAMS_PORT) or
 ``platforms.teams.extra`` in config.yaml (``client_id`` / ``client_secret`` / ``tenant_id`` / ``port``).
 """
@@ -193,7 +193,7 @@ async def _standalone_send(
 ) -> dict[str, Any]:
     """Acquire a Bot Framework bearer token and POST a single message activity; used by
     ``send_message_tool._send_via_adapter`` when the gateway runner is not in this process
-    (``hermes cron``). ``TEAMS_SERVICE_URL`` is allowlisted and ``chat_id`` charset-checked
+    (``niki cron``). ``TEAMS_SERVICE_URL`` is allowlisted and ``chat_id`` charset-checked
     (SSRF/path traversal). ``media_files`` / ``force_document`` are signature parity only — text-only."""
     extra = getattr(pconfig, "extra", {}) or {}
     client_id, client_secret, tenant_id = _credentials(pconfig)
@@ -479,7 +479,7 @@ class TeamsAdapter(BasePlatformAdapter):
         from gateway.platforms.base import _ssrf_redirect_guard, _read_httpx_body_with_limit
         if not is_safe_url(url):
             raise ValueError("Blocked unsafe attachment URL (SSRF protection)")
-        headers = {"User-Agent": "Mozilla/5.0 (compatible; HermesAgent/1.0)"}
+        headers = {"User-Agent": "Mozilla/5.0 (compatible; NikiAgent/1.0)"}
         if _is_botframework_attachment_url(url):
             try:
                 headers["Authorization"] = f"Bearer {await self._get_botframework_token()}"
@@ -639,14 +639,14 @@ class TeamsAdapter(BasePlatformAdapter):
         from tools.approval import resolve_gateway_approval, has_blocking_approval
 
         data = ctx.activity.value.action.data or {}
-        hermes_action = data.get("hermes_action", "")
+        niki_action = data.get("niki_action", "")
         session_key = data.get("session_key", "")
-        if not hermes_action or not session_key:
+        if not niki_action or not session_key:
             return self._invoke_message(t("platform.teams.approval.unknown_action"))
         denied = self._card_action_denied(ctx.activity.from_)
         if denied:
             return self._invoke_message(denied)
-        choice = _APPROVAL_CHOICES.get(hermes_action)
+        choice = _APPROVAL_CHOICES.get(niki_action)
         if not choice:
             return self._invoke_message(t("platform.teams.approval.unknown_action"))
         if not has_blocking_approval(session_key):
@@ -691,8 +691,8 @@ class TeamsAdapter(BasePlatformAdapter):
         for label, choice, style in prompt.actions:
             kw = {"style": self._EA_CARD_STYLES[style]} if style else {}
             actions.append(ExecuteAction(
-                title=label, verb="hermes_approve",
-                data={**btn_data_base, "hermes_action": self._EA_CARD_ACTIONS[choice]}, **kw))
+                title=label, verb="niki_approve",
+                data={**btn_data_base, "niki_action": self._EA_CARD_ACTIONS[choice]}, **kw))
         body = _approval_body(self._truncate_preview(prompt.command, self._EA_CMD_BUDGET), prompt.description, always=True)
         body.append(TextBlock(text=format_approval_deadline_line(approval_timeout_seconds()), wrap=True))
         if prompt.smart_denied:
@@ -800,9 +800,9 @@ _SETUP_INTRO = (  # "" → blank line
 
 
 def interactive_setup() -> None:
-    from hermes_cli.config import get_env_value, save_env_value
-    from hermes_cli.cli_output import prompt, prompt_yes_no, print_info, print_success, print_warning
-    from hermes_cli.setup_platforms import declines_reconfigure
+    from niki_cli.config import get_env_value, save_env_value
+    from niki_cli.cli_output import prompt, prompt_yes_no, print_info, print_success, print_warning
+    from niki_cli.setup_platforms import declines_reconfigure
     if declines_reconfigure("Teams", "Reconfigure Teams?", "TEAMS_CLIENT_ID"):
         return
     for line in _SETUP_INTRO:
@@ -826,14 +826,14 @@ def interactive_setup() -> None:
         save_env_value("TEAMS_ALLOW_ALL_USERS", "true")
         print_warning("⚠️  Open access — anyone who can message the bot can command it.")
     print()
-    print_success("Teams configuration saved to ~/.hermes/.env")
+    print_success("Teams configuration saved to ~/.niki/.env")
     print_info("Install the app in Teams:  teams app install --id <teamsAppId>")
-    print_info("Restart the gateway:       hermes gateway restart")
+    print_info("Restart the gateway:       niki gateway restart")
 
 
 def _install_hint() -> str:
     """Point to the setup flow that requests PM's declared Teams extra."""
-    return "Teams SDK missing — run `hermes setup`, configure Teams, then restart the gateway"
+    return "Teams SDK missing — run `niki setup`, configure Teams, then restart the gateway"
 
 
 def register(ctx) -> None:

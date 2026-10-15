@@ -1,9 +1,9 @@
 # Niki Plugin Catalog
 
-Curated, Nous-approved Niki plugins. Each YAML file in this directory
+Curated, Niki-approved Niki plugins. Each YAML file in this directory
 (except `removed.yaml`) is one catalog entry, discoverable via
-`hermes plugins catalog` / `hermes plugins search` and installable with
-`hermes plugins install <name>`.
+`niki plugins catalog` / `niki plugins search` and installable with
+`niki plugins install <name>`.
 
 ## Admission policy
 
@@ -12,7 +12,7 @@ meaningful:
 
 <!-- admission-rules:start (mirrored in website/docs/developer-guide/plugins/catalog-submission.md; tests/website/test_catalog_rules_mirror.py keeps them identical) -->
 1. **Human-merged gate.** Entries are added *only* via a PR to the
-   `hermes-agent` repository, reviewed and merged by a maintainer. There is
+   `niki-agent` repository, reviewed and merged by a maintainer. There is
    no self-serve registry, no automated ingestion.
 2. **Exact SHA pins are mandatory.** Every entry pins a full 40-character
    commit SHA. Branches, tags, and short SHAs are rejected by the loader.
@@ -22,7 +22,7 @@ meaningful:
    remote `plugin.js` loaders). The exact SHA pin *is* the trust model; a
    self-updater lets an installed copy move to a commit nobody reviewed.
    Updates reach users only through a SHA-bump PR here plus
-   `hermes plugins update <name>`. Keep the updater in the standalone
+   `niki plugins update <name>`. Keep the updater in the standalone
    distribution if you want one; strip it from the catalog build.
 4. **SHA bumps are new PRs.** Updating an entry's pin is a new PR whose diff
    (old SHA → new SHA) is re-reviewed like any other change — reviewers are
@@ -40,7 +40,7 @@ meaningful:
    (tools, hooks, middleware, env vars) must match what the plugin actually
    registers at the pinned commit. Validation fails the entry otherwise —
    undeclared capability creep is treated as a security issue.
-7. **The install scanner runs at admission.** `hermes plugins validate` includes
+7. **The install scanner runs at admission.** `niki plugins validate` includes
    the `security scan` check: `dangerous` fails the entry; `caution` findings
    appear as warnings in the CI log and the reviewer reads them before merging.
    In exchange, installs at the pinned SHA accept `caution` without a prompt
@@ -49,12 +49,12 @@ meaningful:
    in the Desktop renderer with the app's full authority (the loader isolates
    errors, not capabilities), so a listed one may only use the plugin SDK:
    no prototype patching (`X.prototype.y =`, `Object.defineProperty(...prototype`),
-   no `eval`/`new Function`, no `import()` of anything but `@hermes/plugin-sdk`
+   no `eval`/`new Function`, no `import()` of anything but `@niki/plugin-sdk`
    / `react` (app bundle chunks, blob or http URLs included), no script-tag
    injection, no reaching into the app's internal stores or its own markup
    (querying `data-slot` / `data-tour` / `data-sidebar` / `data-testid`
    elements from `document`, or a `document.body` MutationObserver, to restyle,
-   hide, click or rewrite core UI). `hermes plugins validate` refuses these at
+   hide, click or rewrite core UI). `niki plugins validate` refuses these at
    admission (`desktop surface` check); a plugin that needs a capability the
    SDK lacks asks for an SDK hook instead of patching around it.
 9. **No runtime overrides of Niki core.** A listed plugin extends Niki only
@@ -64,7 +64,7 @@ meaningful:
    private dicts in place (`AIAgent.<method> = ...`, `setattr(server, ...)`,
    `sys.modules[...]`, writes into a core module's tables). Two plugins
    patching the same seam silently break each other, and every core release
-   can break both. `hermes plugins validate` refuses these at admission (`no
+   can break both. `niki plugins validate` refuses these at admission (`no
    core override` check), and warns (without failing) on each import of an
    undocumented core module, by file and line. If the hook you need does not
    exist, open an issue describing it: we would rather add the seam than list
@@ -106,14 +106,14 @@ meaningful:
    long-running background processes, stored credentials. Telemetry and usage
    reporting are opt-in. Reviewers summarise these as disclosure lines on the
    entry PR; undisclosed behaviour found in review is a request for changes.
-14. **Compatibility metadata is truthful.** `requires_hermes` is a SemVer floor
+14. **Compatibility metadata is truthful.** `requires_niki` is a SemVer floor
    (`">=0.21.5"`), never a CalVer date, and never newer than the current release
    (the loader skips the plugin otherwise). `version` matches the pinned code,
    and Python dependencies resolve under Niki's core constraints
-   (`hermes plugins validate --install-deps` is what CI runs).
+   (`niki plugins validate --install-deps` is what CI runs).
 15. **No skins or forks of bundled plugins.** A change to a bundled plugin is a
-   PR against `hermes-agent`, not a competing listing, and vendor-lookalike skins
-   are not listed under Nous branding.
+   PR against `niki-agent`, not a competing listing, and vendor-lookalike skins
+   are not listed under Niki branding.
 16. **One listing per plugin lineage.** A fork of a listed community plugin is
    listed only when it is materially different from the original: a different
    transport or architecture, or capability the original lacks and its author
@@ -144,7 +144,7 @@ meaningful:
 
 The step-by-step submission guide, with the same rules and what reviewers check,
 lives at
-[Submitting to the plugin catalog](https://hermes-agent.nousresearch.com/docs/developer-guide/plugins/catalog-submission).
+[Submitting to the plugin catalog](https://github.com/NeGamer01/niki-agent/docs/developer-guide/plugins/catalog-submission).
 
 ## Entry schema
 
@@ -160,7 +160,7 @@ maintainer: OwnerName
 tier: official              # official | community (default community)
 category: memory            # desktop | memory | platform | web | tools | voice | automation | models | general
                             # (default desktop) — the shelf the entry sits on at /docs/plugins
-requires_hermes: ">=0.19"   # optional
+requires_niki: ">=0.19"   # optional
 docs_url: ""                # optional
 version: "1.4.0"            # optional human label for the sha (quote it); shown as "1.4.0 @ abcd1234"
 image: ""                   # optional https image on a GitHub host, 2:1 (e.g. 1200x600), e.g.
@@ -186,7 +186,7 @@ so the Desktop catalog and the docs site never fetch from third-party hosts;
 pin the raw URL to the entry's commit and the picture is as immutable as the
 code.
 
-Every entry gets a page at `https://hermes-agent.nousresearch.com/docs/plugins/<name>`
+Every entry gets a page at `https://github.com/NeGamer01/niki-agent/docs/plugins/<name>`
 and every maintainer a page at `/docs/plugins/by/<maintainer>`, both generated
 from these files at docs build time. `screenshots:` fills the page's gallery;
 the build fetches the README (from `subdir` if set, else the repo root) **at the

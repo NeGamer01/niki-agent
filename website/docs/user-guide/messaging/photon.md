@@ -43,7 +43,7 @@ automatically.
 
 - A Photon account — sign up at [app.photon.codes][app]
 - Node.js: Niki uses its managed Node when available.
-  `hermes pm install node` provisions the pin; the adapter can fall back to PATH.
+  `niki pm install node` provisions the pin; the adapter can fall back to PATH.
 - A phone number that can receive iMessage (used to bind your account)
 
 That's it — there is no public URL or tunnel to set up.
@@ -53,14 +53,14 @@ That's it — there is no public URL or tunnel to set up.
 Either run the unified gateway wizard and pick **Photon iMessage**:
 
 ```bash
-hermes gateway setup
+niki gateway setup
 ```
 
 …or run the Photon setup directly (the wizard calls the same flow):
 
 ```bash
 # Device-code login + project + user + sidecar deps, all in one
-hermes photon setup --phone +15551234567
+niki photon setup --phone +15551234567
 ```
 
 The setup, in order:
@@ -77,13 +77,13 @@ The setup, in order:
 6. **Runs `npm install`** inside the plugin's sidecar directory. On
    read-only / immutable install trees (hosted Docker images, Podman,
    Nix) the sidecar automatically falls back to a writable mirror under
-   `~/.hermes/photon/sidecar`; set `PHOTON_SIDECAR_DIR` to pin an
+   `~/.niki/photon/sidecar`; set `PHOTON_SIDECAR_DIR` to pin an
    explicit location.
 
-Runtime credentials are written to `~/.hermes/.env`
+Runtime credentials are written to `~/.niki/.env`
 (`PHOTON_PROJECT_ID` = the Spectrum project id, `PHOTON_PROJECT_SECRET`),
 the same place every other channel keeps its token. Management metadata
-(device token, dashboard project id) lives in `~/.hermes/auth.json` under
+(device token, dashboard project id) lives in `~/.niki/auth.json` under
 `credential_pool.photon` / `credential_pool.photon_project`.
 
 ## Authorizing users
@@ -95,18 +95,18 @@ channel. Choose one approach:
 line, Niki replies with a pairing code. Approve it with:
 
 ```bash
-hermes pairing approve photon <CODE>
+niki pairing approve photon <CODE>
 ```
 
-Use `hermes pairing list` to see pending codes and approved users.
+Use `niki pairing list` to see pending codes and approved users.
 
-**Pre-authorize specific numbers** (in `~/.hermes/.env`):
+**Pre-authorize specific numbers** (in `~/.niki/.env`):
 
 ```bash
 PHOTON_ALLOWED_USERS=+15551234567,+15559876543
 ```
 
-**Open access** (dev only, in `~/.hermes/.env`):
+**Open access** (dev only, in `~/.niki/.env`):
 
 ```bash
 PHOTON_ALLOW_ALL_USERS=true
@@ -150,7 +150,7 @@ BlueBubbles iMessage channel uses.
 ## Start the gateway
 
 ```bash
-hermes gateway start
+niki gateway start
 ```
 
 You'll see something like:
@@ -164,7 +164,7 @@ Send an iMessage to your assigned number and Niki will reply.
 ## Status & troubleshooting
 
 ```bash
-hermes photon status
+niki photon status
 ```
 
 Prints saved credentials, sidecar health, your registered number, and the
@@ -187,14 +187,14 @@ Photon iMessage status
 
 Common issues:
 
-- **`sidecar deps : ✗ run hermes photon install-sidecar`** — Node is
+- **`sidecar deps : ✗ run niki photon install-sidecar`** — Node is
   installed but `spectrum-ts` isn't. Run the suggested command.
-- **`device token : ✗ missing`** — run `hermes photon setup` to log in.
+- **`device token : ✗ missing`** — run `niki photon setup` to log in.
 - **`No iMessage line assigned yet`** — Spectrum is enabled but no line
-  has been provisioned; re-run `hermes photon setup` or check the
+  has been provisioned; re-run `niki photon setup` or check the
   [dashboard][app].
 - **Sidecar won't start** — confirm `node --version` is 18.17+ and that
-  `hermes photon install-sidecar` completed without errors.
+  `niki photon install-sidecar` completed without errors.
 
 ## Limits today
 
@@ -221,9 +221,9 @@ Common issues:
   50 new-conversation initiations per shared line per day. Increases
   available — email `help@photon.codes`.
 - **Cron and standalone sends need the gateway running.** Out-of-process
-  senders (cron jobs, `hermes send`, the dashboard) reuse the sidecar the
+  senders (cron jobs, `niki send`, the dashboard) reuse the sidecar the
   gateway spawned — they read its port/token from
-  `<hermes-home>/runtime/photon-sidecar.json`, written once the sidecar
+  `<niki-home>/runtime/photon-sidecar.json`, written once the sidecar
   passes its health check and removed when it stops. If a standalone send
   reports the gateway appears to be down, start (or restart) the gateway
   first.

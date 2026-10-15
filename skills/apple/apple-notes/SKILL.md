@@ -6,7 +6,7 @@ author: Niki Agent
 license: MIT
 platforms: [macos]
 metadata:
-  hermes:
+  niki:
     tags: [Notes, Apple, macOS, note-taking]
     related_skills: [obsidian]
 prerequisites:

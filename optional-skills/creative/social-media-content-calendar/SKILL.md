@@ -6,7 +6,7 @@ author: Ben Barclay (benbarclay), Niki Agent
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  niki:
     tags: [Social-Media, Content-Calendar, Campaigns, Publishing]
     related_skills: [xurl, humanizer]
 ---

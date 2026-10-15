@@ -17,7 +17,7 @@ from pathlib import Path
 
 from gateway.session_busy_controls import authorize
 from gateway.session_tui_reads import context_breakdown
-from hermes_state_runtime import RuntimeStoreError
+from niki_state_runtime import RuntimeStoreError
 
 
 def handlers(connection):
@@ -36,8 +36,8 @@ def _profile_home(authority):
     home = Path(str(authority.profile_id))
     if home.is_absolute() and home.is_dir():
         return home
-    from hermes_constants import get_hermes_home
-    return get_hermes_home()
+    from niki_constants import get_niki_home
+    return get_niki_home()
 
 
 def _multiplexed(authority):
@@ -62,8 +62,8 @@ async def save_session(connection, ref, params):
     target = physical_target(authority, ref)
 
     def write():
-        from hermes_cli.session_export import load_save_snapshot, render_session_for_save
-        from hermes_state import SessionExportTooLargeError
+        from niki_cli.session_export import load_save_snapshot, render_session_for_save
+        from niki_state import SessionExportTooLargeError
         try:
             data = load_save_snapshot(authority.db, target, 'json')
         except SessionExportTooLargeError as exc:
@@ -71,7 +71,7 @@ async def save_session(connection, ref, params):
         if not data:
             raise RuntimeStoreError('not_found')
         path = (_profile_home(authority) / 'sessions' / 'saved'
-                / f'hermes_conversation_{datetime.now():%Y%m%d_%H%M%S}.json')
+                / f'niki_conversation_{datetime.now():%Y%m%d_%H%M%S}.json')
         try:
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(render_session_for_save(data, 'json'), encoding='utf-8')
@@ -84,7 +84,7 @@ async def save_session(connection, ref, params):
 async def reload_env(connection, ref, params):
     """``/reload``: re-read the profile's ``.env`` (main's ``reload.env`` / CLI ``/reload``).
 
-    Single-profile owner: main's ``hermes_cli.config.reload_env()`` verbatim — the owner's
+    Single-profile owner: main's ``niki_cli.config.reload_env()`` verbatim — the owner's
     ``os.environ`` is what its turns read, exactly as the TUI's own sidecar process was. Built agents
     keep their credential pool until ``/new`` (main's documented behaviour).
 
@@ -100,10 +100,10 @@ async def reload_env(connection, ref, params):
 
     def reload():
         if not _multiplexed(authority):
-            from hermes_cli.config import reload_env as reload_process_env
+            from niki_cli.config import reload_env as reload_process_env
             return reload_process_env()
         from agent.secret_scope import build_profile_secret_scope, invalidate_env_file_cache
-        from hermes_cli.env_loader import hydrate_profile_secret_sources, reset_secret_source_cache
+        from niki_cli.env_loader import hydrate_profile_secret_sources, reset_secret_source_cache
         home = _profile_home(authority)
         before = build_profile_secret_scope(home)
         invalidate_env_file_cache(home / '.env')
@@ -134,7 +134,7 @@ async def pause_delegation(connection, ref, params):
         if profile is not None and not isinstance(profile, str):
             raise RuntimeStoreError('invalid_params')
         if profile:
-            from hermes_cli.profiles import profile_matches_home
+            from niki_cli.profiles import profile_matches_home
             if not profile_matches_home(profile, Path(connection.authority.profile_id)):
                 raise RuntimeStoreError('profile_mismatch')
     from tools.delegate_tool_registry import set_spawn_paused
@@ -251,7 +251,7 @@ async def _rewind_last_turn(connection, ref):
     if target is None:
         return 0
     from gateway.session_mutations import mutate_session
-    from hermes_state_mutation_guards import MUTATION_GUARD_REFUSALS
+    from niki_state_mutation_guards import MUTATION_GUARD_REFUSALS
     handle = authority._handle(ref)
     try:
         result = await mutate_session(authority, connection.actor, ref, {

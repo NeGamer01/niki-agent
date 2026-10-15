@@ -6,7 +6,7 @@ author: Niki Agent
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  niki:
     tags: [debugging, nodejs, node-inspect, cdp, breakpoints, ui-tui]
     related_skills: [systematic-debugging, python-debugpy]
 ---
@@ -111,7 +111,7 @@ npm i -g chrome-remote-interface        # or project-local
 node --inspect-brk=9229 target.js &
 ```
 
-Driver script (save as `~/.hermes/cache/scratch/cdp-debug.js`):
+Driver script (save as `~/.niki/cache/scratch/cdp-debug.js`):
 
 ```javascript
 const CDP = require('chrome-remote-interface');
@@ -164,14 +164,14 @@ const CDP = require('chrome-remote-interface');
 Run it:
 
 ```bash
-node ~/.hermes/cache/scratch/cdp-debug.js
+node ~/.niki/cache/scratch/cdp-debug.js
 ```
 
 Niki-specific note: `chrome-remote-interface` is NOT in `ui-tui/package.json`. Install it to a throwaway location if you don't want to dirty the project:
 
 ```bash
-mkdir -p ~/.hermes/cache/scratch/cdp-tools && cd ~/.hermes/cache/scratch/cdp-tools && npm i chrome-remote-interface
-NODE_PATH=~/.hermes/cache/scratch/cdp-tools/node_modules node ~/.hermes/cache/scratch/cdp-debug.js
+mkdir -p ~/.niki/cache/scratch/cdp-tools && cd ~/.niki/cache/scratch/cdp-tools && npm i chrome-remote-interface
+NODE_PATH=~/.niki/cache/scratch/cdp-tools/node_modules node ~/.niki/cache/scratch/cdp-debug.js
 ```
 
 ## Debugging Niki ui-tui
@@ -183,7 +183,7 @@ The TUI is built Ink + tsx. Two common scenarios:
 `ui-tui/package.json` has `npm run dev` (tsx --watch). Add `--inspect-brk` by running tsx directly:
 
 ```bash
-cd <hermes-agent-repo>/ui-tui
+cd <niki-agent-repo>/ui-tui
 npm run build    # produce dist/ once so transpile isn't needed on first load
 node --inspect-brk dist/entry.js
 # In another terminal:
@@ -199,13 +199,13 @@ cont
 
 When it pauses, `repl` → inspect `props`, state refs, `useInput` handler values, etc.
 
-### Debugging a running `hermes --tui`
+### Debugging a running `niki --tui`
 
 The TUI spawns Node from the Python CLI. Easiest path:
 
 ```bash
 # 1. Launch TUI
-hermes --tui &
+niki --tui &
 TUI_PID=$(pgrep -f 'ui-tui/dist/entry' | head -1)
 
 # 2. Enable inspector on that Node PID
@@ -227,7 +227,7 @@ Those are Python, not Node — use the `python-debugpy` skill for them. Only Nod
 ## Running Vitest Tests Under the Debugger
 
 ```bash
-cd <hermes-agent-repo>/ui-tui
+cd <niki-agent-repo>/ui-tui
 # Run a single test file paused on entry
 node --inspect-brk ./node_modules/vitest/vitest.mjs run --no-file-parallelism src/app/foo.test.tsx
 ```
@@ -246,8 +246,8 @@ await client.Profiler.enable();
 await client.Profiler.start();
 await new Promise(r => setTimeout(r, 5000));
 const { profile } = await client.Profiler.stop();
-require('fs').writeFileSync('~/.hermes/cache/scratch/cpu.cpuprofile', JSON.stringify(profile));
-// Open ~/.hermes/cache/scratch/cpu.cpuprofile in Chrome DevTools → Performance tab
+require('fs').writeFileSync('~/.niki/cache/scratch/cpu.cpuprofile', JSON.stringify(profile));
+// Open ~/.niki/cache/scratch/cpu.cpuprofile in Chrome DevTools → Performance tab
 ```
 
 ```javascript
@@ -256,7 +256,7 @@ await client.HeapProfiler.enable();
 const chunks = [];
 client.HeapProfiler.addHeapSnapshotChunk(({ chunk }) => chunks.push(chunk));
 await client.HeapProfiler.takeHeapSnapshot({ reportProgress: false });
-require('fs').writeFileSync('~/.hermes/cache/scratch/heap.heapsnapshot', chunks.join(''));
+require('fs').writeFileSync('~/.niki/cache/scratch/heap.heapsnapshot', chunks.join(''));
 ```
 
 ## Common Pitfalls

@@ -55,7 +55,7 @@ def test_managed_worker_turn_does_not_offer_delegate_task(tmp_path):
         'auxiliary': {'title_generation': {'enabled': False}},
         'platform_toolsets': {'cli': ['delegation', 'todo']}}))
     env = {k: os.environ[k] for k in ('PATH', 'LANG', 'TZ') if k in os.environ}
-    env.update(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home), PYTHONPATH=str(root),
+    env.update(HOME=str(user), USERPROFILE=str(user), NIKI_HOME=str(home), PYTHONPATH=str(root),
                OPENAI_API_KEY='loopback-only', OPENAI_BASE_URL=url)
 
     def rows(sql):

@@ -14,7 +14,7 @@ Read Reddit: subreddits, search, threads, users. No browser.
 
 | | |
 |---|---|
-| Source | Optional — install with `hermes skills install official/social-media/reddit-reading` |
+| Source | Optional — install with `niki skills install official/social-media/reddit-reading` |
 | Path | `optional-skills/social-media/reddit-reading` |
 | Version | `1.0.0` |
 | Author | Teknium (teknium1), Niki Agent |
@@ -54,7 +54,7 @@ returns thinner data (no scores, top-level comments only), which is fine for a f
 
 **Optional upgrade (app credentials, still no user login):** for sustained use or full
 data, register a free "script" type app at https://www.reddit.com/prefs/apps and put its
-two values in `~/.hermes/.env`:
+two values in `~/.niki/.env`:
 
 ```
 REDDIT_CLIENT_ID=...

@@ -14,14 +14,14 @@ description: "使用 FastMCP 在 Python 中构建、测试、检查、安装和�
 
 | | |
 |---|---|
-| 来源 | 可选 — 通过 `hermes skills install official/mcp/fastmcp` 安装 |
+| 来源 | 可选 — 通过 `niki skills install official/mcp/fastmcp` 安装 |
 | 路径 | `optional-skills/mcp/fastmcp` |
 | 版本 | `1.0.0` |
 | 作者 | Niki Agent |
 | 许可证 | MIT |
 | 平台 | linux, macos, windows |
 | 标签 | `MCP`, `FastMCP`, `Python`, `Tools`, `Resources`, `Prompts`, `Deployment` |
-| 相关 skill | [`hermes-agent`](/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-hermes-agent), [`mcporter`](/user-guide/skills/optional/mcp/mcp-mcporter) |
+| 相关 skill | [`niki-agent`](/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-niki-agent), [`mcporter`](/user-guide/skills/optional/mcp/mcp-mcporter) |
 
 ## 参考：完整 SKILL.md
 
@@ -95,7 +95,7 @@ pip install httpx
 直接复制模板或使用脚手架辅助工具：
 
 ```bash
-python ~/.hermes/skills/mcp/fastmcp/scripts/scaffold_fastmcp.py \
+python ~/.niki/skills/mcp/fastmcp/scripts/scaffold_fastmcp.py \
   --template api_wrapper \
   --name "Acme API" \
   --output ./acme_server.py
@@ -104,7 +104,7 @@ python ~/.hermes/skills/mcp/fastmcp/scripts/scaffold_fastmcp.py \
 可用模板：
 
 ```bash
-python ~/.hermes/skills/mcp/fastmcp/scripts/scaffold_fastmcp.py --list
+python ~/.niki/skills/mcp/fastmcp/scripts/scaffold_fastmcp.py --list
 ```
 
 如手动复制，请将 `__SERVER_NAME__` 替换为实际服务器名称。
@@ -187,7 +187,7 @@ fastmcp install cursor acme_server.py -e .
 
 若目标是集成到 Niki，可选择：
 
-- 使用 `native-mcp` skill，在 `~/.hermes/config.yaml` 中配置服务器，或
+- 使用 `native-mcp` skill，在 `~/.niki/config.yaml` 中配置服务器，或
 - 在接口稳定之前，在开发阶段继续使用 FastMCP CLI 命令
 
 ### 7. 本地契约稳定后再部署
@@ -308,7 +308,7 @@ fastmcp call server.py your_tool_name --json
 
 ### Niki 无法看到已部署的服务器
 
-服务器构建部分可能正确，但 Niki 配置有误。加载 `native-mcp` skill 并在 `~/.hermes/config.yaml` 中配置服务器，然后重启 Niki。
+服务器构建部分可能正确，但 Niki 配置有误。加载 `native-mcp` skill 并在 `~/.niki/config.yaml` 中配置服务器，然后重启 Niki。
 
 ## 参考资料
 

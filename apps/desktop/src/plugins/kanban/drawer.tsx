@@ -34,7 +34,7 @@ import {
   useQuery,
   useQueryClient,
   useValue
-} from '@hermes/plugin-sdk'
+} from '@niki/plugin-sdk'
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 
 import {

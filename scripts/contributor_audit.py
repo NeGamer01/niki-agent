@@ -52,7 +52,7 @@ IGNORED_PATTERNS = [
     re.compile(r"^Ubuntu$", re.IGNORECASE),
     # v0.20.0 audit additions:
     re.compile(r"^Blut-?Agent$", re.IGNORECASE),          # self-described AI agent account
-    re.compile(r".*\[bot\]$", re.IGNORECASE),             # any GitHub [bot] suffix (hermes-seaeye[bot] etc.)
+    re.compile(r".*\[bot\]$", re.IGNORECASE),             # any GitHub [bot] suffix (niki-seaeye[bot] etc.)
     re.compile(r"^TRON$", re.IGNORECASE),                 # AgentMail agent
     re.compile(r"^Happy$", re.IGNORECASE),                # happy.engineering AI agent
     re.compile(r"^Orca$", re.IGNORECASE),                 # Stably AI agent
@@ -67,10 +67,10 @@ IGNORED_EMAILS = {
     "noreply@github.com",
     "noreply@nousresearch.com",
     "cursoragent@cursor.com",
-    "hermes@nousresearch.com",
-    "hermes-audit@example.com",
+    "niki@nousresearch.com",
+    "niki-audit@example.com",
     "nousbot@nousresearch.com",
-    "hermes@habibilabs.dev",
+    "niki@habibilabs.dev",
     "omx@oh-my-codex.dev",
     "codex@openai.com",
     "noreply@commandcode.ai",
@@ -123,7 +123,7 @@ def gh_pr_list():
         result = subprocess.run(
             [
                 "gh", "pr", "list",
-                "--repo", "NousResearch/hermes-agent",
+                "--repo", "NeGamer01/niki-agent",
                 "--state", "merged",
                 "--json", "number,title,body,author,mergedAt",
                 "--limit", "300",

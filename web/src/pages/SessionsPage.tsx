@@ -58,17 +58,17 @@ import {
 import { StructuredReasoning } from "@/components/StructuredReasoning";
 import { PlatformsCard } from "@/components/PlatformsCard";
 import { shouldRenderStructuredReasoning } from "@/lib/reasoning-markup";
-import { Toast } from "@nous-research/ui/ui/components/toast";
-import { Button } from "@nous-research/ui/ui/components/button";
-import { Checkbox } from "@nous-research/ui/ui/components/checkbox";
-import { ListItem } from "@nous-research/ui/ui/components/list-item";
-import { Segmented } from "@nous-research/ui/ui/components/segmented";
-import { Spinner } from "@nous-research/ui/ui/components/spinner";
-import { Badge } from "@nous-research/ui/ui/components/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@nous-research/ui/ui/components/card";
+import { Toast } from "@niki-research/ui/ui/components/toast";
+import { Button } from "@niki-research/ui/ui/components/button";
+import { Checkbox } from "@niki-research/ui/ui/components/checkbox";
+import { ListItem } from "@niki-research/ui/ui/components/list-item";
+import { Segmented } from "@niki-research/ui/ui/components/segmented";
+import { Spinner } from "@niki-research/ui/ui/components/spinner";
+import { Badge } from "@niki-research/ui/ui/components/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@niki-research/ui/ui/components/card";
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
-import { useConfirmDelete } from "@nous-research/ui/hooks/use-confirm-delete";
-import { Input } from "@nous-research/ui/ui/components/input";
+import { useConfirmDelete } from "@niki-research/ui/hooks/use-confirm-delete";
+import { Input } from "@niki-research/ui/ui/components/input";
 import {
   Dialog,
   DialogContent,
@@ -76,9 +76,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@nous-research/ui/ui/components/dialog";
+} from "@niki-research/ui/ui/components/dialog";
 import { useSystemActions } from "@/contexts/useSystemActions";
-import { useToast } from "@nous-research/ui/hooks/use-toast";
+import { useToast } from "@niki-research/ui/hooks/use-toast";
 import { useI18n } from "@/i18n";
 import { usePageHeader } from "@/contexts/usePageHeader";
 import { PluginSlot } from "@/plugins";
@@ -1430,8 +1430,8 @@ export default function SessionsPage() {
           credentials: "include",
           headers: {
             "X-Niki-Session-Token":
-              (window as unknown as { __HERMES_SESSION_TOKEN__?: string })
-                .__HERMES_SESSION_TOKEN__ ?? "",
+              (window as unknown as { __NIKI_SESSION_TOKEN__?: string })
+                .__NIKI_SESSION_TOKEN__ ?? "",
           },
         });
         if (!res.ok) {
@@ -1713,7 +1713,7 @@ export default function SessionsPage() {
               <span className="text-xs font-mondwest tracking-[0.12em] truncate">
                 {activeAction === "restart"
                   ? t.status.restartGateway
-                  : t.status.updateHermes}
+                  : t.status.updateNiki}
               </span>
 
               <Badge

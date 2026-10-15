@@ -31,8 +31,8 @@ numbers. Everything here is offline and deterministic; no model calls.
 
 ```bash
 # Independent benchmark environment only — never Niki's selected environment.
-uv venv /tmp/hermes-navigability-bench
-source /tmp/hermes-navigability-bench/bin/activate
+uv venv /tmp/niki-navigability-bench
+source /tmp/niki-navigability-bench/bin/activate
 uv pip install tiktoken radon
 
 # 1 + 2: pass two checkouts (git worktree add is the easy way to get the baseline)

@@ -174,11 +174,11 @@ export interface Translations {
     starting: string;
     startedInBackground: string;
     stopped: string;
-    updateHermes: string;
-    updateHermesConfirmMessage?: string;
-    updateHermesConfirmNow?: string;
-    updateHermesConfirmTitle?: string;
-    updatingHermes: string;
+    updateNiki: string;
+    updateNikiConfirmMessage?: string;
+    updateNikiConfirmNow?: string;
+    updateNikiConfirmTitle?: string;
+    updatingNiki: string;
     waitingForOutput: string;
   };
 
@@ -640,7 +640,7 @@ export interface Translations {
     fontMono?: string;
   };
 
-  // ── Achievements plugin (plugins/hermes-achievements) ──
+  // ── Achievements plugin (plugins/niki-achievements) ──
   achievements: {
     hero: {
       kicker: string;

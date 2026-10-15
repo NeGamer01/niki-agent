@@ -15,8 +15,8 @@ turn. When the script is exhausted, main turns answer ``default_text``.
 Usage::
 
     with FakeLLMServer([ToolCall("terminal", {"command": "echo hi"}), Text("done")]) as srv:
-        write_hermes_home(home, srv.base_url)
-        ...run hermes...
+        write_niki_home(home, srv.base_url)
+        ...run niki...
         assert srv.main_requests()[1]["messages"][-1]["role"] == "tool"
 
 Run standalone for manual probes: ``python -m tests.fakes.fake_llm_provider 8765``.
@@ -32,7 +32,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Callable, Union
 
-from hermes_cli.observability.shared_metrics_consent import OFFER_VERSION
+from niki_cli.observability.shared_metrics_consent import OFFER_VERSION
 
 MODEL_ID = "fake-model"
 
@@ -414,10 +414,10 @@ def _message_for(
     return message, "tool_calls", usage
 
 
-# HERMES_HOME wiring ---------------------------------------------------------
+# NIKI_HOME wiring ---------------------------------------------------------
 
 
-def write_hermes_home(
+def write_niki_home(
     home: Path,
     base_url: str,
     *,

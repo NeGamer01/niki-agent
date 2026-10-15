@@ -1,8 +1,8 @@
-#!/usr/bin/env -S bash -c 'exec "$BASH" "$(dirname "$0")/run-in-hermes-env" python3 "$0" "$@"'
+#!/usr/bin/env -S bash -c 'exec "$BASH" "$(dirname "$0")/run-in-niki-env" python3 "$0" "$@"'
 """Build the Niki Model Catalog — a centralized JSON manifest of curated models.
 
 This script reads the in-repo hardcoded curated lists (``OPENROUTER_MODELS``,
-``_PROVIDER_MODELS["nous"]``) and writes them to a JSON manifest that the
+``_PROVIDER_MODELS["niki"]``) and writes them to a JSON manifest that the
 Niki CLI fetches at runtime. Publishing the catalog through the docs site
 lets maintainers update model lists without shipping a Niki release.
 
@@ -17,7 +17,7 @@ Usage::
 Output: ``website/static/api/model-catalog.json``
 
 Live URL (after ``deploy-site.yml`` runs on merge to main):
-``https://hermes-agent.nousresearch.com/docs/api/model-catalog.json``
+``https://github.com/NeGamer01/niki-agent/docs/api/model-catalog.json``
 """
 
 from __future__ import annotations
@@ -30,10 +30,10 @@ from datetime import datetime, timezone, UTC
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO_ROOT)
 
-# Ensure HERMES_HOME is set for imports that touch it at module level.
-os.environ.setdefault("HERMES_HOME", os.path.join(os.path.expanduser("~"), ".hermes"))
+# Ensure NIKI_HOME is set for imports that touch it at module level.
+os.environ.setdefault("NIKI_HOME", os.path.join(os.path.expanduser("~"), ".niki"))
 
-from hermes_cli.models import (
+from niki_cli.models import (
     OPENROUTER_MODELS,
     PREFERRED_SILENT_DEFAULT_MODEL,
     _PROVIDER_MODELS,
@@ -63,8 +63,8 @@ def build_catalog() -> dict:
         "version": CATALOG_VERSION,
         "updated_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "metadata": {
-            "source": "hermes-agent repo",
-            "docs": "https://hermes-agent.nousresearch.com/docs/reference/model-catalog",
+            "source": "niki-agent repo",
+            "docs": "https://github.com/NeGamer01/niki-agent/docs/reference/model-catalog",
         },
         "providers": {
             "openrouter": {
@@ -82,9 +82,9 @@ def build_catalog() -> dict:
                     for mid, desc in OPENROUTER_MODELS
                 ],
             },
-            "nous": {
+            "niki": {
                 "metadata": {
-                    "display_name": "Nous Portal",
+                    "display_name": "Niki Portal",
                     "note": (
                         'The entry labeled "default": true is the model Niki '
                         "silently lands on when the user never picked one."
@@ -92,7 +92,7 @@ def build_catalog() -> dict:
                 },
                 "models": [
                     _nous_entry(mid)
-                    for mid in _PROVIDER_MODELS.get("nous", [])
+                    for mid in _PROVIDER_MODELS.get("niki", [])
                 ],
             },
         },

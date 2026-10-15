@@ -29,7 +29,7 @@ _GREETINGS = {
     "ar": "مرحبًا، أنا Niki. لنجهّز كل شيء لك، ثم ننجز معًا شيئًا رائعًا.",
     "de": "Hallo, ich bin Niki. Richten wir alles für Sie ein. Danach machen wir etwas Cooles.",
     "es": "Hola, soy Niki. Vamos a dejarlo todo listo para ti. Luego haremos algo genial.",
-    "fr": "Bonjour, je suis Niki. Configurons tout pour vous. Ensuite, nous ferons quelque chose de génial.",
+    "fr": "Bonjour, je suis Niki. Configurons tout pour vous. Ensuite, niki ferons quelque chose de génial.",
     "ja": "こんにちは、Niki です。まずはあなたに合わせて設定しましょう。そのあと、何かすごいものを作りましょう。",
     "ru": "Привет, я Niki. Давайте всё настроим под вас. А потом сделаем что-нибудь классное.",
     "zh": "你好，我是 Niki。我们先帮你把一切设置好，然后一起做点很酷的事。",
@@ -175,7 +175,7 @@ _HOW_TO_WORK = (
     "Real data only: this computer, their connected apps, the live web. Never mock or invent data.",
     "First reply: one line, then a tool call. At most two checks and one question before you start. Something "
     "visible within a minute, finished within five.",
-    "Save every file in ~/hermes-first-task/ and say where. No test files.",
+    "Save every file in ~/niki-first-task/ and say where. No test files.",
     "Install or connect anything once, with exact ids. Never search the whole disk.",
     "Write the words they read with humanizer: short, plain, specific.",
 )
@@ -208,7 +208,7 @@ _PAGE = (
     '3D: three@0.170.0 is ES modules only. Use an import map: "three" to its build/three.module.js, '
     '"three/addons/" to its examples/jsm/.',
 )
-_PAGE_TASKS = ("hermes", "explain", "brief", "week", "youtube", "site", "repo", "own")
+_PAGE_TASKS = ("niki", "explain", "brief", "week", "youtube", "site", "repo", "own")
 
 _CONNECTORS = (
     "Never route around a connector. "
@@ -317,7 +317,7 @@ def _waiting_beat(record) -> str | None:
 
 _REMINDERS = {
     "after_name": lambda r, f: f"They go by {r['picks']['name']}. Greet them by name in a few words. {_next(r)}",
-    "after_theme": lambda r, f: (f"Accent {r['picks']['accent'] or 'Nous blue'} is on, already applied. Do not call "
+    "after_theme": lambda r, f: (f"Accent {r['picks']['accent'] or 'Niki blue'} is on, already applied. Do not call "
                                  f"set_theme for it again. React in three words or fewer. {_next(r)}"),
     "after_layout": _after_layout,
     "offer_first": lambda r, f: f"The connectors card is not shown yet. {_LOOK_AROUND}",

@@ -20,19 +20,19 @@ replay). Do not add the modeled figures to the observed ones; see §5 of #103563
 
 - A Niki checkout with its venv (`.venv/bin/python`). NeMo Relay is not required for the forensics;
   it is what the run itself used for the wire captures in `live_ab/cache_prefix_wire.py`.
-- For forensics: a **copy** of `~/.hermes/state.db` (never point at the live file; `sqlite3 state.db ".backup copy.db"`
-  or `cp` while Niki is idle) and, optionally, the rotated `~/.hermes/logs/agent.log*`.
-- For `--live` probes: real credentials in `HERMES_HOME` (they spend cents per run).
+- For forensics: a **copy** of `~/.niki/state.db` (never point at the live file; `sqlite3 state.db ".backup copy.db"`
+  or `cp` while Niki is idle) and, optionally, the rotated `~/.niki/logs/agent.log*`.
+- For `--live` probes: real credentials in `NIKI_HOME` (they spend cents per run).
 
 ## Forensics: recompute the observed numbers for YOUR run
 
 ```bash
-cd <hermes-checkout>
+cd <niki-checkout>
 P=.venv/bin/python
 # 1. cost buckets, depth/duration shares, context-size reconstruction, excess-cache-write proxy, cap replay
 $P -m evals.postmortem.forensics.tokens     --db state_copy.db [--root <session_id>] [--cap 200000 --floor 65000]
 # 2. per-call cache behaviour from the logs (coverage fraction is printed first; quote nothing without it)
-$P -m evals.postmortem.forensics.logcalls   --db state_copy.db --logs "$HOME/.hermes/logs/agent.log*"
+$P -m evals.postmortem.forensics.logcalls   --db state_copy.db --logs "$HOME/.niki/logs/agent.log*"
 # 3. delegation: timeouts, orphaned children, polling, batch-join delay, truncated summaries
 $P -m evals.postmortem.forensics.delegation --db state_copy.db
 # 4. tool friction: hardline false blocks, foreground refusals, whole-file rewrites, output volume
@@ -66,7 +66,7 @@ the peak-concurrency window). The tracking issue quotes the second and says so.
 ## Live A/B: what each fix does
 
 ```bash
-# offline probes (fake providers, temp HERMES_HOME), main vs a branch or integration checkout:
+# offline probes (fake providers, temp NIKI_HOME), main vs a branch or integration checkout:
 .venv/bin/python -m evals.postmortem.run --repo /path/to/main --compare /path/to/branch
 # add the probes that make real provider calls (cents):
 .venv/bin/python -m evals.postmortem.run --repo /path/to/branch --live
@@ -96,22 +96,22 @@ the peak-concurrency window). The tracking issue quotes the second and says so.
 
 ## Cache concurrency probe (`live_ab/cache_concurrency_probe.py`)
 
-The instrument behind #104284 / #104421 and NousResearch/api#227. N concurrent real `AIAgent`
+The instrument behind #104284 / #104421 and NeGamer01/api#227. N concurrent real `AIAgent`
 sessions run the same growing tool loop against a route; every call's cache_read / cache_creation,
 response id, upstream provider and prefix shas are logged, and consecutive pairs are classified
 `ideal` / `stuck` (previous write not visible: routing) / `collapse` (whole context re-written).
 
 ```bash
 # ~$50 per 20x6 arm on Fable 5.1 at the 5m tier
-python -m evals.postmortem.live_ab.cache_concurrency_probe --repo . --provider nous --workers 20 --calls 6 --out /tmp/p.jsonl
-python -m evals.postmortem.live_ab.cache_concurrency_probe --repo . --provider nous --wire native --workers 20 --calls 6 --out /tmp/p.jsonl
+python -m evals.postmortem.live_ab.cache_concurrency_probe --repo . --provider niki --workers 20 --calls 6 --out /tmp/p.jsonl
+python -m evals.postmortem.live_ab.cache_concurrency_probe --repo . --provider niki --wire native --workers 20 --calls 6 --out /tmp/p.jsonl
 python -m evals.postmortem.live_ab.cache_concurrency_probe --repo . --provider openrouter --pin anthropic --workers 20 --calls 6 --out /tmp/p.jsonl
 ```
 
-Reference results (2026-09-05/06): Nous native wire 13.9% stuck (14–20% over 4 runs, unchanged by the
-portal's provider pin or a 2 s settle); Nous chat wire 0/320; OpenRouter pinned 0/161; OpenRouter
+Reference results (2026-09-05/06): Niki native wire 13.9% stuck (14–20% over 4 runs, unchanged by the
+portal's provider pin or a 2 s settle); Niki chat wire 0/320; OpenRouter pinned 0/161; OpenRouter
 unpinned 9.8% collapse. Use this to clear a new upstream before flipping
-`agent/nous_wire.py::GMI_NATIVE_WIRE_CLEARED`. `--ttl 1h` reproduces the 2× write price
+`agent/niki_wire.py::GMI_NATIVE_WIRE_CLEARED`. `--ttl 1h` reproduces the 2× write price
 (#104168). The `.summary.json` carries the bad pairs with both response ids for the provider's logs.
 
 ## What is NOT here, and why

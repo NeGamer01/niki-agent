@@ -11,7 +11,7 @@ export const arBoot = {
       loadingSessions: 'جار تحميل الجلسات الأخيرة',
       retryingRemoteBackend: 'جارٍ إعادة الاتصال بخادم Niki البعيد…',
       startingDesktopConnection: 'جار بدء اتصال سطح المكتب',
-      startingHermesDesktop: 'جار تشغيل Niki Desktop...'
+      startingNikiDesktop: 'جار تشغيل Niki Desktop...'
     },
     errors: {
       backgroundExited: 'خرجت عملية Niki الخلفية.',
@@ -32,10 +32,10 @@ export const arBoot = {
       retry: 'إعادة المحاولة',
       repairInstall: 'إصلاح التثبيت',
       useLocalGateway: 'استخدام البوابة المحلية',
-      cloudDownTitle: 'عامل Nous Cloud معطّل',
+      cloudDownTitle: 'عامل Niki Cloud معطّل',
       cloudDownDescription:
-        'يعيد عامل السحابة المُدار من Nous الذي يتصل به هذا البوابة خطأً من الخادم. لا يمكن إعادة تشغيله من هنا — تحقق من حالته، أو بدّل إلى البوابة المحلية، أو احصل على الدعم.',
-      cloudDownHint: 'تفتح الأزرار أدناه بوابة Nous (حالة المثيل وعناصر التحكم) أو Discord للحصول على الدعم.',
+        'يعيد عامل السحابة المُدار من Niki الذي يتصل به هذا البوابة خطأً من الخادم. لا يمكن إعادة تشغيله من هنا — تحقق من حالته، أو بدّل إلى البوابة المحلية، أو احصل على الدعم.',
+      cloudDownHint: 'تفتح الأزرار أدناه بوابة Niki (حالة المثيل وعناصر التحكم) أو Discord للحصول على الدعم.',
       cloudDownCheckPortal: 'التحقق من حالة البوابة',
       cloudDownDiscord: 'الحصول على مساعدة عبر Discord',
       openLogs: 'فتح السجلات',
@@ -134,9 +134,9 @@ export const arBoot = {
     versionDetailsDistributionDesktopMsix: 'تطبيق سطح المكتب (MSIX)',
     versionDetailsDistributionDesktopInstaller: 'تطبيق سطح المكتب (المُثبِّت)',
     versionDetailsDistributionSourceInstaller: 'المصدر (سكربت التثبيت)',
-    versionDetailsDistributionSourceInstallerDesktop: 'المصدر (سكربت التثبيت) + hermes desktop',
+    versionDetailsDistributionSourceInstallerDesktop: 'المصدر (سكربت التثبيت) + niki desktop',
     versionDetailsDistributionSource: 'المصدر',
-    versionDetailsDistributionSourceDesktop: 'المصدر + hermes desktop',
+    versionDetailsDistributionSourceDesktop: 'المصدر + niki desktop',
     versionDetailsDistributionStore: 'Microsoft Store',
     versionDetailsRuntimeEmbedded: 'وقت تشغيل مضمّن',
     versionDetailsRuntimeExternal: 'خارجي (يستخدم وقت تشغيل الجهاز)',

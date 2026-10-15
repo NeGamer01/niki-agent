@@ -2,12 +2,12 @@
 name: mono-color
 description: "Generate one- or two-ink editorial print poster images."
 version: 1.0.0
-author: Yan Liu (adapted by Nous Research)
+author: Yan Liu (adapted by NeGamer01)
 license: MIT
 dependencies: []
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  niki:
     tags: [design, poster, print, duotone, risograph, editorial, image-generation]
     category: creative
     related_skills: [baoyu-infographic, meme-generation, pixel-art]

@@ -1,7 +1,7 @@
 """Cron: import path of the restart-safe external worker.
 
 The worker is spawned as ``sys.executable -m cron.scheduler``. Its entry module is
-``cron.scheduler``, not ``hermes_cli.main``, so nothing bootstraps the gateway's checkout
+``cron.scheduler``, not ``niki_cli.main``, so nothing bootstraps the gateway's checkout
 onto its ``sys.path``; historically it imported ``cron`` only through the implicit ``-m``
 cwd entry. That entry is gone under ``PYTHONSAFEPATH`` and useless when the venv's
 editable install maps a moved/deleted checkout -- the worker then dies with
@@ -61,7 +61,7 @@ def _committed_dependency_site_packages(project_root: Path) -> Path | None:
     return selected if selected.is_dir() else None
 
 
-def pin_hermes_tree_on_pythonpath(worker_env: dict, repo_root: Path) -> dict:
+def pin_niki_tree_on_pythonpath(worker_env: dict, repo_root: Path) -> dict:
     """Prepend ``repo_root`` -- and, when this runner has one, the committed dependency
     generation's ``site-packages`` -- to the worker env's own PYTHONPATH (never
     ``os.environ``'s).

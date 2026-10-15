@@ -29,12 +29,12 @@ def test_resolve_managed_tool_gateway_derives_vendor_origin_from_shared_domain()
     ), patch.object(managed_tool_gateway, "managed_nous_tools_enabled", return_value=True):
         result = resolve_managed_tool_gateway(
             "firecrawl",
-            token_reader=lambda: "nous-token",
+            token_reader=lambda: "niki-token",
         )
 
     assert result is not None
     assert result.gateway_origin == "https://firecrawl-gateway.nousresearch.com"
-    assert result.nous_user_token == "nous-token"
+    assert result.niki_user_token == "niki-token"
     assert result.managed_mode is True
 
 
@@ -48,7 +48,7 @@ def test_resolve_managed_tool_gateway_uses_vendor_specific_override():
     ), patch.object(managed_tool_gateway, "managed_nous_tools_enabled", return_value=True):
         result = resolve_managed_tool_gateway(
             "browser-use",
-            token_reader=lambda: "nous-token",
+            token_reader=lambda: "niki-token",
         )
 
     assert result is not None
@@ -76,7 +76,7 @@ def test_resolve_managed_tool_gateway_is_disabled_without_subscription():
          patch.object(managed_tool_gateway, "managed_nous_tools_enabled", return_value=False):
         result = resolve_managed_tool_gateway(
             "firecrawl",
-            token_reader=lambda: "nous-token",
+            token_reader=lambda: "niki-token",
         )
 
     assert result is None
@@ -84,11 +84,11 @@ def test_resolve_managed_tool_gateway_is_disabled_without_subscription():
 
 def test_read_nous_access_token_refreshes_expiring_cached_token(tmp_path, monkeypatch):
     monkeypatch.delenv("TOOL_GATEWAY_USER_TOKEN", raising=False)
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("NIKI_HOME", str(tmp_path))
     expires_at = (datetime.now(UTC) + timedelta(seconds=30)).isoformat()
     (tmp_path / "auth.json").write_text(json.dumps({
         "providers": {
-            "nous": {
+            "niki": {
                 "access_token": "stale-token",
                 "refresh_token": "refresh-token",
                 "expires_at": expires_at,
@@ -96,7 +96,7 @@ def test_read_nous_access_token_refreshes_expiring_cached_token(tmp_path, monkey
         }
     }))
     monkeypatch.setattr(
-        "hermes_cli.auth.resolve_nous_access_token",
+        "niki_cli.auth.resolve_nous_access_token",
         lambda refresh_skew_seconds=120: "fresh-token",
     )
 
@@ -105,11 +105,11 @@ def test_read_nous_access_token_refreshes_expiring_cached_token(tmp_path, monkey
 
 def test_is_managed_tool_gateway_ready_skips_refresh_for_expired_cached_token(tmp_path, monkeypatch):
     monkeypatch.delenv("TOOL_GATEWAY_USER_TOKEN", raising=False)
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("NIKI_HOME", str(tmp_path))
     expired_at = (datetime.now(UTC) - timedelta(seconds=30)).isoformat()
     (tmp_path / "auth.json").write_text(json.dumps({
         "providers": {
-            "nous": {
+            "niki": {
                 "access_token": "expired-token",
                 "refresh_token": "refresh-token",
                 "expires_at": expired_at,
@@ -123,7 +123,7 @@ def test_is_managed_tool_gateway_ready_skips_refresh_for_expired_cached_token(tm
         return "fresh-token"
 
     monkeypatch.setattr(
-        "hermes_cli.auth.resolve_nous_access_token",
+        "niki_cli.auth.resolve_nous_access_token",
         _record_refresh,
     )
 
@@ -214,21 +214,21 @@ def test_read_nous_provider_state_falls_back_to_global_root_for_share_auth_profi
     # A profile created with ``share_auth`` has no auth.json of its own; it signs in with the
     # root identity. The connector gate must see that identity, or manage_connections vanishes
     # from the profile's tool list while every other credential reader still works.
-    root = tmp_path / ".hermes"
+    root = tmp_path / ".niki"
     profile = root / "profiles" / "work"
     profile.mkdir(parents=True)
     (root / "auth.json").write_text(json.dumps({
         "version": 1,
-        "providers": {"nous": {"auth_method": "anonymous", "access_token": "tok"}},
+        "providers": {"niki": {"auth_method": "anonymous", "access_token": "tok"}},
     }))
-    monkeypatch.setenv("HERMES_HOME", str(profile))
+    monkeypatch.setenv("NIKI_HOME", str(profile))
     monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
 
-    import hermes_constants
-    from hermes_cli import auth as auth_mod
+    import niki_constants
+    from niki_cli import auth as auth_mod
 
-    monkeypatch.setattr(hermes_constants, "get_default_hermes_root", lambda: root)
-    monkeypatch.setattr(auth_mod, "get_hermes_home", lambda: profile)
+    monkeypatch.setattr(niki_constants, "get_default_niki_root", lambda: root)
+    monkeypatch.setattr(auth_mod, "get_niki_home", lambda: profile)
     monkeypatch.setattr(auth_mod, "_global_auth_store_cache", None)
     monkeypatch.setattr(auth_mod, "_auth_file_path", lambda: profile / "auth.json")
 

@@ -42,26 +42,26 @@ def set_multiplex_active(active: bool) -> None:
     """Mark whether the process is a profile multiplexer (get_secret fails closed).
 
     Activation also pins the launch home for routed-profile decisions
-    (``hermes_constants.pin_process_hermes_home``) unless an embedding host already pinned one:
+    (``niki_constants.pin_process_niki_home``) unless an embedding host already pinned one:
     from here on "is this task routed" compares the override against the home the process was
-    launched with, not against whatever a host later mirrors into ``os.environ["HERMES_HOME"]``.
+    launched with, not against whatever a host later mirrors into ``os.environ["NIKI_HOME"]``.
     Deactivation releases only the pin activation itself created — a transient toggle
     (``gateway_migrate._multiplex_read_mode``, a cron worker restoring the caller's mode) must not
     drop the host's explicit pin (#119242)."""
     global _MULTIPLEX_ACTIVE, _AUTO_PINNED_HOME
-    from hermes_constants import (
-        get_routing_process_hermes_home,
-        pin_process_hermes_home,
-        process_hermes_home_is_pinned,
+    from niki_constants import (
+        get_routing_process_niki_home,
+        pin_process_niki_home,
+        process_niki_home_is_pinned,
     )
     _MULTIPLEX_ACTIVE = bool(active)
     if _MULTIPLEX_ACTIVE:
-        if not process_hermes_home_is_pinned():
-            _AUTO_PINNED_HOME = get_routing_process_hermes_home()
-            pin_process_hermes_home(_AUTO_PINNED_HOME)
+        if not process_niki_home_is_pinned():
+            _AUTO_PINNED_HOME = get_routing_process_niki_home()
+            pin_process_niki_home(_AUTO_PINNED_HOME)
     elif _AUTO_PINNED_HOME is not None:
-        if get_routing_process_hermes_home() == _AUTO_PINNED_HOME:
-            pin_process_hermes_home(None)
+        if get_routing_process_niki_home() == _AUTO_PINNED_HOME:
+            pin_process_niki_home(None)
         _AUTO_PINNED_HOME = None
 
 
@@ -83,7 +83,7 @@ def is_multiplex_active() -> bool:
 class _BoundScope(NamedTuple):
     """An installed secret scope plus the home it was built for, when the binder
     declared one — the provenance ``serves_routed_profile`` needs when the binding
-    deliberately skips the HERMES_HOME override (kanban spawn-env builds, MCP
+    deliberately skips the NIKI_HOME override (kanban spawn-env builds, MCP
     owner scopes)."""
 
     mapping: Mapping[str, str]
@@ -92,21 +92,21 @@ class _BoundScope(NamedTuple):
 
 def serves_routed_profile() -> bool:
     """True when the current task runs for a profile other than the process's own: always under
-    multiplexing, else when a HERMES_HOME override names another home (dashboard/desktop backend,
+    multiplexing, else when a NIKI_HOME override names another home (dashboard/desktop backend,
     per-profile cron ticker) or a secret scope stamped with a foreign home is bound. The MCP
     registry scope and the check_fn cache key both follow this predicate so a served profile's
     view never aliases the launch profile's (#111151). A host that mirrors the turn's profile into
-    ``HERMES_HOME`` pins its own home with ``hermes_constants.pin_process_hermes_home`` so the
+    ``NIKI_HOME`` pins its own home with ``niki_constants.pin_process_niki_home`` so the
     mirror cannot flip this predicate."""
     if is_multiplex_active():
         return True
-    from hermes_constants import get_hermes_home_override, get_routing_process_hermes_home, hermes_home_key
-    own = hermes_home_key(get_routing_process_hermes_home())
+    from niki_constants import get_niki_home_override, get_routing_process_niki_home, niki_home_key
+    own = niki_home_key(get_routing_process_niki_home())
     bound = _SECRET_SCOPE.get()
-    if bound is not None and bound.profile_home and hermes_home_key(bound.profile_home) != own:
+    if bound is not None and bound.profile_home and niki_home_key(bound.profile_home) != own:
         return True
-    override = get_hermes_home_override()
-    return override is not None and hermes_home_key(override) != own
+    override = get_niki_home_override()
+    return override is not None and niki_home_key(override) != own
 
 
 _SECRET_SCOPE: ContextVar[Optional[_BoundScope]] = ContextVar("_SECRET_SCOPE", default=None)
@@ -131,8 +131,8 @@ class UnscopedSecretError(RuntimeError):
         what = f"this profile's {secret_name}" if secret_name else "this profile's API key"
         super().__init__(
             f"Niki could not read {what} (an internal profile-scoping bug on the multiplexed "
-            "gateway, not your configuration). Run `hermes gateway restart`; if it keeps happening, "
-            "report it with `hermes debug share`."
+            "gateway, not your configuration). Run `niki gateway restart`; if it keeps happening, "
+            "report it with `niki debug share`."
         )
         self.secret_name = secret_name
         self.developer_detail = developer_detail
@@ -145,7 +145,7 @@ def set_secret_scope(secrets: Optional[Mapping[str, str]], *, profile_home: Opti
 
     ``profile_home`` stamps the home the mapping was built for so
     ``serves_routed_profile`` detects a foreign-home scope even when the binder
-    deliberately skips the HERMES_HOME override."""
+    deliberately skips the NIKI_HOME override."""
     if secrets is None:
         return _SECRET_SCOPE.set(None)
     return _SECRET_SCOPE.set(_BoundScope(secrets, str(profile_home) if profile_home else None))
@@ -173,15 +173,15 @@ def current_secret_scope_home() -> Optional[str]:
 # value is a profile secret. Membership is exact name OR prefix.
 _GLOBAL_ENV_EXACT = frozenset({
     # Niki runtime / deployment
-    "HERMES_HOME", "HERMES_PROFILE", "HERMES_GATEWAY_LOCK_DIR",
-    "HERMES_MAX_ITERATIONS", "HERMES_API_TIMEOUT",
-    "HERMES_REDACT_SECRETS", "HERMES_NOUS_TIMEOUT_SECONDS",
-    "_HERMES_GATEWAY",
+    "NIKI_HOME", "NIKI_PROFILE", "NIKI_GATEWAY_LOCK_DIR",
+    "NIKI_MAX_ITERATIONS", "NIKI_API_TIMEOUT",
+    "NIKI_REDACT_SECRETS", "NIKI_NOUS_TIMEOUT_SECONDS",
+    "_NIKI_GATEWAY",
     # OS / interpreter
     "PATH", "HOME", "USER", "LANG", "LC_ALL", "TZ", "PWD", "SHELL", "TMPDIR",
     "VIRTUAL_ENV", "PYTHONPATH", "SSL_CERT_FILE",
     # Kanban paths (per-board, not per-profile-secret)
-    "HERMES_KANBAN_DB", "HERMES_KANBAN_WORKSPACES_ROOT", "HERMES_KANBAN_BOARD",
+    "NIKI_KANBAN_DB", "NIKI_KANBAN_WORKSPACES_ROOT", "NIKI_KANBAN_BOARD",
     # API-server LISTENER settings — deployment config (compose/systemd env),
     # which the scoped runner reload must keep seeing or containers silently
     # lose the api_server platform. API_SERVER_KEY is a credential: NOT here.
@@ -200,8 +200,8 @@ _GLOBAL_ENV_EXACT = frozenset({
     "GATEWAY_RELAY_WAKE_URL", "GATEWAY_RELAY_DISPLAY_NAME",
 })
 _GLOBAL_ENV_PREFIXES = (
-    "HERMES_KANBAN_",
-    "HERMES_TELEGRAM_",   # tuning knobs (batch delays, fallback toggles) — NOT the token
+    "NIKI_KANBAN_",
+    "NIKI_TELEGRAM_",   # tuning knobs (batch delays, fallback toggles) — NOT the token
     "TERMINAL_",          # terminal/sandbox backend settings
 )
 
@@ -305,7 +305,7 @@ def _parse_env_value(raw_value: str) -> str:
 # revalidation on NFS, a vanished/unreadable file fails the open and is never cached (a transient
 # EACCES must not become "this profile has no secrets"), and the descriptor pins one inode so a
 # symlink repointed mid-read can't file one file's contents under another's identity.
-# ``invalidate_env_file_cache()`` is the explicit knob; ``hermes_cli.config.invalidate_env_cache()``
+# ``invalidate_env_file_cache()`` is the explicit knob; ``niki_cli.config.invalidate_env_cache()``
 # calls it for Niki's own .env writers.
 _ENV_FILE_CACHE: OrderedDict[str, tuple[tuple, dict[str, str]]] = OrderedDict()
 _ENV_FILE_CACHE_LOCK = threading.Lock()
@@ -348,7 +348,7 @@ def _parse_env_text(text: str) -> dict[str, str]:
 
 
 def load_env_file(env_path: Path) -> dict[str, str]:
-    """THE ``.env`` tokenizer: every reader (profile scope, ``hermes_cli.config.load_env``, the dashboard
+    """THE ``.env`` tokenizer: every reader (profile scope, ``niki_cli.config.load_env``, the dashboard
     scrub, skill secret capture, managed .env, setup prompts) parses through here so no two boundaries
     disagree on which keys/values a file defines. Dict only — never touches ``os.environ``. ``export``
     prefix, ``#`` comments, quote escapes reversed; a BOM is stripped so it doesn't prefix the first key.
@@ -387,14 +387,14 @@ def load_env_file(env_path: Path) -> dict[str, str]:
     return secrets
 
 
-def build_profile_secret_scope(hermes_home: Path) -> dict[str, str]:
+def build_profile_secret_scope(niki_home: Path) -> dict[str, str]:
     """Build a profile's secret mapping from ``<home>/.env`` plus its external
     secret sources. Global vars are NOT copied in — ``get_secret`` reads those
     from ``os.environ`` — so the scope holds only profile secrets."""
-    secrets = load_env_file(Path(hermes_home) / ".env")
+    secrets = load_env_file(Path(niki_home) / ".env")
     try:
-        from hermes_cli.env_loader import get_secret_source_values
-        external_secrets = get_secret_source_values(Path(hermes_home))
+        from niki_cli.env_loader import get_secret_source_values
+        external_secrets = get_secret_source_values(Path(niki_home))
     except Exception:
         external_secrets = {}
     secrets.update((k, v) for k, v in external_secrets.items() if not _is_global_env(k))
@@ -403,7 +403,7 @@ def build_profile_secret_scope(hermes_home: Path) -> dict[str, str]:
     # into that profile's own mapping. A secondary never inherits it (#80099 class).
     from gateway.config_loader import bridged_allow_all_users
     bridged = bridged_allow_all_users()
-    if bridged is not None and _is_process_home(hermes_home):
+    if bridged is not None and _is_process_home(niki_home):
         secrets.setdefault("GATEWAY_ALLOW_ALL_USERS", bridged)
     # Administrator-managed ``.env`` LAST, with override: the launch process applies it that way
     # (``env_loader._apply_managed_env``) so policy beats a user's own value. Under multiplex
@@ -412,25 +412,25 @@ def build_profile_secret_scope(hermes_home: Path) -> dict[str, str]:
     # managed-vs-user collision (#111187 review). Every multiplex-authoritative scope — gateway
     # turn, routed cron fire, external worker — is built here, so managed authority is composed
     # once, not restored by each consumer.
-    from hermes_cli.managed_scope import load_managed_env  # fail-open: {} when no managed scope
+    from niki_cli.managed_scope import load_managed_env  # fail-open: {} when no managed scope
 
     secrets.update((k, v) for k, v in load_managed_env().items() if not _is_global_env(k))
     return secrets
 
 
-def _is_process_home(hermes_home: Path) -> bool:
-    """Is *hermes_home* the profile this process serves as its own? Same launch-home identity as
-    ``serves_routed_profile()``: a host that mirrors a served profile into ``HERMES_HOME`` would
+def _is_process_home(niki_home: Path) -> bool:
+    """Is *niki_home* the profile this process serves as its own? Same launch-home identity as
+    ``serves_routed_profile()``: a host that mirrors a served profile into ``NIKI_HOME`` would
     otherwise seed the launch profile's bridged allow-all grant into that profile's scope."""
-    from hermes_constants import get_routing_process_hermes_home
+    from niki_constants import get_routing_process_niki_home
     try:
-        return Path(hermes_home).resolve() == get_routing_process_hermes_home().resolve()
+        return Path(niki_home).resolve() == get_routing_process_niki_home().resolve()
     except OSError:
         return False
 
 
-def refresh_installed_secret_scope(hermes_home: Path) -> bool:
-    """Fold a fresh build of *hermes_home*'s secrets into the INSTALLED scope, in place.
+def refresh_installed_secret_scope(niki_home: Path) -> bool:
+    """Fold a fresh build of *niki_home*'s secrets into the INSTALLED scope, in place.
 
     A scope is frozen when installed, but a fire can learn of new values afterwards: a routed cron
     fire's first agent build discovers plugin secret sources, and under multiplex semantics the
@@ -444,7 +444,7 @@ def refresh_installed_secret_scope(hermes_home: Path) -> bool:
     # REPLACE, don't merge: the rebuild is the profile's current truth, so a name a source has
     # stopped supplying (rotated, revoked, source removed) must disappear from the fire's scope
     # rather than survive as the stale value dict.update() would keep.
-    rebuilt = build_profile_secret_scope(hermes_home)
+    rebuilt = build_profile_secret_scope(niki_home)
     # Update first, then drop what is gone: a concurrent reader never sees an emptied scope.
     scope.update(rebuilt)
     for name in [n for n in scope if n not in rebuilt]:

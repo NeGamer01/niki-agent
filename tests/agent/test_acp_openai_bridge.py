@@ -171,11 +171,11 @@ def test_response_level_extras_survive_the_stream_conversion():
     """Niki reads provider extras off the returned object; a plain list would
     drop them and silently disable the projection on stream=True."""
     chunks = completion_to_stream_chunks(
-        _completion(hermes_projected_messages=[{"role": "tool", "content": "x"}])
+        _completion(niki_projected_messages=[{"role": "tool", "content": "x"}])
     )
     assert isinstance(chunks, StreamChunks)
     assert isinstance(chunks, list)
-    assert chunks.hermes_projected_messages == [{"role": "tool", "content": "x"}]
+    assert chunks.niki_projected_messages == [{"role": "tool", "content": "x"}]
 
 
 def test_a_text_only_completion_streams_without_tool_call_deltas():

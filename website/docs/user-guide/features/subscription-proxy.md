@@ -1,7 +1,7 @@
 ---
 sidebar_position: 15
 title: "Subscription Proxy"
-description: "Use your Nous Portal subscription (or other OAuth provider) as an OpenAI-compatible endpoint for external apps"
+description: "Use your Niki Portal subscription (or other OAuth provider) as an OpenAI-compatible endpoint for external apps"
 ---
 
 # Subscription Proxy
@@ -29,21 +29,21 @@ proxy when you just want **the model** through your subscription.
 ### 1. Log into your provider (one-time)
 
 ```bash
-hermes portal
+niki portal
 ```
 
-This opens your browser for the Nous Portal OAuth flow. Niki stores
-the refresh token in `~/.hermes/auth.json` — the same place all Niki
+This opens your browser for the Niki Portal OAuth flow. Niki stores
+the refresh token in `~/.niki/auth.json` — the same place all Niki
 provider logins live.
 
 ### 2. Start the proxy
 
 ```bash
-hermes proxy start
+niki proxy start
 ```
 
 ```
-Starting Niki proxy for Nous Portal
+Starting Niki proxy for Niki Portal
   Listening on:  http://127.0.0.1:8645/v1
   Forwarding to: (resolved per-request from your subscription)
   Use any bearer token in the client — the proxy attaches your real credential.
@@ -69,33 +69,33 @@ automatically when the bearer approaches expiry.
 ## Available providers
 
 ```bash
-hermes proxy providers
+niki proxy providers
 ```
 
-Currently shipped: `nous` (Nous Portal) and `xai` (xAI / Grok). More
+Currently shipped: `niki` (Niki Portal) and `xai` (xAI / Grok). More
 OAuth providers can be added by implementing the `UpstreamAdapter`
-interface in `hermes_cli/proxy/adapters/`.
+interface in `niki_cli/proxy/adapters/`.
 
 ## Check status
 
 ```bash
-hermes proxy status
+niki proxy status
 ```
 
 ```
 Niki proxy upstream adapters
 
-  [nous    ] Nous Portal — ready (bearer expires 2026-05-15T06:43:21Z)
+  [niki    ] Niki Portal — ready (bearer expires 2026-05-15T06:43:21Z)
 ```
 
-If you see `not logged in`, run `hermes portal`. If you see
+If you see `not logged in`, run `niki portal`. If you see
 `credentials need attention`, your refresh token was revoked (rare —
 happens if you signed out from the Portal web UI) — just re-run
-`hermes portal`.
+`niki portal`.
 
 ## Allowed paths
 
-The proxy only forwards paths the upstream actually serves. For Nous
+The proxy only forwards paths the upstream actually serves. For Niki
 Portal:
 
 | Path | Purpose |
@@ -133,7 +133,7 @@ Then start your proxy in a terminal alongside `openviking-server`:
 
 ```bash
 # Terminal 1
-hermes proxy start
+niki proxy start
 
 # Terminal 2
 openviking-server
@@ -170,7 +170,7 @@ neither header and are unaffected. To let other machines on your
 network use it:
 
 ```bash
-hermes proxy start --host 0.0.0.0 --port 8645
+niki proxy start --host 0.0.0.0 --port 8645
 ```
 
 ⚠ **Be aware:** anyone on your network can now use your Portal
@@ -204,7 +204,7 @@ proxy is a credential-attaching pass-through.
 The adapter system is pluggable. Adding a new provider (e.g.
 HuggingFace, GitHub Copilot's chat endpoint, Anthropic via OAuth)
 requires implementing `UpstreamAdapter` in
-`hermes_cli/proxy/adapters/<provider>.py` and registering it in
+`niki_cli/proxy/adapters/<provider>.py` and registering it in
 `adapters/__init__.py`. Providers that aren't OpenAI-compatible at the
 protocol level (Anthropic Messages API, for example) would need a
 transformation layer, which is out of scope for the current shape.

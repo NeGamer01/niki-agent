@@ -11,13 +11,13 @@ export const frBoot = {
       loadingSessions: 'Chargement des sessions récentes',
       retryingRemoteBackend: 'Reconnexion au backend Niki distant…',
       startingDesktopConnection: 'Démarrage de la connexion desktop',
-      startingHermesDesktop: 'Démarrage de Niki Desktop…'
+      startingNikiDesktop: 'Démarrage de Niki Desktop…'
     },
     errors: {
       backgroundExited: "Le processus en arrière-plan de Niki s'est arrêté.",
       backgroundExitedDuringStartup: "Le processus en arrière-plan de Niki s'est arrêté pendant le démarrage.",
       backendStopped: 'Backend arrêté',
-      restartHermes: 'Redémarrer Niki',
+      restartNiki: 'Redémarrer Niki',
       openLogs: 'Ouvrir les journaux',
       desktopBootFailed: 'Échec du démarrage',
       gatewayConnectionLost: 'Connexion au gateway perdue',
@@ -60,11 +60,11 @@ export const frBoot = {
       signOutAndSignIn: 'Se déconnecter et se reconnecter',
       remoteFailureHint:
         "Vérifiez l'URL du gateway et la connexion dans les paramètres du gateway, ou passez au gateway local.",
-      cloudDownTitle: "L'agent Nous Cloud est indisponible",
+      cloudDownTitle: "L'agent Niki Cloud est indisponible",
       cloudDownDescription:
-        "L'agent cloud géré par Nous auquel ce gateway se connecte renvoie une erreur serveur. Il ne peut pas être redémarré depuis ici — vérifiez son état, passez au gateway local ou contactez l'assistance.",
+        "L'agent cloud géré par Niki auquel ce gateway se connecte renvoie une erreur serveur. Il ne peut pas être redémarré depuis ici — vérifiez son état, passez au gateway local ou contactez l'assistance.",
       cloudDownHint:
-        "Les boutons ci-dessous ouvrent le portail Nous, pour consulter et contrôler l'instance, ainsi que notre Discord pour obtenir de l'aide.",
+        "Les boutons ci-dessous ouvrent le portail Niki, pour consulter et contrôler l'instance, ainsi que notre Discord pour obtenir de l'aide.",
       cloudDownCheckPortal: "Vérifier l'état sur le portail",
       cloudDownDiscord: "Obtenir de l'aide sur Discord",
       hideRecentLogs: 'Masquer les journaux récents',
@@ -92,7 +92,7 @@ export const frBoot = {
       since: time => `En attente depuis ${time}`,
       lastChecked: time => `Dernière vérification ${time}`,
       recoveryHint:
-        "Cela se règle généralement en quelques minutes. Sinon : quittez Niki, arrêtez les processus git ou hermes restants (ou redémarrez l'ordinateur), puis rouvrez Niki.",
+        "Cela se règle généralement en quelques minutes. Sinon : quittez Niki, arrêtez les processus git ou niki restants (ou redémarrez l'ordinateur), puis rouvrez Niki.",
       checkAgain: 'Vérifier à nouveau',
       quit: 'Quitter Niki',
       openLogs: 'Ouvrir les journaux',

@@ -42,7 +42,7 @@ Sites that ask for a code after the password are handled the same way:
   link a site shows when you enable 2FA; 1Password and Bitwarden items that
   hold a TOTP seed count too): Niki generates the current code and enters
   it. Nobody is asked. Add the key in **Settings → Passwords & Logins → Add**
-  or `hermes vault add`; the item shows a *2FA auto* badge.
+  or `niki vault add`; the item shows a *2FA auto* badge.
 - **Code sent to your phone or email**: a small prompt appears in your
   surface ("Verification code for github.com"), you type the code, Niki
   enters it into the page. The code never enters the conversation either.
@@ -64,13 +64,13 @@ A manager item that lists several websites (say `amazon.co.uk`,
 `www.amazon.co.uk` and `eu.account.amazon.com`) fills on each of those exact
 origins; nothing is inferred beyond the URLs saved on the item.
 
-Prefer not to use a detected manager? `hermes vault sources --disable bitwarden`,
+Prefer not to use a detected manager? `niki vault sources --disable bitwarden`,
 or the switch in **Settings → Passwords & Logins**.
 
 ## Paying and filling addresses
 
 Cards and addresses work the same way as logins: saved once (**Settings →
-Passwords & Logins → Add**, or `hermes vault add`), bound to the checkout site,
+Passwords & Logins → Add**, or `niki vault add`), bound to the checkout site,
 and filled by the agent on that site only. **Every card fill asks you first**,
 with the same approval prompt as a dangerous command; declining writes nothing.
 Headless sessions (cron, webhooks, the API server) cannot confirm and are
@@ -81,17 +81,17 @@ cannot spend. Address fills need no confirmation.
 
 - **Desktop → Settings → Passwords & Logins**: everything saved, the detected
   password managers with Unlock/Lock, Add, Remove.
-- **CLI**: `hermes vault list`, `hermes vault add`, `hermes vault rm <handle>`,
-  `hermes vault sources`.
+- **CLI**: `niki vault list`, `niki vault add`, `niki vault rm <handle>`,
+  `niki vault sources`.
 
-Items live encrypted under `~/.hermes/vault/` (Fernet key + vault file, both
+Items live encrypted under `~/.niki/vault/` (Fernet key + vault file, both
 `0600`), scoped to the profile. Labels, site origins and login identifiers are
 visible metadata; passwords and card values never leave the vault except into
 the page.
 
 ## Headless sessions
 
-Cron jobs, webhooks, the API server and `hermes chat -q` have nobody to answer a
+Cron jobs, webhooks, the API server and `niki chat -q` have nobody to answer a
 prompt. Saved local logins keep working there; a locked password manager reports
 `unavailable_in_this_session` and a missing login reports `prompt_unavailable`.
 Unlock or save from an interactive session first, or give 1Password a service

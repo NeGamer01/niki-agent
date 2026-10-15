@@ -17,7 +17,7 @@ import stat
 import tempfile
 import threading
 
-from hermes_state_runtime import RuntimeStoreError
+from niki_state_runtime import RuntimeStoreError
 from utils import fsync_directory
 
 
@@ -361,7 +361,7 @@ def release_admission_media(db, admission_id):
     files can collect independently; physical aliases and uncertain stat results
     retain conservatively. A shared hardlink can consequently retain an extra old alias.
     """
-    from hermes_state_runtime import get_session_admission
+    from niki_state_runtime import get_session_admission
     row = get_session_admission(db, admission_id=admission_id)
     if row is None or row['status'] != 'terminal':
         return 0
@@ -420,8 +420,8 @@ def collect_unheld_api_images(db):
     Candidates are enumerated from the ACTIVE home's media root while ownership is decided by
     ``db``: a sweep whose database belongs to another profile would see every image here as
     unowned, so it collects nothing."""
-    from hermes_constants import get_hermes_home
-    if Path(db.db_path).resolve().parent != get_hermes_home().resolve():
+    from niki_constants import get_niki_home
+    if Path(db.db_path).resolve().parent != get_niki_home().resolve():
         import logging
         logging.getLogger(__name__).warning(
             'Skipped retained API image collection: %s is not the active profile store', db.db_path)

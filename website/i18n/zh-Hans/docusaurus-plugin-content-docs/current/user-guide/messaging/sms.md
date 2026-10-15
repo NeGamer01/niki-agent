@@ -23,7 +23,7 @@ SMS gateway（网关）与可选的 [telephony skill](../../reference/skills-cat
 - **Twilio 账户** — [在 twilio.com 注册](https://www.twilio.com/try-twilio)（提供免费试用）
 - **具备 SMS 功能的 Twilio 电话号码**
 - **可公开访问的服务器** — Twilio 在收到 SMS 时会向你的服务器发送 webhook
-- **aiohttp** — `cd ~/.hermes/hermes-agent && python -c "import pm; pm.sync_venv(['sms'], explicit=True)"`
+- **aiohttp** — `cd ~/.niki/niki-agent && python -c "import pm; pm.sync_venv(['sms'], explicit=True)"`
 
 ---
 
@@ -40,14 +40,14 @@ SMS gateway（网关）与可选的 [telephony skill](../../reference/skills-cat
 ### 交互式设置（推荐）
 
 ```bash
-hermes gateway setup
+niki gateway setup
 ```
 
 从平台列表中选择 **SMS (Twilio)**，向导将提示你输入凭据。
 
 ### 手动设置
 
-在 `~/.hermes/.env` 中添加：
+在 `~/.niki/.env` 中添加：
 
 ```bash
 TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -105,7 +105,7 @@ SMS_WEBHOOK_PORT=3000
 ## 第四步：启动 Gateway
 
 ```bash
-hermes gateway
+niki gateway
 ```
 
 你应该看到：

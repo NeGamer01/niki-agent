@@ -7,7 +7,7 @@ import type { Dialog, Shell } from 'electron'
 import { readAndConsumeHandoffResult } from './handoff-result'
 
 export interface HandoffReportHost {
-  hermesHome: string
+  nikiHome: string
   /** Marker line 2 of the run this boot parked on (C2 started_at match), else null. */
   expectedStartedAt: number | null
   /** Stable run id of that marker (survives heartbeat refreshes), else null. */
@@ -53,7 +53,7 @@ export function parkedRunReport() {
  */
 export function reportHandoffResult(host: HandoffReportHost): void {
   try {
-    const result = readAndConsumeHandoffResult(host.hermesHome, {
+    const result = readAndConsumeHandoffResult(host.nikiHome, {
       expectedStartedAt: host.expectedStartedAt,
       expectedRunId: host.expectedRunId,
       log: host.log
@@ -67,7 +67,7 @@ export function reportHandoffResult(host: HandoffReportHost): void {
         type: 'info',
         title: 'Niki update',
         message: 'Niki updated, but some follow-up steps need another try',
-        detail: `${result.warnings.join('\n')}\n\nHermes retries them on the next launch or the next update.`
+        detail: `${result.warnings.join('\n')}\n\nNiki retries them on the next launch or the next update.`
       })
     } else if (result && result.ok && result.manual) {
       // Update landed but the user must act (reopen/reinstall/sandbox). On
@@ -84,11 +84,11 @@ export function reportHandoffResult(host: HandoffReportHost): void {
       host.log(`[updates] detached update finished OK (branch ${result.branch})`)
     } else if (result) {
       host.log(`[updates] detached update FAILED (exit ${result.exitCode}): ${result.message}`)
-      const handoffLogPath = path.join(host.hermesHome, 'logs', 'desktop-update-handoff.log')
+      const handoffLogPath = path.join(host.nikiHome, 'logs', 'desktop-update-handoff.log')
 
       // Async so boot is not blocked behind the dialog; the response handlers
       // reuse the menu's open-updates path (queued until the renderer is ready)
-      // and the same reveal primitive as 'hermes:logs:reveal'.
+      // and the same reveal primitive as 'niki:logs:reveal'.
       void host.dialog
         .showMessageBox({
           type: 'error',

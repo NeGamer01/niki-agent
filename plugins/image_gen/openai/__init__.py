@@ -51,7 +51,7 @@ def _named_endpoint(name: str) -> tuple[str, str]:
     """``(base_url, api_key)`` of the user-declared custom endpoint *name* (``providers:`` /
     ``custom_providers:``), so image generation reuses a chat endpoint's URL and credential without
     duplicating the key into OpenAI variables (#83080). Unknown name → ``("", "")`` with a warning."""
-    from hermes_cli.runtime_provider import _get_named_custom_provider
+    from niki_cli.runtime_provider import _get_named_custom_provider
 
     entry = _get_named_custom_provider(name)
     if not entry:
@@ -161,7 +161,7 @@ class OpenAIImageGenProvider(StaticImageGenProvider):
         if not api_key:
             return error_factory("openai", aspect)(
                 "OPENAI_API_KEY not set (or the variable named by image_gen.openai.key_env is empty). "
-                "Run `hermes tools` → Image Generation → OpenAI to configure, or `hermes setup` "
+                "Run `niki tools` → Image Generation → OpenAI to configure, or `niki setup` "
                 "to add the key.",
                 "auth_required")
 

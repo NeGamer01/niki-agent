@@ -326,7 +326,7 @@ class DingTalkAdapter(BasePlatformAdapter):
             return
         msg = (f"dingtalk-stream cannot open its websocket with the installed websockets package ({exc}). "
                "Niki pins dingtalk-stream==0.24.3 with websockets==15.0.1; reinstall the dingtalk extra "
-               "so those versions are used (e.g. `pip install 'hermes-agent[dingtalk]'`).")
+               "so those versions are used (e.g. `pip install 'niki-agent[dingtalk]'`).")
         logger.error("[%s] %s", self.name, msg)
         # Not retryable: only a reinstall + restart fixes it, and connect() returns True before the
         # socket exists, so a gateway reconnect would re-fail every watcher tick forever.
@@ -575,7 +575,7 @@ class DingTalkAdapter(BasePlatformAdapter):
             token = await self._get_access_token()
             if not token:
                 return None
-            out_track_id, models = f"hermes_{uuid.uuid4().hex[:12]}", dingtalk_card_models
+            out_track_id, models = f"niki_{uuid.uuid4().hex[:12]}", dingtalk_card_models
             is_group = str(getattr(message, "conversation_type", "1")) == "2"
             sender_staff_id = getattr(message, "sender_staff_id", "") or ""
             create_request = models.CreateCardRequest(
@@ -776,10 +776,10 @@ async def _standalone_send(pconfig, chat_id, message, *, thread_id=None, media_f
 
 def interactive_setup() -> None:
     """Configure DingTalk — QR scan (recommended) or manual credential entry."""
-    from hermes_cli.config import save_env_value
-    from hermes_cli.setup import prompt_choice
-    from hermes_cli.cli_output import prompt, print_header, print_success, print_warning
-    from hermes_cli.setup_platforms import declines_reconfigure
+    from niki_cli.config import save_env_value
+    from niki_cli.setup import prompt_choice
+    from niki_cli.cli_output import prompt, print_header, print_success, print_warning
+    from niki_cli.setup_platforms import declines_reconfigure
     print_header("DingTalk")
     if declines_reconfigure("DingTalk", "Reconfigure DingTalk?", "DINGTALK_CLIENT_ID"):
         return
@@ -787,7 +787,7 @@ def interactive_setup() -> None:
     result = None
     if prompt_choice("Choose setup method", choices, default=0) == 0:
         try:
-            from hermes_cli.dingtalk_auth import dingtalk_qr_auth
+            from niki_cli.dingtalk_auth import dingtalk_qr_auth
             result = dingtalk_qr_auth()
             if result is None:
                 print_warning("QR auth incomplete, falling back to manual input.")

@@ -13,10 +13,10 @@ async def test_legacy_history_adoption_is_native_owned_atomic_and_retryable(tmp_
     from gateway.session_authority import initialize_session_authority
     from gateway.session_contract import Principal
     from gateway.session_local_title import resolve_titled_session
-    from hermes_state_local import local_receipt
-    from hermes_state_runtime import RuntimeStoreError
+    from niki_state_local import local_receipt
+    from niki_state_runtime import RuntimeStoreError
 
-    monkeypatch.setenv('HERMES_HOME', str(tmp_path))
+    monkeypatch.setenv('NIKI_HOME', str(tmp_path))
     # A code folder under focus: the row's saved cwd must not adopt it into the coding posture.
     (tmp_path / 'pyproject.toml').write_text('[project]\nname = "old"\n')
     config = {'platform_toolsets': {'cli': []}, 'agent': {'coding_context': 'focus'}}
@@ -98,10 +98,10 @@ async def test_legacy_adoption_refuses_live_owner_and_foreign_profile_without_wr
     from gateway.session_authority import initialize_session_authority
     from gateway.session_contract import Principal
     from gateway.session_local_title import resolve_titled_session
-    from hermes_cli.active_sessions import try_acquire_active_session, release_active_session
-    from hermes_state_runtime import RuntimeStoreError
+    from niki_cli.active_sessions import try_acquire_active_session, release_active_session
+    from niki_state_runtime import RuntimeStoreError
 
-    monkeypatch.setenv('HERMES_HOME', str(tmp_path))
+    monkeypatch.setenv('NIKI_HOME', str(tmp_path))
     monkeypatch.setattr(run, '_load_gateway_config', lambda: {'platform_toolsets': {'cli': []}})
     store = SessionStore(tmp_path / 'sessions', GatewayConfig())
     db = store._db
@@ -113,7 +113,7 @@ async def test_legacy_adoption_refuses_live_owner_and_foreign_profile_without_wr
     authority._native_legacy_transports = {native.transport_id: native}
     lease, refusal = try_acquire_active_session(session_id='old-live', surface='cli', registry_home=Path(db.db_path).parent, config={})
     assert lease is not None, refusal
-    from hermes_cli.active_sessions import active_session_liveness_guard
+    from niki_cli.active_sessions import active_session_liveness_guard
     with active_session_liveness_guard('old-live', registry_home=Path(db.db_path).parent) as active:
         assert active
     try:
@@ -127,8 +127,8 @@ async def test_legacy_adoption_refuses_live_owner_and_foreign_profile_without_wr
         release_active_session(lease)
     ref = resolve_titled_session(authority, native, 'old-live')
     db.set_session_title(ref.session_id, 'Bot Chat')
-    from hermes_state_local_lineage import reset_local_target
-    from hermes_state_local import local_receipt
+    from niki_state_local_lineage import reset_local_target
+    from niki_state_local import local_receipt
     receipt = local_receipt(db, ref.session_id)
     entry = dict(receipt['entry'], session_id='reset-tip')
     reset_local_target(db, epoch=authority.epoch, parent_session_id=ref.session_id, entry=entry)
@@ -140,7 +140,7 @@ async def test_legacy_adoption_refuses_live_owner_and_foreign_profile_without_wr
 @pytest.mark.asyncio
 async def test_upgraded_oneshot_and_tool_history_resumes_by_id_and_title_but_stays_out_of_pickers(tmp_path, monkeypatch):
     """main's `chat -q` stored ``oneshot`` rows (``--source tool`` stored ``tool``) and printed
-    `hermes --resume <id>` for each. After the upgrade, the native owner adopts them by id and by
+    `niki --resume <id>` for each. After the upgrade, the native owner adopts them by id and by
     title like ``cli`` history, and they keep their label so human pickers still hide them."""
     from gateway import run
     from gateway.config import GatewayConfig
@@ -148,7 +148,7 @@ async def test_upgraded_oneshot_and_tool_history_resumes_by_id_and_title_but_sta
     from gateway.session_authority import initialize_session_authority
     from gateway.session_controls import AuthorityConnection
 
-    monkeypatch.setenv('HERMES_HOME', str(tmp_path))
+    monkeypatch.setenv('NIKI_HOME', str(tmp_path))
     monkeypatch.setattr(run, '_load_gateway_config', lambda: {'platform_toolsets': {'cli': []}})
     store = SessionStore(tmp_path / 'sessions', GatewayConfig())
     db = store._db
@@ -179,7 +179,7 @@ async def test_upgraded_oneshot_and_tool_history_resumes_by_id_and_title_but_sta
 @pytest.mark.asyncio
 async def test_upgraded_desktop_history_resumes_by_id(tmp_path, monkeypatch):
     """main's Desktop stored its chats with ``source='desktop'``. After the upgrade the native owner
-    adopts them by id like ``gui`` history, including the ones stamped with the signed-in Nous
+    adopts them by id like ``gui`` history, including the ones stamped with the signed-in Niki
     account. Any other identity still needs its own authority."""
     from gateway import run
     from gateway.config import GatewayConfig
@@ -187,11 +187,11 @@ async def test_upgraded_desktop_history_resumes_by_id(tmp_path, monkeypatch):
     from gateway.session_authority import initialize_session_authority
     from gateway.session_controls import AuthorityConnection
 
-    monkeypatch.setenv('HERMES_HOME', str(tmp_path))
+    monkeypatch.setenv('NIKI_HOME', str(tmp_path))
     monkeypatch.setattr(run, '_load_gateway_config', lambda: {'platform_toolsets': {'gui': []}})
     store = SessionStore(tmp_path / 'sessions', GatewayConfig())
     db = store._db
-    for sid, user_id in (('old-desktop', None), ('old-desktop-account', 'nous:account')):
+    for sid, user_id in (('old-desktop', None), ('old-desktop-account', 'niki:account')):
         db.create_session(sid, source='desktop', model='old-model', cwd=str(tmp_path), user_id=user_id)
         db.append_message(sid, role='user', content=sid.upper())
         db.end_session(sid, 'session_switch')
@@ -209,9 +209,9 @@ async def test_upgraded_desktop_history_resumes_by_id(tmp_path, monkeypatch):
     stamped = await native.dispatch({'id': 2, 'method': 'session.resume', 'params': {'session_id': 'old-desktop-account'}})
     assert stamped.get('result', {}).get('session_id') == 'old-desktop-account', stamped
     assert [m['content'] for m in stamped['result']['messages']] == ['OLD-DESKTOP-ACCOUNT']
-    # Any other identity, or a Nous stamp on a non-Desktop row, still needs its own authority.
+    # Any other identity, or a Niki stamp on a non-Desktop row, still needs its own authority.
     for sid, source, user_id in (('old-desktop-foreign', 'desktop', 'telegram:42'),
-                                 ('old-cli-account', 'cli', 'nous:account')):
+                                 ('old-cli-account', 'cli', 'niki:account')):
         db.create_session(sid, source=source, model='old-model', cwd=str(tmp_path), user_id=user_id)
         db.append_message(sid, role='user', content=sid.upper())
         db.end_session(sid, 'session_switch')

@@ -8,8 +8,8 @@ inputs:
   path:
     description: Path to the plugin directory (containing plugin.yaml).
     default: "."
-  hermes-ref:
-    description: hermes-agent git ref (branch/tag/sha) to validate with.
+  niki-ref:
+    description: niki-agent git ref (branch/tag/sha) to validate with.
     default: "main"
 
 runs:
@@ -19,13 +19,13 @@ runs:
       id: source
       shell: bash
       env:
-        _HERMES_REF: ${{ inputs.hermes-ref }}
+        _NIKI_REF: ${{ inputs.niki-ref }}
       run: |
         set -euo pipefail
-        source=$(mktemp -d "$RUNNER_TEMP/hermes-plugin-validator.XXXXXX")
+        source=$(mktemp -d "$RUNNER_TEMP/niki-plugin-validator.XXXXXX")
         git init "$source"
-        git -C "$source" remote add origin https://github.com/NousResearch/hermes-agent.git
-        git -C "$source" fetch --depth=1 -- origin "$_HERMES_REF"
+        git -C "$source" remote add origin https://github.com/NeGamer01/niki-agent.git
+        git -C "$source" fetch --depth=1 -- origin "$_NIKI_REF"
         git -C "$source" checkout --detach FETCH_HEAD
         printf 'source=%s\n' "$source" >> "$GITHUB_OUTPUT"
         if [ "$RUNNER_OS" = Windows ]; then bootstrap=python; else bootstrap=python3; fi
@@ -50,7 +50,7 @@ runs:
         _SOURCE: ${{ steps.source.outputs.source }}
       run: |
         set -euo pipefail
-        "$HERMES_PYTHON" - <<'PY'
+        "$NIKI_PYTHON" - <<'PY'
         import os
         from pathlib import Path
         from pm import build_environment
@@ -67,4 +67,4 @@ runs:
         _VALIDATOR_PYTHON: ${{ steps.runtime.outputs.python }}
       run: |
         set -euo pipefail
-        "$_VALIDATOR_PYTHON" -I -m hermes_cli.main plugins validate "$_PLUGIN_PATH"
+        "$_VALIDATOR_PYTHON" -I -m niki_cli.main plugins validate "$_PLUGIN_PATH"

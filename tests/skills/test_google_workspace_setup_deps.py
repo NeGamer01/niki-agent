@@ -47,13 +47,13 @@ def test_oauth_stops_at_pm_restart_boundary(command, monkeypatch, tmp_path, caps
 
 
 @pytest.mark.parametrize("command", ["--install-deps", "--auth-url"])
-def test_standalone_without_hermes_reports_setup_not_ambient_installs(command, tmp_path):
+def test_standalone_without_niki_reports_setup_not_ambient_installs(command, tmp_path):
     # -I -S excludes both the checkout and installed site packages, just as a
     # copied skill run with an unrelated interpreter has no Niki PM module.
     (tmp_path / "google_client_secret.json").write_text("{}")
     result = subprocess.run(
         [sys.executable, "-I", "-S", str(SETUP_PATH), command],
-        env={**os.environ, "HERMES_HOME": str(tmp_path), "PATH": ""},
+        env={**os.environ, "NIKI_HOME": str(tmp_path), "PATH": ""},
         capture_output=True,
         text=True,
         timeout=15,
@@ -61,6 +61,6 @@ def test_standalone_without_hermes_reports_setup_not_ambient_installs(command, t
     )
     assert result.returncode == 1
     assert "Niki environment" in result.stdout
-    assert "hermes setup" in result.stdout
+    assert "niki setup" in result.stdout
     assert "pip" not in result.stdout + result.stderr
     assert "Traceback" not in result.stderr

@@ -33,7 +33,7 @@ def _no_background_titles(monkeypatch):
 
 
 def _agent():
-    home = Path(tempfile.mkdtemp(prefix="hermes-test-home-"))
+    home = Path(tempfile.mkdtemp(prefix="niki-test-home-"))
     (home / "logs").mkdir(parents=True, exist_ok=True)
     tool = {"type": "function", "function": {"name": "web_search", "description": "search",
                                              "parameters": {"type": "object", "properties": {}}}}
@@ -41,7 +41,7 @@ def _agent():
         patch("model_tools.get_tool_definitions", return_value=[tool]),
         patch("model_tools.check_toolset_requirements", return_value={}),
         patch("agent.process_bootstrap.OpenAI"),
-        patch("run_agent._hermes_home", home),
+        patch("run_agent._niki_home", home),
         patch("agent.model_metadata.fetch_model_metadata", return_value={}),
     ):
         agent = AIAgent(api_key="test-key", base_url="https://openrouter.ai/api/v1", quiet_mode=True,

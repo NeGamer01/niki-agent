@@ -616,7 +616,7 @@ class TestMirrorUrlOverride:
              patch.object(md, "_save_disk_cache"), \
              patch.object(md, "_load_etag", return_value=""), \
              patch.object(md, "_save_etag"), \
-             patch("hermes_cli.config.load_config_readonly", return_value=fake_config):
+             patch("niki_cli.config.load_config_readonly", return_value=fake_config):
             fetch_models_dev()
 
         call_args = mock_get.call_args
@@ -642,7 +642,7 @@ class TestMirrorUrlOverride:
              patch.object(md, "_save_disk_cache"), \
              patch.object(md, "_load_etag", return_value=""), \
              patch.object(md, "_save_etag"), \
-             patch("hermes_cli.config.load_config_readonly", return_value=fake_config):
+             patch("niki_cli.config.load_config_readonly", return_value=fake_config):
             fetch_models_dev()
 
         call_args = mock_get.call_args
@@ -1263,9 +1263,9 @@ class TestModelOverrides:
         """
         import importlib
 
-        import hermes_cli.config as hc
+        import niki_cli.config as hc
 
-        home = tmp_path / "hermes"
+        home = tmp_path / "niki"
         home.mkdir()
         (home / "config.yaml").write_text(
             "model_overrides:\n"
@@ -1274,7 +1274,7 @@ class TestModelOverrides:
             "      context_window: 524288\n",
             encoding="utf-8",
         )
-        monkeypatch.setenv("HERMES_HOME", str(home))
+        monkeypatch.setenv("NIKI_HOME", str(home))
 
         # Reset caches that memoize config paths (the override layer has
         # no local cache — it rides load_config_readonly's mtime cache).

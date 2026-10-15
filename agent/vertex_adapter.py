@@ -26,7 +26,7 @@ except ImportError:
 def _ensure_google_auth() -> bool:
     """Bind ``google.auth`` on first use, installing the [vertex] extra through PM if needed.
 
-    The extra left [all] under the lazy-install policy (2026-05-12) so a plain ``hermes-agent``
+    The extra left [all] under the lazy-install policy (2026-05-12) so a plain ``niki-agent``
     install still reaches Vertex after selecting a Gemini model. This runs at the first
     credential request, never at import: an import-time sync would rebuild the dependency
     environment of whatever process happens to import this module.
@@ -58,7 +58,7 @@ _creds_cache: dict = {}
 def _vertex_config() -> dict:
     """Return the ``vertex:`` section of config.yaml, or {} on any failure."""
     try:
-        from hermes_cli.config import load_config
+        from niki_cli.config import load_config
 
         section = load_config().get("vertex")
         return section if isinstance(section, dict) else {}

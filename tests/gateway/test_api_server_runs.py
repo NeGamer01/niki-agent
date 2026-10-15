@@ -223,7 +223,7 @@ class TestStartRun:
                     "/v1/runs",
                     data="{this body must never be parsed",
                     headers={
-                        "Authorization": "HermesRoom invalid-token",
+                        "Authorization": "NikiRoom invalid-token",
                         "Content-Type": "application/json",
                     },
                 )
@@ -257,13 +257,13 @@ class TestStartRun:
                 status = await status_resp.json()
                 assert status["run_id"] == data["run_id"]
                 assert status["status"] in {"queued", "running", "completed"}
-                assert status["object"] == "hermes.run"
+                assert status["object"] == "niki.run"
 
     @pytest.mark.asyncio
     async def test_start_binds_chat_id_for_delegation_wake_target(self, adapter):
         """/v1/runs must bind the raw session id as the api_server chat_id
         (like every other agent-entry route does via _run_agent): the async
-        delegation dispatch reads HERMES_SESSION_CHAT_ID to pick its wake
+        delegation dispatch reads NIKI_SESSION_CHAT_ID to pick its wake
         self-post target, and an empty binding forces background delegations
         on this route back to synchronous execution."""
         app = _create_runs_app(adapter)
@@ -498,7 +498,7 @@ class TestRunStatus:
             scope, "shutdown-test-key", "shutdown-test-fingerprint", "run_live", status)
         adapter._run_idempotency_ids.add("run_live")
         adapter._run_statuses["run_done"] = {
-            "object": "hermes.run", "run_id": "run_done", "status": "completed"}
+            "object": "niki.run", "run_id": "run_done", "status": "completed"}
         _claim_run(adapter, "run_done")
 
         async with TestClient(TestServer(_create_runs_app(adapter))) as client:
@@ -1002,7 +1002,7 @@ class TestSteerRun:
 
         assert resp.status == 200
         assert payload == {
-            "object": "hermes.run.steer",
+            "object": "niki.run.steer",
             "run_id": "run_123",
             "accepted": True,
         }
@@ -1487,7 +1487,7 @@ class TestRunsProviderAuthFailure:
         async with TestClient(TestServer(app)) as cli:
             with patch.object(adapter, "_create_agent") as mock_create:
                 mock_create.side_effect = _ProviderAuthResolutionError(
-                    "No credentials found for provider 'nous'"
+                    "No credentials found for provider 'niki'"
                 )
 
                 resp = await cli.post("/v1/runs", json={"input": "hello"})
@@ -1505,7 +1505,7 @@ class TestRunsProviderAuthFailure:
                 assert status["status"] == "failed"
                 assert (
                     status["error"]
-                    == "⚠️ Provider authentication failed: No credentials found for provider 'nous'"
+                    == "⚠️ Provider authentication failed: No credentials found for provider 'niki'"
                 )
                 assert status["last_event"] == "run.failed"
 

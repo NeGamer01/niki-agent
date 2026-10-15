@@ -71,10 +71,10 @@ Alternatif SSH: `git@github.com:NeGamer01/niki-agent.git`
 
 - Repo `niki-agent` di akunmu = rumah resmi Niki Agent milikmu.
 - Update berikutnya seperti biasa: `git add -A && git commit -m "..." && git push`.
-- Mau menarik perbaikan dari upstream Hermes nanti? Tambahkan remote
-  kedua bernama `upstream` ke repo NousResearch/hermes-agent, lalu
+- Mau menarik perbaikan dari upstream Niki nanti? Tambahkan remote
+  kedua bernama `upstream` ke repo NeGamer01/niki-agent, lalu
   `git fetch upstream` dan putuskan sendiri mau merge atau tidak.
   (Rebrand nama produk perlu diulang pada file yang berubah — skripnya
   tersimpan di `milik-saya/rebrand-niki.py`.)
-- Wajib: file `LICENSE` (MIT, © Nous Research) tetap ada di repo —
+- Wajib: file `LICENSE` (MIT, © NeGamer01) tetap ada di repo —
   itu syarat lisensi dan bukti fork ini sah.

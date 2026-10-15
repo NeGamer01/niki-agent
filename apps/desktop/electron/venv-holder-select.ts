@@ -5,7 +5,7 @@
  *
  * The pre-update handoff kills Niki-OWNED venv daemons (the memory plugin's
  * hindsight daemon) so the updater never races a mapped shim. External
- * holders (a user terminal running `hermes`, unrelated scripts) must NOT be
+ * holders (a user terminal running `niki`, unrelated scripts) must NOT be
  * killed — current design reports them via scanVenvBlockers and ABORTS the
  * handoff instead (main.ts releaseBackendLock / applyUpdates).
  */
@@ -23,7 +23,7 @@ export function hasWindowsPathPrefix(exePath: string, venvScriptsDir: string): b
  * references `hindsight_api.main` (the memory daemon the memory plugin
  * spawns DETACHED — it outlives Niki and holds venv shims mapped).
  */
-export function isHermesOwnedVenvDaemon(
+export function isNikiOwnedVenvDaemon(
   exePath: string | null | undefined,
   cmdline: string | null | undefined,
   venvScriptsDir: string
@@ -38,8 +38,8 @@ export function isHermesOwnedVenvDaemon(
 /**
  * True when a process is an external Niki process holding this install's venv
  * (#62311): its exe lives under `<venv>\Scripts\` AND it is unambiguously a
- * Niki program — the `hermes.exe` shim, `python -m hermes_cli...`, or
- * `python -m hermes ...`. These are the autostart holders (the gateway Startup
+ * Niki program — the `niki.exe` shim, `python -m niki_cli...`, or
+ * `python -m niki ...`. These are the autostart holders (the gateway Startup
  * item, the dashboard Scheduled Task) that neither the desktop's backend
  * teardown nor the hindsight-daemon sweep reach, and that keep the venv shim
  * locked so the update hand-off aborts every time.
@@ -65,9 +65,9 @@ export function isExternalVenvHolder(
 
   const exeName = exePath.slice(exePath.lastIndexOf('\\') + 1).toLowerCase()
 
-  if (exeName === 'hermes.exe') {
+  if (exeName === 'niki.exe') {
     return true
   }
 
-  return /hermes_cli/i.test(cmdline) || /(^|\s|")-m\s+hermes([.\s"']|$)/i.test(cmdline)
+  return /niki_cli/i.test(cmdline) || /(^|\s|")-m\s+niki([.\s"']|$)/i.test(cmdline)
 }

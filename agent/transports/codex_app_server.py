@@ -18,8 +18,8 @@ from dataclasses import dataclass
 from typing import Any, Optional
 
 from agent.deadline import kill_process_tree
-from agent.transports.hermes_tools_mcp_server import HERMES_TOOLS_MCP_SERVER_NAME
-from tools.environments.local import hermes_subprocess_env
+from agent.transports.niki_tools_mcp_server import NIKI_TOOLS_MCP_SERVER_NAME
+from tools.environments.local import niki_subprocess_env
 
 MIN_CODEX_VERSION = (0, 125, 0)
 
@@ -102,7 +102,7 @@ class CodexAppServerClient:
         # GATEWAY_RELAY_* auth — none of which a coding subprocess has any use for. Route through the
         # centralized helper so Tier-1 + dynamic-internal secrets are always stripped while provider creds
         # still flow, matching copilot_acp_client (#29157 sibling spawn-site gap).
-        spawn_env = hermes_subprocess_env(inherit_credentials=True)
+        spawn_env = niki_subprocess_env(inherit_credentials=True)
         if env:
             spawn_env.update(env)
         if codex_home:
@@ -117,19 +117,19 @@ class CodexAppServerClient:
         # endpoint acts for this worker; grant it scope via its existing per-server
         # environment (the entry the runtime migration registers), never by granting
         # the whole executor process ownership.
-        owned_task = os.environ.get("HERMES_KANBAN_TASK") and is_dispatcher_owned_worker_context()
+        owned_task = os.environ.get("NIKI_KANBAN_TASK") and is_dispatcher_owned_worker_context()
         if owned_task:
-            for key in (*KANBAN_ENV_KEYS, "HERMES_KANBAN_DB", "HERMES_KANBAN_BOARD"):
+            for key in (*KANBAN_ENV_KEYS, "NIKI_KANBAN_DB", "NIKI_KANBAN_BOARD"):
                 if key in os.environ:
-                    cmd += ["-c", f"mcp_servers.{HERMES_TOOLS_MCP_SERVER_NAME}.env.{key}={json.dumps(os.environ[key])}"]
-            cmd += ["-c", f'mcp_servers.{HERMES_TOOLS_MCP_SERVER_NAME}.env.{DELEGATED_CHILD_ENV_MARKER}=""']
+                    cmd += ["-c", f"mcp_servers.{NIKI_TOOLS_MCP_SERVER_NAME}.env.{key}={json.dumps(os.environ[key])}"]
+            cmd += ["-c", f'mcp_servers.{NIKI_TOOLS_MCP_SERVER_NAME}.env.{DELEGATED_CHILD_ENV_MARKER}=""']
         spawn_env = delegated_child_subprocess_env(spawn_env)
         # Kanban workers must write handoff/status to the board DB outside the
         # workspace: keep the sandbox on, add the Kanban root as writable.
         if owned_task:
-            kanban_db = spawn_env.get("HERMES_KANBAN_DB")
-            default_root = os.path.join(spawn_env.get("HERMES_HOME", os.path.expanduser("~/.hermes")), "kanban")
-            kanban_root = os.path.dirname(kanban_db) if kanban_db else spawn_env.get("HERMES_KANBAN_ROOT", default_root)
+            kanban_db = spawn_env.get("NIKI_KANBAN_DB")
+            default_root = os.path.join(spawn_env.get("NIKI_HOME", os.path.expanduser("~/.niki")), "kanban")
+            kanban_root = os.path.dirname(kanban_db) if kanban_db else spawn_env.get("NIKI_KANBAN_ROOT", default_root)
             cmd += [
                 "-c", 'sandbox_mode="workspace-write"',
                 "-c", f'sandbox_workspace_write.writable_roots=["{kanban_root}"]',
@@ -141,7 +141,7 @@ class CodexAppServerClient:
         # Hide the console the codex child would otherwise flash on Windows (#56747).
         # Hide-only — stdio pipes stay intact for the app-server wire.
         # See #56747.
-        from hermes_cli._subprocess_compat import windows_hide_flags
+        from niki_cli._subprocess_compat import windows_hide_flags
 
         self._proc = subprocess.Popen(
             cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -163,7 +163,7 @@ class CodexAppServerClient:
         self._stderr_reader.start()
 
     def initialize(
-        self, client_name: str = "hermes", client_title: str = "Niki Agent",
+        self, client_name: str = "niki", client_title: str = "Niki Agent",
         client_version: str = "0.1", capabilities: Optional[dict] = None, timeout: float = 10.0,
     ) -> dict:
         """Send ``initialize`` + ``initialized``; return the server's InitializeResponse."""

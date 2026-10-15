@@ -115,7 +115,7 @@ export async function renameCanonicalSession(
   return mutation?.result ? String(mutation.result.title ?? title).trim() : undefined
 }
 
-// The levels `hermes_constants.parse_reasoning_effort` accepts; the display words are config.yaml writes.
+// The levels `niki_constants.parse_reasoning_effort` accepts; the display words are config.yaml writes.
 const REASONING_EFFORTS = new Set([
   'none',
   'false',
@@ -225,7 +225,7 @@ interface ToolsShowResult {
   total?: number
 }
 
-/** Main's `/tools` text (hermes_cli/cli_info_mixin.py show_tools): kawaii header box, one
+/** Main's `/tools` text (niki_cli/cli_info_mixin.py show_tools): kawaii header box, one
  *  `[toolset]` block per section with the first description sentence, then the total. */
 export function renderToolsListing(result: ToolsShowResult): string {
   const sections = result.sections ?? []

@@ -1,15 +1,15 @@
 # Bitwarden Secrets Manager
 
-在进程启动时从 [Bitwarden Secrets Manager](https://bitwarden.com/products/secrets-manager/) 拉取 API 密钥，而不是以明文形式存储在 `~/.hermes/.env` 中。一个引导密钥（机器账户访问令牌）替代了 N 个提供商密钥，轮换凭据只需在 Bitwarden Web 应用中修改一次即可。
+在进程启动时从 [Bitwarden Secrets Manager](https://bitwarden.com/products/secrets-manager/) 拉取 API 密钥，而不是以明文形式存储在 `~/.niki/.env` 中。一个引导密钥（机器账户访问令牌）替代了 N 个提供商密钥，轮换凭据只需在 Bitwarden Web 应用中修改一次即可。
 
 ## 工作原理
 
 1. 在 Bitwarden Secrets Manager 中创建一个**机器账户**，授予其对某个项目的读取权限，并生成一个**访问令牌**。
-2. Niki 将该单一令牌以 `BWS_ACCESS_TOKEN` 的形式存储在 `~/.hermes/.env` 中。
-3. 每次 `hermes`（或 gateway，或 cron 任务）启动时，在加载 `~/.hermes/.env` 之后，Niki 会调用 `bws secret list <project_id>` 并将返回的密钥写入 `os.environ`。
+2. Niki 将该单一令牌以 `BWS_ACCESS_TOKEN` 的形式存储在 `~/.niki/.env` 中。
+3. 每次 `niki`（或 gateway，或 cron 任务）启动时，在加载 `~/.niki/.env` 之后，Niki 会调用 `bws secret list <project_id>` 并将返回的密钥写入 `os.environ`。
 4. 默认情况下，Niki **覆盖**环境中已有的值，因此 Bitwarden 是唯一可信来源——在 Web 应用中轮换一次密钥，每个 Niki 进程在下次启动时即可获取最新值。如果希望 `.env` 优先，可在配置中将 `override_existing: false`。
 
-`bws` 二进制文件在首次使用时会自动下载到 `~/.hermes/bin/`，无需 `apt`、`brew` 或 `sudo`。
+`bws` 二进制文件在首次使用时会自动下载到 `~/.niki/bin/`，无需 `apt`、`brew` 或 `sudo`。
 
 ## 为什么使用机器账户（以及为什么没有双因素认证提示）
 
@@ -34,13 +34,13 @@ Secrets Manager 包含在 Bitwarden 免费套餐中（有使用限制）；无�
 ### 2. 运行向导
 
 ```bash
-hermes secrets bitwarden setup
+niki secrets bitwarden setup
 ```
 
 该命令将：
 
-1. 下载并验证 `bws v2.0.0`，存放至 `~/.hermes/bin/bws`。
-2. 提示输入访问令牌（输入内容隐藏）。以 `BWS_ACCESS_TOKEN` 形式存储在 `~/.hermes/.env` 中。
+1. 下载并验证 `bws v2.0.0`，存放至 `~/.niki/bin/bws`。
+2. 提示输入访问令牌（输入内容隐藏）。以 `BWS_ACCESS_TOKEN` 形式存储在 `~/.niki/.env` 中。
 3. 询问机器账户所属的 Bitwarden 区域——**US Cloud**、**EU Cloud** 或**自托管/自定义 URL**。以 `secrets.bitwarden.server_url` 形式存储在 `config.yaml` 中，并作为 `BWS_SERVER_URL` 传递给 `bws`。
 4. 列出机器账户可见的项目，选择其中一个。以 `secrets.bitwarden.project_id` 形式存储在 `config.yaml` 中。
 5. 测试拉取该项目的 secret，并显示将解析出哪些环境变量。
@@ -49,7 +49,7 @@ hermes secrets bitwarden setup
 也支持通过参数进行非交互式设置：
 
 ```bash
-hermes secrets bitwarden setup \
+niki secrets bitwarden setup \
   --access-token "$BWS_ACCESS_TOKEN" \
   --server-url https://vault.bitwarden.eu \
   --project-id <project-uuid>
@@ -58,37 +58,37 @@ hermes secrets bitwarden setup \
 ### 3. 确认
 
 ```bash
-hermes secrets bitwarden status
+niki secrets bitwarden status
 ```
 
-此后，每次调用 `hermes` 都会在启动时拉取最新 secret。进程中首次应用 secret 时，stderr 会显示一行摘要信息。
+此后，每次调用 `niki` 都会在启动时拉取最新 secret。进程中首次应用 secret 时，stderr 会显示一行摘要信息。
 
 ## CLI
 
 | 命令 | 功能 |
 |---|---|
-| `hermes secrets bitwarden setup` | 交互式向导（安装二进制文件、提示输入令牌、选择项目、测试拉取） |
-| `hermes secrets bitwarden status` | 显示配置、二进制版本，以及令牌是否存在/是否通过校验 |
-| `hermes secrets bitwarden token` | 轮换访问令牌：先向 Bitwarden 验证新令牌，验证通过后再写入 `.env` |
-| `hermes secrets bitwarden sync` | 演习模式：立即拉取 secret 并显示将应用的内容 |
-| `hermes secrets bitwarden sync --apply` | 拉取并导出到当前 shell 的环境中 |
-| `hermes secrets bitwarden install` | 仅下载固定版本的 `bws` 二进制文件（无需认证） |
-| `hermes secrets bitwarden disable` | 将 `enabled` 设为 `false`；保留令牌和项目 ID |
+| `niki secrets bitwarden setup` | 交互式向导（安装二进制文件、提示输入令牌、选择项目、测试拉取） |
+| `niki secrets bitwarden status` | 显示配置、二进制版本，以及令牌是否存在/是否通过校验 |
+| `niki secrets bitwarden token` | 轮换访问令牌：先向 Bitwarden 验证新令牌，验证通过后再写入 `.env` |
+| `niki secrets bitwarden sync` | 演习模式：立即拉取 secret 并显示将应用的内容 |
+| `niki secrets bitwarden sync --apply` | 拉取并导出到当前 shell 的环境中 |
+| `niki secrets bitwarden install` | 仅下载固定版本的 `bws` 二进制文件（无需认证） |
+| `niki secrets bitwarden disable` | 将 `enabled` 设为 `false`；保留令牌和项目 ID |
 
 ## 轮换已过期或已吊销的令牌
 
 当机器账户令牌过期、被吊销或账户被删除时，启动信息会显示令牌被拒绝的说明，并附带 `→` 修复提示。无需重新运行整个向导即可修复：
 
 ```bash
-hermes secrets bitwarden token                     # 隐藏输入提示
-hermes secrets bitwarden token --access-token 0.…  # 非交互式
+niki secrets bitwarden token                     # 隐藏输入提示
+niki secrets bitwarden token --access-token 0.…  # 非交互式
 ```
 
 该命令会在写入任何内容**之前**用新令牌探测 Bitwarden——令牌被拒绝时不会改动现有 `.env`。成功后会存储令牌、清除拉取缓存，并在配置的项目对新机器账户不可见时发出警告。
 
 ## 配置
 
-`~/.hermes/config.yaml` 中的默认值：
+`~/.niki/config.yaml` 中的默认值：
 
 ```yaml
 secrets:
@@ -108,9 +108,9 @@ secrets:
 | `access_token_env` | `BWS_ACCESS_TOKEN` | 存储引导令牌的环境变量名。如果你已将 `BWS_ACCESS_TOKEN` 用于其他用途，可修改此项。 |
 | `project_id` | `""` | 要同步的项目 UUID。 |
 | `server_url` | `""` | Bitwarden 区域或自托管端点。为空时使用 `bws` 默认值（US Cloud，`https://vault.bitwarden.com`）。欧盟云设为 `https://vault.bitwarden.eu`，自托管则填写自己的 URL。以 `BWS_SERVER_URL` 形式传递给 `bws` 子进程。 |
-| `cache_ttl_seconds` | `300` | 进程内拉取结果的复用时长。设为 `0` 可禁用缓存。缓存按进程隔离；新的 `hermes` 调用从头开始。 |
+| `cache_ttl_seconds` | `300` | 进程内拉取结果的复用时长。设为 `0` 可禁用缓存。缓存按进程隔离；新的 `niki` 调用从头开始。 |
 | `override_existing` | `true` | 为 true 时，Bitwarden 的值会覆盖环境中已有的任何值（使 Web 应用中的轮换真正生效）。如果希望本地 `.env` / shell 导出优先，设为 `false`。 |
-| `auto_install` | `true` | 为 true 时，首次使用时自动将 `bws` 下载到 `~/.hermes/bin/`。 |
+| `auto_install` | `true` | 为 true 时，首次使用时自动将 `bws` 下载到 `~/.niki/bin/`。 |
 
 ## 故障模式
 
@@ -118,9 +118,9 @@ Bitwarden 永远不会阻塞 Niki 启动。如果出现任何问题，stderr 会
 
 | 现象 | 原因 | 修复方法 |
 |---|---|---|
-| `BWS_ACCESS_TOKEN is not set` | 配置中已启用，但令牌已从 `.env` 中清除 | 重新运行 `hermes secrets bitwarden setup` |
-| `Bitwarden rejected the machine-account access token … invalid_client` | 令牌已吊销、过期、机器账户被删除——或令牌属于其他区域（例如欧盟令牌访问了美国 identity 端点） | 运行 `hermes secrets bitwarden token` 粘贴新令牌；区域不匹配时重新运行 setup 选择欧盟/自托管（或设置 `secrets.bitwarden.server_url`） |
-| `bws exited 1: invalid access token` | 令牌已吊销或有误 | 运行 `hermes secrets bitwarden token` 提供新令牌 |
+| `BWS_ACCESS_TOKEN is not set` | 配置中已启用，但令牌已从 `.env` 中清除 | 重新运行 `niki secrets bitwarden setup` |
+| `Bitwarden rejected the machine-account access token … invalid_client` | 令牌已吊销、过期、机器账户被删除——或令牌属于其他区域（例如欧盟令牌访问了美国 identity 端点） | 运行 `niki secrets bitwarden token` 粘贴新令牌；区域不匹配时重新运行 setup 选择欧盟/自托管（或设置 `secrets.bitwarden.server_url`） |
+| `bws exited 1: invalid access token` | 令牌已吊销或有误 | 运行 `niki secrets bitwarden token` 提供新令牌 |
 | `bws timed out` | 网络受阻或 Bitwarden API 响应缓慢 | 检查到 `api.bitwarden.com`（或你的 `server_url`）的连通性 |
 | `bws binary not available` | `auto_install: false` 且 `bws` 不在 PATH 中 | 从 [github.com/bitwarden/sdk-sm/releases](https://github.com/bitwarden/sdk-sm/releases) 手动安装，或重新开启 `auto_install` |
 | `Checksum mismatch` | 下载内容损坏或被篡改 | 重新运行，将自动重试；如持续出现，请提交 issue |
@@ -136,7 +136,7 @@ Bitwarden 永远不会阻塞 Niki 启动。如果出现任何问题，stderr 会
 
 ## 不适用场景
 
-- **单机个人使用**，`~/.hermes/.env` 已经够用。你只是用一个凭据换了另一个，并在启动时增加了网络依赖。
+- **单机个人使用**，`~/.niki/.env` 已经够用。你只是用一个凭据换了另一个，并在启动时增加了网络依赖。
 - **无法访问 `api.bitwarden.com` 的隔离环境**。
 - **CI/CD** 场景，已有现成的 secret 注入机制（GitHub Actions secrets、Vault 等）——选择一种方式，不要两者并用。
 

@@ -121,7 +121,7 @@ def _duration_ms(value: Any) -> Optional[int]:
 def _make_activity_event(*, hook_event_name: str, session_id: Any, status: str = "ok", tool_name: Any = None,
                          tool_input: Any = None, tool_output: Any = None, error_class: Any = None,
                          duration_ms: Any = None) -> dict[str, Any]:
-    event: dict[str, Any] = {"schema": ACTIVITY_EVENT_SCHEMA, "eventId": f"hermes-{uuid.uuid4()}",
+    event: dict[str, Any] = {"schema": ACTIVITY_EVENT_SCHEMA, "eventId": f"niki-{uuid.uuid4()}",
                              "sessionId": _safe_scalar(session_id, "unknown") or "unknown",
                              "hookEventName": hook_event_name, "status": "error" if status == "error" else "ok",
                              "occurredAt": datetime.now(UTC).isoformat().replace("+00:00", "Z")}
@@ -376,10 +376,10 @@ class RaftAdapter(BasePlatformAdapter):
         endpoint = f"http://{self._host}:{port}{self._path}"
         cmd: list[str] = [raft_bin, "--profile", profile, "agent", "bridge", "--wake-adapter", "wake-channel",
                           "--wake-channel-endpoint", endpoint]
-        from tools.environments.local import hermes_subprocess_env
+        from tools.environments.local import niki_subprocess_env
         # The raft CLI needs its own profile and channel token, never Niki' credentials.
-        env = {**hermes_subprocess_env(), "RAFT_PROFILE": profile, "RAFT_CHANNEL_TOKEN": self._bridge_token}
-        env["HOME"] = env["HERMES_REAL_HOME"]  # the raft CLI's own login lives under the user's HOME
+        env = {**niki_subprocess_env(), "RAFT_PROFILE": profile, "RAFT_CHANNEL_TOKEN": self._bridge_token}
+        env["HOME"] = env["NIKI_REAL_HOME"]  # the raft CLI's own login lives under the user's HOME
         try:
             self._bridge_process = subprocess.Popen(cmd, env=env, stdin=subprocess.DEVNULL)
             logger.info("[raft] Spawned bridge pid=%d profile=%s endpoint=%s", self._bridge_process.pid, profile, endpoint)
@@ -525,11 +525,11 @@ def _env_enablement() -> Optional[dict]:
 
 
 def interactive_setup() -> None:
-    """``hermes gateway setup`` flow: persists ``RAFT_PROFILE`` to the Niki env file.
+    """``niki gateway setup`` flow: persists ``RAFT_PROFILE`` to the Niki env file.
     CLI helpers are lazy-imported so the plugin stays importable in gateway runtime and tests."""
-    from hermes_cli.cli_output import print_header, print_info, print_success, print_warning, prompt
-    from hermes_cli.config import get_env_value, save_env_value
-    from hermes_cli.setup_platforms import declines_reconfigure
+    from niki_cli.cli_output import print_header, print_info, print_success, print_warning, prompt
+    from niki_cli.config import get_env_value, save_env_value
+    from niki_cli.setup_platforms import declines_reconfigure
     print_header("Raft")
     existing_profile = get_env_value("RAFT_PROFILE")
     if declines_reconfigure("Raft", "Reconfigure Raft?", "RAFT_PROFILE"):
@@ -546,7 +546,7 @@ def interactive_setup() -> None:
     save_env_value("RAFT_PROFILE", profile.strip())
     print()
     print_success("Raft configuration saved")
-    print_info("Restart the gateway for changes to take effect: hermes gateway restart")
+    print_info("Restart the gateway for changes to take effect: niki gateway restart")
 
 
 def register(ctx) -> None:

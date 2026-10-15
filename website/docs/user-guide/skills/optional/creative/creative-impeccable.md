@@ -14,7 +14,7 @@ Frontend design guidance, upstream-maintained (impeccable).
 
 | | |
 |---|---|
-| Source | Optional — install with `hermes skills install official/creative/impeccable` |
+| Source | Optional — install with `niki skills install official/creative/impeccable` |
 | Path | `optional-skills/creative/impeccable` |
 | Version | `4.1.2` |
 | Author | Paul Bakaus (pbakaus) |
@@ -33,8 +33,8 @@ The following is the complete skill definition that Niki loads when this skill i
 
 > **Catalog stub.** This entry is maintained upstream at
 > [pbakaus/impeccable](https://github.com/pbakaus/impeccable): the project
-> ships and verifies a Niki-native skill bundle under `.hermes/skills/`.
-> `hermes skills install impeccable` pulls the current bundle live from that
+> ships and verifies a Niki-native skill bundle under `.niki/skills/`.
+> `niki skills install impeccable` pulls the current bundle live from that
 > repo (quarantined and scanned like any hub install) — this directory holds
 > only the catalog metadata, so the vendored copy can never go stale.
 

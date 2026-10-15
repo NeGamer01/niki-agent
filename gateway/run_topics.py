@@ -370,7 +370,7 @@ class GatewayTopicThreadsMixin:
         if not callable(wait_fn) or not source.chat_id:
             return None
         # 0 means the operator disabled the turn limit; the backstop still needs one.
-        timeout = _float_env("HERMES_AGENT_TIMEOUT", 1800) or 1800
+        timeout = _float_env("NIKI_AGENT_TIMEOUT", 1800) or 1800
         with suppress(Exception):
             return _as_thread_info(await wait_fn(str(source.chat_id), timeout))
         return None
@@ -549,7 +549,7 @@ class GatewayTopicThreadsMixin:
     async def _disable_telegram_topic_mode_for_chat(self, source: SessionSource) -> str:
         """Cleanly disable topic mode for a chat via /topic off."""
         if not self._session_db:
-            from hermes_state import format_session_db_unavailable
+            from niki_state import format_session_db_unavailable
             return format_session_db_unavailable(prefix=t("gateway.shared.session_db_unavailable_prefix"))
         chat_id = str(source.chat_id or "")
         if not chat_id:

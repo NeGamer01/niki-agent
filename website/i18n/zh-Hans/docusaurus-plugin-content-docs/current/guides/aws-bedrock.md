@@ -18,7 +18,7 @@ Niki Agent 通过 **Converse API** 原生支持 Amazon Bedrock——而非 OpenA
   - `AWS_ACCESS_KEY_ID` + `AWS_SECRET_ACCESS_KEY` 环境变量
   - `AWS_PROFILE`（用于 SSO 或命名配置文件）
   - `aws configure`（用于本地开发）
-- **boto3** — 通过 `cd ~/.hermes/hermes-agent && python -c "import pm; pm.sync_venv(['bedrock'], explicit=True)"` 安装
+- **boto3** — 通过 `cd ~/.niki/niki-agent && python -c "import pm; pm.sync_venv(['bedrock'], explicit=True)"` 安装
 - **IAM 权限** — 至少需要：
   - `bedrock:InvokeModel` 和 `bedrock:InvokeModelWithResponseStream`（用于推理）
   - `bedrock:ListFoundationModels` 和 `bedrock:ListInferenceProfiles`（用于模型发现）
@@ -31,20 +31,20 @@ Niki Agent 通过 **Converse API** 原生支持 Amazon Bedrock——而非 OpenA
 
 ```bash
 # 安装并启用 Bedrock 支持
-cd ~/.hermes/hermes-agent && python -c "import pm; pm.sync_venv(['bedrock'], explicit=True)"
+cd ~/.niki/niki-agent && python -c "import pm; pm.sync_venv(['bedrock'], explicit=True)"
 
 # 选择 Bedrock 作为提供商
-hermes model
+niki model
 # → 选择 "More providers..." → "AWS Bedrock"
 # → 选择你的区域和模型
 
 # 开始对话
-hermes chat
+niki chat
 ```
 
 ## 配置
 
-运行 `hermes model` 后，你的 `~/.hermes/config.yaml` 将包含以下内容：
+运行 `niki model` 后，你的 `~/.niki/config.yaml` 将包含以下内容：
 
 ```yaml
 model:
@@ -93,7 +93,7 @@ bedrock:
 
 ## 可用模型
 
-Bedrock 模型使用**推理配置文件 ID** 进行按需调用。`hermes model` 选择器会自动显示这些 ID，并将推荐模型置于顶部：
+Bedrock 模型使用**推理配置文件 ID** 进行按需调用。`niki model` 选择器会自动显示这些 ID，并将推荐模型置于顶部：
 
 | 模型 | ID | 备注 |
 |-------|-----|-------|
@@ -122,7 +122,7 @@ Bedrock 模型使用**推理配置文件 ID** 进行按需调用。`hermes model
 ## 诊断
 
 ```bash
-hermes doctor
+niki doctor
 ```
 
 诊断工具会检查：
@@ -136,8 +136,8 @@ hermes doctor
 Bedrock 可与所有 Niki gateway 平台配合使用（Telegram、Discord、Slack、飞书等）。将 Bedrock 配置为提供商后，正常启动 gateway 即可：
 
 ```bash
-hermes gateway setup
-hermes gateway start
+niki gateway setup
+niki gateway start
 ```
 
 Gateway 读取 `config.yaml` 并使用相同的 Bedrock 提供商配置。
@@ -170,4 +170,4 @@ Niki 按以下顺序检查凭证：
 
 如需在 EC2 上通过 CloudFormation 进行全自动部署：
 
-**[sample-hermes-agent-on-aws-with-bedrock](https://github.com/JiaDe-Wu/sample-hermes-agent-on-aws-with-bedrock)** — 自动创建 VPC、IAM 角色、EC2 实例并配置 Bedrock。一键即可在任意区域完成部署。
+**[sample-niki-agent-on-aws-with-bedrock](https://github.com/JiaDe-Wu/sample-niki-agent-on-aws-with-bedrock)** — 自动创建 VPC、IAM 角色、EC2 实例并配置 Bedrock。一键即可在任意区域完成部署。

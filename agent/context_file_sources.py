@@ -8,7 +8,7 @@ flagged but loaded), empty/unreadable, or suppressed by the install-tree guard. 
 is free of cache impact.
 
 Approximations (the manifest re-derives, it does not re-render): the truncation check sizes the raw
-``## label`` section, so a .hermes.md whose YAML frontmatter the builder strips can read a few chars larger
+``## label`` section, so a .niki.md whose YAML frontmatter the builder strips can read a few chars larger
 here, and the AGENTS.md directory-chain cap (applied to the merged chain after per-file caps) is not modelled.
 """
 
@@ -86,7 +86,7 @@ def list_context_file_sources(
         sources.append(_entry(label, path, content, status))
 
     if not skip_soul:
-        home = Path(home_override) if home_override is not None else _pb.get_hermes_home()
+        home = Path(home_override) if home_override is not None else _pb.get_niki_home()
         soul_path = home / "SOUL.md"
         if _pb._exists_or_denied(soul_path):
             content = _pb._read_context_file(soul_path)

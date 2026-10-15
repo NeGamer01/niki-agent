@@ -11,8 +11,8 @@ import asyncio
 import logging
 from functools import partial
 
-from hermes_state_local import local_receipt
-from hermes_state_runtime import RuntimeStoreError
+from niki_state_local import local_receipt
+from niki_state_runtime import RuntimeStoreError
 
 logger = logging.getLogger(__name__)
 

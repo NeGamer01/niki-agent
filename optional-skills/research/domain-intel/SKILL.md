@@ -6,7 +6,7 @@ author: FurkanL0, Niki Agent
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  niki:
     tags: [Domains, OSINT, DNS, Research]
     related_skills: []
 ---

@@ -170,7 +170,7 @@ jobs:
         run: |
           source="path:$RUNNER_TEMP/release-source?rev=$CANDIDATE_COMMIT"
           package="$(nix build "$source#default" --no-link --print-out-paths)"
-          actual="$("$package/bin/hermes" --version)"
+          actual="$("$package/bin/niki" --version)"
           ACTUAL_VERSION="$actual" python3 - <<'PY'
           import os
 

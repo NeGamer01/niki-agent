@@ -36,7 +36,7 @@ def test_native_carriers_follow_only_their_owner_on_each_request():
     assert "reasoning_details" not in transport.convert_messages(only_native, base_url=OPENROUTER)[0]
 
 
-NOUS_PORTAL = "https://inference-api.nousresearch.com/v1"
+NIKI_PORTAL = "https://inference-api.nousresearch.com/v1"
 
 
 def test_nous_portal_replays_reasoning_details_on_wire():
@@ -48,7 +48,7 @@ def test_nous_portal_replays_reasoning_details_on_wire():
     original = deepcopy(history)
     transport = ChatCompletionsTransport()
 
-    for base_url in (NOUS_PORTAL, "https://stg-inference-api.nousresearch.com/v1"):
+    for base_url in (NIKI_PORTAL, "https://stg-inference-api.nousresearch.com/v1"):
         wire = transport.convert_messages(deepcopy(history), base_url=base_url)
         assert wire[0]["reasoning_details"] == [standard]
         assert history == original
@@ -78,6 +78,6 @@ def test_profile_native_carrier_still_replayed_on_portal_route():
     original = deepcopy(history)
     transport = ChatCompletionsTransport()
 
-    wire = transport.build_kwargs("test", history, provider_profile=owner, base_url=NOUS_PORTAL)["messages"]
+    wire = transport.build_kwargs("test", history, provider_profile=owner, base_url=NIKI_PORTAL)["messages"]
     assert wire[0]["reasoning_details"] == [carrier, standard]
     assert history == original

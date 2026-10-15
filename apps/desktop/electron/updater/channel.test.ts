@@ -56,7 +56,7 @@ async function fixture(): Promise<{
     buildId: 'a'.repeat(32),
     channel: 'fresh-preview-29',
     sequence: 1,
-    repository: 'example/hermes-agent',
+    repository: 'example/niki-agent',
     commit: 'b'.repeat(40),
     sourceVersion: '1.2.3',
     version: '0.0.1',
@@ -66,12 +66,12 @@ async function fixture(): Promise<{
     identity: {
       token: '1234567890abcdef',
       displayName: 'Niki fresh-preview-29',
-      appId: 'chat.nous.hermes.h1234567890abcdef',
-      appNamePascal: 'HermesH1234567890abcdef',
-      artifactNamePascal: 'HermesH1234567890abcdef',
-      cliName: 'hermes-fresh-preview-29',
-      windowsExecutableName: 'HermesH1234567890abcdef.exe',
-      msixAppIdWithOrg: 'NousResearch.HermesH1234567890abcdef'
+      appId: 'chat.niki.niki.h1234567890abcdef',
+      appNamePascal: 'NikiH1234567890abcdef',
+      artifactNamePascal: 'NikiH1234567890abcdef',
+      cliName: 'niki-fresh-preview-29',
+      windowsExecutableName: 'NikiH1234567890abcdef.exe',
+      msixAppIdWithOrg: 'NeGamer01.NikiH1234567890abcdef'
     }
   }
 
@@ -139,7 +139,7 @@ async function retiredFixture(
     f.build = { ...f.build, identity: structuredClone(sourceRecord.identity) }
     f.record.identity = structuredClone(sourceRecord.identity)
   } else {
-    f.record.identity = { ...f.build.identity, appId: 'chat.nous.hermes', token: 'fedcba0987654321' }
+    f.record.identity = { ...f.build.identity, appId: 'chat.niki.niki', token: 'fedcba0987654321' }
   }
 
   f.manifest.request = {
@@ -175,7 +175,7 @@ async function retiredFixture(
   return { ...f, retired }
 }
 
-test.each(['NODE_OPTIONS', 'PATH', 'HERMES_PYTHON'])(
+test.each(['NODE_OPTIONS', 'PATH', 'NIKI_PYTHON'])(
   'channel manifest rejects process-control bundle key %s',
   async (key: string): Promise<void> => {
     const f = await fixture()
@@ -188,11 +188,11 @@ test.each(['NODE_OPTIONS', 'PATH', 'HERMES_PYTHON'])(
 
 test('channel manifest drops retired bundle keys but rejects unknown names', async (): Promise<void> => {
   const f = await fixture()
-  f.manifest.request.bundleEnv.HERMES_SKIP_INTRO = '1'
-  f.manifest.request.bundleEnv.HERMES_GUEST_ONBOARDING = '1'
+  f.manifest.request.bundleEnv.NIKI_SKIP_INTRO = '1'
+  f.manifest.request.bundleEnv.NIKI_GUEST_ONBOARDING = '1'
   expect(decodeChannelManifest(JSON.stringify(f.manifest)).request.bundleEnv).toEqual({})
 
-  f.manifest.request.bundleEnv.HERMES_UNKNOWN = '1'
+  f.manifest.request.bundleEnv.NIKI_UNKNOWN = '1'
   expect((): void => {
     decodeChannelManifest(JSON.stringify(f.manifest))
   }).toThrow('Invalid bundle environment name')
@@ -232,7 +232,7 @@ test('protected canary accepts bounded Windows revisions without relaxing stable
       variant: 'bundled',
       version: '1.2.4.10',
       identity: f.build.identity.msixAppIdWithOrg,
-      publisher: 'CN=Nous Research',
+      publisher: 'CN=NeGamer01',
       artifact: {
         key: `releases/channel-builds/${f.manifest.request.buildId}/win32/Niki.msixbundle`,
         sha256: 'd'.repeat(64),
@@ -248,7 +248,7 @@ test('protected canary accepts bounded Windows revisions without relaxing stable
   f.manifest.request.version = f.manifest.request.releaseTag.slice(1)
   f.manifest.request.windowsVersion = '1.2.4.10'
   f.publish()
-  const resolver = new ChannelResolver({ build: f.build, platform: 'win32', arch: 'x64', signer: 'CN=Nous Research' })
+  const resolver = new ChannelResolver({ build: f.build, platform: 'win32', arch: 'x64', signer: 'CN=NeGamer01' })
   expect((await resolver.resolve()).kind).toBe('active')
 
   for (const version of ['1.2.4.65536', '65536.2.4.0', '1.2.4.-1', '1.2.4.1.0', '1.2.4.x']) {
@@ -526,7 +526,7 @@ test.each(['hash', 'identity', 'repository', 'signer', 'escape', 'schema', 'vers
     }
 
     if (fault === 'repository') {
-      f.manifest.request.repository = 'other/hermes-agent'
+      f.manifest.request.repository = 'other/niki-agent'
     }
 
     if (fault === 'signer') {
@@ -647,7 +647,7 @@ test('Windows resolves its numeric native version, publisher and immutable descr
       variant: 'bundled',
       version: '0.0.2.0',
       identity: f.build.identity.msixAppIdWithOrg,
-      publisher: 'CN=Nous Research',
+      publisher: 'CN=NeGamer01',
       artifact: {
         key: `releases/channel-builds/${f.manifest.request.buildId}/win32/Niki.msixbundle`,
         sha256: 'd'.repeat(64),
@@ -665,7 +665,7 @@ test('Windows resolves its numeric native version, publisher and immutable descr
     build: f.build,
     platform: 'win32',
     arch: 'x64',
-    signer: 'CN=Nous Research'
+    signer: 'CN=NeGamer01'
   }).resolve()
 
   expect(result.kind).toBe('active')

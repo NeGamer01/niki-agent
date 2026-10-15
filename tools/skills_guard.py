@@ -69,7 +69,7 @@ MODIFY_VERB_RE = (
     r'|\breplac(?:e|es|ed|ing)\b|\balter(?:s|ed|ing)?\b|\badd(?:s|ed|ing)\b)')
 
 _AGENT_CONFIG_FILES = r'(?:AGENTS\.md|CLAUDE\.md|\.cursorrules|\.clinerules)'
-_HERMES_CONFIG_FILES = r'\.hermes/(?:config\.yaml|SOUL\.md)'
+_NIKI_CONFIG_FILES = r'\.niki/(?:config\.yaml|SOUL\.md)'
 # Path prefixes (real files are e.g. .claude/settings.json): consume trailing filename chars.
 _OTHER_AGENT_CONFIG_FILES = r'\.(?:claude/settings|codex/config)[\w.]*'
 
@@ -171,8 +171,8 @@ THREAT_PATTERNS = [
     (r'\$HOME/\.kube|\~/\.kube', "kube_dir_access", "high", "exfiltration", "references Kubernetes config directory"),
     (r'\$HOME/\.docker|\~/\.docker',
      "docker_dir_access", "high", "exfiltration", "references Docker config (may contain registry creds)"),
-    (r'\$HOME/\.hermes/\.env|\~/\.hermes/\.env',
-     "hermes_env_access", "critical", "exfiltration", "directly references Niki secrets file"),
+    (r'\$HOME/\.niki/\.env|\~/\.niki/\.env',
+     "niki_env_access", "critical", "exfiltration", "directly references Niki secrets file"),
     # `cat <secrets-file>` reads credentials; `cat >`/`cat >>` WRITES one (setup heredocs) — not exfil.
     (r'cat\s+(?!>)[^\n]*(\.env|credentials|\.netrc|\.pgpass|\.npmrc|\.pypirc)',
      "read_secrets_file", "critical", "exfiltration", "reads known secrets file"),
@@ -288,7 +288,7 @@ THREAT_PATTERNS = [
      r'|(?:tmp|var/tmp|dev/shm|run|var/lib/apt/lists|var/cache/(?:apt|apk|yum|dnf))/(?:[^/\s]*/)*\.\.(?=/|[\s;&|]|$))',
      "destructive_root_rm", "critical", "destructive", "recursive delete from root"),
     # ``rm`` / ``rmdir`` need a left boundary that excludes letters/digits: without it the ``rm`` in
-    # English prose (``the platfoRM rOute to ~/.hermes/config.yaml``) matched a recursive home delete.
+    # English prose (``the platfoRM rOute to ~/.niki/config.yaml``) matched a recursive home delete.
     (r'(?<![A-Za-z0-9])rm\s+(-[^\s]*)?r.*(?:\$HOME|~[/\s*]|~$)|(?<![A-Za-z0-9])rmdir\s+.*(?:\$HOME|~[/\s*]|~$)',
      "destructive_home_rm", "critical", "destructive", "recursive delete targeting home directory ($HOME or ~)"),
     (r'chmod\s+777', "insecure_perms", "medium", "destructive", "sets world-writable permissions"),
@@ -464,12 +464,12 @@ THREAT_PATTERNS = [
      "agent_config_contract", "high", "persistence", "dictates agent config file contents (verify intent — authoring guides use this shape too)"),
     (r'AGENTS\.md|CLAUDE\.md|\.cursorrules|\.clinerules',
      "agent_config_ref", "low", "persistence", "references agent config files (informational; only modification intent is scored)"),
-    (_prose_modify_re(_HERMES_CONFIG_FILES),
-     "hermes_config_mod", "high", "persistence", "modification language aimed at Niki configuration files (verify intent)"),
-    (_shell_write_re(_HERMES_CONFIG_FILES),
-     "hermes_config_mod_shell", "critical", "persistence", "shell write (redirect/sed -i/tee/cp/mv) targeting Niki configuration files"),
-    (r'\.hermes/config\.yaml|\.hermes/SOUL\.md',
-     "hermes_config_ref", "low", "persistence", "references Niki configuration files (informational; only modification intent is scored)"),
+    (_prose_modify_re(_NIKI_CONFIG_FILES),
+     "niki_config_mod", "high", "persistence", "modification language aimed at Niki configuration files (verify intent)"),
+    (_shell_write_re(_NIKI_CONFIG_FILES),
+     "niki_config_mod_shell", "critical", "persistence", "shell write (redirect/sed -i/tee/cp/mv) targeting Niki configuration files"),
+    (r'\.niki/config\.yaml|\.niki/SOUL\.md',
+     "niki_config_ref", "low", "persistence", "references Niki configuration files (informational; only modification intent is scored)"),
     (_prose_modify_re(_OTHER_AGENT_CONFIG_FILES),
      "other_agent_config_mod", "high", "persistence", "modifies other agents' configuration files"),
     (_shell_write_re(_OTHER_AGENT_CONFIG_FILES),

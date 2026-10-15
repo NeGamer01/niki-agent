@@ -12,7 +12,7 @@ import textwrap
 import threading
 
 import pytest
-import hermes_yaml as yaml
+import niki_yaml as yaml
 
 _mcp_server_mod = pytest.importorskip("mcp.server")
 
@@ -69,10 +69,10 @@ def test_profile_local_mcp_tool_is_visible_in_slash_worker(tmp_path):
     for key in list(env):
         if key.endswith("_API_KEY") or key.endswith("_TOKEN"):
             env.pop(key)
-    env["HERMES_HOME"] = str(profile_home)
+    env["NIKI_HOME"] = str(profile_home)
     env["PYTHONPATH"] = str(Path(__file__).resolve().parents[2])
-    env["HERMES_SLASH_WATCHDOG_GRACE_S"] = "0"
-    env["HERMES_SLASH_WATCHDOG_POLL_S"] = "0.05"
+    env["NIKI_SLASH_WATCHDOG_GRACE_S"] = "0"
+    env["NIKI_SLASH_WATCHDOG_POLL_S"] = "0.05"
     proc = subprocess.Popen(
         [
             sys.executable,

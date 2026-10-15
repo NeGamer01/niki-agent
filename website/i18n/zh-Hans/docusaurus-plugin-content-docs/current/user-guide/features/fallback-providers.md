@@ -24,12 +24,12 @@ Niki Agent 具备三层弹性机制，在提供商出现问题时保持会话正
 最简便的方式是使用交互式管理器：
 
 ```bash
-hermes fallback
+niki fallback
 ```
 
-`hermes fallback` 复用 `hermes model` 的提供商选择器——相同的提供商列表、相同的凭据提示、相同的验证流程。使用子命令 `add`、`list`（别名 `ls`）、`remove`（别名 `rm`）和 `clear` 来管理备用链。更改会持久化到 `config.yaml` 顶层的 `fallback_providers:` 列表中。
+`niki fallback` 复用 `niki model` 的提供商选择器——相同的提供商列表、相同的凭据提示、相同的验证流程。使用子命令 `add`、`list`（别名 `ls`）、`remove`（别名 `rm`）和 `clear` 来管理备用链。更改会持久化到 `config.yaml` 顶层的 `fallback_providers:` 列表中。
 
-如果你更倾向于直接编辑 YAML，可在 `~/.hermes/config.yaml` 中添加 `fallback_model` 部分：
+如果你更倾向于直接编辑 YAML，可在 `~/.niki/config.yaml` 中添加 `fallback_model` 部分：
 
 ```yaml
 fallback_model:
@@ -40,7 +40,7 @@ fallback_model:
 `provider` 和 `model` 均为**必填项**。若任一缺失，备用功能将被禁用。
 
 :::note `fallback_model` 与 `fallback_providers`
-`fallback_model`（单数）是旧版单备用键——Niki 仍支持以保持向后兼容。`fallback_providers`（复数，列表）支持按顺序尝试多个备用；`hermes fallback` 写入此键。当两者同时设置时，Niki 会合并它们，`fallback_providers` 优先。
+`fallback_model`（单数）是旧版单备用键——Niki 仍支持以保持向后兼容。`fallback_providers`（复数，列表）支持按顺序尝试多个备用；`niki fallback` 写入此键。当两者同时设置时，Niki 会合并它们，`fallback_providers` 优先。
 :::
 
 ### 支持的提供商
@@ -49,8 +49,8 @@ fallback_model:
 |----------|-------|-------------|
 | AI Gateway | `ai-gateway` | `AI_GATEWAY_API_KEY` |
 | OpenRouter | `openrouter` | `OPENROUTER_API_KEY` |
-| Nous Portal | `nous` | `hermes setup --portal`（全新安装）或 `hermes auth add nous`（OAuth） |
-| OpenAI Codex | `openai-codex` | `hermes model` → **ChatGPT or Codex Subscription**（ChatGPT OAuth） |
+| Niki Portal | `niki` | `niki setup --portal`（全新安装）或 `niki auth add niki`（OAuth） |
+| OpenAI Codex | `openai-codex` | `niki model` → **ChatGPT or Codex Subscription**（ChatGPT OAuth） |
 | GitHub Copilot | `copilot` | `COPILOT_GITHUB_TOKEN`、`GH_TOKEN` 或 `GITHUB_TOKEN` |
 | GitHub Copilot ACP | `copilot-acp` | 外部进程（编辑器集成） |
 | Anthropic | `anthropic` | `ANTHROPIC_API_KEY` 或 Claude Code 凭据 |
@@ -65,10 +65,10 @@ fallback_model:
 | Ollama Cloud | `ollama-cloud` | `OLLAMA_API_KEY` |
 | Google AI Studio | `gemini` | `GOOGLE_API_KEY`（别名：`GEMINI_API_KEY`） |
 | xAI（Grok） | `xai`（别名 `grok`） | `XAI_API_KEY`（可选：`XAI_BASE_URL`） |
-| xAI Grok OAuth（SuperGrok） | `xai-oauth`（别名 `grok-oauth`） | `hermes model` → xAI Grok OAuth（浏览器登录；需 SuperGrok 订阅） |
+| xAI Grok OAuth（SuperGrok） | `xai-oauth`（别名 `grok-oauth`） | `niki model` → xAI Grok OAuth（浏览器登录；需 SuperGrok 订阅） |
 | AWS Bedrock | `bedrock` | 标准 boto3 认证（`AWS_REGION` + `AWS_PROFILE` 或 `AWS_ACCESS_KEY_ID`） |
-| Qwen Portal（OAuth） | `qwen-oauth` | `hermes model`（Qwen Portal OAuth；可选：`HERMES_QWEN_BASE_URL`） |
-| MiniMax（OAuth） | `minimax-oauth` | `hermes model`（MiniMax 门户 OAuth） |
+| Qwen Portal（OAuth） | `qwen-oauth` | `niki model`（Qwen Portal OAuth；可选：`NIKI_QWEN_BASE_URL`） |
+| MiniMax（OAuth） | `minimax-oauth` | `niki model`（MiniMax 门户 OAuth） |
 | OpenCode Zen | `opencode-zen` | `OPENCODE_ZEN_API_KEY` |
 | OpenCode Go | `opencode-go` | `OPENCODE_GO_API_KEY` |
 | Kilo Code | `kilocode` | `KILOCODE_API_KEY` |
@@ -134,15 +134,15 @@ fallback_model:
   model: anthropic/claude-sonnet-4
 ```
 
-**以 Nous Portal 作为 OpenRouter 的备用：**
+**以 Niki Portal 作为 OpenRouter 的备用：**
 ```yaml
 model:
   provider: openrouter
   default: anthropic/claude-opus-4
 
 fallback_model:
-  provider: nous
-  model: nous-hermes-3
+  provider: niki
+  model: niki-hermes-3
 ```
 
 **以本地模型作为云端的备用：**
@@ -172,7 +172,7 @@ fallback_model:
 | 辅助任务（视觉、压缩等） | ✘（使用各自的提供商链——见下文） |
 
 :::tip
-没有针对主备用链的环境变量——只能通过 `config.yaml` 或 `hermes fallback` 进行配置。这是有意为之：备用配置是一个经过深思熟虑的选择，不应被过期的 shell 导出变量覆盖。
+没有针对主备用链的环境变量——只能通过 `config.yaml` 或 `niki fallback` 进行配置。这是有意为之：备用配置是一个经过深思熟虑的选择，不应被过期的 shell 导出变量覆盖。
 :::
 
 ---
@@ -192,7 +192,7 @@ Niki 为附属任务使用独立的轻量级模型。每个任务都有自己的
 | 审批 | 智能命令审批分类 | `auxiliary.approval` |
 | 标题生成 | 会话标题摘要 | `auxiliary.title_generation` |
 | 评审 | `/review` 评审子智能体（完整智能体，而非单次 LLM 调用） | `auxiliary.review` |
-| Triage Specifier | `hermes kanban specify` / 看板（kanban）✨ 按钮——将单行 triage 任务扩展为完整规格 | `auxiliary.triage_specifier` |
+| Triage Specifier | `niki kanban specify` / 看板（kanban）✨ 按钮——将单行 triage 任务扩展为完整规格 | `auxiliary.triage_specifier` |
 
 ### 自动检测链
 
@@ -201,14 +201,14 @@ Niki 为附属任务使用独立的轻量级模型。每个任务都有自己的
 **文本任务（压缩等）：**
 
 ```text
-OpenRouter → Nous Portal → 自定义端点 → Codex OAuth →
+OpenRouter → Niki Portal → 自定义端点 → Codex OAuth →
 API 密钥提供商（z.ai、Kimi、MiniMax、Xiaomi MiMo、Hugging Face、Anthropic）→ 放弃
 ```
 
 **视觉任务：**
 
 ```text
-主提供商（若支持视觉）→ OpenRouter → Nous Portal →
+主提供商（若支持视觉）→ OpenRouter → Niki Portal →
 Codex OAuth → Anthropic → 自定义端点 → 放弃
 ```
 
@@ -221,7 +221,7 @@ Codex OAuth → Anthropic → 自定义端点 → 放弃
 ```yaml
 auxiliary:
   vision:
-    provider: "auto"              # auto | openrouter | nous | codex | main | anthropic
+    provider: "auto"              # auto | openrouter | niki | codex | main | anthropic
     model: ""                     # 例如 "openai/gpt-4o"
     base_url: ""                  # 直接端点（优先于 provider）
     api_key: ""                   # base_url 的 API 密钥
@@ -268,8 +268,8 @@ fallback_model:
 |----------|-------------|-------------|
 | `"auto"` | 按顺序尝试各提供商直到找到可用的（默认） | 至少配置一个提供商 |
 | `"openrouter"` | 强制使用 OpenRouter | `OPENROUTER_API_KEY` |
-| `"nous"` | 强制使用 Nous Portal | `hermes auth` |
-| `"codex"` | 强制使用 Codex OAuth | `hermes model` → ChatGPT or Codex Subscription |
+| `"niki"` | 强制使用 Niki Portal | `niki auth` |
+| `"codex"` | 强制使用 Codex OAuth | `niki model` → ChatGPT or Codex Subscription |
 | `"main"` | 使用主 Agent 当前的提供商（仅限辅助任务） | 已配置活跃的主提供商 |
 | `"anthropic"` | 强制使用 Anthropic 原生 | `ANTHROPIC_API_KEY` 或 Claude Code 凭据 |
 
@@ -314,7 +314,7 @@ auxiliary:
     fallback_chain:
       - provider: openrouter
         model: google/gemini-3-flash-preview
-      - provider: nous
+      - provider: niki
         model: anthropic/claude-sonnet-4
 
   compression:
@@ -345,7 +345,7 @@ Niki 将以下情况识别为等同于 402 额度耗尽的容量错误（而非�
 ```yaml
 auxiliary:
   compression:
-    provider: "auto"                              # auto | openrouter | nous | main
+    provider: "auto"                              # auto | openrouter | niki | main
     model: "google/gemini-3-flash-preview"
 ```
 

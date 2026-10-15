@@ -7,7 +7,7 @@ finds what works, and locks it in by writing config.yaml + prefill.json.
 
 Usage in execute_code:
     exec(open(os.path.expanduser(
-        os.path.join(os.environ.get("HERMES_HOME", os.path.expanduser("~/.hermes")), "skills/security/godmode/scripts/auto_jailbreak.py")
+        os.path.join(os.environ.get("NIKI_HOME", os.path.expanduser("~/.niki")), "skills/security/godmode/scripts/auto_jailbreak.py")
     )).read())
     
     result = auto_jailbreak()  # Uses current model from config
@@ -42,7 +42,7 @@ try:
     _SKILL_DIR = Path(__file__).resolve().parent.parent
 except NameError:
     # __file__ not defined when loaded via exec() — search standard paths
-    _SKILL_DIR = Path(os.getenv("HERMES_HOME", Path.home() / ".hermes")) / "skills" / "security" / "godmode"
+    _SKILL_DIR = Path(os.getenv("NIKI_HOME", Path.home() / ".niki")) / "skills" / "security" / "godmode"
 
 _SCRIPTS_DIR = _SKILL_DIR / "scripts"
 _TEMPLATES_DIR = _SKILL_DIR / "templates"
@@ -64,9 +64,9 @@ if _race_path.exists():
 # Niki config paths
 # ═══════════════════════════════════════════════════════════════════
 
-HERMES_HOME = Path(os.getenv("HERMES_HOME", Path.home() / ".hermes"))
-CONFIG_PATH = HERMES_HOME / "config.yaml"
-PREFILL_PATH = HERMES_HOME / "prefill.json"
+NIKI_HOME = Path(os.getenv("NIKI_HOME", Path.home() / ".niki"))
+CONFIG_PATH = NIKI_HOME / "config.yaml"
+PREFILL_PATH = NIKI_HOME / "prefill.json"
 
 # ═══════════════════════════════════════════════════════════════════
 # Canary queries — questions that typically trigger safety filters
@@ -185,8 +185,8 @@ MODEL_STRATEGIES = {
             ),
         },
     },
-    # Nous/Niki models — already uncensored, just needs clean prompt
-    "hermes": {
+    # Niki/Niki models — already uncensored, just needs clean prompt
+    "niki": {
         "order": ["prefill_only"],
         "system_templates": {},
     },
@@ -312,8 +312,8 @@ def _detect_model_family(model: str) -> str:
         return "gemini"
     if "grok" in model_lower or "x-ai" in model_lower:
         return "grok"
-    if "hermes" in model_lower or "nous" in model_lower:
-        return "hermes"
+    if "niki" in model_lower or "niki" in model_lower:
+        return "niki"
     if "deepseek" in model_lower:
         return "deepseek"
     if "llama" in model_lower or "meta" in model_lower:
@@ -414,7 +414,7 @@ def _write_config(system_prompt: str | None = None, prefill_file: str | None = N
 
 
 def _write_prefill(prefill_messages: list):
-    """Write prefill messages to ~/.hermes/prefill.json."""
+    """Write prefill messages to ~/.niki/prefill.json."""
     with open(PREFILL_PATH, "w") as f:
         json.dump(prefill_messages, f, indent=2, ensure_ascii=False)
     return str(PREFILL_PATH)

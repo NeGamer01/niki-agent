@@ -14,10 +14,10 @@ Versioned site deploys to GitHub/Cloudflare/Netlify Pages.
 
 | | |
 |---|---|
-| Source | Optional — install with `hermes skills install official/web-development/publish-site` |
+| Source | Optional — install with `niki skills install official/web-development/publish-site` |
 | Path | `optional-skills/web-development/publish-site` |
 | Version | `1.0.0` |
-| Author | Niki Agent (Nous Research) |
+| Author | Niki Agent (NeGamer01) |
 | License | MIT |
 | Platforms | linux, macos, windows |
 | Tags | `publish`, `deploy`, `hosting`, `github-pages`, `cloudflare-pages`, `netlify`, `static-site`, `versioning`, `rollback`, `web-development` |

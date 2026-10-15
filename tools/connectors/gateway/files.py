@@ -207,7 +207,7 @@ def _readable_file(raw: str, task_id: Optional[str]) -> str:
     from gateway.session_context import get_session_env
 
     candidate = _backend_path(raw, task_id)
-    allowed = validate_media_delivery_path(candidate, session_key=get_session_env("HERMES_SESSION_KEY", ""))
+    allowed = validate_media_delivery_path(candidate, session_key=get_session_env("NIKI_SESSION_KEY", ""))
     if allowed:
         return allowed
     if not Path(candidate).is_file():
@@ -290,9 +290,9 @@ def _download(client: Any, file: Mapping[str, Any]) -> dict[str, Any]:
 def _fetch_to_downloads(client: Any, url: str, name: str) -> str:
     """Stream ``url`` into a temp file, then link it under a fresh name: a cut download never leaves
     a partial file under the final name, and an existing file is never replaced."""
-    from hermes_constants import CONNECTOR_DOWNLOADS_SUBDIR, get_hermes_home, mkdir_under_hermes_home
+    from niki_constants import CONNECTOR_DOWNLOADS_SUBDIR, get_niki_home, mkdir_under_niki_home
 
-    folder = mkdir_under_hermes_home(get_hermes_home() / CONNECTOR_DOWNLOADS_SUBDIR)
+    folder = mkdir_under_niki_home(get_niki_home() / CONNECTOR_DOWNLOADS_SUBDIR)
     handle = tempfile.NamedTemporaryFile(dir=folder, prefix=".partial-", delete=False)
     try:
         with handle:

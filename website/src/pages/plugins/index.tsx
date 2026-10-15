@@ -280,7 +280,7 @@ function PluginCard({
               <span className={styles.metaLabel}>Pinned</span>
               <span
                 className={styles.metaValue}
-                title={plugin.requiresHermes ? `${plugin.sha} · requires hermes ${plugin.requiresHermes}` : plugin.sha}
+                title={plugin.requiresNiki ? `${plugin.sha} · requires niki ${plugin.requiresNiki}` : plugin.sha}
               >
                 <a
                   href={pinUrl(plugin)}
@@ -291,10 +291,10 @@ function PluginCard({
                 >
                   <code>{plugin.version ? `${plugin.version} @ ${plugin.shaShort}` : plugin.shaShort}</code> ↗
                 </a>
-                {plugin.requiresHermes && (
+                {plugin.requiresNiki && (
                   <>
                     <span aria-hidden="true" className={styles.cardDatesSep}> · </span>
-                    <code>hermes {plugin.requiresHermes}</code>
+                    <code>niki {plugin.requiresNiki}</code>
                   </>
                 )}
               </span>
@@ -370,7 +370,7 @@ export default function PluginCatalogPage() {
   // (Niki desktop's Capabilities > Plugins tab) as a one-click catalog
   // picker. Site chrome is hidden via CSS and every card gains an
   // "+ Add to this Agent" button that posts
-  //   { type: 'hermes-plugin-pick', name, repo, sha, subdir, tier,
+  //   { type: 'niki-plugin-pick', name, repo, sha, subdir, tier,
   //     installCmd }
   // to the parent window. The HOST performs the actual install through its
   // own gateway (plugins.manage, catalog_name=<name>) — this page never
@@ -383,13 +383,13 @@ export default function PluginCatalogPage() {
     if (typeof window === "undefined" || window.parent === window) return;
     window.parent.postMessage(
       {
-        type: "hermes-plugin-pick",
+        type: "niki-plugin-pick",
         name: plugin.name,
         repo: plugin.repo,
         sha: plugin.sha,
         subdir: plugin.subdir || "",
         tier: plugin.tier,
-        installCmd: plugin.installCommand || `hermes plugins install ${plugin.name}`,
+        installCmd: plugin.installCommand || `niki plugins install ${plugin.name}`,
       },
       "*"
     );

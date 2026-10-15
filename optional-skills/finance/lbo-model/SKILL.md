@@ -2,11 +2,11 @@
 name: lbo-model
 description: Build leveraged buyout workbooks with IRR/MOIC in Excel.
 version: 1.0.0
-author: Anthropic (adapted by Nous Research)
+author: Anthropic (adapted by NeGamer01)
 license: Apache-2.0
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  niki:
     tags: [finance, valuation, lbo, private-equity, excel, openpyxl, modeling]
     related_skills: [excel-author, pptx-author, dcf-model, 3-statement-model]
 ---

@@ -5,7 +5,7 @@ description: "Step-by-step prompt builder for Niki Desktop (F4): option cards pe
 maintainer: bwoliveira
 tier: community
 category: desktop
-requires_hermes: ">=0.21.5"
+requires_niki: ">=0.21.5"
 docs_url: https://github.com/bwoliveira/prompt-studio#readme
 version: "1.9.0"
 image: https://raw.githubusercontent.com/bwoliveira/prompt-studio/ecead76f0b2ff4f46c09341c871e234eb1692a1a/docs/images/banner.png

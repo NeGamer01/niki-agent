@@ -20,7 +20,7 @@ from typing import Any, Callable, Mapping
 import pytest
 
 from tests.e2e.core.delivery._fake_platform import GatewayProcess, read_jsonl, wait_until
-from tests.e2e.core.security._helpers import REPO_ROOT, BoundaryBreach, db_blob, files_containing, run_hermes
+from tests.e2e.core.security._helpers import REPO_ROOT, BoundaryBreach, db_blob, files_containing, run_niki
 from tests.fakes.fake_llm_provider import Error, Response, Text, ToolCall
 
 
@@ -206,7 +206,7 @@ class Sinks:
 
 
 def collect(home: Path, requests: list[dict], platform_journal: Path | None = None) -> Sinks:
-    hh = home / ".hermes"
+    hh = home / ".niki"
     logs = {str(p.relative_to(hh / "logs")): p.read_text(encoding="utf-8", errors="replace")
             for p in sorted((hh / "logs").rglob("*")) if p.is_file()}
     store = {"state.db (decoded rows)": db_blob(hh / "state.db")}
@@ -217,7 +217,7 @@ def collect(home: Path, requests: list[dict], platform_journal: Path | None = No
     out.mkdir(exist_ok=True)
     exports = {}
     for flag, name in (([], "plain.jsonl"), (["--redact"], "redacted.jsonl")):
-        r = run_hermes(["sessions", "export", str(out / name), *flag], home, timeout=90)
+        r = run_niki(["sessions", "export", str(out / name), *flag], home, timeout=90)
         assert r.returncode == 0 and (out / name).exists(), f"sessions export failed: {r.stdout}\n{r.stderr}"
         exports[name] = (out / name).read_text(encoding="utf-8")
     wire = {f"request #{i} ({r['kind']})": json.dumps(r["body"]) for i, r in enumerate(requests)
@@ -290,7 +290,7 @@ def check(world: World, scenario: str, sink: str) -> None:
 
 class LoggingGateway(GatewayProcess):
     """The delivery suite's real GatewayRunner child, with the gateway's file logging installed the way
-    ``start_gateway`` does (agent.log / errors.log / gateway.log under the child's HERMES_HOME)."""
+    ``start_gateway`` does (agent.log / errors.log / gateway.log under the child's NIKI_HOME)."""
 
     def start(self) -> LoggingGateway:
         assert self.proc is None
@@ -317,7 +317,7 @@ def files_with(root: Path, needles: list[str]) -> list[str]:
 
 if __name__ == "__main__":  # pragma: no cover - gateway child entry
     if len(sys.argv) >= 3 and sys.argv[1] == "serve":
-        from hermes_logging import setup_logging
+        from niki_logging import setup_logging
 
         setup_logging(mode="gateway")
         from tests.e2e.core.delivery._fake_platform import _serve

@@ -58,7 +58,7 @@ def managed_gateway_auth_headers(
 ) -> dict:
     """Live auth headers for a managed gateway URL, or ``{}`` when not managed.
 
-    Read fresh on every call rather than cached: a Nous access token expires
+    Read fresh on every call rather than cached: a Niki access token expires
     within the hour, and a long session would otherwise keep presenting a dead
     bearer. Returns ``{}`` rather than raising when no token is available, so a
     caller can report "sign in" instead of sending an unauthenticated request.

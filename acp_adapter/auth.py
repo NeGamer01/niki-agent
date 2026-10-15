@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any, Optional
 
 
-TERMINAL_SETUP_AUTH_METHOD_ID = "hermes-setup"
+TERMINAL_SETUP_AUTH_METHOD_ID = "niki-setup"
 
 
 def detect_provider() -> Optional[str]:
@@ -16,7 +16,7 @@ def detect_provider() -> Optional[str]:
     Entra-configured Foundry deployments would default to ``"openrouter"`` and
     the ACP auth handshake would reject the legitimate provider."""
     try:
-        from hermes_cli.runtime_provider import resolve_runtime_provider
+        from niki_cli.runtime_provider import resolve_runtime_provider
         runtime = resolve_runtime_provider()
         api_key, provider = runtime.get("api_key"), runtime.get("provider")
         if isinstance(provider, str) and provider.strip() and (

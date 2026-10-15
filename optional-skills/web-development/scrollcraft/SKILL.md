@@ -6,7 +6,7 @@ author: 'nateherkai (upstream scroll-craft), ported by Niki Agent'
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  niki:
     tags: [web-development, landing-page, scrollytelling, animation, design, frontend]
     category: web-development
     homepage: https://github.com/nateherkai/scroll-craft

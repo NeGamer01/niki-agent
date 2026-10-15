@@ -8,7 +8,7 @@ const submissionId = '00000000-0000-4000-8000-000000000001'
 const missingTicket = () => Object.assign(new Error('CloudKit query for Niki.app failed due to "Record not found".\nThe staple and validate action failed! Error 65.'), { code: 65 })
 
 function fixture() {
-  const root = mkdtempSync(path.join(os.tmpdir(), 'hermes-notary-test-'))
+  const root = mkdtempSync(path.join(os.tmpdir(), 'niki-notary-test-'))
   mkdirSync(path.join(root, 'Niki.app'))
   const key = path.join(root, 'api-key.p8')
   writeFileSync(key, 'test credential path only')

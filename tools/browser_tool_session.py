@@ -14,7 +14,7 @@ import uuid
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
-from hermes_cli._subprocess_compat import windows_hide_flags
+from niki_cli._subprocess_compat import windows_hide_flags
 from tools.browser_tool_origin import origin as _bt
 from tools import browser_tool_cdp as _cdp
 from tools import browser_tool_cloud as _cloud
@@ -24,8 +24,8 @@ from tools import browser_tool_lightpanda_fallback as _lp
 from tools import browser_tool_real_profile as _real_profile
 from tools import browser_tool_snapshot as _snapshot
 
-_DOCKER_PULL = "docker pull ghcr.io/nousresearch/hermes-agent:latest"
-_CHROMIUM_INSTALL = "hermes pm install chromium (system libraries: npx playwright install-deps chromium)"
+_DOCKER_PULL = "docker pull ghcr.io/negamer01/niki-agent:latest"
+_CHROMIUM_INSTALL = "niki pm install chromium (system libraries: npx playwright install-deps chromium)"
 _CHROMIUM_MISSING_DOCKER_HINT = ("Chromium browser is missing. You're running in Docker — pull the latest image "
                                  f"to get the bundled Chromium: {_DOCKER_PULL}")
 _CHROMIUM_MISSING_HINT = f"Chromium browser is missing. Install it with: {_CHROMIUM_INSTALL}"
@@ -165,7 +165,7 @@ def _unwrap_batch_result(result: Any, command: str) -> dict[str, Any]:
 
 def _prepare_session_socket_dir(session_name: str) -> str:
     """Create the per-session socket dir (parallel workers must not share one) and claim it
-    with our PID BEFORE first use — another hermes process's orphan reaper rmtree's any
+    with our PID BEFORE first use — another niki process's orphan reaper rmtree's any
     ownerless agent-browser-* dir in the shared tmpdir."""
     socket_dir = os.path.join(_bt._socket_safe_tmpdir(), f"agent-browser-{session_name}")
     os.makedirs(socket_dir, mode=0o700, exist_ok=True)
@@ -182,7 +182,7 @@ def _agent_browser_command_env(socket_dir: str) -> dict[str, str]:
     env = _bt._build_browser_env()
     env["PATH"] = _install._merge_browser_path(env.get("PATH", ""))
     env = env_for("agent-browser", base_env=env)
-    from hermes_cli.browser_runtime import chromium_executable
+    from niki_cli.browser_runtime import chromium_executable
 
     executable = chromium_executable()
     if executable:
@@ -200,7 +200,7 @@ def _daemon_idle_timeout_seconds() -> int:
     """The daemon's self-termination idle timer. The bot's headed Chromium on the Bot Desktop screen is
     shared with a human who may take the lease to log in: the agent is idle by definition then, so the
     daemon's own timer must not decide (it cannot see the lease); the lease-aware Python janitor owns that
-    browser's lifetime, and a crashed hermes leaves it to the orphan reaper (#110064)."""
+    browser's lifetime, and a crashed niki leaves it to the orphan reaper (#110064)."""
     if _cloud._is_headed_mode():
         from tools.bot_desktop.runtime import published_env
         if published_env().get("DISPLAY"):
@@ -564,7 +564,7 @@ def _sandbox_close_daemon(session_name: str) -> None:
 
 
 def _sandbox_socket_dir(env) -> str:
-    return f"{env.get_temp_dir().rstrip('/')}/hermes-bot-desktop/agent-browser"
+    return f"{env.get_temp_dir().rstrip('/')}/niki-bot-desktop/agent-browser"
 
 
 def sandbox_screenshot_path(host_path: Path) -> Optional[str]:
@@ -575,7 +575,7 @@ def sandbox_screenshot_path(host_path: Path) -> Optional[str]:
     env = _bd_runtime._sandbox_env(create=False)
     if env is None:
         return None
-    return f"{env.get_temp_dir().rstrip('/')}/hermes-bot-desktop/shots/{host_path.name}"
+    return f"{env.get_temp_dir().rstrip('/')}/niki-bot-desktop/shots/{host_path.name}"
 
 
 def fetch_sandbox_file(remote_path: str, local_dest: Path, *, max_bytes: int = 16 * 1024 * 1024) -> bool:
@@ -683,7 +683,7 @@ def _sandbox_wrap(cmd_parts: list[str], browser_env: dict[str, str], task_socket
     remote_env["AGENT_BROWSER_PROFILE"] = sandbox_host.browser_profile_dir(env)  # persists with the container, not its tmpfs
     remote_env["TMPDIR"] = env.get_temp_dir()
     if not getattr(env, "_bd_browser_dirs_ready", False):
-        streams.run_in(env, ["mkdir", "-p", _sandbox_socket_dir(env), f"{env.get_temp_dir().rstrip('/')}/hermes-bot-desktop/shots",
+        streams.run_in(env, ["mkdir", "-p", _sandbox_socket_dir(env), f"{env.get_temp_dir().rstrip('/')}/niki-bot-desktop/shots",
                              remote_env["AGENT_BROWSER_PROFILE"]], user=sandbox_host._user_for(env), timeout=15)
         env._bd_browser_dirs_ready = True
     remote_env["AGENT_BROWSER_ARGS"] = ",".join(CHROMIUM_SANDBOX_BYPASS_ARGS)  # container: no userns for Chromium's own sandbox

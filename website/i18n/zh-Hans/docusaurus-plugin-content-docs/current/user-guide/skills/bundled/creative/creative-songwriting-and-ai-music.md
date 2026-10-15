@@ -237,7 +237,7 @@ AI 歌手不是在阅读——它们是在发音。帮助它们：
 **音标拼写**：
 - 按**发音**拼写单词："through" -> "thru"
 - 专有名词失败率最高——提前测试
-- "Nous" -> "Noose"（强制正确发音）
+- "Niki" -> "Noose"（强制正确发音）
 - 用连字符引导音节："Re-search"、"bio-engineering"
 
 **演唱控制**：
@@ -296,10 +296,10 @@ AI 歌手不是在阅读——它们是在发音。帮助它们：
 
 - **heartmula** — 从歌词 + 标签生成带人声的完整歌曲
   （开源 Suno 替代品，需 8-16GB 显存）：
-  `hermes skills install official/creative/heartmula`
+  `niki skills install official/creative/heartmula`
 - **audiocraft** — Meta 的 MusicGen（文本转纯音乐）和
   AudioGen（音效生成）：
-  `hermes skills install official/creative/audiocraft-audio-generation`
+  `niki skills install official/creative/audiocraft-audio-generation`
 
 本 skill 中的歌词写作与提示词技巧同样适用于 heartmula —
 它的输入格式是带方括号结构标签的歌词，加上逗号分隔的风格标签。

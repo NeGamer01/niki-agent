@@ -56,7 +56,7 @@ from tests.e2e.core.sqlite._helpers import (
     skip_unless_deployable,
     token_flags,
 )
-from tests.fakes.fake_llm_provider import FakeLLMServer, Text, ToolCall, write_hermes_home
+from tests.fakes.fake_llm_provider import FakeLLMServer, Text, ToolCall, write_niki_home
 
 pytestmark = [
     pytest.mark.skipif(not sys.platform.startswith("linux"), reason="/proc fd scan and POSIX lock semantics"),
@@ -126,13 +126,13 @@ def rig(request, tmp_path_factory):
     server.start()
     ch = Chamber(tmp_path_factory.mktemp(f"compaction-{request.param}"), journal=request.param)
     ctx = "  context_length: 128000\n"
-    write_hermes_home(ch.hermes_home, server.base_url, extra_config=MICRO_CONFIG + DB_CONFIG)
+    write_niki_home(ch.niki_home, server.base_url, extra_config=MICRO_CONFIG + DB_CONFIG)
     tui_home = ch.root / "tui-home"
-    write_hermes_home(tui_home / ".hermes", server.base_url, extra_config=DB_CONFIG)
-    for home in (ch.hermes_home, tui_home / ".hermes"):
+    write_niki_home(tui_home / ".niki", server.base_url, extra_config=DB_CONFIG)
+    for home in (ch.niki_home, tui_home / ".niki"):
         cfg = home / "config.yaml"
         cfg.write_text(cfg.read_text(encoding="utf-8").replace(ctx, "  context_length: 64000\n"), encoding="utf-8")
-    yield Rig(ch, server, aux, {"HOME": str(tui_home), "HERMES_HOME": str(tui_home / ".hermes")})
+    yield Rig(ch, server, aux, {"HOME": str(tui_home), "NIKI_HOME": str(tui_home / ".niki")})
     ch.shutdown()
     server.stop()
 

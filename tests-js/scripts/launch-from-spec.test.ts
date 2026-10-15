@@ -18,7 +18,7 @@ test.runIf(process.platform !== 'win32')('the launch environment keeps Chromium 
 
   const env = smokeEnvironment(
     { TEMP: inheritedTemp, TMP: inheritedTemp, TMPDIR: inheritedTemp },
-    '/isolated/hermes-home',
+    '/isolated/niki-home',
     '/isolated/user-data',
   )
 
@@ -39,18 +39,18 @@ test('the update window carries Niki connection state without cloning Chromium s
   }
 
   const captured = {
-    HERMES_HOME: path.join(root, 'hermes-home'),
-    HERMES_DESKTOP_USER_DATA_DIR: userData,
+    NIKI_HOME: path.join(root, 'niki-home'),
+    NIKI_DESKTOP_USER_DATA_DIR: userData,
     PATH: process.env.PATH || '',
   }
 
   try {
     const isolated = isolateUpdateWindowEnvironment(captured)
-    const isolatedUserData = isolated.HERMES_DESKTOP_USER_DATA_DIR
+    const isolatedUserData = isolated.NIKI_DESKTOP_USER_DATA_DIR
 
     expect(isolatedUserData).not.toBe(userData)
-    expect(captured.HERMES_DESKTOP_USER_DATA_DIR).toBe(userData)
-    expect(isolated.HERMES_HOME).toBe(captured.HERMES_HOME)
+    expect(captured.NIKI_DESKTOP_USER_DATA_DIR).toBe(userData)
+    expect(isolated.NIKI_HOME).toBe(captured.NIKI_HOME)
     expect(fs.readFileSync(path.join(isolatedUserData, 'connections.json'), 'utf8')).toBe('{"primary":"local"}\n')
     expect(fs.existsSync(path.join(isolatedUserData, 'Local State'))).toBe(false)
 

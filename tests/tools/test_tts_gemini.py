@@ -13,7 +13,7 @@ def clean_env(monkeypatch):
         "GEMINI_API_KEY",
         "GOOGLE_API_KEY",
         "GEMINI_BASE_URL",
-        "HERMES_SESSION_PLATFORM",
+        "NIKI_SESSION_PLATFORM",
     ):
         monkeypatch.delenv(key, raising=False)
 
@@ -127,7 +127,7 @@ class TestGenerateGeminiTts:
 
     def test_x_goog_api_client_header_is_set(self, tmp_path, monkeypatch, mock_gemini_response):
         """Gemini TTS requests should include Niki client context."""
-        from hermes_cli.version_info import get_version_info
+        from niki_cli.version_info import get_version_info
         from tools.tts_tool import _generate_gemini_tts
 
         monkeypatch.setenv("GEMINI_API_KEY", "test-key")
@@ -136,7 +136,7 @@ class TestGenerateGeminiTts:
             _generate_gemini_tts("Hi", str(tmp_path / "test.wav"), {})
 
         headers = mock_post.call_args[1]["headers"]
-        assert headers["X-Goog-Api-Client"] == f"hermes-agent/{get_version_info().base_version}"
+        assert headers["X-Goog-Api-Client"] == f"niki-agent/{get_version_info().base_version}"
 
     def test_default_voice_and_model(self, tmp_path, monkeypatch, mock_gemini_response):
         from tools.tts_tool import _generate_gemini_tts

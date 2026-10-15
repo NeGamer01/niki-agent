@@ -1,7 +1,7 @@
 """Receipt-only adapter ingress: the authority, not an HTTP/WS task, owns execution."""
 from contextlib import asynccontextmanager
 
-from hermes_state_runtime import RuntimeStoreError
+from niki_state_runtime import RuntimeStoreError
 
 
 @asynccontextmanager
@@ -48,7 +48,7 @@ async def admit_producer(adapter, event):
     async with producer_scope(adapter, event) as authority:
         from gateway.config import Platform
         from gateway.run_inbound_consumer import POST_ADMISSION_HOOK
-        from hermes_cli.lifecycle import has_hook
+        from niki_cli.lifecycle import has_hook
         webhook = adapter.platform == Platform.WEBHOOK
         if webhook:
             prior = await _webhook_retry(authority, event)
@@ -81,7 +81,7 @@ async def _committed(authority, event):
 async def _webhook_retry(authority, event):
     # One-shot finalization ends the route. Resolve an existing provider receipt
     # before SessionStore would rotate it into a new physical session.
-    from hermes_state_runtime import get_session_admission
+    from niki_state_runtime import get_session_admission
     payload, rows = await _committed(authority, event)
     if not rows:
         return None
@@ -126,7 +126,7 @@ async def recover_webhook_finalizations(authority):
     """Close settled original webhooks only after current route authorization succeeds."""
     from gateway.session_envelope import check_native_route
     from gateway.session_contract import SessionRef
-    from hermes_state_runtime import RuntimeStoreError, get_session_admission
+    from niki_state_runtime import RuntimeStoreError, get_session_admission
 
     rows = authority.db._read_all("""
         SELECT a.admission_id FROM sessions AS s

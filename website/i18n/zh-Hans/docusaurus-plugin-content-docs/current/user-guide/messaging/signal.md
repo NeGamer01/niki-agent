@@ -48,7 +48,7 @@ signal-cli 作为**关联设备**运行——类似 WhatsApp Web，但用于 Sig
 
 ```bash
 # 生成关联 URI（显示二维码或链接）
-signal-cli link -n "HermesAgent"
+signal-cli link -n "NikiAgent"
 ```
 
 1. 在手机上打开 **Signal**
@@ -83,7 +83,7 @@ curl http://127.0.0.1:8080/api/v1/check
 最简单的方式：
 
 ```bash
-hermes gateway setup
+niki gateway setup
 ```
 
 从平台菜单中选择 **Signal**。向导将：
@@ -96,7 +96,7 @@ hermes gateway setup
 
 ### 手动配置
 
-在 `~/.hermes/.env` 中添加：
+在 `~/.niki/.env` 中添加：
 
 ```bash
 # 必填
@@ -114,9 +114,9 @@ SIGNAL_HOME_CHANNEL=+1234567890                  # cron 任务的默认投递目
 然后启动 gateway：
 
 ```bash
-hermes gateway              # 前台运行
-hermes gateway install      # 安装为用户服务
-sudo hermes gateway install --system   # 仅 Linux：开机自启系统服务
+niki gateway              # 前台运行
+niki gateway install      # 安装为用户服务
+sudo niki gateway install --system   # 仅 Linux：开机自启系统服务
 ```
 
 ---
@@ -128,7 +128,7 @@ sudo hermes gateway install --system   # 仅 Linux：开机自启系统服务
 私信访问遵循与其他 Niki 平台相同的模式：
 
 1. **已设置 `SIGNAL_ALLOWED_USERS`** → 仅允许这些用户发送消息
-2. **未设置白名单** → 未知用户会收到私信配对码（通过 `hermes pairing approve signal CODE` 审批）
+2. **未设置白名单** → 未知用户会收到私信配对码（通过 `niki pairing approve signal CODE` 审批）
 3. **`SIGNAL_ALLOW_ALL_USERS=true`** → 任何人均可发送消息（谨慎使用）
 
 ### 群组访问
@@ -184,7 +184,7 @@ Signal 消息以**原生格式**渲染，而非显示原始 markdown 字符。�
 
 ### 长消息
 
-Signal 单条消息上限为 **8,000 字符**。Niki 会自动将更长的回复拆分为带编号的分段（`(1/3)`、`(2/3)`……）发送，而不是截断内容。此行为覆盖所有投递路径——实时对话回复、cron 任务投递、`hermes send` 以及 MCP `send_message` 调用——且原生格式（加粗、斜体、代码、剧透）在分段边界处保持不变。
+Signal 单条消息上限为 **8,000 字符**。Niki 会自动将更长的回复拆分为带编号的分段（`(1/3)`、`(2/3)`……）发送，而不是截断内容。此行为覆盖所有投递路径——实时对话回复、cron 任务投递、`niki send` 以及 MCP `send_message` 调用——且原生格式（加粗、斜体、代码、剧透）在分段边界处保持不变。
 
 ### 正在输入指示器
 

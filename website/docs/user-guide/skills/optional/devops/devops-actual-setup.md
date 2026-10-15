@@ -14,7 +14,7 @@ Set up Actual Computer (actual.inc) inference in Niki.
 
 | | |
 |---|---|
-| Source | Optional — install with `hermes skills install official/devops/actual-setup` |
+| Source | Optional — install with `niki skills install official/devops/actual-setup` |
 | Path | `optional-skills/devops/actual-setup` |
 | Version | `2.0.0` |
 | Author | shl0ms + Niki Agent |
@@ -66,19 +66,19 @@ a human in a browser.
 ### Relay / API mode
 
 1. Put the key in `.env` (secrets only — never config.yaml):
-   append `ACTUAL_API_KEY=ac_...` to `~/.hermes/.env`.
+   append `ACTUAL_API_KEY=ac_...` to `~/.niki/.env`.
 2. Verify the key and discover models with `terminal`:
    ```bash
    curl -s https://api.actual.inc/v1/models -H "Authorization: Bearer $ACTUAL_API_KEY"
    ```
 3. Select provider + model:
    ```bash
-   hermes config set model.provider actual
-   hermes config set model.default "MODEL_ID_FROM_DISCOVERY"
+   niki config set model.provider actual
+   niki config set model.default "MODEL_ID_FROM_DISCOVERY"
    ```
 4. Verify end-to-end:
    ```bash
-   hermes chat -Q -q "Reply with exactly: ACTUAL_OK" --provider actual -m MODEL_ID
+   niki chat -Q -q "Reply with exactly: ACTUAL_OK" --provider actual -m MODEL_ID
    ```
 
 ### Local mode
@@ -94,14 +94,14 @@ a human in a browser.
    ```
 3. Point Niki at the daemon. `ACTUAL_BASE_URL` with a loopback host flips the
    built-in provider into local no-auth mode automatically — no key needed:
-   append `ACTUAL_BASE_URL=http://127.0.0.1:8080` to `~/.hermes/.env`, then:
+   append `ACTUAL_BASE_URL=http://127.0.0.1:8080` to `~/.niki/.env`, then:
    ```bash
-   hermes config set model.provider actual
-   hermes config set model.default "INSTALLED_MODEL_NAME"
+   niki config set model.provider actual
+   niki config set model.default "INSTALLED_MODEL_NAME"
    ```
 4. Verify (reduced toolset — see context-window pitfall below):
    ```bash
-   hermes chat -Q -q "Reply with exactly: LOCAL_OK" --provider actual -m INSTALLED_NAME -t file,web
+   niki chat -Q -q "Reply with exactly: LOCAL_OK" --provider actual -m INSTALLED_NAME -t file,web
    ```
 
 ## Quick Reference
@@ -153,11 +153,11 @@ a human in a browser.
 
 ```bash
 # Relay:
-hermes chat -Q -q "Reply with exactly: ACTUAL_OK" --provider actual -m MODEL
+niki chat -Q -q "Reply with exactly: ACTUAL_OK" --provider actual -m MODEL
 # Local (small model — reduced toolset):
-hermes chat -Q -q "Reply with exactly: LOCAL_OK" --provider actual -m MODEL -t file,web
+niki chat -Q -q "Reply with exactly: LOCAL_OK" --provider actual -m MODEL -t file,web
 # Provider status (local no-auth shows key_source=local-offline):
-hermes status
+niki status
 ```
 
 For other OpenAI-compatible clients (e.g. OpenCode), see

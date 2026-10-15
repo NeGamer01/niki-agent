@@ -6,7 +6,7 @@ platforms:
   - linux
   - macos
 metadata:
-  hermes:
+  niki:
     tags: [meetings, google-meet, transcription, realtime-voice]
 ---
 
@@ -43,14 +43,14 @@ Pick `realtime` only when the user actually wants the agent to speak. It costs r
 Easiest path — run the built-in installer:
 
 ```bash
-hermes plugins enable google_meet
-hermes meet install                 # PM dependencies + Chromium (transcribe only)
-hermes meet install --realtime      # + pulseaudio-utils / brew blackhole+ffmpeg
-hermes meet auth                    # optional; skips guest-lobby wait
-hermes meet setup                   # preflight checks
+niki plugins enable google_meet
+niki meet install                 # PM dependencies + Chromium (transcribe only)
+niki meet install --realtime      # + pulseaudio-utils / brew blackhole+ffmpeg
+niki meet auth                    # optional; skips guest-lobby wait
+niki meet setup                   # preflight checks
 ```
 
-`hermes meet install --realtime` prompts before running `sudo apt-get` (Linux)
+`niki meet install --realtime` prompts before running `sudo apt-get` (Linux)
 or `brew install` (macOS). Pass `--yes` to skip the prompt. It will NOT touch
 your macOS default-input setting — you have to select BlackHole 2ch in
 System Settings yourself before starting a realtime meeting.
@@ -60,23 +60,23 @@ For manual realtime audio setup:
 #   Linux:  sudo apt install pulseaudio-utils
 #   macOS:  brew install blackhole-2ch ffmpeg
 #           → System Settings → Sound → Input → BlackHole 2ch
-#   Then set OPENAI_API_KEY or HERMES_MEET_REALTIME_KEY in ~/.hermes/.env
+#   Then set OPENAI_API_KEY or NIKI_MEET_REALTIME_KEY in ~/.niki/.env
 ```
 
 For a remote node:
 ```bash
 # on the user's Mac (where Chrome is signed in):
-hermes plugins enable google_meet
-hermes meet install
-hermes meet node run --display-name my-mac    # persistent server
+niki plugins enable google_meet
+niki meet install
+niki meet node run --display-name my-mac    # persistent server
 # copy the printed token
 
 # on the gateway:
-hermes meet node approve my-mac ws://<mac-ip>:18789 <token>
-hermes meet node ping my-mac                   # confirm reachable
+niki meet node approve my-mac ws://<mac-ip>:18789 <token>
+niki meet node ping my-mac                   # confirm reachable
 ```
 
-Run `hermes meet setup` to preflight local prereqs.
+Run `niki meet setup` to preflight local prereqs.
 
 ## Flow
 
@@ -102,8 +102,8 @@ Run `hermes meet setup` to preflight local prereqs.
 ## Important limits
 
 - Captions are only as good as Google Meet's live captions. English-biased, lossy on overlapping speakers.
-- Guest mode sits in the lobby until a host admits. Warn the user; `hermes meet auth` avoids this.
-- **Lobby timeout**: if the host doesn't admit the bot within 5 minutes (configurable via `HERMES_MEET_LOBBY_TIMEOUT` env), the bot leaves and `meet_status` reports `leaveReason: "lobby_timeout"`.
+- Guest mode sits in the lobby until a host admits. Warn the user; `niki meet auth` avoids this.
+- **Lobby timeout**: if the host doesn't admit the bot within 5 minutes (configurable via `NIKI_MEET_LOBBY_TIMEOUT` env), the bot leaves and `meet_status` reports `leaveReason: "lobby_timeout"`.
 - **One active meeting per install per location.** A second `meet_join` leaves the first.
 - **Windows not supported.**
 - Realtime mode needs a virtual audio device. If the audio bridge setup fails, the bot falls back to transcribe mode and flags it in `meet_status().error`.
@@ -122,7 +122,7 @@ Run `hermes meet setup` to preflight local prereqs.
 | `captioning` | Caption observer is installed. |
 | `transcriptLines` / `lastCaptionAt` | Transcript progress. |
 | `realtime` / `realtimeReady` | Realtime mode provisioned / WS connected. |
-| `realtimeDevice` | Audio device name the bot is feeding (e.g. `hermes_meet_src`). |
+| `realtimeDevice` | Audio device name the bot is feeding (e.g. `niki_meet_src`). |
 | `audioBytesOut` / `lastAudioOutAt` | How much PCM the OpenAI session has produced. |
 | `lastBargeInAt` | Timestamp of the most recent `response.cancel` sent. |
 | `leaveReason` | `duration_expired`, `lobby_timeout`, `denied`, `page_closed`, or null. |
@@ -132,7 +132,7 @@ Run `hermes meet setup` to preflight local prereqs.
 
 Local:
 ```
-$HERMES_HOME/workspace/meetings/<meeting-id>/transcript.txt
+$NIKI_HOME/workspace/meetings/<meeting-id>/transcript.txt
 ```
 
 Remote node: transcript lives on the node host's disk. Use `meet_transcript(node=...)` to read it over RPC.
@@ -141,5 +141,5 @@ Remote node: transcript lives on the node host's disk. Use `meet_transcript(node
 
 - URL regex: only `https://meet.google.com/...` URLs pass.
 - No calendar scanning. No auto-dial.
-- Remote nodes use bearer-token auth; tokens are generated on the node (32 hex chars, persisted in `$HERMES_HOME/workspace/meetings/node_token.json`) and must be copied to the gateway via `hermes meet node approve`.
+- Remote nodes use bearer-token auth; tokens are generated on the node (32 hex chars, persisted in `$NIKI_HOME/workspace/meetings/node_token.json`) and must be copied to the gateway via `niki meet node approve`.
 - `meet_say` text is rate-limited by the OpenAI Realtime session; spam-protection is the bot's problem, not yours, but still — don't queue hundreds of lines.

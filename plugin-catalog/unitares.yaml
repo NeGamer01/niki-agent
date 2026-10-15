@@ -14,8 +14,8 @@ description: >-
 maintainer: cirwel
 tier: community
 category: automation
-requires_hermes: ">=0.21.0"
-docs_url: https://github.com/cirwel/unitares-host-adapter#hermes-agent
+requires_niki: ">=0.21.0"
+docs_url: https://github.com/cirwel/unitares-host-adapter#niki-agent
 version: "0.3.3"
 readme: true
 platforms: []

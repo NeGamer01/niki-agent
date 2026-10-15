@@ -15,7 +15,7 @@ from agent.error_classifier import (
     _extract_error_code,
     _classify_402,
 )
-from tests.hermes_cli.anon_portal import make_jwt
+from tests.niki_cli.anon_portal import make_jwt
 
 
 # ── Helper: mock API errors ────────────────────────────────────────────
@@ -207,7 +207,7 @@ class TestClassifyApiError:
                 ),
             },
         )
-        result = classify_api_error(e, provider="nous", model="gpt-5")
+        result = classify_api_error(e, provider="niki", model="gpt-5")
         assert result.reason == FailoverReason.billing
         assert result.retryable is False
         assert result.should_fallback is True
@@ -225,7 +225,7 @@ class TestClassifyApiError:
                 ),
             },
         )
-        result = classify_api_error(e, provider="nous", model="openai/gpt-5.5-pro")
+        result = classify_api_error(e, provider="niki", model="openai/gpt-5.5-pro")
         assert result.reason == FailoverReason.billing
         assert result.retryable is False
         assert result.should_fallback is True
@@ -245,7 +245,7 @@ class TestClassifyApiError:
                 ),
             },
         )
-        result = classify_api_error(e, provider="nous", model="meituan/longcat-2.0:free")
+        result = classify_api_error(e, provider="niki", model="meituan/longcat-2.0:free")
         assert result.reason == FailoverReason.model_not_found
         assert result.retryable is False
         assert result.should_fallback is True
@@ -931,7 +931,7 @@ class TestClassifyApiError:
             "this endpoint and cannot be disabled.",
             status_code=400,
         )
-        result = classify_api_error(e, provider="nous", model="z-ai/glm-5.3-flash")
+        result = classify_api_error(e, provider="niki", model="z-ai/glm-5.3-flash")
         assert result.reason == FailoverReason.reasoning_mandatory
         assert result.retryable is True
         assert result.should_fallback is False
@@ -2035,10 +2035,10 @@ class TestServerInjectedParameterRejection:
 
 
 
-# ── Test: Nous welcome tier (free tier) refusals ───────────────────────
+# ── Test: Niki welcome tier (free tier) refusals ───────────────────────
 
 class TestNousWelcomeTier:
-    """The Nous gateway's welcome-tier contract: a structured 429 body carries ``reason`` /
+    """The Niki gateway's welcome-tier contract: a structured 429 body carries ``reason`` /
     ``retry_after`` / ``alternates`` / ``upgrade_url``; a 400/403 names the wrong host or a
     dark tier in its message. The parsed refusal rides ``error_context``."""
 
@@ -2049,25 +2049,25 @@ class TestNousWelcomeTier:
                             headers={"retry-after": str(retry_after)})
 
     def test_model_not_free_is_a_non_retryable_gate_with_fallback(self):
-        err = self._refusal("model_not_free", alternates=["nous/welcome"], upgrade_url="https://portal.example/upgrade")
-        result = classify_api_error(err, provider="nous", api_key=make_jwt(), model="gpt-5")
+        err = self._refusal("model_not_free", alternates=["niki/welcome"], upgrade_url="https://portal.example/upgrade")
+        result = classify_api_error(err, provider="niki", api_key=make_jwt(), model="gpt-5")
         assert result.reason == FailoverReason.model_not_found
         assert result.retryable is False
         assert result.should_fallback is True
         assert result.should_rotate_credential is False
         refusal = result.error_context["welcome_refusal"]
         assert refusal["reason"] == "model_not_free"
-        assert refusal["alternates"] == ["nous/welcome"]
+        assert refusal["alternates"] == ["niki/welcome"]
         assert refusal["upgrade_url"] == "https://portal.example/upgrade"
 
     def test_feature_not_free_is_the_same_gate(self):
-        result = classify_api_error(self._refusal("feature_not_free"), provider="nous", api_key=make_jwt())
+        result = classify_api_error(self._refusal("feature_not_free"), provider="niki", api_key=make_jwt())
         assert result.reason == FailoverReason.model_not_found
         assert result.retryable is False
 
     @pytest.mark.parametrize("reason", ["at_capacity", "admission_closed", "rate_limited"])
     def test_capacity_refusals_are_rate_limits_that_honour_retry_after(self, reason):
-        result = classify_api_error(self._refusal(reason, retry_after=30), provider="nous", api_key=make_jwt(), model="nous/welcome")
+        result = classify_api_error(self._refusal(reason, retry_after=30), provider="niki", api_key=make_jwt(), model="niki/welcome")
         assert result.reason == FailoverReason.rate_limit
         assert result.retryable is True
         assert result.should_fallback is True
@@ -2076,35 +2076,35 @@ class TestNousWelcomeTier:
         assert ctx["reset_at"] > 0
 
     def test_retry_after_zero_carries_no_reset(self):
-        result = classify_api_error(self._refusal("at_capacity", retry_after=0), provider="nous", api_key=make_jwt())
+        result = classify_api_error(self._refusal("at_capacity", retry_after=0), provider="niki", api_key=make_jwt())
         assert "reset_at" not in result.error_context
 
     def test_anonymous_jwt_on_the_paid_host_is_deterministic(self):
         body = {"status": 400, "message": "Anonymous accounts must use https://welcome-api.nousresearch.com for inference."}
         err = MockAPIError(f"Error code: 400 - {body}", status_code=400, body=body)
-        result = classify_api_error(err, provider="nous", api_key=make_jwt(), model="nous/welcome")
+        result = classify_api_error(err, provider="niki", api_key=make_jwt(), model="niki/welcome")
         assert result.reason == FailoverReason.format_error
         assert result.retryable is False and result.should_fallback is True
         assert result.error_context["welcome_route"] == "anon_on_paid_host"
 
     def test_named_caller_on_the_welcome_host_is_deterministic(self):
-        body = {"status": 400, "message": "This endpoint serves anonymous Hermes Agent accounts only. Use https://inference-api.nousresearch.com with your API key or signed-in account."}
+        body = {"status": 400, "message": "This endpoint serves anonymous Niki Agent accounts only. Use https://inference-api.nousresearch.com with your API key or signed-in account."}
         err = MockAPIError(f"Error code: 400 - {body}", status_code=400, body=body)
-        result = classify_api_error(err, provider="nous", api_key=make_jwt(account_tier="free"))
+        result = classify_api_error(err, provider="niki", api_key=make_jwt(account_tier="free"))
         assert result.error_context["welcome_route"] == "named_on_welcome_host"
         assert result.retryable is False
 
     def test_dark_tier_403_never_triggers_a_credential_refresh(self):
         body = {"status": 403, "message": "Anonymous accounts are not accepted by this API right now."}
         err = MockAPIError(f"Error code: 403 - {body}", status_code=403, body=body)
-        result = classify_api_error(err, provider="nous", api_key=make_jwt(), model="nous/welcome")
+        result = classify_api_error(err, provider="niki", api_key=make_jwt(), model="niki/welcome")
         assert result.reason == FailoverReason.auth_permanent
         assert result.retryable is False and result.should_fallback is True
         assert result.should_rotate_credential is False
         assert result.error_context["welcome_route"] == "tier_disabled"
 
     def test_ordinary_403_is_untouched(self):
-        result = classify_api_error(MockAPIError("forbidden", status_code=403, body={"message": "forbidden"}), provider="nous", api_key=make_jwt())
+        result = classify_api_error(MockAPIError("forbidden", status_code=403, body={"message": "forbidden"}), provider="niki", api_key=make_jwt())
         assert result.reason == FailoverReason.auth
         assert "welcome_route" not in result.error_context
 

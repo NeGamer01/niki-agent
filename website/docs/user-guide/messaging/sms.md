@@ -24,7 +24,7 @@ The SMS gateway shares credentials with the optional [telephony skill](../../ref
 - **Twilio account** — [Sign up at twilio.com](https://www.twilio.com/try-twilio) (free trial available)
 - **A Twilio phone number** with SMS capability
 - **A publicly accessible server** — Twilio sends webhooks to your server when SMS arrives
-- **aiohttp** — `cd ~/.hermes/hermes-agent && python -c "import pm; pm.sync_venv(['sms'], explicit=True)"`
+- **aiohttp** — `cd ~/.niki/niki-agent && python -c "import pm; pm.sync_venv(['sms'], explicit=True)"`
 
 ---
 
@@ -41,14 +41,14 @@ The SMS gateway shares credentials with the optional [telephony skill](../../ref
 ### Interactive setup (recommended)
 
 ```bash
-hermes gateway setup
+niki gateway setup
 ```
 
 Select **SMS (Twilio)** from the platform list. The wizard will prompt for your credentials.
 
 ### Manual setup
 
-Add to `~/.hermes/.env`:
+Add to `~/.niki/.env`:
 
 ```bash
 TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -106,7 +106,7 @@ SMS_WEBHOOK_PORT=3000
 ## Step 4: Start the Gateway
 
 ```bash
-hermes gateway
+niki gateway
 ```
 
 You should see:

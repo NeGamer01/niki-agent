@@ -47,7 +47,7 @@ import { fileURLToPath } from 'node:url';
  *   builds into the checkout without registering an OS entry point;
  *   packaged-app installs a signed bundle. Its native in-app update pair
  *   is declared separately, not crossed with source-checkout update methods.
- * @typedef {InstallMethod | 'hermes-update' | 'open-app-update' | 'hermes-desktop-app-update'} UpdateMethod
+ * @typedef {InstallMethod | 'niki-update' | 'open-app-update' | 'niki-desktop-app-update'} UpdateMethod
  *   Every install method doubles as an update method (re-run it over the
  *   existing install), plus the updater CLI and the two app-update
  *   variants. The variants differ by launch surface: open-app-update
@@ -55,8 +55,8 @@ import { fileURLToPath } from 'node:url';
  *   (Start Menu / Desktop shortcuts) -- today only the windows desktop
  *   installer's stage registers one (install.sh --include-desktop
  *   builds the app but registers nothing), so these legs pair with a
- *   desktop-installer install; hermes-desktop-app-update starts the app
- *   via `hermes desktop`, which every install method provides on every
+ *   desktop-installer install; niki-desktop-app-update starts the app
+ *   via `niki desktop`, which every install method provides on every
  *   OS that ships the desktop app. Both then update through the app's
  *   own Update button.
  * @typedef {'linux' | 'windows' | 'macos'} Os
@@ -155,12 +155,12 @@ export const SPEC = {
       { method: 'installer-script+desktop' },
       // Run the bootstrap exe again over an existing install (--update flow).
       { method: 'desktop-installer', versions: ['latest'] },
-      { method: 'hermes-update' },
+      { method: 'niki-update' },
       // Settings -> About -> "Update now", app launched from the installed
       // exe (the entry point the desktop installer created).
       { method: 'open-app-update' },
-      // Same button, app launched via `hermes desktop`.
-      { method: 'hermes-desktop-app-update' },
+      // Same button, app launched via `niki desktop`.
+      { method: 'niki-desktop-app-update' },
     ],
   },
   macos: {
@@ -173,12 +173,12 @@ export const SPEC = {
     update: [
       { method: 'installer-script' },
       { method: 'installer-script+desktop' },
-      { method: 'hermes-update' },
+      { method: 'niki-update' },
       // install.sh --include-desktop builds the .app inside the checkout
       // but registers no OS entry point, so open-app-update legs pair
       // with a desktop-installer install (the published dmg).
       { method: 'open-app-update' },
-      { method: 'hermes-desktop-app-update' },
+      { method: 'niki-desktop-app-update' },
     ],
   },
   linux: {
@@ -189,12 +189,12 @@ export const SPEC = {
     update: [
       { method: 'installer-script' },
       { method: 'installer-script+desktop' },
-      { method: 'hermes-update' },
+      { method: 'niki-update' },
       // No desktop installer and no packaged desktop artifact exist for
-      // linux, so there is no open-app-update; `hermes desktop` is always
+      // linux, so there is no open-app-update; `niki desktop` is always
       // the source-mode path (build apps/desktop from the checkout, launch
       // electron) and is the one app surface a linux install has.
-      { method: 'hermes-desktop-app-update' },
+      { method: 'niki-desktop-app-update' },
     ],
   },
 };
@@ -282,7 +282,7 @@ const ROUTE_OSES = /** @type {Record<string, Os[]>} */ ({
 });
 
 /**
- * The pull_request subset: the script install updated by `hermes update`, on every OS,
+ * The pull_request subset: the script install updated by `niki update`, on every OS,
  * from the two starts that catch a regression before it ships -- the newest release
  * updating to the PR (the jump every user makes next) and the PR updating to a synthetic
  * NEXT (the updater the PR itself ships). One leg per {os, start} worth its runner:
@@ -298,7 +298,7 @@ const PR_SUBSET = [
 
 /** @param {Os} os @param {MatrixEntry} entry */
 function inPrSubset(os, entry) {
-  return entry.install_method === 'installer-script' && entry.update_method === 'hermes-update' &&
+  return entry.install_method === 'installer-script' && entry.update_method === 'niki-update' &&
     PR_SUBSET.some((leg) => leg.os === os && leg.to === entry.update_ref);
 }
 
@@ -340,7 +340,7 @@ export function selectRoute(matrices, route) {
  */
 export function methodNeedsDesktop(m) {
   return m.startsWith('desktop-installer') || m === 'installer-script+desktop' ||
-    m === 'open-app-update' || m === 'hermes-desktop-app-update';
+    m === 'open-app-update' || m === 'niki-desktop-app-update';
 }
 
 /**

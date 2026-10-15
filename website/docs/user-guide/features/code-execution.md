@@ -10,15 +10,15 @@ The `execute_code` tool lets the agent write Python scripts that call Niki tools
 
 ## How It Works
 
-1. The agent writes a Python script using `from hermes_tools import ...`
-2. Niki generates a `hermes_tools.py` stub module with RPC functions
+1. The agent writes a Python script using `from niki_tools import ...`
+2. Niki generates a `niki_tools.py` stub module with RPC functions
 3. Niki opens a Unix domain socket and starts an RPC listener thread
 4. The script runs in a child process — tool calls travel over the socket back to Niki
 5. Only the script's `print()` output is returned to the LLM; intermediate tool results never enter the context window
 
 ```python
 # The agent can write scripts like:
-from hermes_tools import web_search, web_extract
+from niki_tools import web_search, web_extract
 
 results = web_search("Python 3.13 features", limit=5)
 for r in results["data"]["web"]:
@@ -44,7 +44,7 @@ The key benefit: intermediate tool results never enter the context window — on
 ### Data Processing Pipeline
 
 ```python
-from hermes_tools import search_files, read_file
+from niki_tools import search_files, read_file
 import json
 
 # Find all config files and extract database settings
@@ -60,7 +60,7 @@ print(json.dumps(configs, indent=2))
 ### Multi-Step Web Research
 
 ```python
-from hermes_tools import web_search, web_extract
+from niki_tools import web_search, web_extract
 import json
 
 # Search, extract, and summarize in one turn
@@ -82,7 +82,7 @@ print(json.dumps(summaries, indent=2))
 ### Bulk File Refactoring
 
 ```python
-from hermes_tools import search_files, read_file, patch
+from niki_tools import search_files, read_file, patch
 
 # Find all Python files using deprecated API and fix them
 matches = search_files("old_api_call", path="src/", file_glob="*.py")
@@ -103,7 +103,7 @@ print(f"Fixed {fixed} files out of {len(matches.get('matches', []))} matches")
 ### Build and Test Pipeline
 
 ```python
-from hermes_tools import terminal, read_file
+from niki_tools import terminal, read_file
 import json
 
 # Run tests, parse results, and report
@@ -128,7 +128,7 @@ print(json.dumps(report, indent=2))
 
 ## Execution Mode
 
-`execute_code` has two execution modes controlled by `code_execution.mode` in `~/.hermes/config.yaml`:
+`execute_code` has two execution modes controlled by `code_execution.mode` in `~/.niki/config.yaml`:
 
 | Mode | Working directory | Python interpreter |
 |------|-------------------|--------------------|
@@ -140,7 +140,7 @@ print(json.dumps(report, indent=2))
 **When to flip to `strict`:** you need maximum reproducibility — you want the same interpreter every session regardless of which venv the user activated, and you want scripts quarantined from the project tree (no risk of accidentally reading project files through a relative path).
 
 ```yaml
-# ~/.hermes/config.yaml
+# ~/.niki/config.yaml
 code_execution:
   mode: project   # or "strict"
 ```
@@ -171,14 +171,14 @@ setting is no longer a separate switch.
 | Resource | Limit | Notes |
 |----------|-------|-------|
 | **Timeout** | 5 minutes (300s) | Script is killed with SIGTERM, then SIGKILL after 5s grace |
-| **Stdout** | 50 KB | Shown head-and-tail inline; the full output is saved to `~/.hermes/cache/exec/` and the path is included in the result |
+| **Stdout** | 50 KB | Shown head-and-tail inline; the full output is saved to `~/.niki/cache/exec/` and the path is included in the result |
 | **Stderr** | 10 KB | Included in output on non-zero exit for debugging |
 | **Tool calls** | 50 per execution | Error returned when limit reached |
 
 All limits are configurable via `config.yaml`:
 
 ```yaml
-# In ~/.hermes/config.yaml
+# In ~/.niki/config.yaml
 code_execution:
   mode: project      # project (default) | strict
   timeout: 300       # Max seconds per script (default: 300)
@@ -198,7 +198,7 @@ What ends a kernel:
 The security envelope is the same as a one-shot script: environment scrubbing, the tool whitelist, and the per-call tool budget all apply to every cell, and tool-call authority (approvals, session, allow-list) is rebound on each cell.
 
 ```yaml
-# ~/.hermes/config.yaml
+# ~/.niki/config.yaml
 code_execution:
   kernel_idle_timeout: 1800   # seconds a kernel may sit idle before it is reaped
   max_session_kernels: 4      # kernels kept alive at once; oldest is evicted past this
@@ -206,7 +206,7 @@ code_execution:
 
 **Remote backends** (Docker, SSH, Modal) run a remote session kernel with the same contract. If the kernel cannot be spawned on the backend, Niki falls back to running each call as a standalone script and says so in the result.
 
-**Large output.** Stdout over 50 KB is shown head-and-tail inline, and the full text is saved under `~/.hermes/cache/exec/` with the path included in the result, so the agent can page through it with `read_file` instead of re-running the script.
+**Large output.** Stdout over 50 KB is shown head-and-tail inline, and the full text is saved under `~/.niki/cache/exec/` with the path included in the result, so the agent can page through it with `read_file` instead of re-running the script.
 
 ## How Tool Calls Work Inside Scripts
 
@@ -253,28 +253,28 @@ terminal:
 
 See the [Security guide](../security.md#environment-variable-passthrough) for full details.
 
-### `HERMES_*` variables in the child
+### `NIKI_*` variables in the child
 
-The child process receives only a small, fixed set of operational `HERMES_*`
+The child process receives only a small, fixed set of operational `NIKI_*`
 variables by exact name:
 
-- `HERMES_HOME`
-- `HERMES_PROFILE`
-- `HERMES_CONFIG`
-- `HERMES_ENV`
+- `NIKI_HOME`
+- `NIKI_PROFILE`
+- `NIKI_CONFIG`
+- `NIKI_ENV`
 
-(plus `HERMES_RPC_DIR` / `HERMES_RPC_SOCKET` / `TZ` / `HOME`, which Niki
+(plus `NIKI_RPC_DIR` / `NIKI_RPC_SOCKET` / `TZ` / `HOME`, which Niki
 injects explicitly so the RPC channel works).
 
 :::note Behavior change
-Earlier versions passed **any** variable whose name began with `HERMES_`
+Earlier versions passed **any** variable whose name began with `NIKI_`
 through to the child. That broad prefix was removed for security hardening: it
-could leak `HERMES_*`-named configuration that doesn't match a secret substring
-(for example `HERMES_BASE_URL`, `HERMES_KANBAN_DB`, or a `HERMES_*_WEBHOOK`
+could leak `NIKI_*`-named configuration that doesn't match a secret substring
+(for example `NIKI_BASE_URL`, `NIKI_KANBAN_DB`, or a `NIKI_*_WEBHOOK`
 endpoint) into arbitrary sandboxed code.
 
 If an `execute_code` script — or a repo/plugin module it imports at import time
-— relied on a `HERMES_*` variable outside the four operational names above, it
+— relied on a `NIKI_*` variable outside the four operational names above, it
 will now find that variable **unset** in the child. The drop is intentional,
 not a bug.
 :::
@@ -290,8 +290,8 @@ be re-allowed this way):
    ```yaml
    terminal:
      env_passthrough:
-       - HERMES_KANBAN_DB
-       - HERMES_BASE_URL
+       - NIKI_KANBAN_DB
+       - NIKI_BASE_URL
    ```
 
 2. **Per-skill, in the skill's frontmatter** — declare it so it is registered
@@ -299,17 +299,17 @@ be re-allowed this way):
 
    ```yaml
    required_environment_variables:
-     - HERMES_KANBAN_DB
+     - NIKI_KANBAN_DB
    ```
 
-**Diagnosing it.** When the child drops one or more non-allowlisted `HERMES_*`
+**Diagnosing it.** When the child drops one or more non-allowlisted `NIKI_*`
 variables, Niki emits a one-line `debug` log naming them and pointing at the
-`env_passthrough` escape hatch. Run with debug logging (`hermes logs --level
-DEBUG`, or check `~/.hermes/logs/agent.log`) and look for
-`execute_code: dropped N non-allowlisted HERMES_* var(s)` if a script behaves
-as though a `HERMES_*` variable is missing.
+`env_passthrough` escape hatch. Run with debug logging (`niki logs --level
+DEBUG`, or check `~/.niki/logs/agent.log`) and look for
+`execute_code: dropped N non-allowlisted NIKI_* var(s)` if a script behaves
+as though a `NIKI_*` variable is missing.
 
-Niki always writes the script and the auto-generated `hermes_tools.py` RPC stub into a temp staging directory that is cleaned up after execution. In `strict` mode the script also *runs* there; in `project` mode it runs in the session's working directory (the staging directory stays on `PYTHONPATH` so imports still resolve). The child process runs in its own process group so it can be cleanly killed on timeout or interruption.
+Niki always writes the script and the auto-generated `niki_tools.py` RPC stub into a temp staging directory that is cleaned up after execution. In `strict` mode the script also *runs* there; in `project` mode it runs in the session's working directory (the staging directory stays on `PYTHONPATH` so imports still resolve). The child process runs in its own process group so it can be cleanly killed on timeout or interruption.
 
 ## execute_code vs terminal
 

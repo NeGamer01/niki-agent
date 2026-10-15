@@ -16,7 +16,7 @@ The cron subsystem provides scheduled task execution — from simple one-shot de
 | `cron/scheduler.py` | Scheduler loop — due-job detection, execution, repeat tracking |
 | `tools/cronjob_tools.py` | Model-facing `cronjob_manage` tool registration and handler |
 | `gateway/run.py` | Gateway integration — cron ticking in the long-running loop |
-| `hermes_cli/cron.py` | CLI `hermes cron` subcommands |
+| `niki_cli/cron.py` | CLI `niki cron` subcommands |
 
 ## Scheduling Model
 
@@ -33,7 +33,7 @@ The model-facing surface is a single `cronjob_manage` tool with action-style ope
 
 ## Job Storage
 
-Jobs are stored in `~/.hermes/cron/jobs.json` with atomic write semantics (write to temp file, then rename). Each job record contains:
+Jobs are stored in `~/.niki/cron/jobs.json` with atomic write semantics (write to temp file, then rename). Each job record contains:
 
 ```json
 {
@@ -67,7 +67,7 @@ Jobs are stored in `~/.hermes/cron/jobs.json` with atomic write semantics (write
 
 `last_status` is written by `cron.jobs.mark_job_run` when a run finishes and, for a
 queued delivery, rewritten once by the delivery write-back below. Every renderer
-(`hermes cron list`/`doctor`, the `cronjob_manage` tool, the web dashboard badge, the
+(`niki cron list`/`doctor`, the `cronjob_manage` tool, the web dashboard badge, the
 Desktop routine inspector) maps each literal explicitly — a consumer must never test
 `== "ok"` for "the user got their result":
 
@@ -104,7 +104,7 @@ its own bookkeeping, because a drain can finish before the run's `mark_job_run` 
 Every write is fenced on the `execution_id` (it must still be the job's latest ledger
 attempt and latest recorded completion), so the call is idempotent and never rewrites a
 later run's status; the ledger only ever moves `queued` to a terminal outcome. Until a
-gateway drains the row, `last_status` stays `delivery_queued` and `hermes cron list`
+gateway drains the row, `last_status` stays `delivery_queued` and `niki cron list`
 shows "finished; delivery is still in progress".
 
 ### Job Lifecycle States
@@ -193,7 +193,7 @@ dropped silently. The mechanics, in the order the due scan applies them
    resume applies rules 3–5 to it — one late/catch-up run, or a logged skip.
    One-shots and future instants recompute from now on resume.
 
-The same store fields drive every topology: a standalone `hermes -p X gateway
+The same store fields drive every topology: a standalone `niki -p X gateway
 run` and a profile served by the host gateway (`_start_multiplex` ticks each
 home under `_profile_cron_scope`) evaluate the identical record. One gateway
 process per host ticks *every* profile's store — `gateway.multiplex_profiles`
@@ -229,7 +229,7 @@ The active provider is chosen by the `cron.provider` config key:
   is byte-identical to the pre-provider behavior.
 - **a named provider** (e.g. `chronos`, a managed-cron provider for
   scale-to-zero deployments) → discovered from `plugins/cron_providers/<name>/` or
-  `$HERMES_HOME/plugins/<name>/`.
+  `$NIKI_HOME/plugins/<name>/`.
 
 If a named provider is missing, fails to load, or reports `is_available() ==
 False`, the resolver falls back to the built-in with a warning — **cron is
@@ -245,10 +245,10 @@ A ticker whose checkout was updated under it (boot revision ≠ disk revision) y
 only to a gateway that can actually take it over: the runtime-lock holder must be a live gateway
 whose `gateway_state.json` heartbeat is fresh and whose stamped `code_sha` is the on-disk revision.
 A lock held by a process that is itself still running the pre-update code — the common case right
-after `hermes update` with a single gateway — never counts as a fresh gateway, so the ticker keeps
+after `niki update` with a single gateway — never counts as a fresh gateway, so the ticker keeps
 dispatching instead of yielding every tick to nobody.
 
-In CLI mode, cron jobs only fire when `hermes cron` commands are run or during active CLI sessions.
+In CLI mode, cron jobs only fire when `niki cron` commands are run or during active CLI sessions.
 
 Upgrade notes for the gateway-owned runtime (the retired
 `cron.bot_chat_delivery_timeout_seconds` key, legacy `cron/bot_chat_pending/` records,
@@ -260,42 +260,42 @@ and runs interrupted by the cutover restart) are in
 Hosted gateways can run the **Chronos** provider (`cron.provider: chronos`)
 instead of the built-in ticker. Chronos lets an idle gateway **scale to zero**
 and still fire cron jobs: rather than a 60-second in-process loop (which would
-keep the process awake), it asks Nous infrastructure to arm exactly **one
-managed one-shot per job at that job's real next-fire time**. At fire time Nous
+keep the process awake), it asks Niki infrastructure to arm exactly **one
+managed one-shot per job at that job's real next-fire time**. At fire time Niki
 calls the gateway back over an authenticated webhook (`POST /api/cron/fire`);
 the gateway runs the job through the same `run_one_job` path as the built-in,
 then re-arms the next one-shot. Between fires the process can be fully stopped —
 it wakes only on a genuine fire, never on a periodic timer.
 
-The flow (the managed scheduler is provided by Nous; the agent holds no
+The flow (the managed scheduler is provided by Niki; the agent holds no
 scheduler credentials):
 
 ```
 create/update a cron job
-  → Chronos asks Nous to arm a one-shot at the job's next_run_at
-      (authenticated with the agent's existing Nous token)
-  → at fire time Nous calls the gateway: POST {callback_url}/api/cron/fire
-      (authenticated with a short-lived, purpose-scoped Nous-minted JWT)
+  → Chronos asks Niki to arm a one-shot at the job's next_run_at
+      (authenticated with the agent's existing Niki token)
+  → at fire time Niki calls the gateway: POST {callback_url}/api/cron/fire
+      (authenticated with a short-lived, purpose-scoped Niki-minted JWT)
   → the gateway verifies the token, claims the job (store compare-and-set so
     multi-replica deployments fire at-most-once), runs it, and re-arms the next
     one-shot
 ```
 
-Config (all non-secret; on hosted agents Nous sets these at provision time):
+Config (all non-secret; on hosted agents Niki sets these at provision time):
 
 | key | meaning |
 |---|---|
 | `cron.provider` | `chronos` to activate (empty = built-in ticker) |
-| `cron.chronos.portal_url` | Nous base URL (arming + the fire-token issuer) |
+| `cron.chronos.portal_url` | Niki base URL (arming + the fire-token issuer) |
 | `cron.chronos.callback_url` | the gateway's own public base URL for inbound fires |
 | `cron.chronos.expected_audience` | this agent's fire-token audience |
 | `cron.chronos.nas_jwks_url` | key set for verifying the inbound fire token |
 
-If Chronos is misconfigured or the agent isn't logged into Nous,
+If Chronos is misconfigured or the agent isn't logged into Niki,
 `resolve_cron_scheduler()` falls back to the built-in ticker (logged warning) —
 cron never loses its trigger. Recurring jobs re-arm after each fire; `repeat`-N
 jobs stop cleanly when the count is exhausted (no orphaned one-shot). The full
-agent↔Nous wire contract lives in [Chronos managed-cron contract](chronos-managed-cron-contract.md).
+agent↔Niki wire contract lives in [Chronos managed-cron contract](chronos-managed-cron-contract.md).
 
 ### Fresh Session Isolation
 
@@ -328,7 +328,7 @@ Create a daily funding report → attach "ai-funding-daily-report" skill
 Jobs can also attach a Python script via the `script` field. The script runs *before* each agent turn, and its stdout is injected into the prompt as context. This enables data collection and change detection patterns:
 
 ```python
-# ~/.hermes/scripts/check_competitors.py
+# ~/.niki/scripts/check_competitors.py
 import requests, json
 # Fetch competitor release notes, diff against last run
 # Print summary to stdout — agent analyzes and reports
@@ -337,11 +337,11 @@ import requests, json
 The script timeout defaults to 3600 seconds (1 hour). `_get_script_timeout()` resolves the limit through a three-layer chain:
 
 1. **Module-level override** — `_SCRIPT_TIMEOUT` (for tests/monkeypatching). Only used when it differs from the default.
-2. **Environment variable** — `HERMES_CRON_SCRIPT_TIMEOUT`
+2. **Environment variable** — `NIKI_CRON_SCRIPT_TIMEOUT`
 3. **Config** — `cron.script_timeout_seconds` in `config.yaml` (read via `load_config()`)
 4. **Default** — 3600 seconds (1 hour)
 
-This timeout bounds the **pre-run script only**, not the agent. Skill-based / LLM-driven jobs run on a separate *inactivity*-based budget (`HERMES_CRON_TIMEOUT`, default 600s of idle time, `0` = unlimited) — they can run for hours as long as they keep calling tools or streaming tokens, and are only killed after the configured idle period with no activity. On platforms where Python's monotonic clock excludes suspend (macOS and Linux), time the host spends asleep does not count toward that idle period; Windows behavior is unchanged. Scripts are dispatched to a persistent thread pool (not held under the tick lock), so a long-running script does not block other due jobs from firing.
+This timeout bounds the **pre-run script only**, not the agent. Skill-based / LLM-driven jobs run on a separate *inactivity*-based budget (`NIKI_CRON_TIMEOUT`, default 600s of idle time, `0` = unlimited) — they can run for hours as long as they keep calling tools or streaming tokens, and are only killed after the configured idle period with no activity. On platforms where Python's monotonic clock excludes suspend (macOS and Linux), time the host spends asleep does not count toward that idle period; Windows behavior is unchanged. Scripts are dispatched to a persistent thread pool (not held under the tick lock), so a long-running script does not block other due jobs from firing.
 
 On timeout or ownership cancellation, `cron.scheduler_script` uses the shared
 `agent.deadline.kill_process_tree` hard-kill path. On POSIX it briefly stops and
@@ -357,7 +357,7 @@ Windows continues to use `taskkill /F /T`.
 
 `run_job()` passes the user's configured fallback providers and credential pool into the `AIAgent` instance:
 
-- **Fallback providers** — reads `fallback_providers` (list) or `fallback_model` (legacy dict) from `config.yaml`, matching the gateway's `_load_fallback_model()` pattern. Passed as `fallback_model=` to `AIAgent.__init__`, which normalizes both formats into a fallback chain. **Unpinned jobs only:** `_job_fallback_chain()` returns no chain for a job carrying its own `provider`, `model` or `base_url`, and the same answer feeds the credential-resolution walk in `_resolve_job_runtime()`, the pre-dispatch key check, and the mid-run ladder, so a pinned job never lands on a global chain entry (#100437). It shares `hermes_cli.fallback_config.scoped_fallback_chain()` with pinned delegation children.
+- **Fallback providers** — reads `fallback_providers` (list) or `fallback_model` (legacy dict) from `config.yaml`, matching the gateway's `_load_fallback_model()` pattern. Passed as `fallback_model=` to `AIAgent.__init__`, which normalizes both formats into a fallback chain. **Unpinned jobs only:** `_job_fallback_chain()` returns no chain for a job carrying its own `provider`, `model` or `base_url`, and the same answer feeds the credential-resolution walk in `_resolve_job_runtime()`, the pre-dispatch key check, and the mid-run ladder, so a pinned job never lands on a global chain entry (#100437). It shares `niki_cli.fallback_config.scoped_fallback_chain()` with pinned delegation children.
 - **Credential pool** — loads via `load_pool(provider)` from `agent.credential_pool` using the resolved runtime provider name. Only passed when the pool has credentials (`pool.has_credentials()`). Enables same-provider key rotation on 429/rate-limit errors.
 
 This mirrors the gateway's behavior — without it, cron agents would fail on rate limits without attempting recovery.
@@ -373,7 +373,7 @@ Most platforms also accept an optional thread/topic as a third segment: `platfor
 | Target | Syntax | Example |
 |--------|--------|---------|
 | Origin chat | `origin` | Deliver to the chat where the job was created |
-| Local file | `local` | Save to `~/.hermes/cron/output/` |
+| Local file | `local` | Save to `~/.niki/cron/output/` |
 | Telegram | `telegram`, `telegram:<chat_id>`, `telegram:<chat_id>:<thread_id>`, `telegram:@username` | `telegram:-1001234567890:17585` |
 | Discord | `discord`, `discord:#channel`, `discord:<channel_id>`, `discord:<channel_id>:<thread_id>` | `discord:#engineering` |
 | Slack | `slack`, `slack:#channel`, `slack:<channel_id>`, `slack:<channel_id>:<thread_ts>` | `slack:#engineering` |
@@ -398,7 +398,7 @@ Platforms in the first group have explicit, validated target syntax — named ch
 
 For **Telegram topics**, use `telegram:<chat_id>:<thread_id>` (e.g., `telegram:-1001234567890:17585`). For **Slack threads**, the third segment is the parent message's `thread_ts` (e.g., `slack:C0123ABCD45:1700000000.000100`), so it only applies when replying under an existing message.
 
-**Bot Chat** (`bot-chat`, `bot-chat:<profile>`) is a machine-local pseudo-platform, not a gateway adapter. A mailbox-capable canonical live owner receives durable admission immediately (idle or busy); only that owner executes the incoming turn. `scheduler_delivery._deliver_to_bot_chat` resolves the target with `get_profile_dir` or the job's current `get_hermes_home`, derives the receipt ID from the source home, job ID, durable `execution_id`, and target home, and checks the receipt before discovering an owner. A profile with no Bot Chat yet gets one created by the authority on first delivery (the `--create-if-missing` semantics of the retired CLI lane). There is no local CLI fallback: without a running authority the run is recorded `delivery_failed` with the reason in `last_delivery_error` and the output kept under `hermes cron runs`; it is not redelivered automatically, and the scheduler never becomes a second writer to the profile's store. Delivery is a real inbound turn, not a transcript mirror. Queued/claimed receipts populate `last_delivery_queued` with receipt IDs. The delivery aggregator excludes admission notices from genuine errors and records execution `delivery_outcome=queued`; successful jobs use `last_status=delivery_queued`. Genuine errors on mixed targets take precedence as failed while retaining queued receipt metadata. The target profile’s durable receipt is authoritative for terminal completion. Queued is the historical admission outcome, not proof of delivery. When the Bot Chat send went through the gateway delivery queue (an agent run), the write-back above settles the cron run once the drain's send returns: `ok`/`delivered` then means the target's authority **accepted** the turn, and `last_delivery_queued` keeps the receipt IDs whose Bot Chat turn may still be running. A Bot Chat delivery made inline (a `no_agent` job, or a Bot-Chat-only external worker) is not on the queue, so its run keeps `last_status=delivery_queued` / `delivery_outcome=queued`; nothing writes the later receipt completion back into cron history. Bot-chat targets are excluded from `all` and credential preflight. Bot-chat-only external workers bypass the gateway delivery queue; mixed external-worker targets retain gateway handoff.
+**Bot Chat** (`bot-chat`, `bot-chat:<profile>`) is a machine-local pseudo-platform, not a gateway adapter. A mailbox-capable canonical live owner receives durable admission immediately (idle or busy); only that owner executes the incoming turn. `scheduler_delivery._deliver_to_bot_chat` resolves the target with `get_profile_dir` or the job's current `get_niki_home`, derives the receipt ID from the source home, job ID, durable `execution_id`, and target home, and checks the receipt before discovering an owner. A profile with no Bot Chat yet gets one created by the authority on first delivery (the `--create-if-missing` semantics of the retired CLI lane). There is no local CLI fallback: without a running authority the run is recorded `delivery_failed` with the reason in `last_delivery_error` and the output kept under `niki cron runs`; it is not redelivered automatically, and the scheduler never becomes a second writer to the profile's store. Delivery is a real inbound turn, not a transcript mirror. Queued/claimed receipts populate `last_delivery_queued` with receipt IDs. The delivery aggregator excludes admission notices from genuine errors and records execution `delivery_outcome=queued`; successful jobs use `last_status=delivery_queued`. Genuine errors on mixed targets take precedence as failed while retaining queued receipt metadata. The target profile’s durable receipt is authoritative for terminal completion. Queued is the historical admission outcome, not proof of delivery. When the Bot Chat send went through the gateway delivery queue (an agent run), the write-back above settles the cron run once the drain's send returns: `ok`/`delivered` then means the target's authority **accepted** the turn, and `last_delivery_queued` keeps the receipt IDs whose Bot Chat turn may still be running. A Bot Chat delivery made inline (a `no_agent` job, or a Bot-Chat-only external worker) is not on the queue, so its run keeps `last_status=delivery_queued` / `delivery_outcome=queued`; nothing writes the later receipt completion back into cron history. Bot-chat targets are excluded from `all` and credential preflight. Bot-chat-only external workers bypass the gateway delivery queue; mixed external-worker targets retain gateway handoff.
 
 ### Response Wrapping
 
@@ -421,24 +421,24 @@ Cron-run sessions have the `cronjob` toolset disabled. This prevents:
 
 ## Locking
 
-The scheduler uses cross-process file-based locking (`fcntl.flock` on Unix, `msvcrt.locking` on Windows) to prevent overlapping ticks from executing the same due-job batch twice — even between the gateway's in-process ticker and a standalone `hermes cron` / manual `tick()` call. If the lock cannot be acquired, `tick()` returns 0 immediately.
+The scheduler uses cross-process file-based locking (`fcntl.flock` on Unix, `msvcrt.locking` on Windows) to prevent overlapping ticks from executing the same due-job batch twice — even between the gateway's in-process ticker and a standalone `niki cron` / manual `tick()` call. If the lock cannot be acquired, `tick()` returns 0 immediately.
 
 ### Stale-code yield
 
-Before the tick lock, a gateway whose checkout was updated under it (boot revision ≠ disk revision) yields the tick when another process holds the gateway runtime lock — a fresher gateway's ticker dispatches instead, and the stale one must not race it with mixed `sys.modules`. The yield is raised (`CronTickYielded`) and persisted as the ticker's last error, so `hermes cron status` reports **"Gateway is running STALE code — its cron ticker yields every tick and fires NOTHING"** with both revisions and the restart command, even though the liveness heartbeat keeps refreshing. `hermes update` closes the loop: a gateway the post-update fleet version matrix proves stale is handed to the drain-first `request_restart` path (SIGUSR1) instead of being left running; a supervised gateway respawns on the new code, a bare `gateway run` is stopped and listed under "Restart manually".
+Before the tick lock, a gateway whose checkout was updated under it (boot revision ≠ disk revision) yields the tick when another process holds the gateway runtime lock — a fresher gateway's ticker dispatches instead, and the stale one must not race it with mixed `sys.modules`. The yield is raised (`CronTickYielded`) and persisted as the ticker's last error, so `niki cron status` reports **"Gateway is running STALE code — its cron ticker yields every tick and fires NOTHING"** with both revisions and the restart command, even though the liveness heartbeat keeps refreshing. `niki update` closes the loop: a gateway the post-update fleet version matrix proves stale is handed to the drain-first `request_restart` path (SIGUSR1) instead of being left running; a supervised gateway respawns on the new code, a bare `gateway run` is stopped and listed under "Restart manually".
 
 ## CLI Interface
 
-The `hermes cron` CLI provides direct job management:
+The `niki cron` CLI provides direct job management:
 
 ```bash
-hermes cron list                    # Show all jobs
-hermes cron create                  # Interactive job creation (alias: add)
-hermes cron edit <job_id>           # Edit job configuration
-hermes cron pause <job_id>          # Pause a running job
-hermes cron resume <job_id>         # Resume a paused job
-hermes cron run <job_id>            # Trigger immediate execution
-hermes cron remove <job_id>         # Delete a job
+niki cron list                    # Show all jobs
+niki cron create                  # Interactive job creation (alias: add)
+niki cron edit <job_id>           # Edit job configuration
+niki cron pause <job_id>          # Pause a running job
+niki cron resume <job_id>         # Resume a paused job
+niki cron run <job_id>            # Trigger immediate execution
+niki cron remove <job_id>         # Delete a job
 ```
 
 ## Related Docs

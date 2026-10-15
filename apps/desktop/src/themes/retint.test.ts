@@ -1,4 +1,4 @@
-import { contrastRatio } from '@hermes/shared/color'
+import { contrastRatio } from '@niki/shared/color'
 import { describe, expect, it } from 'vitest'
 
 import { hexToOklch, withHue } from './color'
@@ -11,13 +11,13 @@ const HUES = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330]
 // A retint seed for each hue, at the authored accent's lightness/chroma.
 const seedAt = (hue: number) => withHue(nousTheme.colors.primary, hue)
 
-const NOUS_BLUE = '#0053FD'
+const NIKI_BLUE = '#0053FD'
 
 // The two seeds are the whole point of the fork, and both are load-bearing:
 // `#0053FD` is the brand color and passes on the light sidebar, but only 3.6:1
 // on the near-black dark one — so dark carries a lifted twin rather than the
 // literal brand hex. Anything that re-derives these must keep both legible.
-describe('the shipped nous accents', () => {
+describe('the shipped niki accents', () => {
   const cases = [
     { appearance: 'light', colors: nousTheme.colors },
     { appearance: 'dark', colors: nousTheme.darkColors! }
@@ -132,25 +132,25 @@ describe('retintTheme', () => {
     expect(retintTheme(nousTheme, 'nonsense').colors).toEqual(nousTheme.colors)
   })
 
-  // The real motivating case: Nous blue is legible on GitHub's light sidebar
+  // The real motivating case: Niki blue is legible on GitHub's light sidebar
   // (5.4:1) but NOT its dark one (3.6:1), so dark has to adapt or ship
   // invisible section headers.
   describe('a seed that only works in one mode', () => {
-    const blue = retintTheme(nousTheme, NOUS_BLUE)
+    const blue = retintTheme(nousTheme, NIKI_BLUE)
 
     it('keeps the picked color where it already passes', () => {
-      expect(blue.colors.primary.toLowerCase()).toBe(NOUS_BLUE.toLowerCase())
+      expect(blue.colors.primary.toLowerCase()).toBe(NIKI_BLUE.toLowerCase())
     })
 
     it('lightens it for the mode where it does not', () => {
       const dark = blue.darkColors!.primary
 
-      expect(dark.toLowerCase()).not.toBe(NOUS_BLUE.toLowerCase())
+      expect(dark.toLowerCase()).not.toBe(NIKI_BLUE.toLowerCase())
       expect(contrastRatio(dark, blue.darkColors!.sidebarBackground!)).toBeGreaterThanOrEqual(4.5)
     })
 
     it('adapts by lightness, holding the hue — so it still reads as the brand', () => {
-      const picked = hexToOklch(NOUS_BLUE)!
+      const picked = hexToOklch(NIKI_BLUE)!
       const adapted = hexToOklch(blue.darkColors!.primary)!
 
       expect(Math.abs(adapted.h - picked.h)).toBeLessThan(3)

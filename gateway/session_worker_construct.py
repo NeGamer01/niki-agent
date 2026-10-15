@@ -26,7 +26,7 @@ def _fallback_chain(authority, policy):
     if policy.safe_mode:
         return None
     if policy.ignore_user_config:
-        from hermes_cli.fallback_config import get_fallback_chain
+        from niki_cli.fallback_config import get_fallback_chain
         return get_fallback_chain(policy.config(authority)) or None
     refresh = getattr(authority.runner, '_refresh_fallback_model', None)
     return refresh() if refresh is not None else None
@@ -79,7 +79,7 @@ def checkpoint_agent_kwargs(config):
         cp_cfg = {"enabled": cp_cfg}
     elif not isinstance(cp_cfg, dict):
         cp_cfg = {}
-    from hermes_cli.config import DEFAULT_CONFIG
+    from niki_cli.config import DEFAULT_CONFIG
     defaults = DEFAULT_CONFIG["checkpoints"]
     return {
         "checkpoints_enabled": cp_cfg.get("enabled", defaults["enabled"]),
@@ -93,7 +93,7 @@ def routing_agent_kwargs(config, model, provider, base_url):
     ``provider_routing`` / ``openrouter.min_coding_score`` / ``agent.service_tier``, a static fast
     tier's request overrides), from a managed worker's frozen session config."""
     from agent.fast_mode import STATIC_TIERS, parse_service_tier
-    from hermes_cli.models import resolve_fast_mode_overrides
+    from niki_cli.models import resolve_fast_mode_overrides
     pr = config.get('provider_routing') or {}
     score = (config.get('openrouter') or {}).get('min_coding_score')
     tier = parse_service_tier((config.get('agent') or {}).get('service_tier', ''))

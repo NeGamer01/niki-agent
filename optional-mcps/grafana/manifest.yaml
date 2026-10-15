@@ -1,4 +1,4 @@
-# Nous-approved MCP catalog entry.
+# Niki-approved MCP catalog entry.
 # Presence in this directory = approval. Merged via PR review.
 manifest_version: 1
 
@@ -53,7 +53,7 @@ suggest:
 
 post_install: |
   On first connection Niki opens a browser to authorize with Grafana Cloud
-  (or run `hermes mcp login grafana`). During authorization you'll enter your
+  (or run `niki mcp login grafana`). During authorization you'll enter your
   Grafana Cloud stack URL (https://<your-stack>.grafana.net) and choose read
   or read+write access, then approve. Restart the session so tools load.
 

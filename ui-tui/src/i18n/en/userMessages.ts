@@ -4,7 +4,7 @@
 //
 // Every slash command cited here exists in ui-tui/src/app/slash/commands
 // (/logs, /retry, /model, /update, /resume, /sessions, /quit, /compress,
-// /skills, /setup) and `hermes doctor` is a real subcommand — keep them as-is.
+// /skills, /setup) and `niki doctor` is a real subcommand — keep them as-is.
 
 export const userMessagesEn = {
   userMessages: {
@@ -22,14 +22,14 @@ export const userMessagesEn = {
         `Niki stopped (exit code ${code}) and could not be restarted. Your chat is saved.`,
       gaveUpReconnect:
         'Niki keeps trying to reconnect in the background and reopens this chat when it succeeds; if it does not, type /resume.',
-      gaveUpLogs: 'Type /logs for the full log, or /quit and run `hermes doctor` to check the install.',
+      gaveUpLogs: 'Type /logs for the full log, or /quit and run `niki doctor` to check the install.',
       gaveUpActivity: 'Niki stopped · /logs for details',
       /** `{0}` = seconds until the next attempt. */
       reconnecting: (secs: string) => `retrying in ${secs}s`,
       /** `{0}` = seconds until the next attempt, `{1}` = attempt number. */
       reconnectingAttempt: (secs: string, attempt: string) => `retrying in ${secs}s (attempt ${attempt})`,
       slowStart:
-        'Niki is taking longer than usual to start. Still waiting… If it never connects: /logs shows the last backend output; /quit and run `hermes doctor`.',
+        'Niki is taking longer than usual to start. Still waiting… If it never connects: /logs shows the last backend output; /quit and run `niki doctor`.',
       slowStartStatus: 'still starting…',
       stderrProblem: 'Something went wrong inside Niki · /logs for details',
       /** `{0}` = the Python exception class name (e.g. `ValueError`). */
@@ -38,7 +38,7 @@ export const userMessagesEn = {
 
     rpc: {
       versionSkew:
-        'The terminal UI and the Niki backend are out of sync (different versions). Run /update, or exit and run `hermes update`, then start the TUI again.',
+        'The terminal UI and the Niki backend are out of sync (different versions). Run /update, or exit and run `niki update`, then start the TUI again.',
       sessionNotFound:
         'This chat is no longer attached to the backend (it was idle or the backend restarted). Your history is saved: type /resume to reopen it.',
       notConnected:

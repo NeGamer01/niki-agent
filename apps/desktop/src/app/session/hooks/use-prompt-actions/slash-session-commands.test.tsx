@@ -15,7 +15,7 @@ import { clearSingleFlightSessionResumeState } from './single-flight-resume'
 // /undo, /retry, /steer and /queue run against the session owner's canonical verbs (the Ink TUI's
 // behaviour on the same gateway), never as `slash.exec`, which the shared gateway refuses.
 
-vi.mock('@/hermes', () => ({
+vi.mock('@/niki', () => ({
   getLatestSessionMessages: vi.fn(async () => ({ messages: [], session_id: 'session' })),
   getProfiles: vi.fn(async () => ({ profiles: [] })),
   getSession: vi.fn(),
@@ -76,7 +76,7 @@ const canonical = () => $connection.set({ mode: 'local', wsUrl: 'ws://localhost/
 
 beforeEach(() => {
   clearSingleFlightSessionResumeState()
-  window.localStorage.removeItem('hermes.desktop.composerQueue.v1')
+  window.localStorage.removeItem('niki.desktop.composerQueue.v1')
   $queuedPromptsBySession.set({})
   setComposerDraft('')
 })

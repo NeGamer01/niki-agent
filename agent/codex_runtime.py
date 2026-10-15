@@ -16,7 +16,7 @@ from types import SimpleNamespace
 from typing import Any, Callable, Dict, List
 
 from agent.stream_single_writer import claim_stream_writer, stream_writer_is_current
-from agent.transports.hermes_tools_mcp_server import HERMES_TOOLS_MCP_SERVER_NAME
+from agent.transports.niki_tools_mcp_server import NIKI_TOOLS_MCP_SERVER_NAME
 from agent.sdk_transform_bypass import bypass_sdk_request_transform
 from agent.stream_diag import buffer_connect_exhausted_notice
 from agent.usage_anchor import set_usage_anchor
@@ -38,7 +38,7 @@ def _stream_drain_timeout() -> float:
     ``0`` skips the drain entirely.
     """
     try:
-        from hermes_cli.config import load_config_readonly
+        from niki_cli.config import load_config_readonly
         agent_cfg = load_config_readonly().get("agent")
         value = agent_cfg.get("stream_drain_timeout") if isinstance(agent_cfg, dict) else None
         if isinstance(value, (int, float)) and not isinstance(value, bool):
@@ -151,7 +151,7 @@ def _record_codex_app_server_usage(agent, turn, messages=None) -> dict[str, Any]
     input (the protocol exposes no cache-write tokens); a turn with no usage still counts as one API call.
     ``messages`` (the transcript mirror) lets real usage anchor the next preflight: this runtime bypasses
     the main loop's capture, and the mirror is never compacted natively, so without an anchor the rough
-    estimate grows monotonically and hermes-mode fires thread compaction on tiny threads (#100381)."""
+    estimate grows monotonically and niki-mode fires thread compaction on tiny threads (#100381)."""
     agent.session_api_calls += 1
     usage = getattr(turn, "token_usage_last", None)
     compressor = getattr(agent, "context_compressor", None)
@@ -280,7 +280,7 @@ _CODEX_PROGRESS_DELTA_METHODS = frozenset(m for m, _ in _CODEX_TEXT_DELTA_METHOD
 }
 _CODEX_PROGRESS_ITEM_TYPES = _CODEX_TOOL_ITEM_TYPES | {"agentMessage", "reasoning"}
 # Internal MCP server wrapping Niki' native tools: its inner dispatch has no tool_progress_callback, so the
-# codex-level mcpToolCall IS the display event and the mcp.hermes-tools.* prefix is stripped (users see Niki tools).
+# codex-level mcpToolCall IS the display event and the mcp.niki-tools.* prefix is stripped (users see Niki tools).
 _STATIC_TOOL_NAMES = {"commandExecution": "exec_command", "fileChange": "apply_patch", "webSearch": "web_search"}
 _STABLE_ID_PREFIXES = {"commandExecution": "exec", "fileChange": "apply_patch"}
 _MCP_LIKE_ITEM_TYPES = {"mcpToolCall", "dynamicToolCall"}
@@ -303,7 +303,7 @@ def _codex_item_to_tool_name(item: dict) -> str:
     item_type = item.get("type") or ""
     if item_type == "mcpToolCall":
         server, tool = item.get("server") or "mcp", item.get("tool") or "unknown"
-        return tool if server == HERMES_TOOLS_MCP_SERVER_NAME else f"mcp.{server}.{tool}"
+        return tool if server == NIKI_TOOLS_MCP_SERVER_NAME else f"mcp.{server}.{tool}"
     if item_type == "dynamicToolCall":
         return item.get("tool") or "dynamic"
     return _STATIC_TOOL_NAMES.get(item_type) or item_type or "unknown"
@@ -499,7 +499,7 @@ def _codex_developer_instructions(agent) -> str:
     return developer_instructions
 
 
-# Durable codex thread binding: ``sessions.model_config.codex_thread_id`` (hermes_state), written after the
+# Durable codex thread binding: ``sessions.model_config.codex_thread_id`` (niki_state), written after the
 # turn's projected rows were committed, read by the next AIAgent built for the same Niki session so an
 # API-server restart (or the per-request agents of /api/sessions/{id}/chat) resumes the model-side thread
 # instead of starting an empty one while Niki' own transcript continues (#100531).
@@ -544,7 +544,7 @@ def _codex_model_provider(agent) -> str | None:
     never enters the JSON-RPC payload (#75186)."""
     if str(getattr(agent, "provider", "") or "").strip().lower() != "custom":
         return None
-    from hermes_cli.runtime_provider_custom import codex_model_provider_id
+    from niki_cli.runtime_provider_custom import codex_model_provider_id
     return codex_model_provider_id(str(getattr(agent, "requested_provider", "") or ""))
 
 
@@ -556,7 +556,7 @@ def _codex_wire_model(agent, model_provider: str | None) -> str | None:
     from agent.model_metadata import strip_codex_context_variant_suffix
     model = strip_codex_context_variant_suffix(getattr(agent, "model", None)) or None
     if model and model_provider is None:
-        from hermes_cli.model_normalize import normalize_model_for_provider
+        from niki_cli.model_normalize import normalize_model_for_provider
         model = normalize_model_for_provider(model, "openai-codex")
     return model
 
@@ -617,9 +617,9 @@ def _ensure_codex_session(agent, messages: list[dict[str, Any]] | None = None) -
     resume_thread_id = None if getattr(agent, "_codex_session_prompt", None) is not None else _stored_codex_thread_id(agent)
     from agent.runtime_cwd import resolve_agent_cwd
     from agent.transports.codex_app_server_session import CodexAppServerSession, _ServerRequestRouting
-    from hermes_cli.codex_runtime_switch import get_configured_codex_binary
-    from hermes_cli.config import load_config
-    # Approval callback: Niki' standard prompt flow when a CLI thread installed one. `hermes chat -q`, cron and
+    from niki_cli.codex_runtime_switch import get_configured_codex_binary
+    from niki_cli.config import load_config
+    # Approval callback: Niki' standard prompt flow when a CLI thread installed one. `niki chat -q`, cron and
     # unattended platforms can have one registered with nobody to answer it, so they get none and fail closed at once.
     approval_callback = None
     with suppress(Exception):
@@ -628,7 +628,7 @@ def _ensure_codex_session(agent, messages: list[dict[str, Any]] | None = None) -
         if not _no_user_can_answer():
             approval_callback = _get_approval_callback()
     # Gateway/cron have no UI for codex approval requests, so exec/apply_patch fail closed by default. Only an
-    # explicit approval bypass (approvals.mode: off, /yolo, --yolo, HERMES_YOLO_MODE) hands policy to codex's sandbox.
+    # explicit approval bypass (approvals.mode: off, /yolo, --yolo, NIKI_YOLO_MODE) hands policy to codex's sandbox.
     auto_approve_requests = False
     try:
         from tools.approval import is_approval_bypass_active
@@ -1227,7 +1227,7 @@ def run_codex_stream(agent, api_kwargs: dict, client: Any = None, on_first_delta
         return bool(agent._interrupt_requested)
 
     def _open_codex_stream(next_api_kwargs: dict[str, Any]):
-        from hermes_cli.providers import is_actual_route
+        from niki_cli.providers import is_actual_route
 
         if is_actual_route(
             getattr(agent, "provider", ""),

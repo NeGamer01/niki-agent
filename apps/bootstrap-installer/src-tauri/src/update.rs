@@ -26,9 +26,9 @@ use crate::marker::{
 };
 use crate::powershell::{pump_child, DRAIN_GRACE};
 
-/// `hermes update` exit code meaning "another hermes process is holding the
+/// `niki update` exit code meaning "another niki process is holding the
 /// venv shim open / dirty precondition" — see _cmd_update_impl in
-/// hermes_cli/main.py (sys.exit(2)). We surface a targeted message for this.
+/// niki_cli/main.py (sys.exit(2)). We surface a targeted message for this.
 pub(crate) const UPDATE_EXIT_CONCURRENT: i32 = 2;
 
 /// How long to wait for the old desktop process to release files under the
@@ -117,19 +117,19 @@ fn busy_update_message(owner: &MarkerOwner) -> String {
 }
 
 async fn run_update(app: AppHandle) -> Result<()> {
-    let hermes_home = crate::paths::hermes_home();
-    let install_root = hermes_home.join("hermes-agent");
+    let niki_home = crate::paths::niki_home();
+    let install_root = niki_home.join("niki-agent");
 
     // Mutual exclusion (#50238): publish an "update in progress" marker for the
     // entire duration of this update. A desktop instance the user relaunches
     // mid-update consults this before spawning its own local backend — without
-    // it, that backend re-locks the venv shim, our `force_kill_other_hermes`
+    // it, that backend re-locks the venv shim, our `force_kill_other_niki`
     // straggler-cleanup kills it, and the relaunch/kill cycle loops. The guard
     // removes the marker on every exit path (incl. early returns / panics).
     //
-    // The same marker is the cross-process update lock (hermes_cli/
+    // The same marker is the cross-process update lock (niki_cli/
     // update_lock.py claims it too), so a live foreign owner means another
-    // updater — most often a dashboard-spawned `hermes update` — is already
+    // updater — most often a dashboard-spawned `niki update` — is already
     // mutating this checkout. Refuse instead of running a second one over it.
     let _update_marker = match UpdateMarkerGuard::acquire(
         crate::paths::update_in_progress_marker(),
@@ -160,9 +160,9 @@ async fn run_update(app: AppHandle) -> Result<()> {
     };
 
     let legacy_install = !install_root.join("pm").is_dir();
-    let hermes = resolve_hermes(&install_root).await.ok_or_else(|| {
+    let niki = resolve_niki(&install_root).await.ok_or_else(|| {
         let msg = format!(
-            "Could not find the hermes CLI under {}. Is Niki installed? \
+            "Could not find the niki CLI under {}. Is Niki installed? \
              Re-run the installer to repair the install.",
             install_root.display()
         );
@@ -199,9 +199,9 @@ async fn run_update(app: AppHandle) -> Result<()> {
         None,
     );
 
-    // ---- stage 2: hermes update -----------------------------------------
+    // ---- stage 2: niki update -----------------------------------------
     // Update against exactly what the desktop checked against (see
-    // update_target_from_args), never `hermes update`'s own default.
+    // update_target_from_args), never `niki update`'s own default.
     emit_log(
         &app,
         Some("update"),
@@ -219,7 +219,7 @@ async fn run_update(app: AppHandle) -> Result<()> {
     let started = Instant::now();
     let mut update = run_streamed(
         &app,
-        &hermes,
+        &niki,
         &update_args,
         &install_root,
         &child_env,
@@ -227,7 +227,7 @@ async fn run_update(app: AppHandle) -> Result<()> {
     )
     .await?;
 
-    // Retry-once for the update-boundary crash. `hermes update` lazily imports
+    // Retry-once for the update-boundary crash. `niki update` lazily imports
     // the FRESHLY PULLED modules, but the dependency-install step still runs the
     // already-in-memory pre-pull code for one invocation. A release that changed
     // an updater-path contract across that boundary (e.g. #39780's `_UvResult`,
@@ -235,7 +235,7 @@ async fn run_update(app: AppHandle) -> Result<()> {
     // `list2cmdline` with `TypeError: sequence item 1: expected str instance,
     // bool found`, fixed in #39820) therefore kills the FIRST update on the
     // parked population — even though the fix is already on disk by then. A
-    // second `hermes update` runs clean because the now-current module is loaded
+    // second `niki update` runs clean because the now-current module is loaded
     // from the start. Rather than make the parked user click Update twice (and
     // stare at a scary crash first), retry once automatically. Skip the retry
     // for the concurrent-instance guard (exit 2) — that's a "close Niki" state
@@ -250,7 +250,7 @@ async fn run_update(app: AppHandle) -> Result<()> {
         );
         update = run_streamed(
             &app,
-            &hermes,
+            &niki,
             &update_args,
             &install_root,
             &child_env,
@@ -262,7 +262,7 @@ async fn run_update(app: AppHandle) -> Result<()> {
     // Self-owned-marker heal (#75788). Exit 2 means the child refused over a
     // live update marker with a foreign owner. When that "foreign" owner is
     // THIS process, the child simply failed to recognize the handoff — a
-    // checkout predating the HERMES_UPDATE_HANDOFF_PID env fix (8c76fe19f)
+    // checkout predating the NIKI_UPDATE_HANDOFF_PID env fix (8c76fe19f)
     // and the ancestor-pid fallback runs its pre-pull update_lock.py, reads
     // our marker, and exits 2 every time. The refusal loop is unbreakable
     // from the user's side because the update being refused is the one that
@@ -286,7 +286,7 @@ async fn run_update(app: AppHandle) -> Result<()> {
         _update_marker.complete();
         update = run_streamed(
             &app,
-            &hermes,
+            &niki,
             &update_args,
             &install_root,
             &child_env,
@@ -320,9 +320,9 @@ async fn run_update(app: AppHandle) -> Result<()> {
         }
         other => {
             let msg = format!(
-                "hermes update failed (exit {:?}). See {} for details.",
+                "niki update failed (exit {:?}). See {} for details.",
                 other,
-                crate::paths::hermes_home()
+                crate::paths::niki_home()
                     .join("logs")
                     .join("update.log")
                     .display()
@@ -351,7 +351,7 @@ async fn run_update(app: AppHandle) -> Result<()> {
         emit_stage(&app, "rebuild", StageState::Running, None, None);
         let started = Instant::now();
         let rebuild_args: Vec<String> = vec!["desktop".into(), "--build-only".into()];
-        let mut rebuild = run_streamed(&app, &hermes, &rebuild_args, &install_root, &child_env, Some("rebuild")).await?;
+        let mut rebuild = run_streamed(&app, &niki, &rebuild_args, &install_root, &child_env, Some("rebuild")).await?;
 
         // Retry-once: the first `--build-only` can return nonzero on a still-settling
         // post-update tree or a network-blocked Electron fetch that our self-heal
@@ -359,7 +359,7 @@ async fn run_update(app: AppHandle) -> Result<()> {
         // (the content-hash stamp makes it a near-no-op when the first actually
         // succeeded). Without this the updater bails here and never reaches the
         // relaunch below — the app updates but doesn't restart. Matches the
-        // retry-once `hermes update` already does above, and `hermes update`'s own
+        // retry-once `niki update` already does above, and `niki update`'s own
         // desktop rebuild in cmd_update.
         if rebuild_needs_retry(rebuild.exit_code) {
             emit_log(
@@ -371,7 +371,7 @@ async fn run_update(app: AppHandle) -> Result<()> {
             );
             rebuild = run_streamed(
                 &app,
-                &hermes,
+                &niki,
                 &rebuild_args,
                 &install_root,
                 &child_env,
@@ -384,7 +384,7 @@ async fn run_update(app: AppHandle) -> Result<()> {
         if rebuild.exit_code != Some(0) {
             let msg = format!(
                 "Rebuilding the desktop app failed (exit {:?}). The update was \
-                 applied but the app could not be rebuilt; run `hermes desktop` \
+                 applied but the app could not be rebuilt; run `niki desktop` \
                  from a terminal to see the error.",
                 rebuild.exit_code
             );
@@ -472,7 +472,7 @@ async fn run_update(app: AppHandle) -> Result<()> {
             );
         }
     } else if let Err(err) =
-        crate::bootstrap::launch_hermes_desktop(app.clone(), install_root.to_string_lossy().into_owned()).await
+        crate::bootstrap::launch_niki_desktop(app.clone(), install_root.to_string_lossy().into_owned()).await
     {
         // Launch failed: don't hard-fail the update (it succeeded); surface a
         // log line so the success screen can still tell the user to launch
@@ -582,10 +582,10 @@ fn rebuild_needs_retry(exit_code: Option<i32>) -> bool {
 /// is a handful of lines printed right before `sys.exit(2)`.
 const STDOUT_TAIL_LINES: usize = 40;
 
-/// User-facing message for an exit-2 refusal from `hermes update`.
+/// User-facing message for an exit-2 refusal from `niki update`.
 ///
 /// Exit 2 has several causes (another update holds the marker, a live
-/// hermes.exe or venv holder, a self-mapped `.pyd` after the code swap), and
+/// niki.exe or venv holder, a self-mapped `.pyd` after the code swap), and
 /// the child always prints the specific one as a block starting with `✗`
 /// just before exiting. Show that block — it names the real holder/PID — and
 /// fall back to the generic "still running" text only when none was captured
@@ -599,7 +599,7 @@ fn concurrent_update_message(stdout_tail: &[String]) -> String {
     }
 }
 
-/// Spawn `hermes <args>` from `cwd`, stream stdout/stderr as Log events on the
+/// Spawn `niki <args>` from `cwd`, stream stdout/stderr as Log events on the
 /// bootstrap channel, and return the exit code. Mirrors powershell::run_script
 /// but for an arbitrary command (no install.ps1 -File wrapping).
 async fn run_streamed(
@@ -611,9 +611,9 @@ async fn run_streamed(
     stage: Option<&str>,
 ) -> Result<CmdResult> {
     let mut stdout_tail: VecDeque<String> = VecDeque::with_capacity(STDOUT_TAIL_LINES);
-    let current = resolve_hermes(cwd).await.ok_or_else(|| anyhow!("Installation launcher missing under {}", cwd.display()))?;
+    let current = resolve_niki(cwd).await.ok_or_else(|| anyhow!("Installation launcher missing under {}", cwd.display()))?;
     let mut command: Vec<String> = vec![current.to_string_lossy().into_owned()];
-    if current.starts_with(cwd.join(".hermes").join("bin")) {
+    if current.starts_with(cwd.join(".niki").join("bin")) {
         let mut query = Command::new(&current);
         query.arg("--print-runtime-command").current_dir(cwd);
         #[cfg(windows)]
@@ -648,7 +648,7 @@ async fn run_streamed(
         .map_err(|e| anyhow!("spawning {} {:?}: {e}", program.display(), args))?;
 
     // Same non-UTF-8-safe decode path as powershell::run_script (#67193), and
-    // the same rule about pipe EOF: `hermes update` is precisely the shape that
+    // the same rule about pipe EOF: `niki update` is precisely the shape that
     // leaves resident descendants holding an inherited stdout handle, and every
     // stage this drives sits downstream of the read.
     let stage_owned = stage.map(|s| s.to_string());
@@ -692,19 +692,19 @@ struct CmdResult {
 }
 
 /// Resolve only a launcher owned by this installation, never PATH.
-async fn resolve_hermes(install_root: &Path) -> Option<PathBuf> {
-    let names: &[&str] = if cfg!(target_os = "windows") { &["hermes.exe", "hermes.cmd"] } else { &["hermes"] };
+async fn resolve_niki(install_root: &Path) -> Option<PathBuf> {
+    let names: &[&str] = if cfg!(target_os = "windows") { &["niki.exe", "niki.cmd"] } else { &["niki"] };
     for name in names {
-        let launcher = install_root.join(".hermes").join("bin").join(name);
+        let launcher = install_root.join(".niki").join("bin").join(name);
         if launcher.is_file() { return Some(launcher); }
     }
     // Earlier PM publication lived in user-bin only. The CLI's existing
     // version surface proves which source tree that command belongs to.
-    if install_root.join("hermes_cli/_launchers.py").is_file() {
-        let mut directories = vec![crate::paths::hermes_home().join("bin")];
+    if install_root.join("niki_cli/_launchers.py").is_file() {
+        let mut directories = vec![crate::paths::niki_home().join("bin")];
         if let Some(home) = dirs::home_dir() { directories.push(home.join(".local/bin")); }
         if let Some(parent) = install_root.parent() { directories.push(parent.join("bin")); }
-        if let Some(local) = std::env::var_os("LOCALAPPDATA") { directories.push(PathBuf::from(local).join("hermes/bin")); }
+        if let Some(local) = std::env::var_os("LOCALAPPDATA") { directories.push(PathBuf::from(local).join("niki/bin")); }
         for directory in directories {
             for name in names {
                 let candidate = directory.join(name);
@@ -741,12 +741,12 @@ async fn launcher_targets_installation(launcher: &Path, root: &Path) -> bool {
 }
 
 fn update_child_env(install_root: &Path) -> Vec<(String, OsString)> {
-    let hermes_home = crate::paths::hermes_home();
+    let niki_home = crate::paths::niki_home();
     let mut envs = vec![(
-        "HERMES_HOME".to_string(),
-        hermes_home.as_os_str().to_os_string(),
+        "NIKI_HOME".to_string(),
+        niki_home.as_os_str().to_os_string(),
     )];
-    // `hermes update` is a Python CLI writing to a pipe here, so CPython
+    // `niki update` is a Python CLI writing to a pipe here, so CPython
     // block-buffers its stdout: nothing reaches run_streamed (and the live
     // log UI) until 8 KB accumulate or the process exits. Long quiet steps —
     // the pre-update backup can zip multi-GB archives for minutes — render as
@@ -754,21 +754,21 @@ fn update_child_env(install_root: &Path) -> Vec<(String, OsString)> {
     // output instead.
     envs.push(("PYTHONUNBUFFERED".to_string(), OsString::from("1")));
     // We hold the update-in-progress marker for this whole run, and the
-    // `hermes update` child claims that SAME lock (hermes_cli/update_lock.py).
+    // `niki update` child claims that SAME lock (niki_cli/update_lock.py).
     // Name our pid so the child recognizes the live holder as its own
     // orchestrator and runs under our claim — without this every GUI update
     // refuses its parent's marker with exit 2 ("Niki is still running")
     // and no number of retries can ever succeed. Keep the variable name in
-    // sync with HANDOFF_PID_ENV in hermes_cli/update_lock.py.
+    // sync with HANDOFF_PID_ENV in niki_cli/update_lock.py.
     envs.push((
-        "HERMES_UPDATE_HANDOFF_PID".to_string(),
+        "NIKI_UPDATE_HANDOFF_PID".to_string(),
         OsString::from(std::process::id().to_string()),
     ));
-    envs.push(("HERMES_INSTALL_ROOT".to_string(), install_root.as_os_str().to_os_string()));
+    envs.push(("NIKI_INSTALL_ROOT".to_string(), install_root.as_os_str().to_os_string()));
     envs
 }
 
-/// `hermes update`'s target flags: the channel the desktop checked against
+/// `niki update`'s target flags: the channel the desktop checked against
 /// (`--channel`), else a branch (`--branch`, then the build pin
 /// BUILD_PIN_BRANCH, then `main`). A stable install the desktop checked
 /// against its release must not be updated onto the pinned branch: it would
@@ -833,7 +833,7 @@ async fn install_macos_app_update(
         ));
     }
 
-    let rebuilt_app = crate::bootstrap::resolve_hermes_desktop_app(install_root).ok_or_else(|| {
+    let rebuilt_app = crate::bootstrap::resolve_niki_desktop_app(install_root).ok_or_else(|| {
         anyhow!(
             "desktop rebuild succeeded but no Niki.app was found under {}",
             install_root.join("apps").join("desktop").join("release").display()
@@ -871,15 +871,15 @@ async fn install_macos_app_update(
     if let Some(parent) = target_app.parent() {
         tokio::fs::create_dir_all(parent).await?;
     }
-    let tmp = PathBuf::from(format!("{}.hermes-update-new", target_app.display()));
-    let old = PathBuf::from(format!("{}.hermes-update-old", target_app.display()));
+    let tmp = PathBuf::from(format!("{}.niki-update-new", target_app.display()));
+    let old = PathBuf::from(format!("{}.niki-update-old", target_app.display()));
     remove_dir_if_exists(&tmp).await;
     remove_dir_if_exists(&old).await;
 
     let ditto = Command::new("/usr/bin/ditto")
         .arg(&rebuilt_app)
         .arg(&tmp)
-        .current_dir(crate::paths::hermes_home())
+        .current_dir(crate::paths::niki_home())
         .status()
         .await
         .map_err(|e| anyhow!("running ditto: {e}"))?;
@@ -899,7 +899,7 @@ async fn install_macos_app_update(
         .arg("-dr")
         .arg("com.apple.quarantine")
         .arg(target_app)
-        .current_dir(crate::paths::hermes_home())
+        .current_dir(crate::paths::niki_home())
         .status()
         .await;
 
@@ -1065,16 +1065,16 @@ mod tests {
     async fn launcher_resolution_is_installation_bound() {
         let root = unique_tmp_dir("launcher");
         let legacy = root.join("venv").join(if cfg!(windows) { "Scripts" } else { "bin" })
-            .join(if cfg!(windows) { "hermes.exe" } else { "hermes" });
+            .join(if cfg!(windows) { "niki.exe" } else { "niki" });
         std::fs::create_dir_all(legacy.parent().unwrap()).unwrap();
         std::fs::write(&legacy, "old").unwrap();
-        assert_eq!(resolve_hermes(&root).await, Some(legacy));
+        assert_eq!(resolve_niki(&root).await, Some(legacy));
         std::fs::create_dir(root.join("pm")).unwrap();
-        assert_eq!(resolve_hermes(&root).await, None, "PM must never fall back to the old venv");
-        let launcher = root.join(".hermes/bin").join(if cfg!(windows) { "hermes.cmd" } else { "hermes" });
+        assert_eq!(resolve_niki(&root).await, None, "PM must never fall back to the old venv");
+        let launcher = root.join(".niki/bin").join(if cfg!(windows) { "niki.cmd" } else { "niki" });
         std::fs::create_dir_all(launcher.parent().unwrap()).unwrap();
         std::fs::write(&launcher, "new").unwrap();
-        assert_eq!(resolve_hermes(&root).await, Some(launcher));
+        assert_eq!(resolve_niki(&root).await, Some(launcher));
         std::fs::remove_dir_all(root).unwrap();
     }
 
@@ -1085,7 +1085,7 @@ mod tests {
 
     #[test]
     fn update_child_env_forces_unbuffered_python() {
-        let envs = update_child_env(Path::new("/x/hermes-agent"));
+        let envs = update_child_env(Path::new("/x/niki-agent"));
         assert!(
             envs.iter()
                 .any(|(k, v)| k == "PYTHONUNBUFFERED" && v.to_str() == Some("1")),
@@ -1095,18 +1095,18 @@ mod tests {
 
     #[test]
     fn update_child_env_names_our_pid_for_the_lock_handoff() {
-        let envs = update_child_env(Path::new("/x/hermes-agent"));
+        let envs = update_child_env(Path::new("/x/niki-agent"));
         assert!(
-            envs.iter().any(|(k, v)| k == "HERMES_UPDATE_HANDOFF_PID"
+            envs.iter().any(|(k, v)| k == "NIKI_UPDATE_HANDOFF_PID"
                 && v.to_str() == Some(std::process::id().to_string().as_str())),
-            "the hermes update child claims the same marker we hold; without our pid \
+            "the niki update child claims the same marker we hold; without our pid \
              it refuses its own parent's lock and every GUI update dead-ends on exit 2"
         );
     }
 
     #[test]
     fn lock_probe_paths_include_desktop_app_payload() {
-        let root = Path::new("/x/hermes-agent");
+        let root = Path::new("/x/niki-agent");
         let probes = install_lock_probe_paths(root);
 
         assert!(probes.iter().all(|p| p.starts_with(root.join("apps/desktop/release"))),
@@ -1125,7 +1125,7 @@ mod tests {
     #[cfg(target_os = "linux")]
     #[test]
     fn lock_probe_paths_cover_arm64_linux_build() {
-        let root = Path::new("/x/hermes-agent");
+        let root = Path::new("/x/niki-agent");
         let probes = install_lock_probe_paths(root);
 
         for dir in ["linux-unpacked", "linux-arm64-unpacked"] {
@@ -1136,7 +1136,7 @@ mod tests {
 
     #[test]
     fn locked_paths_ignores_missing_payloads() {
-        let root = Path::new("/nonexistent/hermes-agent");
+        let root = Path::new("/nonexistent/niki-agent");
         let probes = install_lock_probe_paths(root);
 
         assert!(locked_paths(&probes).is_empty());
@@ -1154,12 +1154,12 @@ mod tests {
             "→ Fetching updates...\n\
              ✓ Updated to 6b2c23ae42\n\
              ✗ Another Niki update is already running (started 3m 42s ago, process 65285).\n\
-             \n  Wait for it to finish, then run `hermes update` again.\n",
+             \n  Wait for it to finish, then run `niki update` again.\n",
         );
         assert_eq!(
             concurrent_update_message(&tail),
             "✗ Another Niki update is already running (started 3m 42s ago, process 65285).\n\
-             \n  Wait for it to finish, then run `hermes update` again."
+             \n  Wait for it to finish, then run `niki update` again."
         );
     }
 
@@ -1243,7 +1243,7 @@ mod tests {
     // Helpers for the swap tests: make a throwaway dir tree we can rename.
     fn unique_tmp_dir(tag: &str) -> PathBuf {
         let base = std::env::temp_dir().join(format!(
-            "hermes-swap-test-{tag}-{}-{}",
+            "niki-swap-test-{tag}-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -1263,8 +1263,8 @@ mod tests {
     async fn swap_installs_new_bundle_and_cleans_up() {
         let base = unique_tmp_dir("ok");
         let target = base.join("Niki.app");
-        let tmp = base.join("Niki.app.hermes-update-new");
-        let old = base.join("Niki.app.hermes-update-old");
+        let tmp = base.join("Niki.app.niki-update-new");
+        let old = base.join("Niki.app.niki-update-old");
         write_marker(&target, "OLD");
         write_marker(&tmp, "NEW");
 
@@ -1293,8 +1293,8 @@ mod tests {
         //  - `tmp` does not exist       -> rename(tmp, target) fails
         let base = unique_tmp_dir("fail");
         let target = base.join("Niki.app");
-        let tmp = base.join("Niki.app.hermes-update-new"); // intentionally absent
-        let old = base.join("Niki.app.hermes-update-old");
+        let tmp = base.join("Niki.app.niki-update-new"); // intentionally absent
+        let old = base.join("Niki.app.niki-update-old");
         write_marker(&target, "OLD");
         write_marker(&old, "OCCUPIED"); // non-empty => rename(target,old) fails
 
@@ -1316,8 +1316,8 @@ mod tests {
         // absent). The original must be rolled back from `old` to `target`.
         let base = unique_tmp_dir("rollback");
         let target = base.join("Niki.app");
-        let tmp = base.join("Niki.app.hermes-update-new"); // absent
-        let old = base.join("Niki.app.hermes-update-old");
+        let tmp = base.join("Niki.app.niki-update-new"); // absent
+        let old = base.join("Niki.app.niki-update-old");
         write_marker(&target, "OLD");
 
         let result = swap_in_new_bundle(&tmp, &target, &old).await;

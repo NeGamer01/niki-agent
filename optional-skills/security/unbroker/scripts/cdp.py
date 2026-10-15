@@ -37,9 +37,9 @@ def default_profile() -> Path:
     """Dedicated debug profile dir, NOT the operator's Default Chrome profile.
 
     Chrome refuses remote-debugging on a profile that is already open in another Chrome instance,
-    so we isolate the debug session in its own user-data-dir under HERMES_HOME.
+    so we isolate the debug session in its own user-data-dir under NIKI_HOME.
     """
-    return paths.hermes_home() / "chrome-debug"
+    return paths.niki_home() / "chrome-debug"
 
 
 def _mac_candidates() -> list[str]:

@@ -6,7 +6,7 @@ author: agiwhitelist (https://github.com/agiwhitelist, upstream agiwhitelist/aut
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  niki:
     tags: [web-design, cinematic, scroll-animation, design-system, anti-slop, frontend]
     category: creative
     related_skills: [popular-web-designs, design-md, p5js]

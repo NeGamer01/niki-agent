@@ -2,7 +2,7 @@
 
 All packagers (Docker, Nix, desktop) call this script to produce the same
 ``install-stamp.json`` file. Runtime surfaces (CLI, TUI, desktop) read the
-stamp through ``hermes_cli.version_info`` — no env vars, no separate
+stamp through ``niki_cli.version_info`` — no env vars, no separate
 docker/nix code paths.
 
 Usage::
@@ -35,19 +35,19 @@ from datetime import datetime, timezone, UTC
 from pathlib import Path
 
 # Bootstrap the repo root onto sys.path so the canary tag shape can come
-# from hermes_cli.update_channel — the single authority — instead of a
-# re-typed regex (hermes_cli/__init__.py is import-light).
+# from niki_cli.update_channel — the single authority — instead of a
+# re-typed regex (niki_cli/__init__.py is import-light).
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from hermes_cli import update_channel
-from hermes_cli.steward import UPDATE_MECHANISMS
+from niki_cli import update_channel
+from niki_cli.steward import UPDATE_MECHANISMS
 
 STAMP_SCHEMA_VERSION = 2
 _REPO_ROOT = Path(__file__).parent.parent.resolve()
 
 # Who applies the next update to the tree this stamp describes. REQUIRED —
 # stamp readers hard-fail a stamp without it.
-#   self             — `hermes update` owns the tree (installer-created
+#   self             — `niki update` owns the tree (installer-created
 #                      source checkouts).
 #   electron-updater — the in-app updater replaces the artifact (NSIS,
 #                      mac .app, AppImage).
@@ -133,7 +133,7 @@ def build_stamp(
     where the pm store (the managed tool bytes) lives. A sealed desktop-app
     payload stages its runtime dir as a sibling of ``repo/`` (the install
     root), so the value is ``..``. The Python boot path reads this instead
-    of deriving ``<install_root>/.hermes-runtime``, which is wrong for that
+    of deriving ``<install_root>/.niki-runtime``, which is wrong for that
     layout: the runtime dir is the payload dir, not a child of the install
     root. ``..`` keeps it relocatable — an absolute path would break under
     MSIX translocation.
@@ -148,9 +148,9 @@ def build_stamp(
     if channel_request is not None:
         from scripts.bundles.desktop_prepare import git, require_source, validate_channel_request
         channel_request = validate_channel_request(channel_request)
-        if os.environ.get("HERMES_BUILD_COMMIT") or os.environ.get("HERMES_PAYLOAD_TAG"):
+        if os.environ.get("NIKI_BUILD_COMMIT") or os.environ.get("NIKI_PAYLOAD_TAG"):
             raise ValueError("channel request conflicts with commit-build or tag identity")
-        if os.environ.get("HERMES_DESKTOP_VARIANT") != "bundled" or update_mechanism not in {"electron-updater", "app-installer"}:
+        if os.environ.get("NIKI_DESKTOP_VARIANT") != "bundled" or update_mechanism not in {"electron-updater", "app-installer"}:
             raise ValueError("channel builds require a bundled native update owner")
         if _run_git("rev-parse", "HEAD", cwd=_REPO_ROOT) != channel_request["commit"] or commit not in (None, channel_request["commit"]):
             raise ValueError("channel build identity does not match checkout HEAD")
@@ -159,12 +159,12 @@ def build_stamp(
         dirty, distance = False, 0
         commit_date = int(git(_REPO_ROOT, "log", "-1", "--format=%ct", "HEAD"))
 
-    commit_build = os.environ.get("HERMES_BUILD_COMMIT")
+    commit_build = os.environ.get("NIKI_BUILD_COMMIT")
     if commit_build:
         from scripts.releases.commit_build import require_commit
 
         require_commit(commit_build)
-        if os.environ.get("HERMES_PAYLOAD_TAG"):
+        if os.environ.get("NIKI_PAYLOAD_TAG"):
             raise ValueError("Commit builds cannot also select a release tag")
         if _resolve_commit_from_git() != commit_build or commit not in (None, commit_build):
             raise ValueError("Commit build identity does not match the checkout HEAD")
@@ -215,7 +215,7 @@ def build_stamp(
             display_version = f"{display_version}+?"
 
     # The desktop artifact kind, from the one build-time selector
-    # HERMES_DESKTOP_VARIANT. Every stamp carries it:
+    # NIKI_DESKTOP_VARIANT. Every stamp carries it:
     #   bootstrap — no runtime in the artifact; first launch bootstraps a
     #               local install. The default (variable unset/empty; also
     #               the value for non-desktop stamps, where it is inert).
@@ -233,22 +233,22 @@ def build_stamp(
     #               enclosing desktop app (bundled_app.resolve_bundle_layout)
     #               and a tree without one is damage to them.
     # Release artifacts pin a tag. Commit builds never enter an update channel.
-    variant = os.environ.get("HERMES_DESKTOP_VARIANT", "").strip()
+    variant = os.environ.get("NIKI_DESKTOP_VARIANT", "").strip()
     if variant not in ("", "bootstrap", "bundled", "light", "store", "runtime"):
         raise SystemExit(
-            f"write_install_stamp: unknown HERMES_DESKTOP_VARIANT {variant!r} "
+            f"write_install_stamp: unknown NIKI_DESKTOP_VARIANT {variant!r} "
             "(expected unset, 'bootstrap', 'bundled', 'light', 'store', or 'runtime')"
         )
     payload = "bundled" if variant == "store" else (variant or "bootstrap")
-    tag = os.environ.get("HERMES_PAYLOAD_TAG") or None
+    tag = os.environ.get("NIKI_PAYLOAD_TAG") or None
 
     _stable_tag = re.compile(r"^v(0|[1-9]\d{0,2})\.\d+\.\d+$")
     if payload != "bootstrap" and not commit_build and channel_request is None and not (
         tag and (_stable_tag.match(tag) or update_channel.is_canary_tag(tag))
     ):
         raise SystemExit(
-            f"write_install_stamp: HERMES_DESKTOP_VARIANT={payload} requires "
-            f"HERMES_PAYLOAD_TAG=vX.Y.Z or vX.Y.Z+canary.YYYYMMDDTHHMMSSZ (got {tag!r})"
+            f"write_install_stamp: NIKI_DESKTOP_VARIANT={payload} requires "
+            f"NIKI_PAYLOAD_TAG=vX.Y.Z or vX.Y.Z+canary.YYYYMMDDTHHMMSSZ (got {tag!r})"
         )
 
     stamp = {
@@ -305,7 +305,7 @@ def main() -> int:
         "--update-mechanism",
         required=True,
         choices=UPDATE_MECHANISMS,
-        help="Who applies the next update: 'self' (hermes update), "
+        help="Who applies the next update: 'self' (niki update), "
         "'app-installer' (Windows App Installer), 'electron-updater' (in-app updater), "
         "'external' (nix/docker/store)",
     )

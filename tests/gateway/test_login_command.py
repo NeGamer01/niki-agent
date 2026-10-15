@@ -10,8 +10,8 @@ import pytest
 from gateway.config import GatewayConfig, Platform, PlatformConfig
 from gateway.run import GatewayRunner
 from gateway.session import AsyncSessionStore, SessionSource, SessionStore
-from hermes_cli import anon_auth
-from hermes_cli.commands import resolve_command
+from niki_cli import anon_auth
+from niki_cli.commands import resolve_command
 
 
 def _source(*, chat_type="dm", chat_id="chat-1", user_id="user-1", platform=Platform.TELEGRAM):
@@ -310,7 +310,7 @@ async def test_a_replacement_reaches_a_poll_running_on_the_private_executor(monk
 @pytest.mark.asyncio
 async def test_a_completion_evicts_welcome_and_clears_its_override(monkeypatch):
     runner = _runner(monkeypatch)
-    agent = SimpleNamespace(provider="nous", model=anon_auth.GUEST_MODEL)
+    agent = SimpleNamespace(provider="niki", model=anon_auth.GUEST_MODEL)
     runner._agent_cache = {"k1": (agent, "signature")}
     runner._session_model_overrides["k1"] = {"model": anon_auth.GUEST_MODEL}
 
@@ -325,12 +325,12 @@ async def test_a_completion_evicts_welcome_and_clears_its_override(monkeypatch):
 
 
 def _durable_sweep_runner(monkeypatch, tmp_path):
-    import hermes_state
+    import niki_state
 
     def no_sqlite(**_kwargs):
         raise RuntimeError("Exercise sessions.json persistence")
 
-    monkeypatch.setattr(hermes_state, "SessionDB", no_sqlite)
+    monkeypatch.setattr(niki_state, "SessionDB", no_sqlite)
     runner = _runner(monkeypatch)
     store = SessionStore(sessions_dir=tmp_path, config=runner.config)
     key = store.get_or_create_session(_source()).session_key
@@ -340,7 +340,7 @@ def _durable_sweep_runner(monkeypatch, tmp_path):
     runner._async_session_store = AsyncSessionStore(store)
     runner._session_model_overrides[key] = dict(override)
     runner._agent_cache[key] = (
-        SimpleNamespace(provider="nous", model=anon_auth.GUEST_MODEL), "signature")
+        SimpleNamespace(provider="niki", model=anon_auth.GUEST_MODEL), "signature")
     return runner, store, key, override
 
 
@@ -415,7 +415,7 @@ async def test_durable_clear_fails_twice_keeps_override_and_warns(monkeypatch, t
 async def test_the_sweep_leaves_sessions_on_other_models_alone(monkeypatch):
     runner = _runner(monkeypatch)
     runner._agent_cache = {
-        "k1": (SimpleNamespace(provider="nous", model=anon_auth.GUEST_MODEL), "signature"),
+        "k1": (SimpleNamespace(provider="niki", model=anon_auth.GUEST_MODEL), "signature"),
         "k2": (SimpleNamespace(provider="openrouter", model="openrouter/x"), "signature"),
     }
     runner._session_model_overrides["k2"] = {"model": "openrouter/x"}
@@ -434,7 +434,7 @@ async def test_the_sweep_leaves_sessions_on_other_models_alone(monkeypatch):
 async def test_the_sweep_is_skipped_when_the_model_did_not_change(monkeypatch):
     runner = _runner(monkeypatch)
     runner._agent_cache = {
-        "k1": (SimpleNamespace(provider="nous", model=anon_auth.GUEST_MODEL), "signature")}
+        "k1": (SimpleNamespace(provider="niki", model=anon_auth.GUEST_MODEL), "signature")}
 
     await runner._render_login_state(
         SimpleNamespace(source=_source(), attempt_id="attempt"),
@@ -463,7 +463,7 @@ async def test_a_failing_sweep_still_pushes_the_completion(monkeypatch, caplog):
     runner = _runner(monkeypatch)
     runner._evict_cached_agent = MagicMock(side_effect=RuntimeError("boom"))
     runner._agent_cache = {
-        "k1": (SimpleNamespace(provider="nous", model=anon_auth.GUEST_MODEL), "signature")}
+        "k1": (SimpleNamespace(provider="niki", model=anon_auth.GUEST_MODEL), "signature")}
     attempt = SimpleNamespace(source=_source(), attempt_id="attempt")
     state = anon_auth.Completed(email="person@example.test", model="model-1", model_changed=True)
 

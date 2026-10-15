@@ -222,8 +222,8 @@ def _spawn_bash_ls(root: str, ctx: ServerContext) -> Optional[SpawnSpec]:
 
 
 _VUE_REINSTALL = (
-    "delete <HERMES_HOME>/lsp/node_modules/@vue and <HERMES_HOME>/lsp/bin/vue-language-server*, "
-    "then run: hermes lsp install vue-language-server"
+    "delete <NIKI_HOME>/lsp/node_modules/@vue and <NIKI_HOME>/lsp/bin/vue-language-server*, "
+    "then run: niki lsp install vue-language-server"
 )
 _VUE_TUNNEL_MSG = (
     "vue-language-server: the installed @vue/language-server is 3.x, which only works behind a client-hosted "
@@ -239,8 +239,8 @@ def _node_modules_trees(bin_path: str, root: Optional[str]) -> list[str]:
     """``node_modules`` trees that may hold a server and its TypeScript SDK: the launcher's own tree
     (symlinks resolved), Niki staging, then the project's (``root`` None: Niki's trees only, for
     TypeScript's SDK pin in an untrusted workspace, whose own JavaScript must not load)."""
-    from agent.lsp.install import hermes_lsp_bin_dir
-    trees = [str(hermes_lsp_bin_dir().parent / "node_modules")] + ([os.path.join(root, "node_modules")] if root else [])
+    from agent.lsp.install import niki_lsp_bin_dir
+    trees = [str(niki_lsp_bin_dir().parent / "node_modules")] + ([os.path.join(root, "node_modules")] if root else [])
     real = os.path.realpath(bin_path)
     marker = f"{os.sep}node_modules{os.sep}"
     if (idx := real.rfind(marker)) >= 0:
@@ -285,7 +285,7 @@ def _spawn_vue(root: str, ctx: ServerContext) -> Optional[SpawnSpec]:
 
 _TS_UNTRUSTED_MSG = (
     "typescript-language-server: no TypeScript SDK next to the server, and this workspace is untrusted so its "
-    "own node_modules/typescript is not loaded — diagnostics are skipped. Reinstall: hermes lsp install "
+    "own node_modules/typescript is not loaded — diagnostics are skipped. Reinstall: niki lsp install "
     "typescript-language-server, or list the workspace under lsp.trusted_workspaces."
 )
 
@@ -309,15 +309,15 @@ def _spawn_typescript(root: str, ctx: ServerContext) -> Optional[SpawnSpec]:
 def _find_pses_bundle(ctx: ServerContext) -> Optional[str]:
     """Locate the PowerShellEditorServices bundle dir (release zip, manual install).  Resolution order:
     ``lsp.servers.powershell.command[0]`` when a directory, ``init_overrides["powershell"]["bundlePath"]``,
-    ``PSES_BUNDLE_PATH`` env, then ``<HERMES_HOME>/lsp/PowerShellEditorServices``."""
-    from hermes_constants import get_hermes_home
+    ``PSES_BUNDLE_PATH`` env, then ``<NIKI_HOME>/lsp/PowerShellEditorServices``."""
+    from niki_constants import get_niki_home
     override = ctx.binary_overrides.get("powershell")
     init = ctx.init_overrides.get("powershell", {})
     candidates = [
         override[0] if override else None,
         str(init["bundlePath"]) if isinstance(init, dict) and init.get("bundlePath") else None,
         os.environ.get("PSES_BUNDLE_PATH"),
-        os.path.join(str(get_hermes_home()), "lsp", "PowerShellEditorServices"),
+        os.path.join(str(get_niki_home()), "lsp", "PowerShellEditorServices"),
     ]
     for cand in filter(None, candidates):
         # Accept either the bundle root or the inner module dir.
@@ -331,7 +331,7 @@ def _find_pses_bundle(ctx: ServerContext) -> Optional[str]:
 _PSES_MISSING_MSG = (
     "powershell: pwsh found but the PowerShellEditorServices bundle is missing. Download the release zip from "
     "https://github.com/PowerShell/PowerShellEditorServices/releases, extract it, and either set "
-    "lsp.servers.powershell.command to the bundle path or unzip it to <HERMES_HOME>/lsp/PowerShellEditorServices."
+    "lsp.servers.powershell.command to the bundle path or unzip it to <NIKI_HOME>/lsp/PowerShellEditorServices."
 )
 
 
@@ -346,13 +346,13 @@ def _spawn_powershell_es(root: str, ctx: ServerContext) -> Optional[SpawnSpec]:
         return None
     start_script = os.path.join(bundle, "PowerShellEditorServices", "Start-EditorServices.ps1")
     # PSES writes connection info to the session details file on startup.
-    session_dir = hermes_lsp_session_dir()
+    session_dir = niki_lsp_session_dir()
     inner = (
         f"& '{start_script}' -BundledModulesPath '{bundle}' "
         f"-LogPath '{os.path.join(session_dir, 'pses.log')}' "
         f"-SessionDetailsPath '{os.path.join(session_dir, f'pses-session-{os.getpid()}.json')}' "
         f"-FeatureFlags @() -AdditionalModules @() "
-        f"-HostName Niki -HostProfileId hermes -HostVersion 1.0.0 -Stdio -LogLevel Normal"
+        f"-HostName Niki -HostProfileId niki -HostVersion 1.0.0 -Stdio -LogLevel Normal"
     )
     return SpawnSpec(
         [pwsh, "-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", inner],
@@ -361,10 +361,10 @@ def _spawn_powershell_es(root: str, ctx: ServerContext) -> Optional[SpawnSpec]:
     )
 
 
-def hermes_lsp_session_dir() -> str:
+def niki_lsp_session_dir() -> str:
     """Return (and create) the dir for PSES session/log scratch files."""
-    from hermes_constants import get_hermes_home
-    d = os.path.join(str(get_hermes_home()), "lsp", "pses")
+    from niki_constants import get_niki_home
+    d = os.path.join(str(get_niki_home()), "lsp", "pses")
     os.makedirs(d, exist_ok=True)
     return d
 

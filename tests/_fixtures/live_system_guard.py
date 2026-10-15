@@ -17,10 +17,10 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 # (``cmd_update``, ``kill_gateway_processes``, ``stop_profile_gateway``).
 # When a single test forgets to mock either ``os.kill`` or the global
 # ``find_gateway_pids`` helper, the real call leaks out of the hermetic
-# environment and finds the developer's live ``hermes-gateway`` process
+# environment and finds the developer's live ``niki-gateway`` process
 # via ``psutil`` — sending it SIGTERM mid-test. The shutdown forensics in
 # PR #23285 caught this happening 5+ times in 3 days, every time
-# correlated with a ``tests/hermes_cli/`` pytest run starting up.
+# correlated with a ``tests/niki_cli/`` pytest run starting up.
 #
 # This fixture makes the leak impossible by intercepting the two
 # primitives that actually do damage:
@@ -30,9 +30,9 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 #    instead of silently murdering the real gateway.
 #  • ``subprocess.run`` / ``subprocess.Popen`` / ``call`` / ``check_call`` /
 #    ``check_output`` reject any ``systemctl ... <verb> <unit>`` invocation
-#    that would mutate ANY live Niki unit — ``hermes-gateway[-<profile>]``,
-#    ``hermes-dashboard[-<profile>]``, ``hermes-serve[-<profile>]`` and every
-#    other ``hermes``/``hermes-*`` unit. Read-only systemctl calls
+#    that would mutate ANY live Niki unit — ``niki-gateway[-<profile>]``,
+#    ``niki-dashboard[-<profile>]``, ``niki-serve[-<profile>]`` and every
+#    other ``niki``/``niki-*`` unit. Read-only systemctl calls
 #    (``status``, ``show``, ``list-units``, ``is-active``) still pass through.
 #
 # We intentionally do NOT stub ``find_gateway_pids`` / ``_scan_gateway_pids``
@@ -66,12 +66,12 @@ def _live_system_guard(request, monkeypatch):
       • pty.spawn
       • asyncio.create_subprocess_exec / create_subprocess_shell
     A mutating systemctl verb is refused against every Niki unit
-    (``hermes``/``hermes-*``: gateway, dashboard, serve, any profile).
+    (``niki``/``niki-*``: gateway, dashboard, serve, any profile).
     Subprocess inspection looks at the WHOLE command string (not just
-    tokens[0]), so ``bash -c "systemctl restart hermes-dashboard"``,
+    tokens[0]), so ``bash -c "systemctl restart niki-dashboard"``,
     ``sudo systemctl ...``, ``env systemctl ...``, ``setsid systemctl ...``
     are all caught. ``pkill``/``killall``/``taskkill`` invocations
-    targeting hermes/python patterns are also blocked. Bare ``git``
+    targeting niki/python patterns are also blocked. Bare ``git``
     commands may not mutate a protected checkout. Git writes against
     temporary repositories and read-only Git commands remain allowed.
     """
@@ -173,13 +173,13 @@ def _live_system_guard(request, monkeypatch):
         monkeypatch.setattr(_os, "killpg", _guarded_killpg)
 
     # ── Subprocess command-string inspection (whole-line) ──────────
-    _HERMES_TOKENS = (
-        "hermes-gateway",
-        "hermes.service",
-        "hermes_cli.main gateway",
-        "hermes_cli/main.py gateway",
+    _NIKI_TOKENS = (
+        "niki-gateway",
+        "niki.service",
+        "niki_cli.main gateway",
+        "niki_cli/main.py gateway",
         "gateway/run.py",
-        "hermes gateway",
+        "niki gateway",
     )
     _MUTATING_VERBS = (
         "restart", "start", "stop", "kill", "reload",
@@ -219,13 +219,13 @@ def _live_system_guard(request, monkeypatch):
                 return ""
         return str(cmd)
 
-    def _matches_hermes_gateway(cmd_str: str) -> bool:
+    def _matches_niki_gateway(cmd_str: str) -> bool:
         low = cmd_str.lower()
-        return any(tok in low for tok in _HERMES_TOKENS)
+        return any(tok in low for tok in _NIKI_TOKENS)
 
     def _shell_words(cmd_str: str, depth: int = 0) -> set[str]:
         # Split on whitespace AND quoting/shell punctuation so a unit or verb
-        # inside ``bash -c "systemctl restart hermes-dashboard"`` is still a word,
+        # inside ``bash -c "systemctl restart niki-dashboard"`` is still a word,
         # and keep the shell's own reading too: ``rest\\art`` runs ``restart``.
         words: set[str] = set()
         for w in _re.split(r"[\s'\"`;&|()<>]+", cmd_str):
@@ -241,14 +241,14 @@ def _live_system_guard(request, monkeypatch):
                 words |= _shell_words(token, depth + 1)  # a ``bash -c`` payload
         return words
 
-    def _is_hermes_unit(word: str) -> bool:
-        # ``hermes`` / ``hermes-<anything>`` once any path and unit suffix are
-        # stripped: hermes-gateway[-<profile>], hermes-dashboard[-<profile>],
-        # hermes-serve[-<profile>], ... — never ``myhermes-dashboard`` or ``nginx``.
+    def _is_niki_unit(word: str) -> bool:
+        # ``niki`` / ``niki-<anything>`` once any path and unit suffix are
+        # stripped: niki-gateway[-<profile>], niki-dashboard[-<profile>],
+        # niki-serve[-<profile>], ... — never ``myniki-dashboard`` or ``nginx``.
         name = word.rsplit("/", 1)[-1].lower()
         for suffix in (".service", ".timer", ".socket"):
             name = name.removesuffix(suffix)
-        return name == "hermes" or name.startswith("hermes-")
+        return name == "niki" or name.startswith("niki-")
 
     def _is_blocked_systemctl(cmd) -> bool:
         cmd_str = _cmd_to_string(cmd)
@@ -258,8 +258,8 @@ def _live_system_guard(request, monkeypatch):
         # A unit the test itself created under a unique name (``request.node.
         # live_system_guard_owned_units``) may be cleaned up; nothing else is exempt.
         owned = getattr(request.node, "live_system_guard_owned_units", ())
-        if not (_matches_hermes_gateway(cmd_str)
-                or any(_is_hermes_unit(w) and w not in owned for w in words)):
+        if not (_matches_niki_gateway(cmd_str)
+                or any(_is_niki_unit(w) and w not in owned for w in words)):
             return False
         return any(verb in words for verb in _MUTATING_VERBS)
 
@@ -285,11 +285,11 @@ def _live_system_guard(request, monkeypatch):
             head = tok.rsplit("/", 1)[-1].rsplit("\\", 1)[-1]
             if head in _PROCESS_KILLERS:
                 low = cmd_str.lower()
-                # pkill -f pattern: catch hermes-themed patterns + a
+                # pkill -f pattern: catch niki-themed patterns + a
                 # plain "python" -f which would catch the live gateway
-                # whose cmdline contains "python -m hermes_cli.main".
+                # whose cmdline contains "python -m niki_cli.main".
                 if (
-                    "hermes" in low
+                    "niki" in low
                     or "gateway" in low
                     or ("python" in low and "-f" in tokens)
                 ):
@@ -301,9 +301,9 @@ def _live_system_guard(request, monkeypatch):
     def _sandboxed_gateway_child(cmd_str: str, env) -> bool:
         """The disposable-daemon fixtures (``tests/gateway/fixtures/*``, the socket-path-length
         probes) launch the bare ``python -m gateway.run`` module entry with an explicit ``env``
-        that re-homes BOTH ``HERMES_HOME`` and ``HOME`` away from the developer's account. Such a
+        that re-homes BOTH ``NIKI_HOME`` and ``HOME`` away from the developer's account. Such a
         child resolves no developer unit or config, holds no live port, and is reaped by its
-        test: the orphan class the guard exists for is the ``hermes gateway run|start|restart``
+        test: the orphan class the guard exists for is the ``niki gateway run|start|restart``
         CLI spawn against the real home, which the fixtures never use."""
         if not isinstance(env, dict):
             return False
@@ -313,8 +313,8 @@ def _live_system_guard(request, monkeypatch):
             tokens = cmd_str.split()
         if "-m" not in tokens or tokens[tokens.index("-m") + 1:][:1] != ["gateway.run"]:
             return False
-        hermes_home, home = env.get("HERMES_HOME"), env.get("HOME")
-        if not hermes_home or not home:
+        niki_home, home = env.get("NIKI_HOME"), env.get("HOME")
+        if not niki_home or not home:
             return False
         # The developer's account home from the passwd db: tests re-point ``Path.home`` at their
         # tmp user dir, which would make a sandboxed child look like it runs against the real one.
@@ -323,13 +323,13 @@ def _live_system_guard(request, monkeypatch):
             real_home = Path(pwd.getpwuid(_os.getuid()).pw_dir).resolve()
         except (ImportError, KeyError):
             real_home = Path.home().resolve()
-        # The child must not resolve the REAL Niki root. Comparing HERMES_HOME against the whole
+        # The child must not resolve the REAL Niki root. Comparing NIKI_HOME against the whole
         # account home refused every Windows sandbox: %TEMP% lives under %USERPROFILE%.
-        from hermes_state_guard import _real_platform_state_root
-        real_root = _real_platform_state_root() or real_home / ".hermes"
+        from niki_state_guard import _real_platform_state_root
+        real_root = _real_platform_state_root() or real_home / ".niki"
         try:
             return (Path(home).resolve() != real_home
-                    and not Path(hermes_home).resolve().is_relative_to(real_root))
+                    and not Path(niki_home).resolve().is_relative_to(real_root))
         except Exception:
             return False
 
@@ -346,8 +346,8 @@ def _live_system_guard(request, monkeypatch):
             raise RuntimeError(
                 f"tests/conftest.py live-system guard: blocked "
                 f"subprocess.{name}({cmd!r}) — would mutate a live "
-                "Niki systemd unit (hermes-gateway*, hermes-dashboard*, "
-                "hermes-serve*, ...). Mock "
+                "Niki systemd unit (niki-gateway*, niki-dashboard*, "
+                "niki-serve*, ...). Mock "
                 "subprocess.run / _run_systemctl in the test, or "
                 "mark with @pytest.mark.live_system_guard_bypass."
             )
@@ -355,12 +355,12 @@ def _live_system_guard(request, monkeypatch):
             raise RuntimeError(
                 f"tests/conftest.py live-system guard: blocked "
                 f"subprocess.{name}({cmd!r}) — process-killer command "
-                "targeting hermes/python could hit the live gateway. "
+                "targeting niki/python could hit the live gateway. "
                 "Mark with @pytest.mark.live_system_guard_bypass if "
                 "intentional."
             )
-        # Block any subprocess that would run `hermes update` (or the
-        # equivalent `python -m hermes_cli.main update`).  These commands
+        # Block any subprocess that would run `niki update` (or the
+        # equivalent `python -m niki_cli.main update`).  These commands
         # run `git fetch origin + git pull` against the REAL checkout,
         # overwriting files like pyproject.toml mid-test-run and corrupting
         # every subsequent subprocess that reads them.  The corruption is
@@ -372,19 +372,19 @@ def _live_system_guard(request, monkeypatch):
         cmd_str = _cmd_to_string(cmd)
         low = cmd_str.lower()
         if "update" in low and (
-            # hermes update / hermes update --gateway / setsid bash -c ... hermes update
-            ("hermes" in low and "update" in low.split())
+            # niki update / niki update --gateway / setsid bash -c ... niki update
+            ("niki" in low and "update" in low.split())
             or
-            # python -m hermes_cli.main update --gateway
-            ("hermes_cli" in low and "update" in low.split())
+            # python -m niki_cli.main update --gateway
+            ("niki_cli" in low and "update" in low.split())
             or
-            # venv/bin/hermes update  (absolute path variant used in tests)
-            (".venv/bin/hermes" in low and "update" in low)
+            # venv/bin/niki update  (absolute path variant used in tests)
+            (".venv/bin/niki" in low and "update" in low)
         ):
             raise RuntimeError(
                 f"tests/conftest.py live-system guard: blocked "
                 f"subprocess.{name}({cmd!r}) — this command would run "
-                "`hermes update` against the real checkout, fetching "
+                "`niki update` against the real checkout, fetching "
                 "from origin and overwriting repo files (e.g. "
                 "pyproject.toml) mid-test-run. This corrupts every "
                 "subsequent subprocess in the same runner. "
@@ -394,17 +394,17 @@ def _live_system_guard(request, monkeypatch):
                 "needed (e.g. an integration test testing the update "
                 "flow against a dedicated throwaway repo)."
             )
-        # Block spawning a REAL gateway runtime (``python -m hermes_cli.main
-        # gateway run|start|restart``). ``_spawn_hermes_action`` launches it
+        # Block spawning a REAL gateway runtime (``python -m niki_cli.main
+        # gateway run|start|restart``). ``_spawn_niki_action`` launches it
         # with start_new_session=True, so it outlives the pytest worker; the
-        # child inherits the pytest-tmp HERMES_HOME, resolves the DEVELOPER's
-        # ``hermes-gateway`` systemd unit (a tmp home hashes to no profile
+        # child inherits the pytest-tmp NIKI_HOME, resolves the DEVELOPER's
+        # ``niki-gateway`` systemd unit (a tmp home hashes to no profile
         # suffix), restarts the live gateway, and the survivors squat the
         # webhook port. 2026-09-03: 39 such orphans lived 6 days after a
         # sibling refactor moved the spawn seam and left tests patching the
         # facade. The canonical matcher, never an argv substring.
         from gateway.status import gateway_spawn_intent_subcommand
-        # A gateway launched INSIDE a container (`docker exec … hermes gateway start`) cannot
+        # A gateway launched INSIDE a container (`docker exec … niki gateway start`) cannot
         # reach the host's systemd unit or webhook port; tests/docker/ exists to exercise it.
         in_container = _first_token_basename(cmd_str) in _CONTAINER_RUNTIMES
         if (
@@ -416,11 +416,11 @@ def _live_system_guard(request, monkeypatch):
             raise RuntimeError(
                 f"tests/conftest.py live-system guard: blocked "
                 f"subprocess.{name}({cmd!r}) — this would spawn a REAL "
-                "hermes gateway runtime that outlives the test (it is "
+                "niki gateway runtime that outlives the test (it is "
                 "detached), restarts the developer's live gateway, and "
                 "holds the webhook port. Patch the spawn seam where "
-                "production reads it (hermes_cli.web_server_gateway."
-                "_spawn_hermes_action), or mark with "
+                "production reads it (niki_cli.web_server_gateway."
+                "_spawn_niki_action), or mark with "
                 "@pytest.mark.spawns_gateway_lookalike a test that spawns "
                 "and reaps its own stub child."
             )

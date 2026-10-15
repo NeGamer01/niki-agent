@@ -47,7 +47,7 @@ Three tools, picked by situation:
 
 - A test fails and the traceback doesn't reveal why a value is wrong
 - You need to step through a function and watch a collection mutate
-- A long-running process (hermes gateway, tui_gateway) misbehaves and you can't restart it
+- A long-running process (niki gateway, tui_gateway) misbehaves and you can't restart it
 - Post-mortem: an exception fired in prod-ish code and you want to inspect locals at the crash site
 - A subprocess / child (Python `_SlashWorker`, PTY bridge worker) is the actual bug site
 
@@ -164,7 +164,7 @@ For long-lived processes: Niki gateway, tui_gateway, a daemon, a process that's 
 
 For Niki, use a separate development checkout and data home, not a live
 production generation. Follow the
-[PM developer workflow](https://hermes-agent.nousresearch.com/docs/reference/package-management#developer-workflow)
+[PM developer workflow](https://github.com/NeGamer01/niki-agent/docs/reference/package-management#developer-workflow)
 and activate that checkout — PowerShell: `. .\activate.ps1`. The declared `dev`
 extra includes debugpy, which PM activation does not sync (`all` excludes it).
 Through `terminal`, build a fresh, caller-owned debug/test environment with the
@@ -178,7 +178,7 @@ python -m pm.build_env --source . --out .venv --group dev --group test
 
 The output must not already exist. Stop its processes and intentionally remove
 only that disposable environment before rebuilding. Keep the same isolated
-`HERMES_HOME` for the debug target. `.venv/bin/python` is this explicitly built
+`NIKI_HOME` for the debug target. `.venv/bin/python` is this explicitly built
 debug environment, not a guessed application venv, and the patterns below run
 through it. Do not add debugpy to a running production environment; reproduce
 there only with an already-prepared debug target or arrange a restart in the
@@ -231,7 +231,7 @@ The easiest terminal-side DAP client is VS Code CLI or a small script. From insi
 **Option 1: `debugpy`'s own CLI REPL** — not an official feature, but a tiny DAP client script:
 
 ```python
-# ~/.hermes/cache/scratch/dap_client.py
+# ~/.niki/cache/scratch/dap_client.py
 import socket, json, itertools, time, sys
 
 HOST, PORT = "127.0.0.1", 5678
@@ -277,7 +277,7 @@ This is fine for one-off automation but painful as an interactive UX.
   "connect": { "host": "127.0.0.1", "port": 5678 },
   "justMyCode": false,
   "pathMappings": [
-    { "localRoot": "${workspaceFolder}", "remoteRoot": "<hermes-agent-repo>" }
+    { "localRoot": "${workspaceFolder}", "remoteRoot": "<niki-agent-repo>" }
   ]
 }
 ```
@@ -312,9 +312,9 @@ See Recipe 3. The wrapper captures subprocess output, so run pytest directly for
 
 ### `run_agent.py` / CLI — one-shot
 In the prepared debug checkout, add `breakpoint()` near the suspect line, then
-run `python hermes`. Control returns to your terminal at the pause point.
+run `python niki`. Control returns to your terminal at the pause point.
 
-### `tui_gateway` subprocess (spawned by `hermes --tui`)
+### `tui_gateway` subprocess (spawned by `niki --tui`)
 The gateway runs as a child of the Node TUI. Options:
 
 **A. Source-edit the gateway:**
@@ -324,7 +324,7 @@ import debugpy
 debugpy.listen(("127.0.0.1", 5678))
 debugpy.wait_for_client()
 ```
-Start `python hermes --tui` from the prepared debug checkout. The TUI will appear frozen (its backend is waiting). Attach a client; execution resumes when you `continue`. Check the child's interpreter and imports before assuming it inherited the debug environment.
+Start `python niki --tui` from the prepared debug checkout. The TUI will appear frozen (its backend is waiting). Attach a client; execution resumes when you `continue`. Check the child's interpreter and imports before assuming it inherited the debug environment.
 
 **B. Use `remote-pdb` at a specific handler:**
 ```python

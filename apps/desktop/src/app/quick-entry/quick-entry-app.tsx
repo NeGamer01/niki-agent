@@ -44,7 +44,7 @@ export function QuickEntryApp() {
   // the decision stays pure and testable while the effects stay in one place.
   const [state, dispatch] = useReducer((current: QuickComposerState, event: QuickComposerEvent) => {
     const { send, state: next } = quickComposerReducer(current, event)
-    const api = window.hermesDesktop?.quickEntry
+    const api = window.nikiDesktop?.quickEntry
 
     if (send) {
       const submitId = submitIdRef.current
@@ -66,7 +66,7 @@ export function QuickEntryApp() {
   // and take the keyboard back for a fresh capture. Also adopt gateway-state
   // pushes (connection + recent sessions) relayed from the primary renderer.
   useEffect(() => {
-    const api = window.hermesDesktop?.quickEntry
+    const api = window.nikiDesktop?.quickEntry
 
     const offShown = api?.onShown(() => {
       dispatch({ type: 'shown' })

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Image generation via FAL.ai (model picked in ``hermes tools``, persisted to ``image_gen.model``).
+"""Image generation via FAL.ai (model picked in ``niki tools``, persisted to ``image_gen.model``).
 
 ``_build_fal_payload()`` / ``_build_fal_edit_payload()`` translate unified inputs into the
 ``FAL_MODELS`` payload filtered to its ``supports`` whitelist so models never receive rejected
@@ -40,8 +40,8 @@ from tools.image_generation_catalog import (
 )
 from tools.managed_tool_gateway import resolve_managed_tool_gateway
 from tools.tool_backend_helpers import (
-    NOUS_MANAGED_PROVIDER, fal_key_is_configured, managed_nous_tools_enabled,
-    nous_tool_gateway_unavailable_message, read_selection, selection_error)
+    NIKI_MANAGED_PROVIDER, fal_key_is_configured, managed_nous_tools_enabled,
+    niki_tool_gateway_unavailable_message, read_selection, selection_error)
 
 logger = logging.getLogger(__name__)
 
@@ -51,21 +51,21 @@ _managed_fal_client_config = None
 _managed_fal_client_lock = threading.Lock()
 
 
-# --- Managed FAL gateway (Nous Subscription) ---
+# --- Managed FAL gateway (Niki Subscription) ---
 def _resolve_managed_fal_gateway():
-    """Managed gateway config for the stored `hermes tools` selection, or ``None`` for direct FAL.
+    """Managed gateway config for the stored `niki tools` selection, or ``None`` for direct FAL.
 
-    ``"nous"`` (or legacy ``use_gateway: true``) → managed ONLY (unreachable = selection-naming
+    ``"niki"`` (or legacy ``use_gateway: true``) → managed ONLY (unreachable = selection-naming
     error, never a silent FAL_KEY fallback). Other stored provider → direct ONLY (missing FAL_KEY
     = error naming the selection). Never configured → autodetect: direct if FAL_KEY, else managed.
     """
     selected = read_selection("image_gen")
-    if selected == NOUS_MANAGED_PROVIDER:
+    if selected == NIKI_MANAGED_PROVIDER:
         gateway = resolve_managed_tool_gateway("fal-queue")
         if gateway is None:
             raise ValueError(selection_error(
-                "image_gen", NOUS_MANAGED_PROVIDER,
-                "the Nous Tool Gateway is not available (not entitled or unreachable)"))
+                "image_gen", NIKI_MANAGED_PROVIDER,
+                "the Niki Tool Gateway is not available (not entitled or unreachable)"))
         return gateway
     if selected is not None:
         if fal_key_is_configured():
@@ -78,12 +78,12 @@ def _resolve_managed_fal_gateway():
 def _get_managed_fal_client(managed_gateway):
     """Reuse the managed FAL client so its internal httpx.Client is not leaked per call."""
     global _managed_fal_client, _managed_fal_client_config
-    client_config = (managed_gateway.gateway_origin.rstrip("/"), managed_gateway.nous_user_token)
+    client_config = (managed_gateway.gateway_origin.rstrip("/"), managed_gateway.niki_user_token)
     with _managed_fal_client_lock:
         if _managed_fal_client is None or _managed_fal_client_config != client_config:
             # Resolved on this module so monkeypatching ``image_generation_tool.fal_client`` still applies.
             _managed_fal_client = _ManagedFalSyncClient(
-                _load_fal_client(), key=managed_gateway.nous_user_token,
+                _load_fal_client(), key=managed_gateway.niki_user_token,
                 queue_run_origin=managed_gateway.gateway_origin)
             _managed_fal_client_config = client_config
         return _managed_fal_client
@@ -139,16 +139,16 @@ def _submit_fal_request(model: str, arguments: dict[str, Any]):
             billing = _managed_fal_billing_error(exc, "model")
             if billing is not None:
                 raise ValueError(
-                    f"Nous Subscription gateway rejected model '{model}' (HTTP {status}): {billing}") from exc
+                    f"Niki Subscription gateway rejected model '{model}' (HTTP {status}): {billing}") from exc
             gateway_message = ""
             if status in {401, 402, 403}:
-                gateway_message = "\n\n" + nous_tool_gateway_unavailable_message(
+                gateway_message = "\n\n" + niki_tool_gateway_unavailable_message(
                     "managed FAL image generation", force_fresh=True)
             raise ValueError(
-                f"Nous Subscription gateway rejected model '{model}' (HTTP {status}). This model "
-                f"may not yet be enabled on the Nous Portal's FAL proxy. Either:\n"
+                f"Niki Subscription gateway rejected model '{model}' (HTTP {status}). This model "
+                f"may not yet be enabled on the Niki Portal's FAL proxy. Either:\n"
                 f"  • Set FAL_KEY in your environment to use FAL.ai directly, or\n"
-                f"  • Pick a different model via `hermes tools` → Image Generation."
+                f"  • Pick a different model via `niki tools` → Image Generation."
                 f"{gateway_message}") from exc
         raise
 
@@ -157,7 +157,7 @@ def _submit_fal_request(model: str, arguments: dict[str, Any]):
 def _read_image_gen_key(key: str) -> Optional[str]:
     """Return the stripped ``image_gen.<key>`` string from config.yaml, or None."""
     try:
-        from hermes_cli.config import load_config
+        from niki_cli.config import load_config
         cfg = load_config()
         section = cfg.get("image_gen") if isinstance(cfg, dict) else None
         value = section.get(key) if isinstance(section, dict) else None
@@ -187,9 +187,9 @@ def _read_configured_image_provider():
 
 
 def _plugin_provider_name() -> Optional[str]:
-    """Configured provider that must go through the plugin registry; None for unset/fal/nous."""
+    """Configured provider that must go through the plugin registry; None for unset/fal/niki."""
     configured = _read_configured_image_provider()
-    if not configured or configured in ("fal", NOUS_MANAGED_PROVIDER):
+    if not configured or configured in ("fal", NIKI_MANAGED_PROVIDER):
         return None
     return configured
 
@@ -287,8 +287,8 @@ def _upscale_image(image_url: str, original_prompt: str) -> Optional[dict[str, A
 _CONTAINER_HOME_ENVS = {"DockerEnvironment", "SingularityEnvironment", "ModalEnvironment"}
 # No env yet: only deterministic cache roots translate side-effect free (SSH: tilde path; its
 # first sync uploads the cache file).
-_CACHE_BASE_BY_BACKEND = {"docker": "/root/.hermes", "singularity": "/root/.hermes",
-                          "modal": "/root/.hermes", "ssh": "~/.hermes"}
+_CACHE_BASE_BY_BACKEND = {"docker": "/root/.niki", "singularity": "/root/.niki",
+                          "modal": "/root/.niki", "ssh": "~/.niki"}
 
 
 def _looks_like_absolute_file_path(value: str) -> bool:
@@ -319,9 +319,9 @@ def _agent_cache_base_for_env(env: Any) -> str | None:
                 logger.debug("active env agent_visible_cache_base failed: %s", exc)
         remote_home = getattr(env, "_remote_home", None)
         if remote_home:
-            return f"{str(remote_home).rstrip('/')}/.hermes"
+            return f"{str(remote_home).rstrip('/')}/.niki"
         if env.__class__.__name__ in _CONTAINER_HOME_ENVS:
-            return "/root/.hermes"
+            return "/root/.niki"
     from tools.terminal_scope import terminal_env
     backend = (terminal_env("TERMINAL_ENV") or "local").strip().lower()
     return _CACHE_BASE_BY_BACKEND.get(backend)
@@ -395,7 +395,7 @@ def _prepare_fal_request(model_id, meta, prompt, aspect_ratio, seed, overrides, 
         raise ValueError(
             f"Model '{display}' ({model_id}) is not capable of image-to-image / editing. "
             f"Provide a text-only prompt (omit image_url), or switch to an edit-capable model "
-            f"via `hermes tools` → Image Generation.")
+            f"via `niki tools` → Image Generation.")
     aspect_lc = (aspect_ratio or DEFAULT_ASPECT_RATIO).lower().strip()
     if aspect_lc not in VALID_ASPECT_RATIOS:
         logger.warning("Invalid aspect_ratio '%s', defaulting to '%s'", aspect_ratio, DEFAULT_ASPECT_RATIO)
@@ -510,23 +510,23 @@ def _build_no_backend_setup_message() -> str:
         lines.append("  - FAL_KEY is not set and the managed FAL gateway is unreachable")
     else:
         lines.append("  - FAL_KEY environment variable is not set")
-        if gateway_message := nous_tool_gateway_unavailable_message("managed FAL image generation"):
+        if gateway_message := niki_tool_gateway_unavailable_message("managed FAL image generation"):
             lines.append(f"  - {gateway_message}")
     lines += ["", "To enable image generation, do one of:",
               "  1. Get a free API key at https://fal.ai and set FAL_KEY=<your-key> "
               "(then restart the session)"]
     if managed:
-        lines.append("  2. Sign in to a Nous account that has the managed FAL gateway enabled "
-                     "(`hermes setup`)")
-    lines.append("  3. Configure a different image_gen provider via `hermes tools` → Image Generation "
-                 "(run `hermes plugins list` to see installed backends)")
+        lines.append("  2. Sign in to a Niki account that has the managed FAL gateway enabled "
+                     "(`niki setup`)")
+    lines.append("  3. Configure a different image_gen provider via `niki tools` → Image Generation "
+                 "(run `niki plugins list` to see installed backends)")
     return "\n".join(lines)
 
 
 def _get_plugin_provider(name: str, *, force: bool = False):
     """Discover plugins (local import: importing this module must not trigger discovery) and return the named provider."""
     from agent.image_gen_registry import get_provider
-    from hermes_cli.plugins import _ensure_plugins_discovered
+    from niki_cli.plugins import _ensure_plugins_discovered
     if force:
         _ensure_plugins_discovered(force=True)
     else:
@@ -639,7 +639,7 @@ def _dispatch_to_plugin_provider(
     reference_image_urls: Optional[list] = None, upscale: Optional[bool] = None,
     controls: Optional[dict[str, Any]] = None):
     """JSON result from the selected plugin provider, or ``None`` to fall through to in-tree FAL
-    (provider unset / ``"fal"`` / ``"nous"``). Providers without ``upscale`` ignore it via ``**kwargs``."""
+    (provider unset / ``"fal"`` / ``"niki"``). Providers without ``upscale`` ignore it via ``**kwargs``."""
     configured = _plugin_provider_name()
     if configured is None:
         return None
@@ -658,7 +658,7 @@ def _dispatch_to_plugin_provider(
     if provider is None:
         return _provider_error(
             f"image_gen.provider='{configured}' is set but no plugin registered that name. "
-            f"Run `hermes plugins list` to see available image gen backends.", "provider_not_registered")
+            f"Run `niki plugins list` to see available image gen backends.", "provider_not_registered")
     pname = getattr(provider, "name", "?")
     kwargs: dict[str, Any] = {"prompt": prompt, "aspect_ratio": aspect_ratio}
     try:
@@ -675,7 +675,7 @@ def _dispatch_to_plugin_provider(
             return _provider_error(
                 f"Provider '{pname}' does not support image-to-image / editing (its generate() "
                 f"signature is out of date with the image_generate schema). Omit image_url for "
-                f"text-to-image, or pick a backend that supports editing via `hermes tools` → "
+                f"text-to-image, or pick a backend that supports editing via `niki tools` → "
                 f"Image Generation.", "modality_unsupported")
         logger.warning("Image gen provider '%s' raised%s: %s", pname,
                        " TypeError" if is_type_error else "", exc)
@@ -697,7 +697,7 @@ def _managed_model_plugin() -> Optional[tuple]:
     from tools.image_generation_managed import KREA, PORTAL, managed_route
 
     model_id = _read_configured_image_model()
-    return {KREA: ("krea", model_id), PORTAL: ("nous", model_id)}.get(
+    return {KREA: ("krea", model_id), PORTAL: ("niki", model_id)}.get(
         managed_route(_read_configured_image_provider(), model_id))
 
 
@@ -728,8 +728,8 @@ def _maybe_route_managed_model(
         if plugin_name == "krea":
             return None
         return _provider_error(
-            f"image_gen.model='{model_id}' is a Nous Portal model but the Portal image backend is not "
-            f"available. Pick another model via `hermes tools` → Image Generation.", "provider_not_registered")
+            f"image_gen.model='{model_id}' is a Niki Portal model but the Portal image backend is not "
+            f"available. Pick another model via `niki tools` → Image Generation.", "provider_not_registered")
     kwargs: dict[str, Any] = {"prompt": prompt, "aspect_ratio": aspect_ratio, "model": model_id}
     try:
         _add_provider_kwargs(kwargs, image_url, reference_image_urls, upscale,
@@ -780,7 +780,7 @@ def _handle_image_generate(args, **kw):
     if confine_error is not None:
         return confine_error
     # Order matters: explicit plugin provider, then the model-driven managed gateways (Krea /
-    # Portal — only under the "nous"/unset selection, so BYO/direct FAL stays untouched), then FAL.
+    # Portal — only under the "niki"/unset selection, so BYO/direct FAL stays untouched), then FAL.
     sources = dict(image_url=image_url, reference_image_urls=reference_image_urls,
                    upscale=upscale if isinstance(upscale, bool) else None)
     controls = {name: args[name] for name in _CREATIVE_CONTROL_PARAMS if name in args}

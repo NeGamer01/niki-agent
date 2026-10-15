@@ -5,7 +5,7 @@ import { useProfileScope } from "@/contexts/useProfileScope";
 import { useI18n } from "@/i18n";
 
 const DOCS_URL =
-  "https://hermes-agent.nousresearch.com/docs/developer-guide/relay-shared-metrics";
+  "https://github.com/NeGamer01/niki-agent/docs/developer-guide/relay-shared-metrics";
 const STORAGE_KEY = "sharedMetricsOfferDismissed";
 
 /**
@@ -89,13 +89,13 @@ export function SharedMetricsConsentBanner() {
             ? (t.app.sharedMetricsReaskBody ??
               'Asking once more: an earlier version could save "No thanks" before you saw this question.')
             : (t.app.sharedMetricsBody ??
-            "Shared metrics are bounded counters, never prompts, files, paths or error text. Collection stays on this machine; sending to Nous is a separate choice.")}{" "}
+            "Shared metrics are bounded counters, never prompts, files, paths or error text. Collection stays on this machine; sending to Niki is a separate choice.")}{" "}
         <a href={DOCS_URL} target="_blank" rel="noreferrer" className="underline">
           {t.app.sharedMetricsDetails ?? "Details"}
         </a>
       </span>
       <button type="button" disabled={saving} className={choice} onClick={() => answer(true, true)}>
-        {t.app.sharedMetricsShare ?? "Send to Nous"}
+        {t.app.sharedMetricsShare ?? "Send to Niki"}
       </button>
       <button type="button" disabled={saving} className={choice} onClick={() => answer(true, false)}>
         {t.app.sharedMetricsLocal ?? "Local only"}

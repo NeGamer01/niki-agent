@@ -6,7 +6,7 @@ author: AminBlg (https://github.com/AminBlg/SimpleEnglish), ported by Niki Agent
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  niki:
     tags: [writing, documentation, ste, asd-ste100, technical-writing, editing, anti-ai-slop]
     category: creative
     homepage: https://github.com/AminBlg/SimpleEnglish

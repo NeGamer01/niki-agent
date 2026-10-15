@@ -9,7 +9,7 @@ description: "How to build a memory provider plugin for Niki Agent"
 Memory provider plugins give Niki Agent persistent, cross-session knowledge beyond the built-in MEMORY.md and USER.md. This guide covers how to build one.
 
 :::tip
-Memory providers are one of two **provider plugin** types. The other is [Context Engine Plugins](./context-engine-plugin.md), which replace the built-in context compressor. Both follow the same pattern: single-select, config-driven, managed via `hermes plugins`.
+Memory providers are one of two **provider plugin** types. The other is [Context Engine Plugins](./context-engine-plugin.md), which replace the built-in context compressor. Both follow the same pattern: single-select, config-driven, managed via `niki plugins`.
 :::
 
 ## Installation Layouts
@@ -18,10 +18,10 @@ Niki discovers memory providers from four sources, in this precedence order:
 
 | Source | Location | Notes |
 |---|---|---|
-| Bundled | `plugins/memory/<name>/` | Ships with Hermes. Closed to new providers — see [CONTRIBUTING](https://github.com/NousResearch/hermes-agent/blob/main/CONTRIBUTING.md). |
-| User | `$HERMES_HOME/plugins/<name>/` | Dropped in by the user, per profile. |
-| Project | `./.hermes/plugins/<name>/` | Opt-in via `HERMES_ENABLE_PROJECT_PLUGINS=1`. |
-| Package | `hermes_agent.memory_providers` entry point | Distribution supplied by the installation owner; nothing to copy. |
+| Bundled | `plugins/memory/<name>/` | Ships with Niki. Closed to new providers — see [CONTRIBUTING](https://github.com/NeGamer01/niki-agent/blob/main/CONTRIBUTING.md). |
+| User | `$NIKI_HOME/plugins/<name>/` | Dropped in by the user, per profile. |
+| Project | `./.niki/plugins/<name>/` | Opt-in via `NIKI_ENABLE_PROJECT_PLUGINS=1`. |
+| Package | `niki_agent.memory_providers` entry point | Distribution supplied by the installation owner; nothing to copy. |
 
 Earlier sources win on a name collision, so a directory dropped into a working
 tree can never shadow a shipped provider.
@@ -38,7 +38,7 @@ Discovery only *enumerates* — it never imports a provider. Nothing runs until
 Entry-point discovery does not install packages. Do not inject a provider into
 Niki's selected environment with pip. On PM-managed installations, ship a
 directory provider with declared Python dependencies; plugin admission and
-`hermes memory setup` prepare them through PM before use. Owner-managed builds
+`niki memory setup` prepare them through PM before use. Owner-managed builds
 (such as Nix) can include an entry-point distribution declaratively.
 
 CLI and dashboard setup share candidate preparation. PM includes the provider's
@@ -52,8 +52,8 @@ checks and setup commands remain separate from the Python union.
 ### Directory Provider
 
 A directory provider lives in `plugins/memory/<name>/` when bundled with
-Niki, in `$HERMES_HOME/plugins/<name>/` when installed by a user, or in
-`./.hermes/plugins/<name>/` for a project-local one:
+Niki, in `$NIKI_HOME/plugins/<name>/` when installed by a user, or in
+`./.niki/plugins/<name>/` for a project-local one:
 
 ```
 plugins/memory/my-provider/
@@ -65,22 +65,22 @@ plugins/memory/my-provider/
 ### Packaged Provider
 
 A pip-installed provider publishes an entry point in the
-`hermes_agent.memory_providers` group. The entry-point name is the provider
+`niki_agent.memory_providers` group. The entry-point name is the provider
 name users select in `memory.provider`; its value points to the provider's
 `register(ctx)` function:
 
 ```toml title="pyproject.toml"
-[project.entry-points."hermes_agent.memory_providers"]
+[project.entry-points."niki_agent.memory_providers"]
 my-provider = "my_provider:register"
 ```
 
 Point the entry point at the **package**, or at a `register(ctx)` inside it, and
 keep your implementation, skills, and other resources in the normal Python
-package layout. No copy under `$HERMES_HOME/plugins/` is required.
+package layout. No copy under `$NIKI_HOME/plugins/` is required.
 
 A package entry point gets everything a directory install does, including the
 two files Niki reads from disk rather than importing — `config_schema.py`
-(the dashboard config panel) and `cli.py` (your `hermes <provider>`
+(the dashboard config panel) and `cli.py` (your `niki <provider>`
 subcommands). Both are found next to your package's `__init__.py`, so point the
 entry point at a package rather than a single module if you ship either.
 
@@ -105,7 +105,7 @@ class MyMemoryProvider(MemoryProvider):
         """Called once at agent startup.
 
         kwargs always includes:
-          hermes_home (str): Active HERMES_HOME path. Use for storage.
+          niki_home (str): Active NIKI_HOME path. Use for storage.
         """
         self._api_key = get_secret("MY_API_KEY") or ""
         self._session_id = session_id
@@ -121,15 +121,15 @@ fields; callers may initialize a provider without an agent or a session database
 
 | Keyword | Meaning |
 |---|---|
-| `hermes_home` | Active profile's storage directory. |
+| `niki_home` | Active profile's storage directory. |
 | `platform` | Session surface, such as `cli`, `gui`, `acp`, or `telegram`. |
 | `session_title` | Stored session title, when available. A display label is not necessarily a user-selected identity. |
-| `session_title_source` | Stored title provenance, when available: `derived`, `llm`, or `user`. Automatic sources must not be mistaken for explicit identity overrides; missing provenance retains a provider's legacy behavior. Shared constants live in `hermes_state_common.py`. |
+| `session_title_source` | Stored title provenance, when available: `derived`, `llm`, or `user`. Automatic sources must not be mistaken for explicit identity overrides; missing provenance retains a provider's legacy behavior. Shared constants live in `niki_state_common.py`. |
 | `cwd` | Non-empty logical workspace supplied as `AIAgent(cwd=...)`, available before provider initialization. Omitted for `None` or an empty string. |
 | `gateway_session_key` | Stable messaging-chat identity for per-chat session isolation. |
 | `user_id`, `user_id_alt`, `user_name`, `chat_id` | Gateway identity fields, included when present. |
 | `agent_identity` | Active profile name, when available. |
-| `agent_workspace`, `agent_context` | Runtime agent scope. `agent_workspace` is `hermes`; `agent_context` is `cron` for scheduler runs, `subagent` for `delegate_task` children, else `primary` — skip automatic writes for the non-primary values. |
+| `agent_workspace`, `agent_context` | Runtime agent scope. `agent_workspace` is `niki`; `agent_context` is `cron` for scheduler runs, `subagent` for `delegate_task` children, else `primary` — skip automatic writes for the non-primary values. |
 
 Do not assume `os.getcwd()` identifies the conversation's workspace: one Desktop
 or gateway backend can serve several sessions. If `cwd` is absent and directory
@@ -163,8 +163,8 @@ workspace; absent or empty cwd remains unpinned.
 
 | Method | Purpose | Must Implement? |
 |--------|---------|-----------------|
-| `get_config_schema()` | Declare config fields for `hermes memory setup` | **Yes** |
-| `save_config(values, hermes_home)` | Write non-secret config to native location | **Yes** (unless env-var-only) |
+| `get_config_schema()` | Declare config fields for `niki memory setup` | **Yes** |
+| `save_config(values, niki_home)` | Write non-secret config to native location | **Yes** (unless env-var-only) |
 
 ### Optional Hooks
 
@@ -295,18 +295,18 @@ own directory, so a provider installed from the plugin catalog keeps all of them
 | Surface | What the provider ships |
 |---|---|
 | Desktop → Capabilities → Tools → Memory (config panel) | `config_schema.py` (below) |
-| `hermes memory setup` wizard | `get_config_schema()` declares the fields the wizard prompts for, `save_config(config, hermes_home)` persists them, `post_setup(hermes_home, config)` runs afterwards for anything interactive (OAuth, first sync); `get_status_config()` feeds `hermes memory status` |
-| `hermes <provider> …` subcommands | `cli.py` with `register_cli(subparser)` ([Adding CLI Commands](#adding-cli-commands)) |
-| Python dependencies | `pyproject.toml` `[project] dependencies` (or `python_dependencies` in `plugin.yaml`); installed under Niki' own pins at install time and re-applied across `hermes update` |
+| `niki memory setup` wizard | `get_config_schema()` declares the fields the wizard prompts for, `save_config(config, niki_home)` persists them, `post_setup(niki_home, config)` runs afterwards for anything interactive (OAuth, first sync); `get_status_config()` feeds `niki memory status` |
+| `niki <provider> …` subcommands | `cli.py` with `register_cli(subparser)` ([Adding CLI Commands](#adding-cli-commands)) |
+| Python dependencies | `pyproject.toml` `[project] dependencies` (or `python_dependencies` in `plugin.yaml`); installed under Niki' own pins at install time and re-applied across `niki update` |
 
 Your provider's name, `memory.<name>` config section, data directory and tool names are the
 contract with existing users. A provider that moves out of core keeps all four; Niki then
 installs the catalog plugin automatically for anyone whose `memory.provider` still names it
-(on `hermes update`, and once at agent start when `security.allow_lazy_installs` is on).
+(on `niki update`, and once at agent start when `security.allow_lazy_installs` is on).
 
 ## Config Schema
 
-`get_config_schema()` returns a list of field descriptors used by `hermes memory setup`:
+`get_config_schema()` returns a list of field descriptors used by `niki memory setup`:
 
 ```python
 def get_config_schema(self):
@@ -328,7 +328,7 @@ def get_config_schema(self):
         {
             "key": "project",
             "description": "Project identifier",
-            "default": "hermes",
+            "default": "niki",
         },
     ]
 ```
@@ -336,17 +336,17 @@ def get_config_schema(self):
 Fields with `secret: True` and `env_var` go to `.env`. Non-secret fields are passed to `save_config()`.
 
 :::tip Minimal vs Full Schema
-Every field in `get_config_schema()` is prompted during `hermes memory setup`. Providers with many options should keep the schema minimal — only include fields the user **must** configure (API key, required credentials). Document optional settings in a config file reference (e.g. `$HERMES_HOME/myprovider.json`) rather than prompting for them all during setup. This keeps the setup wizard fast while still supporting advanced configuration. See the [Supermemory provider](https://github.com/supermemoryai/hermes-supermemory) (a plugin catalog entry) for an example — it only prompts for the API key; all other options live in `supermemory.json`.
+Every field in `get_config_schema()` is prompted during `niki memory setup`. Providers with many options should keep the schema minimal — only include fields the user **must** configure (API key, required credentials). Document optional settings in a config file reference (e.g. `$NIKI_HOME/myprovider.json`) rather than prompting for them all during setup. This keeps the setup wizard fast while still supporting advanced configuration. See the [Supermemory provider](https://github.com/supermemoryai/niki-supermemory) (a plugin catalog entry) for an example — it only prompts for the API key; all other options live in `supermemory.json`.
 :::
 
 ## Save Config
 
 ```python
-def save_config(self, values: dict, hermes_home: str) -> None:
+def save_config(self, values: dict, niki_home: str) -> None:
     """Write non-secret config to your native location."""
     import json
     from pathlib import Path
-    config_path = Path(hermes_home) / "my-provider.json"
+    config_path = Path(niki_home) / "my-provider.json"
     config_path.write_text(json.dumps(values, indent=2))
 ```
 
@@ -393,7 +393,7 @@ hooks:
 
 ## Threading Contract
 
-**`sync_turn()` MUST be non-blocking.** If your backend has latency (API calls, LLM processing), run the work in a daemon thread — spawned with `agent.memory_provider.spawn_context_thread`, never a bare `threading.Thread`. Profile isolation (the active `HERMES_HOME`, the per-turn secret scope) lives in `contextvars`, and a plain thread starts with an empty context: under multiplexed profiles it would silently write into the *default* profile's store, and `get_secret()` fails closed there.
+**`sync_turn()` MUST be non-blocking.** If your backend has latency (API calls, LLM processing), run the work in a daemon thread — spawned with `agent.memory_provider.spawn_context_thread`, never a bare `threading.Thread`. Profile isolation (the active `NIKI_HOME`, the per-turn secret scope) lives in `contextvars`, and a plain thread starts with an empty context: under multiplexed profiles it would silently write into the *default* profile's store, and `get_secret()` fails closed there.
 
 ```python
 from agent.memory_provider import spawn_context_thread
@@ -411,7 +411,7 @@ def sync_turn(self, user_content, assistant_content, *, session_id="", messages=
     self._sync_thread.start()
 ```
 
-The same applies to prefetch and writer threads. Small JSON config sidecars (`$HERMES_HOME/<provider>.json`) are read with `utils.read_json_or_empty` and written with `utils.atomic_json_write`; anything under `config.yaml` goes through `hermes_cli.config.save_config(..., merge_existing=True)`.
+The same applies to prefetch and writer threads. Small JSON config sidecars (`$NIKI_HOME/<provider>.json`) are read with `utils.read_json_or_empty` and written with `utils.atomic_json_write`; anything under `config.yaml` goes through `niki_cli.config.save_config(..., merge_existing=True)`.
 
 `messages` is optional OpenAI-style conversation context as of the completed
 turn. When present, it includes user/assistant messages, assistant tool calls,
@@ -425,15 +425,15 @@ workspace data.
 
 ## Profile Isolation
 
-All storage paths **must** use the `hermes_home` kwarg from `initialize()`, not hardcoded `~/.hermes`:
+All storage paths **must** use the `niki_home` kwarg from `initialize()`, not hardcoded `~/.niki`:
 
 ```python
 # CORRECT — profile-scoped
-from hermes_constants import get_hermes_home
-data_dir = get_hermes_home() / "my-provider"
+from niki_constants import get_niki_home
+data_dir = get_niki_home() / "my-provider"
 
 # WRONG — shared across all profiles
-data_dir = Path("~/.hermes/my-provider").expanduser()
+data_dir = Path("~/.niki/my-provider").expanduser()
 ```
 
 ## Testing
@@ -458,16 +458,16 @@ mgr.shutdown_all()
 
 ## Adding CLI Commands
 
-Memory provider plugins can register their own CLI subcommand tree (e.g. `hermes my-provider status`, `hermes my-provider config`). This uses a convention-based discovery system — no changes to core files needed.
+Memory provider plugins can register their own CLI subcommand tree (e.g. `niki my-provider status`, `niki my-provider config`). This uses a convention-based discovery system — no changes to core files needed.
 
 ### How it works
 
 1. Add a `cli.py` file to your plugin directory
 2. Define a `register_cli(subparser)` function that builds the argparse tree
 3. The memory plugin system discovers it at startup via `discover_plugin_cli_commands()`
-4. Your commands appear under `hermes <provider-name> <subcommand>`
+4. Your commands appear under `niki <provider-name> <subcommand>`
 
-**Active-provider gating:** Your CLI commands only appear when your provider is the active `memory.provider` in config. If a user hasn't configured your provider, your commands won't show in `hermes --help`.
+**Active-provider gating:** Your CLI commands only appear when your provider is the active `memory.provider` in config. If a user hasn't configured your provider, your commands won't show in `niki --help`.
 
 ### Example
 
@@ -482,10 +482,10 @@ def my_command(args):
     elif sub == "config":
         print("Showing config...")
     else:
-        print("Usage: hermes my-provider <status|config>")
+        print("Usage: niki my-provider <status|config>")
 
 def register_cli(subparser) -> None:
-    """Build the hermes my-provider argparse tree.
+    """Build the niki my-provider argparse tree.
 
     Called by discover_plugin_cli_commands() at argparse setup time.
     """
@@ -497,7 +497,7 @@ def register_cli(subparser) -> None:
 
 ### Reference implementation
 
-See the Honcho plugin's [`cli.py`](https://github.com/plastic-labs/honcho/blob/main/hermes-plugin-honcho/cli.py) for a full example with 13 subcommands, cross-profile management (`--target-profile`), and config read/write.
+See the Honcho plugin's [`cli.py`](https://github.com/plastic-labs/honcho/blob/main/niki-plugin-honcho/cli.py) for a full example with 13 subcommands, cross-profile management (`--target-profile`), and config read/write.
 
 ### Directory structure with CLI
 
@@ -513,12 +513,12 @@ plugins/memory/my-provider/
 
 Only **one** external memory provider can be active at a time. If a user tries to register a second, the MemoryManager rejects it with a warning. This prevents tool schema bloat and conflicting backends.
 
-## `HERMES_HOME` survival contract (what wrappers can rely on)
+## `NIKI_HOME` survival contract (what wrappers can rely on)
 
 For wrapper-style providers that keep their runtime in a sidecar venv outside Niki-managed Python (no dependency surface — no `pyproject.toml`, `pip_dependencies`, or `python_dependencies` — at the scanned plugin root; a `pyproject.toml` belonging solely to an external or nested sidecar is not scanned):
 
-- **Location.** `$HERMES_HOME/plugins/<name>/` is the profile-scoped plugin location, and `HERMES_HOME` follows the active context override, then `$HERMES_HOME`, then the platform default. Propagate `HERMES_HOME` when launching the wrapper or sidecar so profile isolation holds; `MemoryManager.initialize_all` injects the active `hermes_home` into every provider.
-- **Survival.** Ordinary Niki updates — including managed-venv rebuild/replacement by pm — do not delete or rewrite `$HERMES_HOME/plugins/**`. An installed wrapper directory and its marker file (e.g. `mnemosyne-wrapper.json`) survive. Explicit plugin updates and deletion flows (`hermes uninstall`, `hermes plugins remove`, profile deletion, user deletion) are excluded from this guarantee.
+- **Location.** `$NIKI_HOME/plugins/<name>/` is the profile-scoped plugin location, and `NIKI_HOME` follows the active context override, then `$NIKI_HOME`, then the platform default. Propagate `NIKI_HOME` when launching the wrapper or sidecar so profile isolation holds; `MemoryManager.initialize_all` injects the active `niki_home` into every provider.
+- **Survival.** Ordinary Niki updates — including managed-venv rebuild/replacement by pm — do not delete or rewrite `$NIKI_HOME/plugins/**`. An installed wrapper directory and its marker file (e.g. `mnemosyne-wrapper.json`) survive. Explicit plugin updates and deletion flows (`niki uninstall`, `niki plugins remove`, profile deletion, user deletion) are excluded from this guarantee.
 - **Sidecar isolation.** A plugin root with no dependency surface never joins the pm workspace dependency union; a resync or venv rebuild neither provisions deps for it nor touches its tree.
 - **Conflicts.** For native shared-venv plugins, an unsatisfiable dependency union fails loudly: the candidate plugin stays unenabled and unimported (the admission authority refuses before publishing config, reporting the plugin identity plus the resolver's reason, with a re-enable/retry path and a machine-readable pm receipt). Dependency resolution does not automatically disable other plugins or run a bisect. Explicit plugin updates, removal, and independent security gates are separate operations.
 

@@ -22,16 +22,16 @@ Niki Agent 通过 **Google AI Studio / Gemini API** 原生支持 Google Gemini�
 
 ```bash
 # 添加 Gemini API 密钥
-echo "GOOGLE_API_KEY=..." >> ~/.hermes/.env
+echo "GOOGLE_API_KEY=..." >> ~/.niki/.env
 
 # 选择 Gemini 作为 provider
-hermes model
+niki model
 # → 选择 "More providers..." → "Google AI Studio"
 # → Niki 检查密钥层级并显示 Gemini 模型列表
 # → 选择一个模型
 
 # 开始对话
-hermes chat
+niki chat
 ```
 
 如果你偏好直接编辑配置文件，请使用原生 Gemini API 基础 URL：
@@ -45,7 +45,7 @@ model:
 
 ## 配置
 
-运行 `hermes model` 后，`~/.hermes/config.yaml` 将包含：
+运行 `niki model` 后，`~/.niki/config.yaml` 将包含：
 
 ```yaml
 model:
@@ -54,7 +54,7 @@ model:
   base_url: https://generativelanguage.googleapis.com/v1beta
 ```
 
-`~/.hermes/.env` 中：
+`~/.niki/.env` 中：
 
 ```bash
 GOOGLE_API_KEY=...
@@ -100,7 +100,7 @@ GEMINI_BASE_URL=https://generativelanguage.googleapis.com/v1beta
 
 ## 可用模型
 
-`hermes model` 选择器显示 Niki provider 注册表中维护的 Gemini 模型。常见选项包括：
+`niki model` 选择器显示 Niki provider 注册表中维护的 Gemini 模型。常见选项包括：
 
 | 模型 | ID | 说明 |
 |------|----|------|
@@ -109,7 +109,7 @@ GEMINI_BASE_URL=https://generativelanguage.googleapis.com/v1beta
 | Gemini 3 Flash Preview | `gemini-3-flash-preview` | 推荐的默认选项，速度与能力均衡 |
 | Gemini 3.1 Flash Lite Preview | `gemini-3.1-flash-lite-preview` | 可用时速度最快、成本最低的选项 |
 
-模型可用性会随时间变化。如果某个模型消失或未对你的密钥启用，请重新运行 `hermes model` 并从当前列表中选择。
+模型可用性会随时间变化。如果某个模型消失或未对你的密钥启用，请重新运行 `niki model` 并从当前列表中选择。
 
 :::info 模型 ID
 当 `provider: gemini` 时，请使用 Gemini 原生模型 ID，如 `gemini-3-flash-preview`，而非 OpenRouter 风格的 ID（如 `google/gemini-3-flash-preview`）。
@@ -168,12 +168,12 @@ model:
 /model gemini-3.1-flash-lite-preview
 ```
 
-如果尚未配置 Gemini，请退出会话并先运行 `hermes model`。`/model` 用于在已配置的 provider 和模型之间切换，不会收集新的 API 密钥。
+如果尚未配置 Gemini，请退出会话并先运行 `niki model`。`/model` 用于在已配置的 provider 和模型之间切换，不会收集新的 API 密钥。
 
 ## 诊断
 
 ```bash
-hermes doctor
+niki doctor
 ```
 
 doctor 命令检查：
@@ -186,8 +186,8 @@ doctor 命令检查：
 Gemini 可与所有 Niki gateway 平台配合使用（Telegram、Discord、Slack、WhatsApp、LINE、飞书等）。将 Gemini 配置为你的 provider，然后正常启动 gateway：
 
 ```bash
-hermes gateway setup
-hermes gateway start
+niki gateway setup
+niki gateway start
 ```
 
 gateway 读取 `config.yaml` 并使用相同的 Gemini provider 配置。
@@ -196,7 +196,7 @@ gateway 读取 `config.yaml` 并使用相同的 Gemini provider 配置。
 
 ### "Gemini native client requires an API key"
 
-Niki 找不到可用的 API 密钥。请将以下任一项添加到 `~/.hermes/.env`：
+Niki 找不到可用的 API 密钥。请将以下任一项添加到 `~/.niki/.env`：
 
 ```bash
 GOOGLE_API_KEY=...
@@ -204,7 +204,7 @@ GOOGLE_API_KEY=...
 GEMINI_API_KEY=...
 ```
 
-然后重新运行 `hermes model`。
+然后重新运行 `niki model`。
 
 ### "This Google API key is on the free tier"
 
@@ -213,16 +213,16 @@ Niki 在设置期间会探测 Gemini API 密钥。由于工具调用、重试、
 请为与密钥关联的 Google Cloud 项目启用计费，必要时重新生成密钥，然后运行：
 
 ```bash
-hermes model
+niki model
 ```
 
 ### "404 model not found"
 
-所选模型对你的账号、地区或密钥不可用。重新运行 `hermes model` 并从当前列表中选择其他 Gemini 模型。
+所选模型对你的账号、地区或密钥不可用。重新运行 `niki model` 并从当前列表中选择其他 Gemini 模型。
 
-### Gemma 模型未显示在 `hermes model` 中
+### Gemma 模型未显示在 `niki model` 中
 
-Niki 默认可能会在选择器中隐藏低吞吐量的 Gemma 模型。如果你有意评估某个模型，请直接在 `~/.hermes/config.yaml` 中设置模型 ID。
+Niki 默认可能会在选择器中隐藏低吞吐量的 Gemma 模型。如果你有意评估某个模型，请直接在 `~/.niki/config.yaml` 中设置模型 ID。
 
 ### Gemma 出现 "429 quota exceeded"
 
@@ -230,7 +230,7 @@ Niki 默认可能会在选择器中隐藏低吞吐量的 Gemma 模型。如果�
 
 ### 已配置 OpenAI 兼容端点
 
-检查 `~/.hermes/.env` 中是否存在：
+检查 `~/.niki/.env` 中是否存在：
 
 ```bash
 GEMINI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
@@ -244,7 +244,7 @@ GEMINI_BASE_URL=https://generativelanguage.googleapis.com/v1beta
 
 ### 工具调用因 schema 错误而失败
 
-升级 Niki 并重新运行 `hermes model`。原生 Gemini 适配器会针对 Gemini 更严格的函数声明格式对工具 schema 进行清理；旧版本或自定义端点可能不支持此功能。
+升级 Niki 并重新运行 `niki model`。原生 Gemini 适配器会针对 Gemini 更严格的函数声明格式对工具 schema 进行清理；旧版本或自定义端点可能不支持此功能。
 
 ## 相关链接
 

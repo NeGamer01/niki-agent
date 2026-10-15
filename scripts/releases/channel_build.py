@@ -13,7 +13,7 @@ import os
 from pathlib import Path
 import subprocess
 
-from hermes_cli.release_channels import (
+from niki_cli.release_channels import (
     ChannelError,
     validate_name,
     validate_repository,
@@ -167,10 +167,10 @@ def cmd_channel(args) -> None:
         if args.channel:
             bundle_env = parse_assignments(args.bundle_env, args.bundle_unset)
             if args.channel_specific_data_dirs:
-                bundle_env["HERMES_DATA_DIR_SUFFIX"] = f"-channel-build-{args.channel}"
-                bundle_env["HERMES_HOME"] = None
-                bundle_env["HERMES_DESKTOP_USER_DATA_DIR"] = None
-                bundle_env["HERMES_SHARED_AUTH_DIR"] = None
+                bundle_env["NIKI_DATA_DIR_SUFFIX"] = f"-channel-build-{args.channel}"
+                bundle_env["NIKI_HOME"] = None
+                bundle_env["NIKI_DESKTOP_USER_DATA_DIR"] = None
+                bundle_env["NIKI_SHARED_AUTH_DIR"] = None
 
             result = prepare_build(
                 name=args.channel,
@@ -246,7 +246,7 @@ def add_arguments(parser) -> None:
     parser.add_argument(
         "--channel-specific-data-dirs",
         action="store_true",
-        help="Set HERMES_HOME et al to a directory specific for this channel",
+        help="Set NIKI_HOME et al to a directory specific for this channel",
     )
     parser.add_argument(
         "--branding",
@@ -303,10 +303,10 @@ def validate_arguments(parser, args) -> bool:
 
         env = parse_assignments(args.bundle_env, args.bundle_unset)
         banned = (
-            "HERMES_DATA_DIR_SUFFIX",
-            "HERMES_HOME",
-            "HERMES_SHARED_AUTH_DIR",
-            "HERMES_DESKTOP_USER_DATA_DIR",
+            "NIKI_DATA_DIR_SUFFIX",
+            "NIKI_HOME",
+            "NIKI_SHARED_AUTH_DIR",
+            "NIKI_DESKTOP_USER_DATA_DIR",
         )
         bad_vars = [e for e in env if e in banned]
         if bad_vars:

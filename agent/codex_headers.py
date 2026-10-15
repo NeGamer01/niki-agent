@@ -40,10 +40,10 @@ def codex_cloudflare_headers(access_token: str, *, base_url: str = CODEX_AUX_BAS
     OAuth JWT (see :func:`codex_account_headers`).
     """
     if is_official_codex_base_url(base_url):
-        from hermes_cli.version_info import get_version_info
+        from niki_cli.version_info import get_version_info
         headers = {
-            "User-Agent": f"HermesAgent/{get_version_info().base_version}",
-            "originator": "hermes-agent",
+            "User-Agent": f"NikiAgent/{get_version_info().base_version}",
+            "originator": "niki-agent",
         }
     else:
         headers = {"User-Agent": "codex_cli_rs/0.0.0 (Niki Agent)", "originator": "codex_cli_rs"}

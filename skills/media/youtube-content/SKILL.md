@@ -6,7 +6,7 @@ author: Teknium (teknium1), Niki Agent
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  niki:
     tags: [YouTube, Video, Transcripts, Media]
     related_skills: []
 ---
@@ -26,7 +26,7 @@ Use `terminal` with the Python from a PM-prepared Niki source checkout. The
 Niki with raw pip or project-discovering `uv run`.
 
 From that checkout, first follow the isolated development-home setup in
-[Package Management](https://hermes-agent.nousresearch.com/docs/reference/package-management#developer-workflow),
+[Package Management](https://github.com/NeGamer01/niki-agent/docs/reference/package-management#developer-workflow),
 then prepare the extra and reactivate before running the helper:
 
 ```bash

@@ -6,12 +6,12 @@ import { Input } from '@/components/ui/input'
 import { Tip } from '@/components/ui/tooltip'
 import {
   deleteSession,
-  getHermesConfigRecord,
+  getNikiConfigRecord,
   peekConfigReadOrigin,
   retainConfigReadOrigin,
-  saveHermesConfig,
+  saveNikiConfig,
   setSessionArchived
-} from '@/hermes'
+} from '@/niki'
 import { useI18n } from '@/i18n'
 import { sessionTitle } from '@/lib/chat-runtime'
 import { pathLeaf } from '@/lib/display-path'
@@ -24,7 +24,7 @@ import { applyConfiguredDefaultProjectDir, ensureDefaultWorkspaceCwd } from '@/s
 import { untombstoneSessions } from '@/store/session-removal'
 import { forgetSessionUnread } from '@/store/session-unread'
 import { listEveryArchivedSession } from '@/store/sidebar-archive'
-import type { HermesConfigRecord, SessionInfo } from '@/types/hermes'
+import type { NikiConfigRecord, SessionInfo } from '@/types/niki'
 
 import { EmptyState, ListRow, SectionHeading, SettingsContent, SettingsSkeleton, ToggleRow } from './primitives'
 import { SETTING_IDS, settingElementId } from './settings-manifest'
@@ -216,20 +216,20 @@ function ArchivedSessionsSettings({ includeDefaultDirectory }: { includeDefaultD
 function AutoArchiveSetting() {
   const { t } = useI18n()
   const s = t.settings.sessions
-  const [config, setConfig] = useState<HermesConfigRecord | null>(null)
+  const [config, setConfig] = useState<NikiConfigRecord | null>(null)
   const [enabled, setEnabled] = useState(false)
   const [days, setDays] = useState(DEFAULT_AUTO_ARCHIVE_DAYS)
 
   useEffect(() => {
     // Config REST is only reachable through the Electron bridge; skip in
     // non-Electron contexts (tests/storybook) rather than throwing.
-    if (!window.hermesDesktop) {
+    if (!window.nikiDesktop) {
       return
     }
 
     let alive = true
 
-    void getHermesConfigRecord()
+    void getNikiConfigRecord()
       .then(record => {
         if (!alive) {
           return
@@ -272,7 +272,7 @@ function AutoArchiveSetting() {
       try {
         // Sparse patch: PUT /api/config deep-merges, and echoing the cached
         // snapshot would overwrite keys other surfaces changed since it loaded.
-        await saveHermesConfig({ sessions: { auto_archive: autoArchive, auto_archive_days: archiveDays } }, writeScope)
+        await saveNikiConfig({ sessions: { auto_archive: autoArchive, auto_archive_days: archiveDays } }, writeScope)
       } catch (err) {
         notifyError(err, s.autoArchiveFailed)
       }
@@ -333,11 +333,11 @@ function DefaultProjectDirSetting() {
 
   useEffect(() => {
     // The bridge is only present when running inside Electron. In a Vitest
-    // / Storybook / non-Electron context `window.hermesDesktop` is
+    // / Storybook / non-Electron context `window.nikiDesktop` is
     // undefined, so guard the WHOLE call chain rather than chaining
     // `?.settings.getDefaultProjectDir().then(...)` (the latter would
     // short-circuit to `undefined.then(...)` and throw at runtime).
-    const settings = window.hermesDesktop?.settings
+    const settings = window.nikiDesktop?.settings
 
     if (!settings) {
       return
@@ -361,7 +361,7 @@ function DefaultProjectDirSetting() {
   }, [])
 
   const choose = useCallback(async () => {
-    const settings = window.hermesDesktop?.settings
+    const settings = window.nikiDesktop?.settings
 
     if (!settings) {
       return
@@ -388,7 +388,7 @@ function DefaultProjectDirSetting() {
   }, [s])
 
   const clear = useCallback(async () => {
-    const settings = window.hermesDesktop?.settings
+    const settings = window.nikiDesktop?.settings
 
     if (!settings) {
       return

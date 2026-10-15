@@ -1,4 +1,4 @@
-"""Firecrawl web search + extract provider (direct SDK, keyless cloud, or Nous tool-gateway).
+"""Firecrawl web search + extract provider (direct SDK, keyless cloud, or Niki tool-gateway).
 
 Config: ``web.backend`` / ``web.search_backend`` / ``web.extract_backend: firecrawl``.
 Env: FIRECRAWL_API_KEY, FIRECRAWL_API_URL (self-hosted), FIRECRAWL_GATEWAY_URL / TOOL_GATEWAY_*.
@@ -69,7 +69,7 @@ def _wt():
 
 
 def _env(name: str) -> str:
-    from hermes_cli.config import get_env_value
+    from niki_cli.config import get_env_value
     return (get_env_value(name) or "").strip()
 
 
@@ -92,14 +92,14 @@ def _is_explicit_firecrawl_selection() -> bool:
 
 
 def _use_keyless_ring(capability: Optional[str] = None) -> bool:
-    """Route via the keyless ring only with no direct credentials, when the managed Nous
+    """Route via the keyless ring only with no direct credentials, when the managed Niki
     gateway isn't the selected path for *capability*, and the keyless tier isn't disabled or pinned paid."""
     if _env("FIRECRAWL_API_KEY") or _env("FIRECRAWL_API_URL"):
         return False
-    from tools.tool_backend_helpers import NOUS_MANAGED_PROVIDER, read_web_capability_selection
+    from tools.tool_backend_helpers import NIKI_MANAGED_PROVIDER, read_web_capability_selection
     from plugins.web.keyless_mcp import use_keyless
     # Both probes are optional layers: a failing probe never blocks the ring.
-    for probe in (lambda: read_web_capability_selection(capability) == NOUS_MANAGED_PROVIDER,
+    for probe in (lambda: read_web_capability_selection(capability) == NIKI_MANAGED_PROVIDER,
                   lambda: _is_tool_gateway_ready() and not _is_explicit_firecrawl_selection()):
         try:
             if probe():
@@ -139,17 +139,17 @@ def _get_firecrawl_gateway_url() -> str:
 
 
 def _is_tool_gateway_ready() -> bool:
-    """True when gateway URL + Nous Subscriber token are available."""
+    """True when gateway URL + Niki Subscriber token are available."""
     return _gateway.resolve_managed_tool_gateway("firecrawl", token_reader=_gateway.peek_nous_access_token) is not None
 
 
 def check_firecrawl_api_key() -> bool:
-    """True when the route selected via ``hermes tools`` (or, on a never-configured
+    """True when the route selected via ``niki tools`` (or, on a never-configured
     install, either route) is usable."""
-    from tools.tool_backend_helpers import NOUS_MANAGED_PROVIDER, read_web_capability_selection
+    from tools.tool_backend_helpers import NIKI_MANAGED_PROVIDER, read_web_capability_selection
 
     def _usable(selected) -> bool:
-        if selected == NOUS_MANAGED_PROVIDER:
+        if selected == NIKI_MANAGED_PROVIDER:
             return _is_tool_gateway_ready()
         return _get_direct_firecrawl_config() is not None or (selected is None and _is_tool_gateway_ready())
 
@@ -158,27 +158,27 @@ def check_firecrawl_api_key() -> bool:
 
 
 def is_managed_route(capability: Optional[str] = None) -> bool:
-    """True when Firecrawl calls for *capability* go through the Nous Tool Gateway rather than the user's
+    """True when Firecrawl calls for *capability* go through the Niki Tool Gateway rather than the user's
     own key / instance — the same decision :func:`_get_firecrawl_client` makes, without building a client."""
-    from tools.tool_backend_helpers import NOUS_MANAGED_PROVIDER, read_web_capability_selection
+    from tools.tool_backend_helpers import NIKI_MANAGED_PROVIDER, read_web_capability_selection
     selected = read_web_capability_selection(capability)
     if selected is not None or _is_explicit_firecrawl_selection():
-        return selected == NOUS_MANAGED_PROVIDER
+        return selected == NIKI_MANAGED_PROVIDER
     return _get_direct_firecrawl_config() is None and _is_tool_gateway_ready()
 
 
 def _firecrawl_backend_help_suffix() -> str:
-    return ", or use the Nous Tool Gateway via your subscription (FIRECRAWL_GATEWAY_URL or TOOL_GATEWAY_DOMAIN)" if _backend_helpers.managed_nous_tools_enabled() else ""
+    return ", or use the Niki Tool Gateway via your subscription (FIRECRAWL_GATEWAY_URL or TOOL_GATEWAY_DOMAIN)" if _backend_helpers.managed_nous_tools_enabled() else ""
 
 
 def _get_firecrawl_client(capability: Optional[str] = None) -> Any:
     """Get or create the cached Firecrawl client. Strict selection semantics on the stored selection for
-    *capability* (``web.<capability>_backend``, else the shared ``web`` selection): ``"nous"`` → managed Tool
+    *capability* (``web.<capability>_backend``, else the shared ``web`` selection): ``"niki"`` → managed Tool
     Gateway ONLY; any other stored backend → direct Firecrawl ONLY (never a silent managed fallback billed to
-    Nous); never-configured → direct when present, else managed. Raises ValueError when the resolved path is
+    Niki); never-configured → direct when present, else managed. Raises ValueError when the resolved path is
     unusable."""
     wt = _wt()
-    from tools.tool_backend_helpers import NOUS_MANAGED_PROVIDER, read_web_capability_selection, selection_error
+    from tools.tool_backend_helpers import NIKI_MANAGED_PROVIDER, read_web_capability_selection, selection_error
     selected = read_web_capability_selection(capability)
     direct_config = _get_direct_firecrawl_config()
 
@@ -186,18 +186,18 @@ def _get_firecrawl_client(capability: Optional[str] = None) -> Any:
         gw = _gateway.resolve_managed_tool_gateway("firecrawl", token_reader=_gateway.read_nous_access_token)
         if gw is None:
             return None
-        return "sdk", {"api_key": gw.nous_user_token, "api_url": gw.gateway_origin}, ("tool-gateway", gw.gateway_origin, gw.nous_user_token)
+        return "sdk", {"api_key": gw.niki_user_token, "api_url": gw.gateway_origin}, ("tool-gateway", gw.gateway_origin, gw.niki_user_token)
 
     def _unconfigured_message() -> str:
         message = "Web tools are not configured. Set FIRECRAWL_API_KEY for cloud Firecrawl or set FIRECRAWL_API_URL for a self-hosted Firecrawl instance."
         if _backend_helpers.managed_nous_tools_enabled():
-            return message + " With your Nous subscription you can also use the Tool Gateway. run `hermes tools` and select Nous Subscription as the web provider."
-        return message + " " + _backend_helpers.nous_tool_gateway_unavailable_message("managed Firecrawl web tools")
+            return message + " With your Niki subscription you can also use the Tool Gateway. run `niki tools` and select Niki Subscription as the web provider."
+        return message + " " + _backend_helpers.niki_tool_gateway_unavailable_message("managed Firecrawl web tools")
 
     # (resolved config, log detail, error message) per selection state; the message is built lazily.
-    if selected == NOUS_MANAGED_PROVIDER:
-        resolved, log, message = _managed(), "the Nous Subscription web selection is stored but the tool gateway is unavailable.", lambda: selection_error(
-            "web", NOUS_MANAGED_PROVIDER, "the Nous Tool Gateway is not available (not entitled or unreachable)")
+    if selected == NIKI_MANAGED_PROVIDER:
+        resolved, log, message = _managed(), "the Niki Subscription web selection is stored but the tool gateway is unavailable.", lambda: selection_error(
+            "web", NIKI_MANAGED_PROVIDER, "the Niki Tool Gateway is not available (not entitled or unreachable)")
     elif selected is not None or _is_explicit_firecrawl_selection():
         # Stored vendor selection (shared name, or a per-capability key naming firecrawl): direct only (no
         # credentials → explicit selection unlocks keyless cloud mode). A per-capability key naming ANOTHER
@@ -367,6 +367,6 @@ class FirecrawlWebSearchProvider(BaseWebSearchProvider):
     def get_setup_schema(self) -> dict[str, Any]:
         return setup_schema(
             "Firecrawl", "keyless/paid · optional gateway",
-            "Full search + extract; supports keyless cloud, direct API, and Nous tool-gateway routing.",
+            "Full search + extract; supports keyless cloud, direct API, and Niki tool-gateway routing.",
             "FIRECRAWL_API_KEY", "Firecrawl API key (optional; blank = keyless cloud or self-hosted)", "https://docs.firecrawl.dev/introduction",
         )

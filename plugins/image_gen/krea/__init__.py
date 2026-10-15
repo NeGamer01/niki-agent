@@ -125,11 +125,11 @@ def _resolve_model(explicit: Optional[str] = None) -> tuple[str, dict[str, Any]]
 
 def _resolve_managed_krea_gateway():
     """Managed gateway config on the managed path, else ``None``. Managed when the stored
-    ``image_gen`` selection is ``nous`` (or legacy ``use_gateway: true``), or never-configured with
+    ``image_gen`` selection is ``niki`` (or legacy ``use_gateway: true``), or never-configured with
     no ``KREA_API_KEY``; an explicit vendor selection pins direct. Never raises (discovery scans)."""
     try:
         from tools.managed_tool_gateway import resolve_managed_tool_gateway
-        from tools.tool_backend_helpers import NOUS_MANAGED_PROVIDER, read_selection
+        from tools.tool_backend_helpers import NIKI_MANAGED_PROVIDER, read_selection
     except Exception as exc:
         logger.debug("Managed Krea gateway resolution unavailable: %s", exc)
         return None
@@ -137,7 +137,7 @@ def _resolve_managed_krea_gateway():
         selected = read_selection("image_gen")
     except Exception:
         selected = None
-    if selected is not None and selected != NOUS_MANAGED_PROVIDER:
+    if selected is not None and selected != NIKI_MANAGED_PROVIDER:
         return None
     if selected is None and get_secret("KREA_API_KEY"):
         return None
@@ -410,11 +410,11 @@ def _submit_job(
             if managed and 400 <= status < 500:
                 hint = (
                     "Krea's shared-key concurrency cap was hit — retry shortly." if status == 429 else
-                    f"Model '{model_id}' may not be enabled/priced on the Nous Portal's Krea gateway. "
+                    f"Model '{model_id}' may not be enabled/priced on the Niki Portal's Krea gateway. "
                     "Set KREA_API_KEY to use Krea directly, or pick a different model via "
-                    "`hermes tools` → Image Generation.")
+                    "`niki tools` → Image Generation.")
                 return None, submit_fail(
-                    f"Nous Subscription Krea gateway rejected '{model_id}' "
+                    f"Niki Subscription Krea gateway rejected '{model_id}' "
                     f"(HTTP {status}): {err_msg}. {hint}",
                     "api_error")
             return None, submit_fail(failure.error, "api_error")
@@ -464,11 +464,11 @@ class KreaImageGenProvider(StaticImageGenProvider):
     default_model_id = DEFAULT_MODEL
     setup = dict(
         name="Krea", badge="paid",
-        tag="Krea 2 foundation model — Medium ($0.03), Large ($0.06), Medium Turbo ($0.015). Style transfer, moodboards, reference-guided generation. Direct key or managed Nous Subscription gateway.",
+        tag="Krea 2 foundation model — Medium ($0.03), Large ($0.06), Medium Turbo ($0.015). Style transfer, moodboards, reference-guided generation. Direct key or managed Niki Subscription gateway.",
         key="KREA_API_KEY", prompt="Krea API key", url="https://www.krea.ai/settings/api-tokens")
 
     def is_available(self) -> bool:
-        # Direct key OR managed Nous gateway (portal users without a Krea key).
+        # Direct key OR managed Niki gateway (portal users without a Krea key).
         return bool(get_secret("KREA_API_KEY")) or _managed_krea_gateway_ready()
 
     def capabilities(self) -> dict[str, Any]:
@@ -492,21 +492,21 @@ class KreaImageGenProvider(StaticImageGenProvider):
             return prompt_required_error("krea", aspect)
 
         # Managed gateway owns the shared Krea credential and meters per generation (token =
-        # Nous access token); otherwise direct Krea with a BYO ``KREA_API_KEY``.
+        # Niki access token); otherwise direct Krea with a BYO ``KREA_API_KEY``.
         managed = _resolve_managed_krea_gateway()
         if managed is not None:
             base_url = managed.gateway_origin.rstrip("/")
-            auth_token = managed.nous_user_token
+            auth_token = managed.niki_user_token
         else:
             base_url = BASE_URL
             auth_token = get_secret("KREA_API_KEY")
             if not auth_token:
                 return error_factory("krea", aspect)(
-                    "KREA_API_KEY not set. Run `hermes tools` → Image "
+                    "KREA_API_KEY not set. Run `niki tools` → Image "
                     "Generation → Krea to configure, get a key at "
                     "https://www.krea.ai/settings/api-tokens, or sign in to "
-                    "a Nous account with the managed Krea gateway enabled "
-                    "(`hermes setup`).",
+                    "a Niki account with the managed Krea gateway enabled "
+                    "(`niki setup`).",
                     "auth_required")
 
         model_id, meta = _resolve_model(kwargs.get("model"))
@@ -519,7 +519,7 @@ class KreaImageGenProvider(StaticImageGenProvider):
             for what, arg in _MANAGED_UNSUPPORTED:
                 if arg in payload:
                     return fail(
-                        f"Managed Krea (Nous Subscription) does not support {what}. "
+                        f"Managed Krea (Niki Subscription) does not support {what}. "
                         f"Set KREA_API_KEY to use Krea directly, or omit `{arg}`.",
                         "unsupported_argument")
         # After the fail-fast above, so a request about to be refused never reads local files.
@@ -534,7 +534,7 @@ class KreaImageGenProvider(StaticImageGenProvider):
         if err is not None:
             return err
 
-        # 2. Poll — same principal as submit, so the managed path polls the gateway with the Nous token.
+        # 2. Poll — same principal as submit, so the managed path polls the gateway with the Niki token.
         poll_errors: list[dict[str, Any]] = []
 
         def poll_error(kind: str, detail: Any) -> dict[str, Any]:

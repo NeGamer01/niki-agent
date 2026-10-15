@@ -292,7 +292,7 @@ def get_clarify_timeout() -> int:
     hung on ``running: clarify`` (#32762).
     """
     try:
-        from hermes_cli.config import load_config
+        from niki_cli.config import load_config
         return resolve_clarify_timeout(load_config() or {})
     except Exception:
         return 3600

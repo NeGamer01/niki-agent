@@ -9,7 +9,7 @@ call, which Niki then misreports as "only allows pre-approved OAuth
 clients". (``oauth.user_agent`` does not help — it is stamped only on
 token-endpoint requests.)
 
-``HermesMCPOAuthProvider`` now gives such requests a default User-Agent.
+``NikiMCPOAuthProvider`` now gives such requests a default User-Agent.
 These tests drive the bridge through the 401 branch so the SDK yields a
 real discovery request, then assert on its headers.
 """
@@ -35,15 +35,15 @@ async def _make_flow(tmp_path, monkeypatch, *, registered=True):
     from mcp.shared.auth import OAuthClientInformationFull, OAuthClientMetadata, OAuthToken
     from pydantic import AnyUrl
 
-    from tools.mcp_oauth import HermesTokenStorage
-    from tools.mcp_oauth_manager import _HERMES_PROVIDER_CLS, reset_manager_for_tests
+    from tools.mcp_oauth import NikiTokenStorage
+    from tools.mcp_oauth_manager import _NIKI_PROVIDER_CLS, reset_manager_for_tests
 
-    assert _HERMES_PROVIDER_CLS is not None
+    assert _NIKI_PROVIDER_CLS is not None
 
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("NIKI_HOME", str(tmp_path))
     reset_manager_for_tests()
 
-    storage = HermesTokenStorage("srv")
+    storage = NikiTokenStorage("srv")
     await storage.set_tokens(
         OAuthToken(access_token="old_access", token_type="Bearer", expires_in=3600, refresh_token="old_refresh")
     )
@@ -57,7 +57,7 @@ async def _make_flow(tmp_path, monkeypatch, *, registered=True):
                 token_endpoint_auth_method="none",
             )
         )
-    provider = _HERMES_PROVIDER_CLS(
+    provider = _NIKI_PROVIDER_CLS(
         server_name="srv",
         server_url="https://example.com/mcp",
         client_metadata=OAuthClientMetadata(

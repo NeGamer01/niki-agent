@@ -2,7 +2,7 @@
 import asyncio
 from pathlib import Path
 
-from hermes_state_runtime import RuntimeStoreError
+from niki_state_runtime import RuntimeStoreError
 
 
 GROUP_METHODS = {
@@ -54,7 +54,7 @@ async def dispatch_group_control(connection, method, params):
     db_path = await asyncio.to_thread(Path(authority.db.db_path).resolve)
     if db_path.parent != await asyncio.to_thread(home.resolve):
         raise RuntimeStoreError('profile_mismatch')
-    from hermes_cli.profiles import profile_matches_home
+    from niki_cli.profiles import profile_matches_home
     profile = params.get('profile')
     if profile is not None and not isinstance(profile, str):
         raise RuntimeStoreError('invalid_params')
@@ -254,8 +254,8 @@ def _execution_control(service, method, params):
 
 
 def _profiles(authority, actor, home, params):
-    from hermes_cli.profiles import _profile_info, read_profile_meta
-    import hermes_yaml as yaml
+    from niki_cli.profiles import _profile_info, read_profile_meta
+    import niki_yaml as yaml
     include_sessions = params.get('include_sessions', True)
     if type(include_sessions) is not bool:
         raise RuntimeStoreError('invalid_params')
@@ -305,7 +305,7 @@ def _profiles(authority, actor, home, params):
         else:
             owner_filter, owner_params = 'user_id=? AND ', (actor.subject,)
         with authority.db._lock:
-            from hermes_state_sessions import INTERNAL_LISTING_SOURCES
+            from niki_state_sessions import INTERNAL_LISTING_SOURCES
             hidden_sources = ','.join('?' * len(INTERNAL_LISTING_SOURCES))
             latest = authority.db._conn.execute(
                 f"SELECT id FROM sessions WHERE {owner_filter}chat_id LIKE 'local-%' AND archived=0 "

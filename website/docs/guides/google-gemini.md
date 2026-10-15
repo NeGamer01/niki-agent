@@ -22,16 +22,16 @@ Set `GOOGLE_API_KEY` or `GEMINI_API_KEY`. Niki checks both names for the `gemini
 
 ```bash
 # Add your Gemini API key
-echo "GOOGLE_API_KEY=..." >> ~/.hermes/.env
+echo "GOOGLE_API_KEY=..." >> ~/.niki/.env
 
 # Select Gemini as your provider
-hermes model
+niki model
 # → Choose "More providers..." → "Google AI Studio"
 # → Niki checks your key tier and shows Gemini models
 # → Select a model
 
 # Start chatting
-hermes chat
+niki chat
 ```
 
 If you prefer direct config editing, use the native Gemini API base URL:
@@ -45,7 +45,7 @@ model:
 
 ## Configuration
 
-After running `hermes model`, your `~/.hermes/config.yaml` will contain:
+After running `niki model`, your `~/.niki/config.yaml` will contain:
 
 ```yaml
 model:
@@ -54,7 +54,7 @@ model:
   base_url: https://generativelanguage.googleapis.com/v1beta
 ```
 
-And in `~/.hermes/.env`:
+And in `~/.niki/.env`:
 
 ```bash
 GOOGLE_API_KEY=...
@@ -139,14 +139,14 @@ Earlier Niki releases detected the `AQ.` prefix and rerouted such keys to
 `aiplatform.googleapis.com` automatically, so the documented setup was "set
 `GEMINI_API_KEY` to the express key and leave `GEMINI_BASE_URL` unset". That
 automatic reroute is gone: with `GEMINI_BASE_URL` unset, every request — chat,
-`hermes doctor`, TTS — now goes to the AI Studio host and a Vertex express key
+`niki doctor`, TTS — now goes to the AI Studio host and a Vertex express key
 gets `403 PERMISSION_DENIED` there. Add `GEMINI_BASE_URL=https://aiplatform.googleapis.com`
-to `~/.hermes/.env` (or set `base_url` on the provider) once and restart.
+to `~/.niki/.env` (or set `base_url` on the provider) once and restart.
 :::
 
 ## Available Models
 
-The `hermes model` picker shows Gemini models maintained in Niki' provider registry. Common choices include:
+The `niki model` picker shows Gemini models maintained in Niki' provider registry. Common choices include:
 
 | Model | ID | Notes |
 |-------|----|-------|
@@ -158,7 +158,7 @@ The `hermes model` picker shows Gemini models maintained in Niki' provider regis
 | Gemini 2.5 Flash | `gemini-2.5-flash` | Previous generation fast model with thinking capabilities |
 | Gemini 2.5 Pro | `gemini-2.5-pro` | Previous generation complex reasoning model |
 
-Model availability changes over time. If a model disappears or is not enabled for your key, run `hermes model` again and pick one from the current list.
+Model availability changes over time. If a model disappears or is not enabled for your key, run `niki model` again and pick one from the current list.
 
 :::info Model IDs
 Use Gemini's native model IDs such as `gemini-3.7-flash`, not OpenRouter-style IDs like `google/gemini-3.7-flash`, when `provider: gemini`.
@@ -244,12 +244,12 @@ Use the `/model` command during a conversation:
 /model gemini-3.1-flash-lite-preview
 ```
 
-If you have not configured Gemini yet, exit the session and run `hermes model` first. `/model` switches among already-configured providers and models; it does not collect new API keys.
+If you have not configured Gemini yet, exit the session and run `niki model` first. `/model` switches among already-configured providers and models; it does not collect new API keys.
 
 ## Diagnostics
 
 ```bash
-hermes doctor
+niki doctor
 ```
 
 The doctor checks:
@@ -262,8 +262,8 @@ The doctor checks:
 Gemini works with all Niki gateway platforms (Telegram, Discord, Slack, WhatsApp, LINE, Feishu, etc.). Configure Gemini as your provider, then start the gateway normally:
 
 ```bash
-hermes gateway setup
-hermes gateway start
+niki gateway setup
+niki gateway start
 ```
 
 The gateway reads `config.yaml` and uses the same Gemini provider configuration.
@@ -272,7 +272,7 @@ The gateway reads `config.yaml` and uses the same Gemini provider configuration.
 
 ### "Gemini native client requires an API key"
 
-Niki could not find a usable API key. Add one of these to `~/.hermes/.env`:
+Niki could not find a usable API key. Add one of these to `~/.niki/.env`:
 
 ```bash
 GOOGLE_API_KEY=...
@@ -280,7 +280,7 @@ GOOGLE_API_KEY=...
 GEMINI_API_KEY=...
 ```
 
-Then run `hermes model` again.
+Then run `niki model` again.
 
 ### "This Google API key is on the free tier"
 
@@ -289,16 +289,16 @@ Niki probes Gemini API keys during setup. Free-tier quotas can be exhausted afte
 Enable billing on the Google Cloud project attached to your key, regenerate the key if needed, then run:
 
 ```bash
-hermes model
+niki model
 ```
 
 ### "404 model not found"
 
-The selected model is not available for your account, region, or key. Run `hermes model` again and pick another Gemini model from the current list.
+The selected model is not available for your account, region, or key. Run `niki model` again and pick another Gemini model from the current list.
 
-### Gemma model is not shown in `hermes model`
+### Gemma model is not shown in `niki model`
 
-Niki may hide low-throughput Gemma models from the picker by default. If you intentionally want to evaluate one, set the model ID directly in `~/.hermes/config.yaml`.
+Niki may hide low-throughput Gemma models from the picker by default. If you intentionally want to evaluate one, set the model ID directly in `~/.niki/config.yaml`.
 
 ### "429 quota exceeded" on Gemma
 
@@ -306,7 +306,7 @@ Gemma models exposed through the Gemini API are useful for evaluation, but their
 
 ### OpenAI-compatible endpoint is configured
 
-Check `~/.hermes/.env` for:
+Check `~/.niki/.env` for:
 
 ```bash
 GEMINI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
@@ -320,7 +320,7 @@ GEMINI_BASE_URL=https://generativelanguage.googleapis.com/v1beta
 
 ### Tool calling fails with schema errors
 
-Upgrade Niki and rerun `hermes model`. The native Gemini adapter sanitizes tool schemas for Gemini's stricter function-declaration format; older builds or custom endpoints may not.
+Upgrade Niki and rerun `niki model`. The native Gemini adapter sanitizes tool schemas for Gemini's stricter function-declaration format; older builds or custom endpoints may not.
 
 ## Related
 

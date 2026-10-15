@@ -1,7 +1,7 @@
 name: desensitize
-repo: https://github.com/yubingz/hermes-desensitize
+repo: https://github.com/yubingz/niki-desensitize
 sha: 4f6697c1e45bb224e40b556372f33794f9326c0f
-subdir: src/hermes_desensitize
+subdir: src/niki_desensitize
 description: "Chinese-context desensitization for Niki chats. Replaces PII and business-sensitive
   entities — person names, company names, addresses, file paths, and magnitude figures — with
   reversible placeholders before a message reaches the model, then restores them in the reply.
@@ -23,8 +23,8 @@ description: "Chinese-context desensitization for Niki chats. Replaces PII and b
 maintainer: yubingz
 tier: community
 category: tools
-requires_hermes: ">=0.19"
-docs_url: https://github.com/yubingz/hermes-desensitize#readme
+requires_niki: ">=0.19"
+docs_url: https://github.com/yubingz/niki-desensitize#readme
 version: "1.4.1"
 readme: true
 platforms: []

@@ -106,7 +106,7 @@ def test_classify_network_failure_stays_generic():
 
 
 def test_core_only_generation_carries_no_release_age_cutoff(layout):
-    """A core-only install (hermes update) is a frozen sync: the cutoff there only gates the build
+    """A core-only install (niki update) is a frozen sync: the cutoff there only gates the build
     tools uv fetches, and a mirror without upload times rejects every one of them (#135589)."""
     tmp, core, _, _ = layout
     manifest = core / "pyproject.toml"
@@ -122,8 +122,8 @@ def test_undated_index_failure_names_the_index_not_a_conflict():
     from pm.workspace import ResolutionConflict, classify_uv_failure
 
     seeded = ("  x No solution found when resolving dependencies:\n"
-              "  Because resvg-py==0.4.0 has no publish time and hermes-agent depends on resvg-py==0.4.0, "
-              "we can conclude that hermes-agent's requirements are unsatisfiable.")
+              "  Because resvg-py==0.4.0 has no publish time and niki-agent depends on resvg-py==0.4.0, "
+              "we can conclude that niki-agent's requirements are unsatisfiable.")
     cold = ("warning: cffi-2.0.0.tar.gz is missing an upload date, but user provided: 2026-09-25T00:00:00Z\n"
             "  x No solution found when resolving dependencies:\n"
             "  Because there are no versions of cffi and you require cffi>=2.0.0, we can conclude that "

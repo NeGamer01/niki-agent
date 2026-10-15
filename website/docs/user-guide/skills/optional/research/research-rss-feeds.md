@@ -14,7 +14,7 @@ Read RSS, Atom, JSON feeds; discover feeds behind a page.
 
 | | |
 |---|---|
-| Source | Optional — install with `hermes skills install official/research/rss-feeds` |
+| Source | Optional — install with `niki skills install official/research/rss-feeds` |
 | Path | `optional-skills/research/rss-feeds` |
 | Version | `1.0.0` |
 | Author | Teknium (teknium1), Niki Agent |
@@ -109,6 +109,6 @@ truncated or the first paragraph only.
 
 ## Verification
 
-`python3 scripts/feed.py read https://github.com/NousResearch/hermes-agent/releases.atom
+`python3 scripts/feed.py read https://github.com/NeGamer01/niki-agent/releases.atom
 --limit 1` prints one entry with a `releases/tag/` link and a `[atom]` format tag;
 `discover https://simonwillison.net/` prints an `/atom/` URL.

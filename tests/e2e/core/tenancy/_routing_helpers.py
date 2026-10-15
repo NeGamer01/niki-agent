@@ -5,8 +5,8 @@ identity, each accepting only its own randomly minted key. ``check_routing`` is 
 invariant every scenario shares: a request on a host the scenario did not select, or a
 selected host receiving any bearer other than its own, is a credential leak.
 
-Niki itself runs for real in child processes (``hermes chat -q`` / ``hermes -z`` /
-``python -m tui_gateway.entry``) with HOME and HERMES_HOME inside the test's tmp dir,
+Niki itself runs for real in child processes (``niki chat -q`` / ``niki -z`` /
+``python -m tui_gateway.entry``) with HOME and NIKI_HOME inside the test's tmp dir,
 every credential/endpoint env var stripped, and only these fake hosts configured.
 """
 
@@ -27,7 +27,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
-import hermes_yaml as yaml
+import niki_yaml as yaml
 
 from tests.fakes.fake_llm_provider import Error, FakeLLMServer, Text
 
@@ -47,26 +47,26 @@ def assert_routing(problems: list[str], ctx: str) -> None:
 
 # Env that could route or authenticate a child Niki outside the fake fleet.
 _STRIP_SUFFIXES = ("_API_KEY", "_TOKEN", "_BASE_URL", "_SECRET", "_ACCESS_KEY", "_KEY_ID")
-_STRIP_PREFIXES = ("HERMES_", "OPENAI", "ANTHROPIC", "OPENROUTER", "AWS_", "AZURE_", "GOOGLE_",
-                   "GEMINI", "PYTEST_", "NOUS_", "XAI_", "LLM_", "CUSTOM_")
+_STRIP_PREFIXES = ("NIKI_", "OPENAI", "ANTHROPIC", "OPENROUTER", "AWS_", "AZURE_", "GOOGLE_",
+                   "GEMINI", "PYTEST_", "NIKI_", "XAI_", "LLM_", "CUSTOM_")
 
 
-def hermetic_env(home: Path, hermes_home: Path | None = None, proxy: str | None = None) -> dict[str, str]:
+def hermetic_env(home: Path, niki_home: Path | None = None, proxy: str | None = None) -> dict[str, str]:
     real_home = Path(pwd.getpwuid(os.getuid()).pw_dir).resolve()
     fake = home.resolve()
     # The state-db guard is bypassed below, so prove first that this child can never reach the
     # real install: its HOME (and therefore every profile root) lives outside the real home.
-    assert fake != real_home and real_home / ".hermes" not in (fake, *fake.parents), fake
+    assert fake != real_home and real_home / ".niki" not in (fake, *fake.parents), fake
     env = {k: v for k, v in os.environ.items()
            if not (k.endswith(_STRIP_SUFFIXES) or k.startswith(_STRIP_PREFIXES))}
     env.update(
         HOME=str(home),
-        HERMES_HOME=str(hermes_home or home / ".hermes"),
+        NIKI_HOME=str(niki_home or home / ".niki"),
         PYTHONPATH=str(REPO_ROOT),
         NO_COLOR="1",
         TERM="dumb",
-        # A pytest-descendant child treats $HOME/.hermes/state.db as production; that HOME is ours.
-        HERMES_STATE_DB_GUARD_BYPASS="1",
+        # A pytest-descendant child treats $HOME/.niki/state.db as production; that HOME is ours.
+        NIKI_STATE_DB_GUARD_BYPASS="1",
     )
     for var in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "NO_PROXY", "http_proxy", "https_proxy", "all_proxy", "no_proxy"):
         env.pop(var, None)
@@ -246,24 +246,24 @@ def inference_hosts() -> frozenset[str]:
     """
     from urllib.parse import urlparse
 
-    from hermes_cli.auth import PROVIDER_REGISTRY
-    from hermes_constants import OPENROUTER_BASE_URL
+    from niki_cli.auth import PROVIDER_REGISTRY
+    from niki_constants import OPENROUTER_BASE_URL
 
     urls = [getattr(p, "inference_base_url", "") or "" for p in PROVIDER_REGISTRY.values()] + [OPENROUTER_BASE_URL]
     return frozenset(h for h in (urlparse(u).hostname for u in urls) if h and h not in {"127.0.0.1", "localhost"})
 
 
-# HERMES_HOME writing ------------------------------------------------------------
+# NIKI_HOME writing ------------------------------------------------------------
 
 
-def write_home(hermes_home: Path, config: dict[str, Any], env: dict[str, str],
+def write_home(niki_home: Path, config: dict[str, Any], env: dict[str, str],
                auth: dict[str, Any] | None = None) -> Path:
-    hermes_home.mkdir(parents=True, exist_ok=True)
-    (hermes_home / "config.yaml").write_text(yaml.safe_dump(config, sort_keys=False), encoding="utf-8")
-    (hermes_home / ".env").write_text("".join(f"{k}={v}\n" for k, v in env.items()), encoding="utf-8")
+    niki_home.mkdir(parents=True, exist_ok=True)
+    (niki_home / "config.yaml").write_text(yaml.safe_dump(config, sort_keys=False), encoding="utf-8")
+    (niki_home / ".env").write_text("".join(f"{k}={v}\n" for k, v in env.items()), encoding="utf-8")
     if auth is not None:
-        (hermes_home / "auth.json").write_text(json.dumps(auth), encoding="utf-8")
-    return hermes_home
+        (niki_home / "auth.json").write_text(json.dumps(auth), encoding="utf-8")
+    return niki_home
 
 
 def pool_auth(provider: str, keys: Iterable[str]) -> dict[str, Any]:
@@ -286,13 +286,13 @@ class RunResult:
     seconds: float
 
 
-def run_hermes(argv: list[str], home: Path, *, hermes_home: Path | None = None, proxy: str | None = None,
+def run_niki(argv: list[str], home: Path, *, niki_home: Path | None = None, proxy: str | None = None,
                timeout: float = 240.0) -> RunResult:
-    """Run the real ``hermes`` entry point in its own process group; kill only that group."""
+    """Run the real ``niki`` entry point in its own process group; kill only that group."""
     start = time.monotonic()
     proc = subprocess.Popen(
-        [sys.executable, "-m", "hermes_cli.main", *argv],
-        cwd=str(home), env=hermetic_env(home, hermes_home, proxy), stdin=subprocess.DEVNULL,
+        [sys.executable, "-m", "niki_cli.main", *argv],
+        cwd=str(home), env=hermetic_env(home, niki_home, proxy), stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, start_new_session=True,
     )
     try:

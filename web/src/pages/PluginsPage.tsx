@@ -15,18 +15,18 @@ import type {
   MemoryProviderSetupResult,
   PluginsHubResponse,
 } from "@/lib/api";
-import { Button } from "@nous-research/ui/ui/components/button";
-import { Badge } from "@nous-research/ui/ui/components/badge";
-import { Select, SelectOption } from "@nous-research/ui/ui/components/select";
-import { Switch } from "@nous-research/ui/ui/components/switch";
-import { Spinner } from "@nous-research/ui/ui/components/spinner";
-import { CommandBlock, CopyButton } from "@nous-research/ui/ui/components/command-block";
-import { Card, CardContent, CardHeader, CardTitle } from "@nous-research/ui/ui/components/card";
-import { ConfirmDialog } from "@nous-research/ui/ui/components/confirm-dialog";
-import { Input } from "@nous-research/ui/ui/components/input";
-import { Label } from "@nous-research/ui/ui/components/label";
-import { useToast } from "@nous-research/ui/hooks/use-toast";
-import { Toast } from "@nous-research/ui/ui/components/toast";
+import { Button } from "@niki-research/ui/ui/components/button";
+import { Badge } from "@niki-research/ui/ui/components/badge";
+import { Select, SelectOption } from "@niki-research/ui/ui/components/select";
+import { Switch } from "@niki-research/ui/ui/components/switch";
+import { Spinner } from "@niki-research/ui/ui/components/spinner";
+import { CommandBlock, CopyButton } from "@niki-research/ui/ui/components/command-block";
+import { Card, CardContent, CardHeader, CardTitle } from "@niki-research/ui/ui/components/card";
+import { ConfirmDialog } from "@niki-research/ui/ui/components/confirm-dialog";
+import { Input } from "@niki-research/ui/ui/components/input";
+import { Label } from "@niki-research/ui/ui/components/label";
+import { useToast } from "@niki-research/ui/hooks/use-toast";
+import { Toast } from "@niki-research/ui/ui/components/toast";
 import { useI18n } from "@/i18n";
 import { en } from "@/i18n/en";
 import { PluginSlot } from "@/plugins";
@@ -34,7 +34,7 @@ import { cn } from "@/lib/utils";
 import { usePageHeader } from "@/contexts/usePageHeader";
 
 /** Select value for built-in memory (`config` uses empty string). Never use `""` — UI Select maps empty value to an empty label. */
-const MEMORY_PROVIDER_BUILTIN = "__hermes_memory_builtin__";
+const MEMORY_PROVIDER_BUILTIN = "__niki_memory_builtin__";
 
 type MemoryFormValue = string | boolean | number;
 
@@ -883,7 +883,7 @@ export default function PluginsPage() {
 
           <p className="text-xs tracking-[0.06em] text-text-tertiary">
             {t.pluginsPage.catalogHint ??
-              "Curated, Nous-reviewed plugins pinned to exact commits."}
+              "Curated, Niki-reviewed plugins pinned to exact commits."}
           </p>
 
           <Input
@@ -904,7 +904,7 @@ export default function PluginsPage() {
               {t.pluginsPage.catalogEmpty ?? "No catalog entries match."}{" "}
               <a
                 className="underline"
-                href="https://hermes-agent.nousresearch.com/docs/plugins"
+                href="https://github.com/NeGamer01/niki-agent/docs/plugins"
                 target="_blank"
                 rel="noreferrer"
               >
@@ -1387,8 +1387,8 @@ function CatalogEntryCard(props: CatalogEntryCardProps) {
             </a>
           ) : null}
 
-          {entry.requires_hermes ? (
-            <span>hermes {entry.requires_hermes}</span>
+          {entry.requires_niki ? (
+            <span>niki {entry.requires_niki}</span>
           ) : null}
 
           {entry.platforms.length ? (

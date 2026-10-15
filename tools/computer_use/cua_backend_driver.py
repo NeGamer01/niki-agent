@@ -17,7 +17,7 @@ from typing import Any, Dict, List, Optional, Tuple
 logger = logging.getLogger("tools.computer_use.cua_backend")
 
 # PM owns the pinned binary; an explicit override remains externally owned.
-_CUA_DRIVER_CMD_ENV = "HERMES_CUA_DRIVER_CMD"
+_CUA_DRIVER_CMD_ENV = "NIKI_CUA_DRIVER_CMD"
 _CUA_DRIVER_DEFAULT_CMD = "cua-driver"
 _CUA_DRIVER_ARGS = ["mcp"]  # stdio MCP; fallback when the driver has no `manifest` verb
 _CUA_DRIVER_RUNTIME_CONTRACT_MIN = (0, 20, 0)
@@ -64,7 +64,7 @@ def _wsl_windows_path_to_posix(path: str) -> str:
     if not re.match(r"^[A-Za-z]:[\\/]", path):
         return path
     try:
-        from hermes_constants import is_wsl
+        from niki_constants import is_wsl
         wsl = is_wsl()
     except Exception:
         wsl = False
@@ -89,8 +89,8 @@ def cua_driver_binary_available() -> bool:
     return resolve_cua_driver_cmd() is not None
 
 def cua_driver_install_hint() -> str:
-    return ("cua-driver is not installed. Install the pinned driver with:\n  hermes computer-use install\n"
-            "Or run `hermes tools` and enable the Computer Use toolset to install it automatically.")
+    return ("cua-driver is not installed. Install the pinned driver with:\n  niki computer-use install\n"
+            "Or run `niki tools` and enable the Computer Use toolset to install it automatically.")
 
 def _mcp_args_with_overlay_flag(args: list[str], driver_cmd: str = _CUA_DRIVER_DEFAULT_CMD) -> list[str]:
     """Return *args* with ``--no-overlay`` appended when configured and supported."""
@@ -113,7 +113,7 @@ def _resolve_mcp_invocation(driver_cmd: str, *, timeout: float = 6.0) -> tuple[s
     on older drivers or any discovery failure — the wrapper must not refuse to start over a failed discovery hop.
     ``--no-overlay`` appended when allowed.
 
-    Surface 8 of NousResearch/hermes-agent#47072: instead of hardcoding ``["mcp"]`` we ask the driver itself
+    Surface 8 of NeGamer01/niki-agent#47072: instead of hardcoding ``["mcp"]`` we ask the driver itself
     via ``cua-driver manifest`` (trycua/cua#1961). The manifest carries a stable ``mcp_invocation`` pointer
     with both ``command`` and ``args``, so a future cua-driver that renames or relocates the subcommand
     keeps working without a Niki patch.

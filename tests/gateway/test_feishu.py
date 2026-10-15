@@ -164,8 +164,8 @@ class TestFeishuAdapterMessaging(unittest.TestCase):
         Without this UA tag the Feishu server does not push group @mention
         events over the WebSocket transport. The long-lived client must also
         stay off asyncio's shared default executor. See
-        https://github.com/NousResearch/hermes-agent/issues/50656
-        https://github.com/NousResearch/hermes-agent/issues/78318
+        https://github.com/NeGamer01/niki-agent/issues/50656
+        https://github.com/NeGamer01/niki-agent/issues/78318
         """
         from gateway.config import PlatformConfig
         from plugins.platforms.feishu.adapter import FeishuAdapter
@@ -946,7 +946,7 @@ class TestAdapterBehavior(unittest.TestCase):
     @patch.dict(
         os.environ,
         {
-            "HERMES_FEISHU_TEXT_BATCH_MAX_MESSAGES": "2",
+            "NIKI_FEISHU_TEXT_BATCH_MAX_MESSAGES": "2",
         },
         clear=True,
     )
@@ -1004,8 +1004,8 @@ class TestAdapterBehavior(unittest.TestCase):
     @patch.dict(
         os.environ,
         {
-            "HERMES_FEISHU_TEXT_BATCH_MAX_MESSAGES": "8",
-            "HERMES_FEISHU_TEXT_BATCH_MAX_CHARS": "4000",
+            "NIKI_FEISHU_TEXT_BATCH_MAX_MESSAGES": "8",
+            "NIKI_FEISHU_TEXT_BATCH_MAX_CHARS": "4000",
         },
         clear=False,
     )
@@ -1148,7 +1148,7 @@ class TestAdapterBehavior(unittest.TestCase):
                 return _FakeResponse()
 
         with tempfile.TemporaryDirectory() as tmp:
-            with patch.dict(os.environ, {"HERMES_HOME": tmp}, clear=False):
+            with patch.dict(os.environ, {"NIKI_HOME": tmp}, clear=False):
                 adapter = FeishuAdapter(PlatformConfig())
 
                 async def _run() -> tuple[str, str]:
@@ -1237,7 +1237,7 @@ class TestAdapterBehavior(unittest.TestCase):
         from plugins.platforms.feishu.adapter import FeishuAdapter
 
         with tempfile.TemporaryDirectory() as temp_home:
-            with patch.dict(os.environ, {"HERMES_HOME": temp_home}, clear=False):
+            with patch.dict(os.environ, {"NIKI_HOME": temp_home}, clear=False):
                 first = FeishuAdapter(PlatformConfig())
                 self.assertFalse(asyncio.run(first._is_duplicate("om_same")))
                 second = FeishuAdapter(PlatformConfig())
@@ -1386,7 +1386,7 @@ class TestAdapterBehavior(unittest.TestCase):
 
         content = (
             "确认已入库 ✓\n"
-            "文件路径：`/root/.hermes/profiles/agent_cto/cron/jobs.json`\n"
+            "文件路径：`/root/.niki/profiles/agent_cto/cron/jobs.json`\n"
             "**解码后的内容：**\n"
             "```json\n"
             '{"cron": "list"}\n'
@@ -1412,7 +1412,7 @@ class TestAdapterBehavior(unittest.TestCase):
                 [
                     {
                         "tag": "md",
-                        "text": "确认已入库 ✓\n文件路径：`/root/.hermes/profiles/agent_cto/cron/jobs.json`\n**解码后的内容：**",
+                        "text": "确认已入库 ✓\n文件路径：`/root/.niki/profiles/agent_cto/cron/jobs.json`\n**解码后的内容：**",
                     }
                 ],
                 [{"tag": "md", "text": "```json\n{\"cron\": \"list\"}\n```"}],
@@ -1530,15 +1530,15 @@ class TestWebhookSecurity(unittest.TestCase):
 
     def test_webhook_request_rejects_oversized_chunked_body_while_reading(self):
         from gateway.config import PlatformConfig
-        from hermes_constants import reset_hermes_home_override, set_hermes_home_override
+        from niki_constants import reset_niki_home_override, set_niki_home_override
         from plugins.platforms.feishu.adapter import FeishuAdapter, _FEISHU_WEBHOOK_MAX_BODY_BYTES
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            token = set_hermes_home_override(tmpdir)
+            token = set_niki_home_override(tmpdir)
             try:
                 adapter = FeishuAdapter(PlatformConfig())
             finally:
-                reset_hermes_home_override(token)
+                reset_niki_home_override(token)
             content = _FakeRequestContent(b"A" * (_FEISHU_WEBHOOK_MAX_BODY_BYTES + 2))
             request = SimpleNamespace(
                 remote="127.0.0.1",
@@ -1610,7 +1610,7 @@ class TestDedupTTL(unittest.TestCase):
         from plugins.platforms.feishu.adapter import FeishuAdapter
 
         with tempfile.TemporaryDirectory() as temp_home:
-            with patch.dict(os.environ, {"HERMES_HOME": temp_home}, clear=True):
+            with patch.dict(os.environ, {"NIKI_HOME": temp_home}, clear=True):
                 adapter = FeishuAdapter(PlatformConfig())
                 adapter._dedup_state_path.parent.mkdir(parents=True, exist_ok=True)
                 adapter._dedup_state_path.write_text(
@@ -1663,13 +1663,13 @@ class TestDedupTTL(unittest.TestCase):
         from gateway.config import PlatformConfig
         from plugins.platforms.feishu.adapter import FeishuAdapter
 
-        # The class-level env wipe drops the per-test HERMES_HOME, so the adapter resolves
-        # its dedup store under the operator's real ~/.hermes and every id a live gateway
+        # The class-level env wipe drops the per-test NIKI_HOME, so the adapter resolves
+        # its dedup store under the operator's real ~/.niki and every id a live gateway
         # persisted leaks into writes[-1]. Pin the store to a scratch path instead.
         # Kept open for the whole test: _persist_seen_message_ids mkdirs the store's
         # parent back, so closing it early leaks an empty scratch dir per run.
         with tempfile.TemporaryDirectory() as scratch:
-            with patch("plugins.platforms.feishu.adapter.get_hermes_home", return_value=Path(scratch)):
+            with patch("plugins.platforms.feishu.adapter.get_niki_home", return_value=Path(scratch)):
                 adapter = FeishuAdapter(PlatformConfig())
             writes = []
             calls = [0]

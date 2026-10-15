@@ -2,13 +2,13 @@ import assert from 'node:assert/strict'
 
 import { test } from 'vitest'
 
-import { hasWindowsPathPrefix, isExternalVenvHolder, isHermesOwnedVenvDaemon } from './venv-holder-select'
+import { hasWindowsPathPrefix, isExternalVenvHolder, isNikiOwnedVenvDaemon } from './venv-holder-select'
 
 const SCRIPTS = 'C:\\Niki\\venv\\Scripts'
 
 test('matches the hindsight daemon shim (exe under venv Scripts + hindsight cmdline)', () => {
   assert.equal(
-    isHermesOwnedVenvDaemon(
+    isNikiOwnedVenvDaemon(
       'C:\\Niki\\venv\\Scripts\\pythonw.exe',
       'C:\\Niki\\venv\\Scripts\\pythonw.exe -m hindsight_api.main --daemon --idle-timeout 300 --port 9177',
       SCRIPTS
@@ -19,8 +19,8 @@ test('matches the hindsight daemon shim (exe under venv Scripts + hindsight cmdl
 
 test('Windows path prefix match is ordinal case-insensitive', () => {
   assert.equal(
-    isHermesOwnedVenvDaemon(
-      'c:\\hermes\\venv\\scripts\\python.exe',
+    isNikiOwnedVenvDaemon(
+      'c:\\niki\\venv\\scripts\\python.exe',
       'python.exe -m hindsight_api.main --daemon',
       'C:\\Niki\\venv\\Scripts'
     ),
@@ -29,18 +29,18 @@ test('Windows path prefix match is ordinal case-insensitive', () => {
 })
 
 test('excludes external venv holders that are not the hindsight daemon', () => {
-  // a user terminal running the hermes CLI from the venv — must NOT be killed
-  assert.equal(isHermesOwnedVenvDaemon('C:\\Niki\\venv\\Scripts\\hermes.exe', 'hermes chat -q "hi"', SCRIPTS), false)
+  // a user terminal running the niki CLI from the venv — must NOT be killed
+  assert.equal(isNikiOwnedVenvDaemon('C:\\Niki\\venv\\Scripts\\niki.exe', 'niki chat -q "hi"', SCRIPTS), false)
   // an unrelated python script using the venv interpreter
   assert.equal(
-    isHermesOwnedVenvDaemon('C:\\Niki\\venv\\Scripts\\python.exe', 'python C:\\tools\\import.py', SCRIPTS),
+    isNikiOwnedVenvDaemon('C:\\Niki\\venv\\Scripts\\python.exe', 'python C:\\tools\\import.py', SCRIPTS),
     false
   )
 })
 
 test('excludes exes outside the venv even when the cmdline mentions hindsight', () => {
   assert.equal(
-    isHermesOwnedVenvDaemon('C:\\Other\\pythonw.exe', 'pythonw -m hindsight_api.main --daemon', SCRIPTS),
+    isNikiOwnedVenvDaemon('C:\\Other\\pythonw.exe', 'pythonw -m hindsight_api.main --daemon', SCRIPTS),
     false
   )
 })
@@ -51,35 +51,35 @@ test('prefix boundary: sibling dirs (ScriptsX) do not match', () => {
 })
 
 test('null/undefined fields never match', () => {
-  assert.equal(isHermesOwnedVenvDaemon(null, 'x', SCRIPTS), false)
-  assert.equal(isHermesOwnedVenvDaemon('C:\\Niki\\venv\\Scripts\\pythonw.exe', null, SCRIPTS), false)
-  assert.equal(isHermesOwnedVenvDaemon(undefined, undefined, SCRIPTS), false)
+  assert.equal(isNikiOwnedVenvDaemon(null, 'x', SCRIPTS), false)
+  assert.equal(isNikiOwnedVenvDaemon('C:\\Niki\\venv\\Scripts\\pythonw.exe', null, SCRIPTS), false)
+  assert.equal(isNikiOwnedVenvDaemon(undefined, undefined, SCRIPTS), false)
 })
 
 // --- isExternalVenvHolder (#62311) ------------------------------------------
 
-test('matches the autostart gateway shim (hermes.exe under venv Scripts)', () => {
+test('matches the autostart gateway shim (niki.exe under venv Scripts)', () => {
   assert.equal(
     isExternalVenvHolder(
-      'C:\\Niki\\venv\\Scripts\\hermes.exe',
-      '"C:\\Niki\\venv\\Scripts\\hermes.exe" gateway run --external-supervisor',
+      'C:\\Niki\\venv\\Scripts\\niki.exe',
+      '"C:\\Niki\\venv\\Scripts\\niki.exe" gateway run --external-supervisor',
       SCRIPTS
     ),
     true
   )
 })
 
-test('matches the dashboard scheduled task (python -m hermes_cli / -m hermes)', () => {
+test('matches the dashboard scheduled task (python -m niki_cli / -m niki)', () => {
   assert.equal(
     isExternalVenvHolder(
       'C:\\Niki\\venv\\Scripts\\python.exe',
-      '"C:\\Niki\\venv\\Scripts\\python.exe" -m hermes_cli.main dashboard',
+      '"C:\\Niki\\venv\\Scripts\\python.exe" -m niki_cli.main dashboard',
       SCRIPTS
     ),
     true
   )
   assert.equal(
-    isExternalVenvHolder('C:\\Niki\\venv\\Scripts\\pythonw.exe', 'pythonw.exe -m hermes serve', SCRIPTS),
+    isExternalVenvHolder('C:\\Niki\\venv\\Scripts\\pythonw.exe', 'pythonw.exe -m niki serve', SCRIPTS),
     true
   )
 })
@@ -90,24 +90,24 @@ test('never matches an unrelated process that merely borrows the venv interprete
     isExternalVenvHolder('C:\\Niki\\venv\\Scripts\\python.exe', 'python C:\\tools\\import.py', SCRIPTS),
     false
   )
-  // hindsight daemon is selected by isHermesOwnedVenvDaemon, not here
+  // hindsight daemon is selected by isNikiOwnedVenvDaemon, not here
   assert.equal(
     isExternalVenvHolder('C:\\Niki\\venv\\Scripts\\pythonw.exe', 'pythonw -m hindsight_api.main --daemon', SCRIPTS),
     false
   )
 })
 
-test('never matches a process outside the venv, even with hermes in the cmdline', () => {
+test('never matches a process outside the venv, even with niki in the cmdline', () => {
   // an editor / shell whose command line mentions the install root (#62445 regression guard)
   assert.equal(
     isExternalVenvHolder('C:\\Windows\\System32\\cmd.exe', 'cmd /c cd C:\\Niki\\venv\\Scripts && dir', SCRIPTS),
     false
   )
-  assert.equal(isExternalVenvHolder('C:\\Other\\hermes.exe', 'hermes gateway run', SCRIPTS), false)
+  assert.equal(isExternalVenvHolder('C:\\Other\\niki.exe', 'niki gateway run', SCRIPTS), false)
 })
 
 test('sibling-dir and boundary safety for the external selector', () => {
-  assert.equal(isExternalVenvHolder('C:\\Niki\\venv\\ScriptsX\\hermes.exe', 'hermes gateway run', SCRIPTS), false)
-  assert.equal(isExternalVenvHolder(null, 'hermes gateway run', SCRIPTS), false)
-  assert.equal(isExternalVenvHolder('C:\\Niki\\venv\\Scripts\\hermes.exe', null, SCRIPTS), false)
+  assert.equal(isExternalVenvHolder('C:\\Niki\\venv\\ScriptsX\\niki.exe', 'niki gateway run', SCRIPTS), false)
+  assert.equal(isExternalVenvHolder(null, 'niki gateway run', SCRIPTS), false)
+  assert.equal(isExternalVenvHolder('C:\\Niki\\venv\\Scripts\\niki.exe', null, SCRIPTS), false)
 })

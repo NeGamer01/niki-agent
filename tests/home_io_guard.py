@@ -20,7 +20,7 @@ _INTERPRETER_PREFIXES = tuple({
     Path(p).resolve() for p in sys.path if p and Path(p).name in ("site-packages", "dist-packages")
 } | {
     # The default install checks the repo out INSIDE the home (install.sh:
-    # INSTALL_DIR=$HERMES_HOME/hermes-agent). Reading test data, sources for tracebacks, or the
+    # INSTALL_DIR=$NIKI_HOME/niki-agent). Reading test data, sources for tracebacks, or the
     # checkout's own .venv is not Niki state; without this every run from a default install
     # trips on its first traceback.
     Path(__file__).resolve().parent.parent,
@@ -82,19 +82,19 @@ class HomeIOGuard:
                 return
             resolved = self._refuse_installed_app_change(value, absolute) if destructive else None
             roots = tuple(_normcase(os.fspath(r)) for r in self.roots())
-            # Resolving the root itself (get_default_hermes_root's relative_to
+            # Resolving the root itself (get_default_niki_root's relative_to
             # probe) reads no state; only its contents are guarded.
             if metadata and absolute in roots:
                 return
             # ``shutil.which`` stats/accesses ``<PATH entry>/<name>``. A developer shell puts
-            # PM's tool store (~/.hermes/tools/...) on PATH; probing an executable there is
+            # PM's tool store (~/.niki/tools/...) on PATH; probing an executable there is
             # command lookup, not reading Niki state. CI has no such entries.
             if metadata:
                 path = os.environ.get("PATH", "")
                 cwd = os.getcwd() if self._relative_path_entries(path) else None
                 if os.path.dirname(absolute) in self._path_entries(path, cwd):
                     return
-            # The interpreter's own installation (a PM-managed python under ~/.hermes/tools):
+            # The interpreter's own installation (a PM-managed python under ~/.niki/tools):
             # stdlib source reads (linecache, traceback) are not Niki state either, nor is
             # realpath() walking up through its ancestors.
             for prefix in _INTERPRETER_PREFIX_STRS:
@@ -132,14 +132,14 @@ class HomeIOGuard:
                 # pytest.fail, not AssertionError: removal helpers catch Exception and would log
                 # the refusal as a warning while the test passed.
                 pytest.fail(f"TEST BUG: changing the REAL installed Niki desktop app: {value}\n"
-                            "Stub hermes_cli.gui_uninstall.packaged_gui_app_paths to a temporary path.")
+                            "Stub niki_cli.gui_uninstall.packaged_gui_app_paths to a temporary path.")
         return resolved
 
     @staticmethod
     def refuse(value):
         raise AssertionError(
-            f"TEST BUG: file I/O against the REAL hermes home: {value}\n"
-            "Use the isolated HERMES_HOME or a temporary fixture instead."
+            f"TEST BUG: file I/O against the REAL niki home: {value}\n"
+            "Use the isolated NIKI_HOME or a temporary fixture instead."
         )
 
     @staticmethod

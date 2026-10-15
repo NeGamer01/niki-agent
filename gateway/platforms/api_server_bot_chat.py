@@ -1,6 +1,6 @@
 """Peer turns into the canonical Bot Chat under session authority.
 
-``hermes peer dm`` (``/api/sessions/{id}/chat[/stream]``) and ``hermes peer run`` (``/v1/runs``)
+``niki peer dm`` (``/api/sessions/{id}/chat[/stream]``) and ``niki peer run`` (``/v1/runs``)
 aim at the profile's Bot Chat. Under session authority that chat is a LOCAL session whose only
 writer is the authority FIFO — a Desktop showing it is a viewer, never a lease-holding executor —
 so the API edge admits the turn through the same door as ``bot_relay.deliver``
@@ -14,7 +14,7 @@ from types import SimpleNamespace
 import uuid
 
 from gateway.session_contract import Principal
-from hermes_state_runtime import RuntimeStoreError
+from niki_state_runtime import RuntimeStoreError
 
 _PENDING = ('queued', 'claimed')
 

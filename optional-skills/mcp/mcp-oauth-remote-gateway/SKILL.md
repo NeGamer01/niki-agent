@@ -6,9 +6,9 @@ author: Ben Barclay (benbarclay), Niki Agent
 license: MIT
 platforms: [linux, macos]
 metadata:
-  hermes:
+  niki:
     tags: [MCP, OAuth, PKCE, Remote-Deployment]
-    related_skills: [hermes-agent, mcporter, fastmcp]
+    related_skills: [niki-agent, mcporter, fastmcp]
 ---
 
 # MCP OAuth on a Remote Niki Gateway
@@ -54,8 +54,8 @@ to `http://127.0.0.1:P/callback?code=...`, which resolves to the user's own
 laptop and fails to connect. The callback never reaches the Niki process, the
 flow times out, and `/reload-mcp` returns "No MCP tools available" with no detail.
 
-Symptoms to recognize: `[xdg-open] <defunct>` processes under the hermes user, an
-empty or missing tokens directory (`$HERMES_HOME/mcp-tokens/`), and a reload that
+Symptoms to recognize: `[xdg-open] <defunct>` processes under the niki user, an
+empty or missing tokens directory (`$NIKI_HOME/mcp-tokens/`), and a reload that
 responds without any "Added/Reconnected: X" line in `change_detail`.
 
 ## Cheap First Fallbacks: the Built-in Flow's Own Escape Hatches
@@ -78,8 +78,8 @@ gateway/bot where `/reload-mcp` triggers the flow with nobody at a prompt.
 ## Preferred Front Door: the Niki Dashboard (try this BEFORE manual token surgery)
 
 A remote Niki gateway often also runs the **dashboard** web UI as a SEPARATE
-process (e.g. `hermes dashboard --host 0.0.0.0 --port <port>`; check with
-`ps aux | grep 'hermes dashboard'`). It exposes a connector/MCP console —
+process (e.g. `niki dashboard --host 0.0.0.0 --port <port>`; check with
+`ps aux | grep 'niki dashboard'`). It exposes a connector/MCP console —
 endpoints like `/api/mcp/servers`, `/api/mcp/status`, and `/connectors` (all
 login-gated; a cookieless curl returning 401/302 confirms they exist).
 
@@ -98,11 +98,11 @@ platforms inject it into the environment — grep for it rather than making the
 user hunt:
 
 ```bash
-env | grep -iE "HERMES_DASHBOARD_PUBLIC_URL|RAILWAY_PUBLIC_DOMAIN|RAILWAY_STATIC_URL|RAILWAY_SERVICE_.*_URL|PUBLIC_URL|BASE_URL|DOMAIN" \
+env | grep -iE "NIKI_DASHBOARD_PUBLIC_URL|RAILWAY_PUBLIC_DOMAIN|RAILWAY_STATIC_URL|RAILWAY_SERVICE_.*_URL|PUBLIC_URL|BASE_URL|DOMAIN" \
   | sed -E 's/(TOKEN|SECRET|KEY|PASSWORD)=.*/\1=***REDACTED***/I'
 ```
 
-`HERMES_DASHBOARD_PUBLIC_URL` is authoritative when present. On Railway also check
+`NIKI_DASHBOARD_PUBLIC_URL` is authoritative when present. On Railway also check
 `RAILWAY_PUBLIC_DOMAIN` / `RAILWAY_STATIC_URL` (the `*.up.railway.app` host) and
 `RAILWAY_SERVICE_*_URL` vars, which sometimes carry a friendlier custom domain.
 Hand the user the full `https://` URL and point them at the Connectors/MCP
@@ -111,13 +111,13 @@ to `*_TOKEN`/`*_SECRET` vars.
 
 **What the dashboard does NOT fix (still host-side / shell):** stdio servers that
 need shell auth state (a CLI `login` command whose credentials may not persist
-across restarts) and anything reading credentials from `$HERMES_HOME/.env`. Those
+across restarts) and anything reading credentials from `$NIKI_HOME/.env`. Those
 are out of the dashboard's scope regardless.
 
 ## The Workaround
 
 Do the OAuth dance manually, then write the resulting tokens into the exact files
-Niki' `HermesTokenStorage` would have written, so on `/reload-mcp` Niki finds
+Niki' `NikiTokenStorage` would have written, so on `/reload-mcp` Niki finds
 cached tokens and skips the browser flow entirely.
 
 Run the shell commands below through the `terminal` tool on the gateway host and
@@ -136,12 +136,12 @@ No display + a remote indicator = remote gateway. `tools/mcp_oauth.py::_can_open
 uses these same env vars, so if Niki' own auto-detect says "headless", the
 built-in flow won't work.
 
-### 2. Find HERMES_HOME and the config path
+### 2. Find NIKI_HOME and the config path
 
 ```bash
-HERMES_HOME=$(python3 -c 'from hermes_constants import get_hermes_home; print(get_hermes_home())')
-echo "config: $HERMES_HOME/config.yaml"
-echo "tokens: $HERMES_HOME/mcp-tokens/"
+NIKI_HOME=$(python3 -c 'from niki_constants import get_niki_home; print(get_niki_home())')
+echo "config: $NIKI_HOME/config.yaml"
+echo "tokens: $NIKI_HOME/mcp-tokens/"
 ```
 
 ### 3. Discover OAuth metadata from the MCP server
@@ -211,7 +211,7 @@ non-empty array AND/OR the resource metadata declares specific scopes. If
 default set on its own. Fabricating scope strings against an empty
 `scopes_supported` can cause `invalid_scope` errors on some ASes.
 
-**Stash `code_verifier` and `state` to disk** (e.g. `~/.hermes/cache/scratch/.mcp-oauth-work/<server>.json`,
+**Stash `code_verifier` and `state` to disk** (e.g. `~/.niki/cache/scratch/.mcp-oauth-work/<server>.json`,
 0600 perms). You need them for step 7, possibly across multiple chat turns.
 
 ### 6. Give the user the authorize URL
@@ -242,8 +242,8 @@ When the user pastes the callback URL:
 
 ### 8. Write tokens in Niki' exact schema
 
-`tools/mcp_oauth.py::HermesTokenStorage` expects two files under
-`$HERMES_HOME/mcp-tokens/` (create dir with `0o700`, files with `0o600`):
+`tools/mcp_oauth.py::NikiTokenStorage` expects two files under
+`$NIKI_HOME/mcp-tokens/` (create dir with `0o700`, files with `0o600`):
 
 **`<server_name>.json`** — the `OAuthToken` pydantic model:
 ```json
@@ -296,7 +296,7 @@ body = json.dumps({
     "params": {
         "protocolVersion": "2025-06-18",
         "capabilities": {},
-        "clientInfo": {"name": "hermes-debug", "version": "1.0"},
+        "clientInfo": {"name": "niki-debug", "version": "1.0"},
     },
 }).encode()
 # POST to the MCP URL with:
@@ -314,7 +314,7 @@ UA** — Cloudflare will 403 you even though Niki (which uses httpx) will succee
 
 ### 11. Tell the user to run `/reload-mcp`
 
-On reload, Niki sees `auth: oauth`, calls `HermesTokenStorage.get_tokens()`,
+On reload, Niki sees `auth: oauth`, calls `NikiTokenStorage.get_tokens()`,
 finds your cached tokens, skips the browser flow, and registers `mcp_<name>_*`
 tools. Refresh happens automatically before `expires_in` elapses.
 
@@ -344,7 +344,7 @@ tools. Refresh happens automatically before `expires_in` elapses.
 
 12. **Never hand-type the redirect URL for the user to open.** Generate the authorize URL programmatically with `urllib.parse.urlencode()`. Spaces in scopes and special chars in `state` break string-concatenated URLs.
 
-13. **Security: the stash file contains the `code_verifier`.** Delete `~/.hermes/cache/scratch/.mcp-oauth-work/<server>.json` immediately after successful token exchange. There's no reason to keep a proof-of-identity secret around once it's consumed.
+13. **Security: the stash file contains the `code_verifier`.** Delete `~/.niki/cache/scratch/.mcp-oauth-work/<server>.json` immediately after successful token exchange. There's no reason to keep a proof-of-identity secret around once it's consumed.
 
 14. **Write what the token endpoint actually returned.** The AS may grant a narrower (or wider) scope than requested. Write the `scope` from the token-exchange response to `<server>.json`, not what you asked for in step 5. When `scopes_supported: []`, the explicit scope list you send IS authoritative both ways: some servers grant exactly what you list (pass narrow scopes for least-privilege, or enumerate the full set if the user needs everything), and some won't echo the granted scope back at registration time — only the token-exchange response is authoritative.
 

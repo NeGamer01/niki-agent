@@ -5,10 +5,10 @@
  * preset down to its 3-slot background/midground/foreground model via
  * `webPresetFromShared`). Edit a preset's colours HERE; both surfaces follow.
  *
- * The palette-bearing presets (nous, github, catppuccin, everforest, solarized)
+ * The palette-bearing presets (niki, github, catppuccin, everforest, solarized)
  * are forks of their VS Code originals converted by the desktop's
  * `buildThemeFromMarketplace`; re-convert from the upstream extension rather
- * than hand-editing hexes. `nous-alt` is first-party — do not re-derive it.
+ * than hand-editing hexes. `niki-alt` is first-party — do not re-derive it.
  */
 
 /** Tailwind-style colour slots a preset carries (light palette, or the only palette). */
@@ -52,16 +52,16 @@ export interface ThemePresetColors {
 export interface ThemePresetPalette {
   /** Light palette (also reused for dark when `darkColors` is omitted). */
   colors: ThemePresetColors
-  /** Hand-tuned dark palette. Skins like `nous` ship one. */
+  /** Hand-tuned dark palette. Skins like `niki` ship one. */
   darkColors?: ThemePresetColors
 }
 
-const NOUS_ALT_BLUE = '#0053FD'
-const NOUS_ALT_NAVY = '#1540B1'
-const NOUS_ALT_CREAM = '#FFE6CB'
+const NIKI_ALT_BLUE = '#0053FD'
+const NIKI_ALT_NAVY = '#1540B1'
+const NIKI_ALT_CREAM = '#FFE6CB'
 
-const nousAltTint = (pct: number) => `color-mix(in srgb, ${NOUS_ALT_BLUE} ${pct}%, #FFFFFF)`
-const nousAltTintTransparent = (pct: number) => `color-mix(in srgb, ${NOUS_ALT_BLUE} ${pct}%, transparent)`
+const nousAltTint = (pct: number) => `color-mix(in srgb, ${NIKI_ALT_BLUE} ${pct}%, #FFFFFF)`
+const nousAltTintTransparent = (pct: number) => `color-mix(in srgb, ${NIKI_ALT_BLUE} ${pct}%, transparent)`
 
 export const THEME_PRESET_PALETTES = {
   github: {
@@ -122,7 +122,7 @@ export const THEME_PRESET_PALETTES = {
       userBubbleBorder: '#30363d'
     }
   },
-  nous: {
+  niki: {
     colors: {
       background: '#ffffff',
       foreground: '#1f2328',
@@ -354,7 +354,7 @@ export const THEME_PRESET_PALETTES = {
       userBubbleBorder: '#234751'
     }
   },
-  'nous-alt': {
+  'niki-alt': {
     colors: {
       background: '#F8FAFF',
       foreground: '#17171A',
@@ -364,7 +364,7 @@ export const THEME_PRESET_PALETTES = {
       mutedForeground: '#666678',
       popover: '#FFFFFF',
       popoverForeground: '#17171A',
-      primary: NOUS_ALT_BLUE,
+      primary: NIKI_ALT_BLUE,
       primaryForeground: '#FCFCFC',
       secondary: nousAltTint(7),
       secondaryForeground: '#242432',
@@ -372,9 +372,9 @@ export const THEME_PRESET_PALETTES = {
       accentForeground: '#202030',
       border: nousAltTintTransparent(22),
       input: nousAltTintTransparent(30),
-      ring: NOUS_ALT_BLUE,
-      midground: NOUS_ALT_BLUE,
-      composerRing: NOUS_ALT_BLUE,
+      ring: NIKI_ALT_BLUE,
+      midground: NIKI_ALT_BLUE,
+      composerRing: NIKI_ALT_BLUE,
       destructive: '#C72E4D',
       destructiveForeground: '#FFFFFF',
       sidebarBackground: '#F3F7FF',
@@ -384,24 +384,24 @@ export const THEME_PRESET_PALETTES = {
     },
     darkColors: {
       background: '#0D2F86',
-      foreground: NOUS_ALT_CREAM,
+      foreground: NIKI_ALT_CREAM,
       card: '#12378F',
-      cardForeground: NOUS_ALT_CREAM,
+      cardForeground: NIKI_ALT_CREAM,
       muted: '#183F9A',
       mutedForeground: '#B5C7F3',
       popover: '#123A96',
-      popoverForeground: NOUS_ALT_CREAM,
-      primary: NOUS_ALT_CREAM,
+      popoverForeground: NIKI_ALT_CREAM,
+      primary: NIKI_ALT_CREAM,
       primaryForeground: '#0D2F86',
       secondary: '#1B45A4',
       secondaryForeground: '#E0E8FF',
-      accent: NOUS_ALT_NAVY,
+      accent: NIKI_ALT_NAVY,
       accentForeground: '#F0F4FF',
       border: '#3158AD',
       input: '#0B2566',
-      ring: NOUS_ALT_CREAM,
-      midground: NOUS_ALT_BLUE,
-      composerRing: NOUS_ALT_CREAM,
+      ring: NIKI_ALT_CREAM,
+      midground: NIKI_ALT_BLUE,
+      composerRing: NIKI_ALT_CREAM,
       destructive: '#C0473A',
       destructiveForeground: '#FEF2F2',
       sidebarBackground: '#09286F',

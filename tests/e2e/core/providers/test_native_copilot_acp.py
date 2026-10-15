@@ -3,9 +3,9 @@
 ``provider: copilot-acp`` makes Niki spawn an external ACP agent (``copilot --acp --stdio``) per model
 call and speak the Agent Client Protocol to it over stdio. Here the agent is
 ``tests/fakes/providers/copilot_acp.py``, a fake that validates every request against the published
-ACP schema and replays scripted turns. Everything on the Niki side is real: the ``hermes chat -q``
-process, runtime resolution from ``config.yaml`` + the profile ``.env`` (``HERMES_COPILOT_ACP_COMMAND``
-/ ``HERMES_COPILOT_ACP_ARGS``), the ACP client, the agent loop, the ``read_file`` tool and ``state.db``.
+ACP schema and replays scripted turns. Everything on the Niki side is real: the ``niki chat -q``
+process, runtime resolution from ``config.yaml`` + the profile ``.env`` (``NIKI_COPILOT_ACP_COMMAND``
+/ ``NIKI_COPILOT_ACP_ARGS``), the ACP client, the agent loop, the ``read_file`` tool and ``state.db``.
 
 Contract under test (documented in ``agent/copilot_acp_client.py`` and the ACP spec):
 
@@ -125,7 +125,7 @@ def _flow(root: Path) -> Scenario:
     project = NativeHome(root).project
     turns = [
         [acp.tool_call("agent-native-1", "run shell", kind="execute"), acp.permission("agent-native-1"),
-         acp.message(acp.hermes_tool_call("call_rf_1", "read_file", {"path": str(project / "canary.txt")}))],
+         acp.message(acp.niki_tool_call("call_rf_1", "read_file", {"path": str(project / "canary.txt")}))],
         [acp.fs_read(str(project / "canary.txt")), acp.fs_read(str(root / "outside" / "secret.txt")),
          acp.thought("REASONING-ONE: the tool result names the canary"), acp.message(FINAL_ONE)],
         [acp.message(FINAL_TWO)],
@@ -152,7 +152,7 @@ def _compaction(root: Path) -> Scenario:
     """Eight read_file calls in one turn cross ``compression.threshold_tokens``; the summarizer runs
     through the same ACP provider (no tool bridge -> the fake answers ``SUMMARY``)."""
     project = NativeHome(root).project
-    turns = [[acp.thought(f"step {i}"), acp.message(acp.hermes_tool_call(
+    turns = [[acp.thought(f"step {i}"), acp.message(acp.niki_tool_call(
         f"call_f{i}", "read_file", {"path": str(project / f"f{i}.txt")}))] for i in range(1, COMPACT_FILES + 1)]
     fake = acp.AcpFake(root / "acp", [*turns, [acp.message(FINAL_COMPACT)]], models=MODELS, aux_text=SUMMARY)
     nh = make_home(root, {"provider": "copilot-acp", "default": CONFIGURED_MODEL}, env_file=fake.env(),
@@ -196,7 +196,7 @@ def _calls(fake: acp.AcpFake) -> dict[int, list[dict[str, Any]]]:
 # ── tests ──────────────────────────────────────────────────────────────────────────────────────
 
 
-def test_hermes_tool_call_round_trips_through_acp_and_persists(outcomes):
+def test_niki_tool_call_round_trips_through_acp_and_persists(outcomes):
     """A ``<tool_call>`` in the agent's message runs Niki' real read_file; the result reaches the
     NEXT call's prompt; the CLI prints the answer; state.db pairs the call and result by id."""
     sc = _flow_ok(outcomes)

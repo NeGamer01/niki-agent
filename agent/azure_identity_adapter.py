@@ -56,7 +56,7 @@ def _require_azure_identity():
         try:
             from pm import InstallError, ensure_import
         except ImportError as exc:
-            raise ImportError(_INSTALL_MSG + "Run: hermes pm repair") from exc
+            raise ImportError(_INSTALL_MSG + "Run: niki pm repair") from exc
         try:
             ensure_import(_AZURE_IDENTITY_FEATURE)
         except InstallError as exc:
@@ -147,11 +147,11 @@ def _scoped_credential(ai: Any, config: EntraIdentityConfig) -> Any:
 
 def build_credential(config: EntraIdentityConfig) -> Any:
     """Cached Entra credential: the process-wide default chain when unscoped, the routed profile's own
-    credential (built from its secret scope) under a HERMES_HOME override."""
-    from hermes_constants import get_hermes_home_override, hermes_home_key
-    if get_hermes_home_override() is None:
+    credential (built from its secret scope) under a NIKI_HOME override."""
+    from niki_constants import get_niki_home_override, niki_home_key
+    if get_niki_home_override() is None:
         return _default_chain_credential(config)
-    key = (hermes_home_key(), config)
+    key = (niki_home_key(), config)
     credential = _credentials_by_home.get(key)
     if credential is None:
         credential = _credentials_by_home[key] = _scoped_credential(_require_azure_identity(), config)
@@ -330,7 +330,7 @@ def build_bearer_http_client(
             # WARNING so the misconfiguration is visible at default levels.
             logger.warning("Bearer hook: Entra ID token provider returned empty (%s) "
                            "— stripping Authorization headers. Azure will respond 401. "
-                           "Run `hermes doctor` or `az login` to recover.", exc)
+                           "Run `niki doctor` or `az login` to recover.", exc)
             _strip_auth_headers(request)
             return
         _strip_auth_headers(request)

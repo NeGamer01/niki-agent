@@ -9,7 +9,7 @@ from websockets.asyncio.client import connect
 from websockets.exceptions import InvalidStatus
 
 from gateway.session_controls import AuthorityConnection
-from hermes_state import SessionDB
+from niki_state import SessionDB
 from tests.gateway.fixtures.local_recovery_probe import child_env, daemon, rpc, websocket
 
 
@@ -26,7 +26,7 @@ def test_group_management_on_ordinary_authenticated_socket(tmp_path):
                   'base_url': 'http://127.0.0.1:1/v1'},
         'auxiliary': {'title_generation': {'enabled': False}},
     }))
-    env = child_env() | dict(HOME=str(user), USERPROFILE=str(user), HERMES_HOME=str(home),
+    env = child_env() | dict(HOME=str(user), USERPROFILE=str(user), NIKI_HOME=str(home),
                              PYTHONPATH=str(root), PYTHONUNBUFFERED='1')
 
     async def probe(desc):
@@ -68,10 +68,10 @@ def test_group_management_on_ordinary_authenticated_socket(tmp_path):
 def test_profile_discovery_and_group_controls_enforce_actor_scope(tmp_path, monkeypatch):
     home = tmp_path / 'state'
     home.mkdir()
-    monkeypatch.setenv('HERMES_HOME', str(home))
+    monkeypatch.setenv('NIKI_HOME', str(home))
     monkeypatch.setenv('HOME', str(tmp_path / 'user'))
     (home / 'config.yaml').write_text('model:\n  default: fixture-model\n  provider: custom\n')
-    (home / 'profile.yaml').write_text('display_name: Fixture\nui_meta:\n  hermes-bots:\n    color: blue\n')
+    (home / 'profile.yaml').write_text('display_name: Fixture\nui_meta:\n  niki-bots:\n    color: blue\n')
     with SessionDB(home / 'state.db') as db:
         db.create_session('private', source='cli', user_id='another')
         db.set_session_title('private', 'Bot Chat')
@@ -92,7 +92,7 @@ def test_profile_discovery_and_group_controls_enforce_actor_scope(tmp_path, monk
             row, = result['result']['profiles']
             assert row['model'] == 'fixture-model'
             assert row['display_name'] == 'Fixture'
-            assert row['ui_meta']['hermes-bots']['color'] == 'blue'
+            assert row['ui_meta']['niki-bots']['color'] == 'blue'
             assert row['canonical_session'] is None
             assert row['last_session'] is None
             assert db.get_session('private')['title'] == 'Bot Chat'
@@ -118,7 +118,7 @@ def test_groups_list_pages_the_actor_visible_rooms(tmp_path):
     before the authorization filter (which returned empty/short pages ahead of visible rooms)."""
     from gateway import hosted_rooms as rooms
     from gateway.session_group_controls import _group
-    from hermes_state_runtime import RuntimeStoreError
+    from niki_state_runtime import RuntimeStoreError
     db_path = tmp_path / 'state.db'
     with SessionDB(db_path) as db:
         for index, name in enumerate(['f1', 'f2', 'm1', 'f3', 'm2', 'm3']):

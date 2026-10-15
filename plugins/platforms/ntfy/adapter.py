@@ -46,7 +46,7 @@ DEDUP_WINDOW_SECONDS = 300
 DEDUP_MAX_SIZE = 1000
 RECONNECT_BACKOFF = [2, 5, 10, 30, 60]
 STREAM_TIMEOUT_SECONDS = 90  # ntfy keepalive default is 55s; give margin
-_ECHO_TAG = "hermes-agent"  # tag added to outgoing messages for echo-loop prevention
+_ECHO_TAG = "niki-agent"  # tag added to outgoing messages for echo-loop prevention
 _MARKDOWN_TRUTHY = ("1", "true", "yes")
 
 

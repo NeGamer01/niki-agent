@@ -25,7 +25,7 @@ description: "通过 AI Bot WebSocket 网关将 Niki Agent 连接到 WeCom"
 #### 推荐方式：扫码创建（一条命令）
 
 ```bash
-hermes gateway setup
+niki gateway setup
 ```
 
 选择 **WeCom**，用企业微信手机端扫描二维码。Niki 将自动创建具有正确权限的机器人应用并保存凭据。
@@ -44,7 +44,7 @@ hermes gateway setup
 2. 导航至 **应用管理** → **创建应用** → **AI Bot**
 3. 配置机器人名称和描述
 4. 从凭据页面复制 **Bot ID** 和 **Secret**
-5. 运行 `hermes gateway setup`，选择 **WeCom**，并在提示时输入凭据
+5. 运行 `niki gateway setup`，选择 **WeCom**，并在提示时输入凭据
 
 :::warning
 请妥善保管 Bot Secret。任何持有它的人都可以冒充你的机器人。
@@ -55,7 +55,7 @@ hermes gateway setup
 #### 方式 A：交互式设置（推荐）
 
 ```bash
-hermes gateway setup
+niki gateway setup
 ```
 
 选择 **WeCom** 并按照提示操作。向导将引导你完成：
@@ -65,7 +65,7 @@ hermes gateway setup
 
 #### 方式 B：手动配置
 
-将以下内容添加到 `~/.hermes/.env`：
+将以下内容添加到 `~/.niki/.env`：
 
 ```bash
 WECOM_BOT_ID=your-bot-id
@@ -81,7 +81,7 @@ WECOM_HOME_CHANNEL=chat_id
 ### 第三步：启动网关
 
 ```bash
-hermes gateway
+niki gateway
 ```
 
 ## 功能特性
@@ -202,7 +202,7 @@ WeCom 对部分入站媒体附件使用 AES-256-CBC 加密。适配器会自动�
 - 当入站媒体项包含 `aeskey` 字段时，适配器下载加密字节并使用带 PKCS#7 填充的 AES-256-CBC 进行解密。
 - AES 密钥是 `aeskey` 字段的 base64 解码值（必须恰好为 32 字节）。
 - IV 由密钥的前 16 字节派生。
-- 此功能需要 `cryptography` Python 包（`hermes pm repair`）。
+- 此功能需要 `cryptography` Python 包（`niki pm repair`）。
 
 无需任何配置——收到加密媒体时解密会自动透明地进行。
 
@@ -281,13 +281,13 @@ WeCom 对部分入站媒体附件使用 AES-256-CBC 加密。适配器会自动�
 |---------|-----|
 | `WECOM_BOT_ID and WECOM_SECRET are required` | 设置两个环境变量，或在设置向导中配置 |
 | `WeCom startup failed: aiohttp not installed` | 安装 aiohttp：`python -c "import pm; pm.sync_venv(['messaging'], explicit=True)"` |
-| `WeCom startup failed: httpx not installed` | 安装 httpx：`hermes pm repair` |
+| `WeCom startup failed: httpx not installed` | 安装 httpx：`niki pm repair` |
 | `invalid secret (errcode=40013)` | 验证 secret 是否与机器人凭据匹配 |
 | `Timed out waiting for subscribe acknowledgement` | 检查到 `openws.work.weixin.qq.com` 的网络连通性 |
 | 机器人在群组中不响应 | 检查 `group_policy` 设置，并确保群组 ID 在 `group_allow_from` 中 |
 | 机器人忽略群组中的某些用户 | 检查 `groups` 配置节中按群组的 `allow_from` 列表 |
-| 媒体解密失败 | 安装 `cryptography`：`hermes pm repair` |
-| `cryptography is required for WeCom media decryption` | 入站媒体已被 AES 加密。安装：`hermes pm repair` |
+| 媒体解密失败 | 安装 `cryptography`：`niki pm repair` |
+| `cryptography is required for WeCom media decryption` | 入站媒体已被 AES 加密。安装：`niki pm repair` |
 | 语音消息作为文件发送 | WeCom 原生语音仅支持 AMR 格式，其他格式会自动降级为文件。 |
 | `File too large` 错误 | WeCom 对所有文件上传有 20 MB 的绝对限制。请压缩或拆分文件。 |
 | 图片作为文件发送 | 图片 > 10 MB 超过原生图片限制，会自动降级为文件附件。 |

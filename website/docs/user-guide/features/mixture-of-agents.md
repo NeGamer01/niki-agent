@@ -11,7 +11,7 @@ Mixture of Agents is a virtual model provider. Each named MoA preset appears as 
 When you select a MoA preset, the preset's aggregator is the acting model. It is the model that writes the assistant response and emits tool calls. Reference models run first and provide analysis for the aggregator to use.
 
 :::info Who pays for a MoA run
-The **aggregator is billed for the whole run**: it runs every step of the tool loop, so almost all of a preset's cost lands on the aggregator's provider. References only advise once per user turn (with the default `fanout`). If your main model is on a subscription provider but the aggregator sits elsewhere, the run is billed to the aggregator's provider, not to your subscription — `hermes moa configure` and `hermes moa list` print a one-line notice whenever the aggregator's provider differs from `model.provider`, and the Desktop editor, `hermes model`, and `/model` mark the aggregator slot as the acting, billed model.
+The **aggregator is billed for the whole run**: it runs every step of the tool loop, so almost all of a preset's cost lands on the aggregator's provider. References only advise once per user turn (with the default `fanout`). If your main model is on a subscription provider but the aggregator sits elsewhere, the run is billed to the aggregator's provider, not to your subscription — `niki moa configure` and `niki moa list` print a one-line notice whenever the aggregator's provider differs from `model.provider`, and the Desktop editor, `niki model`, and `/model` mark the aggregator slot as the acting, billed model.
 :::
 
 Use MoA when a hard task benefits from multiple model perspectives but still needs Niki' normal agent loop: tool calls, follow-up iterations, interrupts, transcript persistence, and the same session context as any other message.
@@ -28,7 +28,7 @@ You can select a preset through the normal model picker surfaces:
 MoA presets are selectable on **every Niki surface**, because MoA is a normal provider in the model system:
 
 - **CLI / gateway / TUI `/model`** — `/model <preset> --provider moa`, or `/model --provider moa` for the default preset. A bare `/model <preset>` also works when the name exactly matches a configured preset.
-- **`hermes model`** and the **Dashboard model picker** — a `Mixture of Agents` provider row appears with your preset names as its models.
+- **`niki model`** and the **Dashboard model picker** — a `Mixture of Agents` provider row appears with your preset names as its models.
 - **Desktop GUI app** — the model dropdown shows an `MoA presets` section; selecting one (`MoA: <preset>`) switches the active model to that preset. The Desktop settings panel also creates and edits presets.
 
 Configured presets therefore show up wherever you would pick any other model.
@@ -71,7 +71,7 @@ You can configure named MoA presets from:
 
 - Dashboard → Models → Model Settings → Mixture of Agents
 - Desktop app → Settings → Model → Mixture of Agents
-- `hermes moa configure [name]`
+- `niki moa configure [name]`
 - `config.yaml`
 
 The config stores explicit provider/model pairs, so you can mix providers and use multiple models from the same provider:
@@ -212,23 +212,23 @@ Omit `reasoning_effort` to use the provider/Niki default for that slot.
 ## Terminal preset management
 
 ```bash
-hermes moa list
-hermes moa configure              # update the default preset
-hermes moa configure review       # create or update a named preset
-hermes moa delete review
+niki moa list
+niki moa configure              # update the default preset
+niki moa configure review       # create or update a named preset
+niki moa delete review
 ```
 
-`hermes moa list` marks the aggregator as the acting model that carries almost all of the cost and lists references as advising once per user turn (by default). When the aggregator's provider differs from your main `model.provider`, both `list` and `configure` add:
+`niki moa list` marks the aggregator as the acting model that carries almost all of the cost and lists references as advising once per user turn (by default). When the aggregator's provider differs from your main `model.provider`, both `list` and `configure` add:
 
 ```text
-Aggregator is on nous; the whole tool loop will be billed there, not to openai-codex.
+Aggregator is on niki; the whole tool loop will be billed there, not to openai-codex.
 ```
 
 ## Benchmarks
 
-On HermesBench, a two-model MoA preset — `claude-opus-4.8` aggregating over a `gpt-5.5` reference — outscores either model run on its own:
+On NikiBench, a two-model MoA preset — `claude-opus-4.8` aggregating over a `gpt-5.5` reference — outscores either model run on its own:
 
-| Model | HermesBench score |
+| Model | NikiBench score |
 |---|---|
 | **Opus aggregator (opus-4.8 + gpt-5.5 reference) — MoA** | **0.8202** |
 | `anthropic/claude-opus-4.8` | 0.7607 |
@@ -251,7 +251,7 @@ So MoA does not sacrifice prompt caching on either call type. Its only real cost
 
 ## Notes
 
-- MoA is no longer listed under `hermes tools`; there is no `moa` toolset to enable.
+- MoA is no longer listed under `niki tools`; there is no `moa` toolset to enable.
 - Setting `enabled: false` on a preset disables the reference fan-out for that preset: the aggregator acts alone, exactly as if you selected it as a plain model. This is the per-preset off switch surfaced in the dashboard and desktop settings.
 - A preset's aggregator cannot be another MoA preset. Recursive MoA trees are intentionally blocked.
 - Credential failures on one reference model do not abort the turn. Niki includes the failure in the reference context and continues with whatever models returned.

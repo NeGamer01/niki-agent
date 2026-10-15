@@ -28,7 +28,7 @@ Three pieces fit together:
    `text_to_speech` for audio, and so on.
 
 2. **The gateway scans agent responses for file paths.** Any absolute path
-   (`~/.hermes/cache/scratch/...`) or home-relative path (`~/...`) ending in a supported
+   (`~/.niki/cache/scratch/...`) or home-relative path (`~/...`) ending in a supported
    extension gets extracted. Paths inside code blocks and inline code are
    ignored so code samples are never mutilated.
 
@@ -66,12 +66,12 @@ messaging platforms.
 
 **Project-level:** add the bias to `AGENTS.md` / `CLAUDE.md` /
 `.cursorrules` in a project the agent works from, to your global
-persona in `~/.hermes/SOUL.md`, or as a named preset under
-`agent.personalities` in `~/.hermes/config.yaml` (switchable per session
+persona in `~/.niki/SOUL.md`, or as a named preset under
+`agent.personalities` in `~/.niki/config.yaml` (switchable per session
 via `/personality`).
 
 The mechanic the agent has to use is simple: render the file to an
-absolute path (e.g. `~/.hermes/cache/scratch/q3-revenue.png`) and mention that path as
+absolute path (e.g. `~/.niki/cache/scratch/q3-revenue.png`) and mention that path as
 plain text in the reply. The gateway does the rest. Paths inside
 fenced code blocks or backticks are ignored so code samples are never
 mutilated.
@@ -85,8 +85,8 @@ deliverable files to their `kanban_complete` call:
 kanban_complete(
     summary="rendered Q3 revenue chart and report",
     artifacts=[
-        "~/.hermes/cache/scratch/q3-revenue.png",
-        "~/.hermes/cache/scratch/q3-report.pdf",
+        "~/.niki/cache/scratch/q3-revenue.png",
+        "~/.niki/cache/scratch/q3-report.pdf",
     ],
 )
 ```
@@ -115,7 +115,7 @@ community servers for most popular tools — install whichever you need:
 | **Snowflake / BigQuery** | SQL against data warehouses |
 | **Google Drive** | File search, contents, share management |
 
-Install MCP servers via `~/.hermes/config.yaml` under the `mcp_servers`
+Install MCP servers via `~/.niki/config.yaml` under the `mcp_servers`
 section. See [MCP integration](./mcp.md) for the full setup guide.
 
 ## Comparison to Perplexity Computer in Slack

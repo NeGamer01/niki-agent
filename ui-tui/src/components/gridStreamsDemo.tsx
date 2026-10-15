@@ -1,4 +1,4 @@
-import { Box, Text } from '@hermes/ink'
+import { Box, Text } from '@niki/ink'
 import { memo, type ReactNode, useEffect, useRef, useState } from 'react'
 
 import { sparkRows } from '../lib/charts.js'
@@ -326,7 +326,7 @@ export const GridStreamsDemo = memo(function GridStreamsDemo({
           width={cell.width}
         >
           <Text bold color={t.color.primary}>
-            hermes mission control
+            niki mission control
           </Text>
           <Text color={t.color.muted}>{`main: ${main.title}`}</Text>
         </Box>

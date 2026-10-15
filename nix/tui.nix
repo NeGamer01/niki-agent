@@ -1,6 +1,6 @@
 # Self-contained Niki TUI, compiled by the same recipe as npm.
-{ hermesNpmLib, ... }:
-hermesNpmLib.buildNpmPackage {
+{ nikiNpmLib, ... }:
+nikiNpmLib.buildNpmPackage {
   dirs = [
     "ui-tui"
     "apps/shared"
@@ -19,8 +19,8 @@ hermesNpmLib.buildNpmPackage {
 
   installPhase = ''
     runHook preInstall
-    mkdir -p $out/lib/hermes-tui
-    cp -r "$TMPDIR/tui-product/." $out/lib/hermes-tui/
+    mkdir -p $out/lib/niki-tui
+    cp -r "$TMPDIR/tui-product/." $out/lib/niki-tui/
     runHook postInstall
   '';
 }

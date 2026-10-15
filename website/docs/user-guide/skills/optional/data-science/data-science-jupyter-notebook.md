@@ -14,7 +14,7 @@ Iterative Python via live Jupyter kernel (hamelnb).
 
 | | |
 |---|---|
-| Source | Optional — install with `hermes skills install official/data-science/jupyter-notebook` |
+| Source | Optional — install with `niki skills install official/data-science/jupyter-notebook` |
 | Path | `optional-skills/data-science/jupyter-notebook` |
 | Version | `1.0.0` |
 | Author | Niki Agent |
@@ -39,7 +39,7 @@ state incrementally, explore APIs, inspect DataFrames, or iterate on complex cod
 | Tool | Use When |
 |------|----------|
 | **This skill** | Iterative exploration, state across steps, data science, ML, "let me try this and check" |
-| `execute_code` | One-shot scripts needing hermes tool access (web_search, file ops). Stateless. |
+| `execute_code` | One-shot scripts needing niki tool access (web_search, file ops). Stateless. |
 | `terminal` | Shell commands, builds, installs, git, process management |
 
 **Rule of thumb:** If you'd want a Jupyter notebook for the task, use this skill.
@@ -72,7 +72,7 @@ uv run "$SCRIPT" servers
 If no servers found, start one:
 ```
 jupyter-lab --no-browser --port=8888 --notebook-dir=$HOME/notebooks \
-  --IdentityProvider.token='' --ServerApp.password='' > ~/.hermes/cache/scratch/jupyter.log 2>&1 &
+  --IdentityProvider.token='' --ServerApp.password='' > ~/.niki/cache/scratch/jupyter.log 2>&1 &
 sleep 3
 ```
 

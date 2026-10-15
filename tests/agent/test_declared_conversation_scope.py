@@ -2,7 +2,7 @@
 
 A host that mints one physical ``session_id`` per RESPONSE re-keys every
 conversation-affinity hint Niki sends — ``prompt_cache_key`` on both
-OpenAI-wire transports, the OpenRouter/Nous sticky ``session_id``, and xAI's
+OpenAI-wire transports, the OpenRouter/Niki sticky ``session_id``, and xAI's
 ``x-grok-conv-id`` — so the conversation never lands back on the routing
 bucket it warmed. Niki cannot infer the logical conversation from the id's
 syntax (#79017's failure class), but it does not have to: the host declares
@@ -34,7 +34,7 @@ from agent.prompt_cache_scope import (
     resolve_prompt_cache_scope,
 )
 from agent.transports.codex import _cache_scope_from_session_id, _content_cache_key
-from hermes_state import SessionDB
+from niki_state import SessionDB
 
 # One room member, two consecutive replies: the Studio group-chat shape
 # (``gc_run_<room>_<profile>_<name>`` truncated to 96 chars + a per-response
@@ -380,7 +380,7 @@ class TestPromptCacheKeyStability:
 
 
 class TestProviderStickyKeys:
-    """OpenRouter / Nous sticky ids and x-grok-conv-id read the same scope."""
+    """OpenRouter / Niki sticky ids and x-grok-conv-id read the same scope."""
 
     @pytest.fixture(autouse=True)
     def _clean_context(self):
@@ -429,8 +429,8 @@ class TestProviderStickyKeys:
         scope = declared_conversation_scope(_agent(RUN_1, None, CHAT_KEY))
         token = set_affinity_scope(scope)
         try:
-            body = get_provider_profile("nous").build_extra_body(session_id=RUN_1)
-            body_next = get_provider_profile("nous").build_extra_body(session_id=RUN_2)
+            body = get_provider_profile("niki").build_extra_body(session_id=RUN_1)
+            body_next = get_provider_profile("niki").build_extra_body(session_id=RUN_2)
         finally:
             reset_affinity_scope(token)
 
@@ -775,7 +775,7 @@ class TestSourceOverrideDomain:
 
     ``_agent_source`` used ``agent.platform`` before the row landed while
     persistence uses ``session_source_for``, which honors
-    ``HERMES_SESSION_SOURCE``. Under an override both sides of a ``/new``
+    ``NIKI_SESSION_SOURCE``. Under an override both sides of a ``/new``
     queried the platform domain, missed the boundary stored under the
     override, and hashed the same scope (@andrexibiza on #98811).
     """
@@ -785,7 +785,7 @@ class TestSourceOverrideDomain:
     def test_the_pre_row_source_matches_persistence(self, db, monkeypatch):
         from agent.prompt_cache_scope import _agent_source
 
-        monkeypatch.setenv("HERMES_SESSION_SOURCE", "override-src")
+        monkeypatch.setenv("NIKI_SESSION_SOURCE", "override-src")
         agent = SimpleNamespace(
             session_id="s-none", _session_db=db, _gateway_session_key=self.KEY,
             platform="telegram",
@@ -793,7 +793,7 @@ class TestSourceOverrideDomain:
         assert _agent_source(agent, "", db) == "override-src"
 
     def test_new_rotates_under_a_source_override(self, db, monkeypatch):
-        monkeypatch.setenv("HERMES_SESSION_SOURCE", "override-src")
+        monkeypatch.setenv("NIKI_SESSION_SOURCE", "override-src")
 
         def keyed(sid):
             db.create_session(

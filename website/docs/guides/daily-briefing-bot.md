@@ -11,7 +11,7 @@ In this tutorial, you'll build a personal briefing bot that wakes up every morni
 By the end, you'll have a fully automated workflow combining **web search**, **cron scheduling**, **delegation**, and **messaging delivery** — no code required.
 
 :::tip
-This recipe hits web search, summarization, and optional TTS — all bundled in a Portal subscription. The fastest setup is `hermes setup --portal`. See [Nous Portal](../integrations/nous-portal.md).
+This recipe hits web search, summarization, and optional TTS — all bundled in a Portal subscription. The fastest setup is `niki setup --portal`. See [Niki Portal](../integrations/niki-portal.md).
 :::
 
 ## What We're Building
@@ -33,16 +33,16 @@ Before starting, make sure you have:
 - **Niki Agent installed** — see the [Installation guide](../getting-started/installation.md)
 - **Gateway running** — the gateway daemon handles cron execution:
   ```bash
-  hermes gateway install   # Install as a user service
-  sudo hermes gateway install --system   # Linux servers: boot-time system service
+  niki gateway install   # Install as a user service
+  sudo niki gateway install --system   # Linux servers: boot-time system service
   # or
-  hermes gateway           # Run in foreground
+  niki gateway           # Run in foreground
   ```
 - **Firecrawl API key** — set `FIRECRAWL_API_KEY` in your environment for web search
 - **Messaging configured** (optional but recommended) — [Telegram](../user-guide/messaging/telegram.md) or Discord set up with a home channel
 
 :::tip No messaging? No problem
-You can still follow this tutorial using `deliver: "local"`. Briefings will be saved to `~/.hermes/cron/output/` and you can read them anytime.
+You can still follow this tutorial using `deliver: "local"`. Briefings will be saved to `~/.niki/cron/output/` and you can read them anytime.
 :::
 
 ## Step 1: Test the Workflow Manually
@@ -50,7 +50,7 @@ You can still follow this tutorial using `deliver: "local"`. Briefings will be s
 Before automating anything, let's make sure the briefing works. Start a chat session:
 
 ```bash
-hermes
+niki
 ```
 
 Then enter this prompt:
@@ -215,7 +215,7 @@ In chat:
 
 Or from the terminal:
 ```bash
-hermes cron list
+niki cron list
 ```
 
 You'll see output like:
@@ -246,15 +246,15 @@ Niki will use `cronjob(action="list")` to find it and `cronjob(action="remove")`
 Make sure the scheduler is actually running:
 
 ```bash
-hermes cron status
+niki cron status
 ```
 
 If the gateway isn't running, your jobs won't execute. Install it as a background service for reliability:
 
 ```bash
-hermes gateway install
+niki gateway install
 # or on Linux servers
-sudo hermes gateway install --system
+sudo niki gateway install --system
 ```
 
 ## Going Further

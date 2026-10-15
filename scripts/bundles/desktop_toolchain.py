@@ -16,10 +16,10 @@ import uuid
 
 
 _INSTALL_ENV = {
-    "HERMES_INSTALL_ROOT", "HERMES_PAYLOAD_ROOT", "HERMES_PAYLOAD_TAG", "HERMES_BUILD_COMMIT",
-    "HERMES_SITE", "HERMES_PYTHON", "HERMES_NODE", "HERMES_PROFILE", "HERMES_REAL_HOME",
-    "HERMES_DATA_DIR_SUFFIX", "HERMES_BUNDLED_SKILLS", "HERMES_OPTIONAL_SKILLS",
-    "HERMES_BUNDLED_PLUGINS", "HERMES_BUNDLED_LOCALES", "HERMES_OPTIONAL_MCPS",
+    "NIKI_INSTALL_ROOT", "NIKI_PAYLOAD_ROOT", "NIKI_PAYLOAD_TAG", "NIKI_BUILD_COMMIT",
+    "NIKI_SITE", "NIKI_PYTHON", "NIKI_NODE", "NIKI_PROFILE", "NIKI_REAL_HOME",
+    "NIKI_DATA_DIR_SUFFIX", "NIKI_BUNDLED_SKILLS", "NIKI_OPTIONAL_SKILLS",
+    "NIKI_BUNDLED_PLUGINS", "NIKI_BUNDLED_LOCALES", "NIKI_OPTIONAL_MCPS",
     "PYTHONPATH", "PYTHONHOME", "PYTHONUSERBASE", "VIRTUAL_ENV", "CONDA_PREFIX",
 }
 
@@ -28,8 +28,8 @@ def bootstrap_environment(source: Path, work: Path, cache: Path,
                           env: Mapping[str, str]) -> dict[str, str]:
     """Return launch state; never import PM, mutate the process, or write files."""
     source, work, cache = source.resolve(), work.resolve(), cache.resolve()
-    owned = {"HOME", "USERPROFILE", "LOCALAPPDATA", "APPDATA", "HERMES_HOME", "HERMES_RUNTIME_DIR",
-             "HERMES_PYTHON_SRC_ROOT", "XDG_CONFIG_HOME", "XDG_CACHE_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME",
+    owned = {"HOME", "USERPROFILE", "LOCALAPPDATA", "APPDATA", "NIKI_HOME", "NIKI_RUNTIME_DIR",
+             "NIKI_PYTHON_SRC_ROOT", "XDG_CONFIG_HOME", "XDG_CACHE_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME",
              "UV_CACHE_DIR", "NPM_CONFIG_CACHE", "NPM_EXECPATH", "NPM_NODE_EXECPATH",
              "NPM_CONFIG_USERCONFIG", "NPM_CONFIG_GLOBALCONFIG", "NPM_CONFIG_PREFIX",
              "PYTHONUTF8", "PYTHONDONTWRITEBYTECODE", "CARGO_HOME", "RUSTUP_HOME"}
@@ -37,7 +37,7 @@ def bootstrap_environment(source: Path, work: Path, cache: Path,
     canonical = {key.upper(): value for key, value in env.items()}
     # Rustup must still find the runner's installed toolchain after HOME moves.
     home_key = "USERPROFILE" if os.name == "nt" else "HOME"
-    original_home = Path(canonical.get("HERMES_REAL_HOME") or canonical.get(home_key) or Path.home())
+    original_home = Path(canonical.get("NIKI_REAL_HOME") or canonical.get(home_key) or Path.home())
     for key, directory in (("CARGO_HOME", ".cargo"), ("RUSTUP_HOME", ".rustup")):
         result[key] = canonical.get(key) or str(original_home / directory)
     home = work / "home"
@@ -45,9 +45,9 @@ def bootstrap_environment(source: Path, work: Path, cache: Path,
         "HOME": str(home), "USERPROFILE": str(home),
         "LOCALAPPDATA": str(home / "AppData/Local"),
         "APPDATA": str(home / "AppData/Roaming"),
-        "HERMES_HOME": str(work / "hermes-home"),
-        "HERMES_RUNTIME_DIR": str(cache / "tools"),
-        "HERMES_PYTHON_SRC_ROOT": str(source),
+        "NIKI_HOME": str(work / "niki-home"),
+        "NIKI_RUNTIME_DIR": str(cache / "tools"),
+        "NIKI_PYTHON_SRC_ROOT": str(source),
         "XDG_CONFIG_HOME": str(home / "config"), "XDG_CACHE_HOME": str(home / "cache"),
         "XDG_DATA_HOME": str(home / "data"), "XDG_STATE_HOME": str(home / "state"),
         "UV_CACHE_DIR": str(cache / "python/runtime"),
@@ -117,7 +117,7 @@ def prepare_tools(source: Path, work: Path, cache: Path,
             raise FileNotFoundError(f"PM did not prepare a native {name} executable")
         binaries[name] = installed.binary
     prepared = pm.env_for("python", "npm", base_env=prepared)
-    prepared.update({"HERMES_PYTHON": str(binaries["python"]), "HERMES_NODE": str(binaries["node"]),
+    prepared.update({"NIKI_PYTHON": str(binaries["python"]), "NIKI_NODE": str(binaries["node"]),
                      "UV_CACHE_DIR": str(native_cache_path(cache, prepared))})
     return binaries["python"], binaries["node"], prepared
 

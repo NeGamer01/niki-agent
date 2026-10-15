@@ -135,20 +135,20 @@ class TestFallbackChainAdvancement:
 
     def test_activation_counts_once_with_classifier_reason(self, monkeypatch):
         """A skipped candidate is not an activation; the one that binds records its FailoverReason."""
-        from hermes_cli.observability import shared_metrics_events
-        from hermes_cli.observability.shared_metrics_fields import fallback_fields
+        from niki_cli.observability import shared_metrics_events
+        from niki_cli.observability.shared_metrics_fields import fallback_fields
 
         calls = []
         monkeypatch.setattr(shared_metrics_events, "record_fallback", lambda **kw: calls.append(kw))
         agent = _make_agent(fallback_model=[
             {"provider": "broken", "model": "nope"}, {"provider": "zai", "model": "glm-5.2"},
         ])
-        agent.provider = "nous"
+        agent.provider = "niki"
         with patch("agent.auxiliary_client.resolve_provider_client",
                    side_effect=[(None, None), (_mock_client(base_url="https://api.z.ai/v1"), "glm-5.2")]):
             assert agent._try_activate_fallback(FailoverReason.rate_limit) is True
 
-        assert [(kw["from_provider"], kw["to_provider"]) for kw in calls] == [("nous", "zai")]
+        assert [(kw["from_provider"], kw["to_provider"]) for kw in calls] == [("niki", "zai")]
         assert fallback_fields(**calls[0])["error_class"] == "rate_limit"
 
     def test_skips_provider_that_raises_to_next(self):
@@ -196,17 +196,17 @@ class TestFallbackChainAdvancement:
     def test_nous_anthropic_fallback_uses_the_messages_wire(self, monkeypatch):
         """Portal Claude fallbacks must not stay on chat_completions when the native wire is selected.
 
-        ``resolve_provider_client`` still returns an OpenAI client for Nous;
+        ``resolve_provider_client`` still returns an OpenAI client for Niki;
         activation has to re-derive api_mode from the model and rebuild the
         Anthropic client — otherwise the turn POSTs /chat/completions. The wire
-        is opt-in since 2026-09-06 (``nous.anthropic_wire``, see ``nous_api_mode``).
+        is opt-in since 2026-09-06 (``niki.anthropic_wire``, see ``niki_api_mode``).
         """
-        from hermes_cli import providers as _providers
+        from niki_cli import providers as _providers
         monkeypatch.setattr(_providers, "_nous_anthropic_wire", lambda: "native")
         portal = "https://inference-api.nousresearch.com/v1"
         fbs = [
             {
-                "provider": "nous",
+                "provider": "niki",
                 "model": "anthropic/claude-opus-4.8",
             }
         ]
@@ -232,7 +232,7 @@ class TestFallbackChainAdvancement:
                 ),
             ),
             patch(
-                "hermes_cli.model_normalize.normalize_model_for_provider",
+                "niki_cli.model_normalize.normalize_model_for_provider",
                 side_effect=lambda m, p: m,
             ),
             patch(
@@ -243,7 +243,7 @@ class TestFallbackChainAdvancement:
             assert agent._try_activate_fallback() is True
 
         assert agent.api_mode == "anthropic_messages"
-        assert agent.provider == "nous"
+        assert agent.provider == "niki"
         assert agent.model == "anthropic/claude-opus-4.8"
         assert agent.client is None
         assert rebuilt["count"] == 1
@@ -253,7 +253,7 @@ class TestFallbackChainAdvancement:
 
     def test_nous_non_anthropic_fallback_stays_on_chat_completions(self):
         portal = "https://inference-api.nousresearch.com/v1"
-        fbs = [{"provider": "nous", "model": "hermes-4-405b"}]
+        fbs = [{"provider": "niki", "model": "hermes-4-405b"}]
         agent = _make_agent(fallback_model=fbs)
         with (
             patch(
@@ -268,7 +268,7 @@ class TestFallbackChainAdvancement:
                 ),
             ),
             patch(
-                "hermes_cli.model_normalize.normalize_model_for_provider",
+                "niki_cli.model_normalize.normalize_model_for_provider",
                 side_effect=lambda m, p: m,
             ),
             patch(
@@ -330,7 +330,7 @@ class TestFallbackChainDedup:
             called.append((provider, model))
             return _mock_client(), model
         with patch("agent.auxiliary_client.resolve_provider_client", side_effect=_resolve):
-            with patch("hermes_cli.model_normalize.normalize_model_for_provider", side_effect=lambda m, p: m):
+            with patch("niki_cli.model_normalize.normalize_model_for_provider", side_effect=lambda m, p: m):
                 ok = agent._try_activate_fallback()
 
         assert ok is True
@@ -383,7 +383,7 @@ class TestFallbackChainDedup:
 
         with patch("agent.auxiliary_client.resolve_provider_client", side_effect=_resolve):
             with patch(
-                "hermes_cli.model_normalize.normalize_model_for_provider",
+                "niki_cli.model_normalize.normalize_model_for_provider",
                 side_effect=lambda m, p: m,
             ):
                 ok = agent._try_activate_fallback()
@@ -486,10 +486,10 @@ class TestFallbackExtraBodyReResolution:
 
 
 def _write_moa_home(tmp_path, monkeypatch):
-    """Real config.yaml with a MoA preset under a temp HERMES_HOME (genuine preset resolution)."""
-    import hermes_yaml as yaml
+    """Real config.yaml with a MoA preset under a temp NIKI_HOME (genuine preset resolution)."""
+    import niki_yaml as yaml
 
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".niki"
     home.mkdir(exist_ok=True)
     (home / "config.yaml").write_text(yaml.safe_dump({
         "moa": {"default_preset": "default", "presets": {"default": {
@@ -498,7 +498,7 @@ def _write_moa_home(tmp_path, monkeypatch):
             "aggregator": {"provider": "xai", "model": "grok-4.6"},
         }}},
     }))
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("NIKI_HOME", str(home))
     return home
 
 

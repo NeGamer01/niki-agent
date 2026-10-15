@@ -1,6 +1,6 @@
 """Tests for scripts/verify-bootstrap-version-stamp.py.
 
-The bootstrap installers stamp ``.hermes-bootstrap-complete`` with the
+The bootstrap installers stamp ``.niki-bootstrap-complete`` with the
 commit/branch they pinned; this script reads the stamp back and cross-checks
 it against the installed checkout. Tests build a real temp git repo, write
 stamps by hand, and verify the honest and lying cases.
@@ -60,8 +60,8 @@ def _install_repo(tmp_path: Path) -> Path:
     _git(repo, "init", "-b", "main")
     _git(repo, "config", "user.email", "ci@example.com")
     _git(repo, "config", "user.name", "ci")
-    (repo / "hermes_cli").mkdir()
-    (repo / "hermes_cli" / "__init__.py").write_text(
+    (repo / "niki_cli").mkdir()
+    (repo / "niki_cli" / "__init__.py").write_text(
         '"""Niki CLI."""\n', encoding="utf-8")
     _git(repo, "add", "-A")
     _git(repo, "commit", "-m", "seed")
@@ -93,7 +93,7 @@ def test_verifier_cli(tmp_path, changes, expect, error):
     repo = _install_repo(tmp_path)
     stamp = {"schemaVersion": 1, "pinnedCommit": _git(repo, "rev-parse", "HEAD"),
              "pinnedBranch": "main", "completedAt": "2026-08-30T12:00:00.000Z", **changes}
-    path = repo / ".hermes-bootstrap-complete"
+    path = repo / ".niki-bootstrap-complete"
     if changes.get("missing") != "stamp":
         path.write_text(json.dumps(stamp), encoding="utf-8")
     if changes.get("missing") == "version":

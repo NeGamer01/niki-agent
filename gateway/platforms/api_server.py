@@ -36,7 +36,7 @@ def _prefix_names_served_profile(profile: str) -> bool:
     """True when a /p/<profile>/ prefix names the profile this gateway serves. Fail closed: a
     single-profile gateway answering /p/<x>/ served the owner's toolsets under another URL."""
     try:
-        from hermes_cli.profiles import profile_matches_home
+        from niki_cli.profiles import profile_matches_home
         return profile_matches_home(profile)
     except Exception:
         return False
@@ -101,8 +101,8 @@ _CAPABILITY_ENDPOINTS = (
     ("browser_control_ws", ("GET", "/v1/browser-control/ws")),
     ("artifact_upload", ("POST", "/v1/artifacts/upload")),
     ("artifact_download", ("GET", "/v1/artifacts/download/{artifact_id}")))
-_BROWSER_CONTROL_WS_PROTOCOL = "hermes-browser-control-v1"
-_BROWSER_CONTROL_TICKET_PROTOCOL_PREFIX = "hermes-browser-control-ticket."
+_BROWSER_CONTROL_WS_PROTOCOL = "niki-browser-control-v1"
+_BROWSER_CONTROL_TICKET_PROTOCOL_PREFIX = "niki-browser-control-ticket."
 
 
 def _approval_event_choices(*, smart_denied: bool, allow_session: bool, allow_permanent: bool) -> list[str]:
@@ -161,7 +161,7 @@ from gateway.browser_control_broker import (
 from gateway.platforms._shared import coerce_port as _coerce_port
 from gateway.platforms._shared import get_scoped_secret as _get_scoped_secret
 from gateway.platforms.tcp_site import start_tcp_site
-from hermes_state_errors import SessionActiveWriteGuardError
+from niki_state_errors import SessionActiveWriteGuardError
 
 
 logger = logging.getLogger(__name__)
@@ -208,9 +208,9 @@ async def _call_verifier(verifier, *args, **kwargs):
     return await asyncio.to_thread(verifier, *args, **kwargs)
 
 
-def _hermes_version() -> str:
+def _niki_version() -> str:
     """Canonical base version for API protocol and compatibility payloads."""
-    from hermes_cli.version_info import get_version_info
+    from niki_cli.version_info import get_version_info
     return get_version_info().base_version
 
 
@@ -319,7 +319,7 @@ def _apply_runtime_agent_overrides(
 def _resolve_request_runtime_agent_kwargs(provider: str, target_model: Optional[str] = None) -> dict[str, Any]:
     """gateway.run._resolve_runtime_agent_kwargs() for an explicit provider/model, so an API
     caller uses the same authenticated provider catalog without mutating config.yaml."""
-    from hermes_cli.runtime_provider import resolve_runtime_provider, format_runtime_provider_error, _get_model_config
+    from niki_cli.runtime_provider import resolve_runtime_provider, format_runtime_provider_error, _get_model_config
     try:
         runtime = resolve_runtime_provider(requested=provider, target_model=target_model)
     except Exception as exc:
@@ -336,7 +336,7 @@ def _request_agent_overrides(
 ) -> dict[str, Any]:
     """Extract per-request model/provider/options for _run_agent.
 
-    The virtual model (``hermes-agent``) means "gateway default". A bare ``model`` without
+    The virtual model (``niki-agent``) means "gateway default". A bare ``model`` without
     ``provider`` is honored only when ``allow_bare_model`` (generic clients hardcode "gpt-4o";
     OpenAI-compatible handlers pass the ``direct_model_requests`` opt-in, Niki-native
     endpoints always allow it). An explicit ``provider`` is always honored.
@@ -934,9 +934,9 @@ def _names_launch_profile(profile: str) -> bool:
     """True when a /p/<profile>/ prefix names the profile this process was LAUNCHED as: its
     un-prefixed and prefixed requests are one profile and must key one session."""
     try:
-        from hermes_cli.profiles import profile_matches_home
-        from hermes_constants import get_routing_process_hermes_home
-        return profile_matches_home(profile, home=get_routing_process_hermes_home())
+        from niki_cli.profiles import profile_matches_home
+        from niki_constants import get_routing_process_niki_home
+        return profile_matches_home(profile, home=get_routing_process_niki_home())
     except Exception:
         return False
 
@@ -1004,7 +1004,7 @@ class _ProviderAuthResolutionError(RuntimeError):
     def is_rate_limited(self) -> bool:
         """A quota/429 cap with valid credentials must not be labelled an authentication
         failure — the cause chain (RuntimeError -> AuthError) tells them apart (#89401)."""
-        from hermes_cli.auth import is_rate_limited_auth_error
+        from niki_cli.auth import is_rate_limited_auth_error
 
         cause = self.__cause__
         cause = getattr(cause, "__cause__", None) if isinstance(cause, RuntimeError) else cause
@@ -1097,7 +1097,7 @@ def _run_route_delegate(name: str):
 
 
 class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
-    """aiohttp server routing OpenAI-format requests through hermes-agent's AIAgent."""
+    """aiohttp server routing OpenAI-format requests through niki-agent's AIAgent."""
 
     # Stateless request/response (``send()`` is a stub): async-delivery tools must not promise
     # delivery here, and a resumed turn completes the work rather than asking.
@@ -1137,16 +1137,16 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
         self._direct_model_requests: bool = _coerce_request_bool(
             extra.get("direct_model_requests"), default=False)
         # ``platforms.api_server.tool_progress_events: false`` drops the custom
-        # ``hermes.tool.progress`` SSE frames from Chat Completions streams for strict OpenAI
+        # ``niki.tool.progress`` SSE frames from Chat Completions streams for strict OpenAI
         # clients that choke on named events (#12020). Default on.
         self._tool_progress_events: bool = _coerce_request_bool(
             extra.get("tool_progress_events"), default=True)
         self._app: Optional[web.Application] = None
         self._runner: Optional[web.AppRunner] = None
         self._site: Optional[web.TCPSite] = None
-        from hermes_constants import get_hermes_home
+        from niki_constants import get_niki_home
         self._response_store = ResponseStore()  # this home's; a /p/<profile>/ route gets its own
-        self._response_store_home = str(get_hermes_home())
+        self._response_store_home = str(get_niki_home())
         self._response_stores: dict[str, ResponseStore] = {}
         self._response_store_lock = threading.Lock()
         _api_runs._initialize_run_state(self, store_factory=RunIdempotencyStore)
@@ -1292,7 +1292,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
     def _resolve_api_server_int(key: str, *, default: int) -> int:
         """Integer setting under gateway.api_server (unreadable config -> default; negatives -> 0)."""
         try:
-            from hermes_cli.config import cfg_get, load_config
+            from niki_cli.config import cfg_get, load_config
             value = int(cfg_get(load_config(), "gateway", "api_server", key, default=default))
         except Exception:
             return default
@@ -1383,16 +1383,16 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
 
     @staticmethod
     def _resolve_model_name(explicit: str) -> str:
-        """Advertised /v1/models name: explicit override > active profile name > "hermes-agent"
-        (precedence owned by ``hermes_cli.model_switch.resolve_effective_model``)."""
-        from hermes_cli.model_switch import resolve_effective_model
+        """Advertised /v1/models name: explicit override > active profile name > "niki-agent"
+        (precedence owned by ``niki_cli.model_switch.resolve_effective_model``)."""
+        from niki_cli.model_switch import resolve_effective_model
         profile_name = ""
         with suppress(Exception):
-            from hermes_cli.profiles import get_active_profile_name
+            from niki_cli.profiles import get_active_profile_name
             profile = get_active_profile_name()  # launch profile, pre-identity (advertised model name)
             if profile and profile not in {"default", "custom"}:
                 profile_name = profile
-        return resolve_effective_model(explicit, profile_name, "hermes-agent")
+        return resolve_effective_model(explicit, profile_name, "niki-agent")
 
     def _cors_headers_for_origin(self, origin: str) -> Optional[dict[str, str]]:
         """Return CORS headers for an allowed browser origin."""
@@ -1466,7 +1466,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
             return self._api_key
         try:
             from agent.secret_scope import get_secret
-            from hermes_cli.auth import has_usable_secret
+            from niki_cli.auth import has_usable_secret
             key = get_secret("API_SERVER_KEY", "") or ""
             return key if has_usable_secret(key, min_length=16) else ""
         except Exception as exc:
@@ -1582,7 +1582,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
         if not getattr(cfg, "multiplex_profiles", False):
             return None if _prefix_names_served_profile(profile) else _PROFILE_REJECTED
         try:
-            from hermes_cli.profiles import profiles_to_serve
+            from niki_cli.profiles import profiles_to_serve
             served = {name for name, _ in profiles_to_serve(multiplex=True)}
         except Exception:
             return _PROFILE_REJECTED
@@ -1602,11 +1602,11 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
                 from agent.secret_scope import is_multiplex_active
                 if is_multiplex_active():
                     from gateway.run import _profile_runtime_scope
-                    from hermes_constants import get_hermes_home
-                    return _profile_runtime_scope(get_hermes_home())
+                    from niki_constants import get_niki_home
+                    return _profile_runtime_scope(get_niki_home())
             return nullcontext()
         from gateway.run import _profile_runtime_scope
-        from hermes_cli.profiles import get_profile_dir
+        from niki_cli.profiles import get_profile_dir
         return _profile_runtime_scope(get_profile_dir(profile))
 
     async def _handle_profile_ingress(self, request: web.Request) -> web.StreamResponse:
@@ -1778,8 +1778,8 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
     def _current_response_store(self) -> ResponseStore:
         """Responses state of the routed profile's home. Conversation names are client-chosen, so one
         shared store let any profile's key read, chain onto and overwrite another's (#84253)."""
-        from hermes_constants import get_hermes_home
-        home = get_hermes_home()
+        from niki_constants import get_niki_home
+        home = get_niki_home()
         if str(home) == self._response_store_home:
             return self._response_store
         with self._response_store_lock:
@@ -1796,7 +1796,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
         if self.gateway_runner is not None:
             from gateway.platforms.api_server_store import selected_session_db
             return selected_session_db(self, home)
-        from hermes_state_registry import acquire
+        from niki_state_registry import acquire
         key = str(home)
         with self._session_db_cache_lock:
             if self._session_db_cache_closed:
@@ -1809,7 +1809,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
 
     def _cached_session_db_locked(self, key: str) -> Optional[Any]:
         """Caller holds ``_session_db_cache_lock``. A profile unserve/delete tears the home's
-        generation down through ``hermes_state_registry.close_all_under`` (clearing
+        generation down through ``niki_state_registry.close_all_under`` (clearing
         ``_shared_registry_owned``) without telling this cache; serving that handle would keep
         raising ``StateDbReplacedError`` after a recreate, so drop it and let the caller reopen."""
         db = self._session_dbs.get(key)
@@ -1829,23 +1829,23 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
             if db is shared_db:
                 continue
             try:
-                from hermes_state_registry import release_or_close
+                from niki_state_registry import release_or_close
                 release_or_close(db)
             except Exception:
                 logger.debug("Failed to close API-server SessionDB", exc_info=True)
 
     def _ensure_session_db(self):
-        """SessionDB for the active profile home (the runtime scope redirects ``get_hermes_home()``
+        """SessionDB for the active profile home (the runtime scope redirects ``get_niki_home()``
         per profile). Sync, for ``_create_agent``; handlers use ``_ensure_session_db_async``."""
         if self.gateway_runner is not None:
-            from hermes_constants import get_hermes_home
+            from niki_constants import get_niki_home
             from gateway.platforms.api_server_store import selected_session_db
-            return selected_session_db(self, get_hermes_home())
+            return selected_session_db(self, get_niki_home())
         if self._session_db is not None:
             return self._session_db
         try:
-            from hermes_constants import get_hermes_home
-            return self._open_and_cache_session_db(get_hermes_home())
+            from niki_constants import get_niki_home
+            return self._open_and_cache_session_db(get_niki_home())
         except Exception as e:
             logger.debug("SessionDB unavailable for API server: %s", e)
             return None
@@ -1854,14 +1854,14 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
         """Async variant: the profile home is captured on the loop thread (its scope is invisible
         inside ``to_thread``), only the blocking open runs in the worker, single-flight locked."""
         if self.gateway_runner is not None:
-            from hermes_constants import get_hermes_home
+            from niki_constants import get_niki_home
             from gateway.platforms.api_server_store import selected_session_db
-            return selected_session_db(self, get_hermes_home())
+            return selected_session_db(self, get_niki_home())
         if self._session_db is not None:
             return self._session_db
         try:
-            from hermes_constants import get_hermes_home
-            home = get_hermes_home()
+            from niki_constants import get_niki_home
+            home = get_niki_home()
             key = str(home)
             with self._session_db_cache_lock:
                 cached = self._cached_session_db_locked(key)
@@ -1915,7 +1915,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
 
     def _stored_session_model(self, session: Any) -> Optional[str]:
         """The model persisted on a session row, minus the virtual alias (replaying
-        "hermes-agent" upstream as a provider model id 400s)."""
+        "niki-agent" upstream as a provider model id 400s)."""
         stored = session.get("model") if isinstance(session, dict) else None
         if not stored or stored == self._model_name:
             return None
@@ -2094,10 +2094,10 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
     @staticmethod
     def _normalize_session_source(value: Any) -> str:
         text = str(value or "").strip().lower()
-        allowed = {"api_server", "hermes_browser", "browser", "cli", "telegram", "discord", "slack", "desktop", "dashboard"}
+        allowed = {"api_server", "niki_browser", "browser", "cli", "telegram", "discord", "slack", "desktop", "dashboard"}
         if text not in allowed:
             return "api_server"
-        return "hermes_browser" if text == "browser" else text
+        return "niki_browser" if text == "browser" else text
 
     def _session_model_override_for(self, session_key: Optional[str]) -> Optional[dict[str, Any]]:
         """The gateway's per-session ``/model`` override for *session_key*, if any — a
@@ -2179,10 +2179,10 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
     def _recover_or_record_model(self, model: str, runtime_kwargs: dict[str, Any], gateway_session_key) -> str:
         """Fill an empty resolved model: provider's default catalog model, then the last-known-good
         model for this key / process-wide. Non-empty non-virtual models are recorded instead."""
-        # No model.default but a provider resolved (e.g. `hermes auth add` without `hermes model`).
+        # No model.default but a provider resolved (e.g. `niki auth add` without `niki model`).
         if not model and runtime_kwargs.get("provider"):
             with suppress(Exception):
-                from hermes_cli.models import get_default_model_for_provider
+                from niki_cli.models import get_default_model_for_provider
                 model = get_default_model_for_provider(runtime_kwargs["provider"])
                 if model:
                     logger.info(
@@ -2225,8 +2225,8 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
         current_provider = _clean_request_string(runtime_kwargs.get("provider"))
         session_override = None if confirmed_runtime_lock else self._session_model_override_for(session_key)
         # Model-string precedence (override > session-persisted > global) is owned by
-        # hermes_cli.model_switch.resolve_effective_model.
-        from hermes_cli.model_switch import resolve_effective_model
+        # niki_cli.model_switch.resolve_effective_model.
+        from niki_cli.model_switch import resolve_effective_model
         if session_override:
             model = resolve_effective_model(session_override, None, model)
             self._apply_provider_runtime(
@@ -2293,7 +2293,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
         from gateway.run import (
             _checkpoint_agent_kwargs, _current_max_iterations, _resolve_runtime_agent_kwargs,
             _resolve_gateway_model, _load_gateway_config, GatewayRunner)
-        from hermes_cli.tools_config import _get_platform_tools
+        from niki_cli.tools_config import _get_platform_tools
         # RuntimeError is caught ONLY here (sole provider-auth raiser); the typed subclass keeps
         # run_conversation() errors distinct.
         try:
@@ -2355,7 +2355,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
             "session_model_lock" if confirmed_runtime_lock
             else "session_model_override" if session_override
             else "raw_request" if route or request_model or request_provider else "global")
-        agent._hermes_api_runtime = {
+        agent._niki_api_runtime = {
             "provider": runtime_kwargs.get("provider") or getattr(agent, "provider", "") or "",
             "model": getattr(agent, "model", None) or model,
             "route_source": route_source}
@@ -2365,7 +2365,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
 
     async def _handle_health(self, request: web.Request) -> web.Response:
         """GET /health — simple health check."""
-        return web.json_response({"status": "ok", "platform": "hermes-agent", "version": _hermes_version()})
+        return web.json_response({"status": "ok", "platform": "niki-agent", "version": _niki_version()})
 
     @_require_auth
     async def _handle_health_detailed(self, request: web.Request) -> web.Response:
@@ -2397,8 +2397,8 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
             active_api_runs=active_api_runs, process_completion_queue_depth=process_depth,
             active_delegations=active_delegations)
         return web.json_response({
-"status": readiness["status"], "readiness": readiness, "platform": "hermes-agent",
-            "version": _hermes_version(), "gateway_state": gw_state,
+"status": readiness["status"], "readiness": readiness, "platform": "niki-agent",
+            "version": _niki_version(), "gateway_state": gw_state,
             "platforms": platforms,
             "api_server": api_status,
             "metrics_today": api_status["metrics_today"],
@@ -2414,14 +2414,14 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
 
     @_require_auth
     async def _handle_models(self, request: web.Request) -> web.Response:
-        """GET /v1/models — hermes-agent plus configured model_routes aliases (alias + resolved
+        """GET /v1/models — niki-agent plus configured model_routes aliases (alias + resolved
         model only, never credentials). Under /p/<profile>/ the primary id follows that profile."""
         now = int(time.time())
         # The middleware already entered the profile scope, so get_active_profile_name() resolves.
         model_name = self._resolve_model_name("") if _api_request_profile.get() else self._model_name
 
         def _model(mid: str, root: str, parent) -> dict[str, Any]:
-            return {"id": mid, "object": "model", "created": now, "owned_by": "hermes", "permission": [],
+            return {"id": mid, "object": "model", "created": now, "owned_by": "niki", "permission": [],
                     "root": root, "parent": parent}
         models = [_model(model_name, model_name, None)]
         models.extend(
@@ -2437,7 +2437,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
         include_unconfigured = _coerce_request_bool(
             request.query.get("include_unconfigured"), default=True)
         try:
-            from hermes_cli.inventory import build_model_options_payload, load_picker_context
+            from niki_cli.inventory import build_model_options_payload, load_picker_context
 
             def _build_payload() -> dict[str, Any]:
                 return build_model_options_payload(
@@ -2480,7 +2480,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
                     "local_vps": "websocket-subprotocol-ticket",
                     "cloud": "authenticated-gateway-rpc"}}}
         return web.json_response({
-            "object": "hermes.api_server.capabilities", "platform": "hermes-agent",
+            "object": "niki.api_server.capabilities", "platform": "niki-agent",
             "model": self._model_name,
             "auth": {"type": "bearer", "required": bool(self._api_key)},
             "runtime": {
@@ -2703,7 +2703,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
         BY RESOLVED PROFILE (on a multiplex listener profile A must never pin B to A's root).
 
         The store root lives under the profile's data directory
-        (``<HERMES_HOME>/plugin-data/.../artifacts``-style controlled root), so artifacts never escape the
+        (``<NIKI_HOME>/plugin-data/.../artifacts``-style controlled root), so artifacts never escape the
         profile boundary. Stores are cached BY RESOLVED PROFILE — on a multiplex listener, profile A
         touching the artifact route first must never pin profile B to A's physical root (same frozen-handle
         class as the per-profile session-storage fix in #88734). The root itself is created on first use;
@@ -2714,13 +2714,13 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
         if store is not None:
             return store
         try:
-            from hermes_cli.profiles import get_profile_dir
+            from niki_cli.profiles import get_profile_dir
             root = Path(get_profile_dir(profile or "default")) / "artifacts" / "browser-control"
         except Exception:
             # Unscoped fallback (tests/manual wiring): controlled root under the Niki home.
             try:
-                from hermes_state import get_hermes_home
-                root = Path(get_hermes_home()) / "artifacts" / "browser-control"
+                from niki_state import get_niki_home
+                root = Path(get_niki_home()) / "artifacts" / "browser-control"
             except Exception:
                 raise ArtifactError("no artifact root is resolvable") from None
         store = ArtifactStore(
@@ -2891,8 +2891,8 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
         """GET /v1/toolsets — each toolset the api_server agent exposes: enabled/configured state
         plus the concrete tool names it expands to."""
         try:
-            from hermes_cli.config import load_config
-            from hermes_cli.tools_config import (
+            from niki_cli.config import load_config
+            from niki_cli.tools_config import (
                 _get_effective_configurable_toolsets, _get_platform_tools, _toolset_has_keys,
                 get_nous_subscription_features)
             from toolsets import resolve_toolset
@@ -3019,7 +3019,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
         offset = self._parse_nonnegative_int(request.query.get("offset"), default=0, maximum=1_000_000)
         source = request.query.get("source") or None
         include_children = _coerce_request_bool(request.query.get("include_children"), default=False)
-        # Exact-title lookup (`hermes peer dm` -> canonical "Bot Chat"). include_hidden is honored
+        # Exact-title lookup (`niki peer dm` -> canonical "Bot Chat"). include_hidden is honored
         # ONLY with a title filter: a blanket hidden listing stays off this client surface.
         title_filter = (request.query.get("title") or "").strip() or None
         include_hidden = bool(title_filter) and _coerce_request_bool(
@@ -3038,12 +3038,12 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
 
         sessions = await _list()
         if title_filter and not sessions:
-            # A canonical Bot Chat auto-archived by the orphan reaper would make `hermes peer dm`
+            # A canonical Bot Chat auto-archived by the orphan reaper would make `niki peer dm`
             # mint transient sessions: resurrect and re-list; deliberate archives stay put.
             try:
                 # Recoverable-archive resurrection (#92687): a canonical Bot Chat archived by the ws-orphan
                 # reaper / older agent cleanup is invisible to list_sessions_rich (include_archived=False),
-                # which would fail `hermes peer dm` resolution and mint transient sessions — same accident
+                # which would fail `niki peer dm` resolution and mint transient sessions — same accident
                 # the tui_gateway lookups heal.
                 from tools.bot_mode_probe import BOT_CHAT_TITLE
 
@@ -3091,7 +3091,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
             return lock_error
         requested = runtime_request.get("requested") or {}
         # The normalized requested["model"] (prefix split, virtual alias nulled) — the raw body
-        # would persist "hermes-agent" and later send it to the provider literally.
+        # would persist "niki-agent" and later send it to the provider literally.
         model_name = self._clean_runtime_id(requested.get("model")) or None
         model_config = None
         if requested.get("model") or requested.get("provider"):
@@ -3130,7 +3130,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
             return _error_response(f"Session already exists: {session_id}", 409, code="session_exists")
         if err and err.startswith("title:"):
             return _error_response(err[len("title:"):], 400, code="invalid_title")
-        return web.json_response({"object": "hermes.session", "session": self._session_response(session)}, status=201)
+        return web.json_response({"object": "niki.session", "session": self._session_response(session)}, status=201)
 
     @_require_auth
     async def _handle_get_session(self, request: web.Request) -> web.Response:
@@ -3138,7 +3138,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
         session, err = await self._get_existing_session_or_404(request.match_info["session_id"])
         if err:
             return err
-        return web.json_response({"object": "hermes.session", "session": self._session_response(session)})
+        return web.json_response({"object": "niki.session", "session": self._session_response(session)})
 
     @_require_auth
     async def _handle_patch_session(self, request: web.Request) -> web.Response:
@@ -3178,7 +3178,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
         if body.get("end_reason"):
             await asyncio.to_thread(db.end_session, session_id, str(body["end_reason"]))
         session = await asyncio.to_thread(db.get_session, session_id) or session
-        return web.json_response({"object": "hermes.session", "session": self._session_response(session)})
+        return web.json_response({"object": "niki.session", "session": self._session_response(session)})
 
     @_require_auth
     async def _handle_delete_session(self, request: web.Request) -> web.Response:
@@ -3191,11 +3191,11 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
         if db is None:
             return self._session_db_unavailable()
         # Same profile home the DB was resolved from (the profile middleware scopes
-        # get_hermes_home() for this request) — without it the transcript/dump scrub is skipped.
+        # get_niki_home() for this request) — without it the transcript/dump scrub is skipped.
         sessions_dir = None
         try:
-            from hermes_constants import get_hermes_home
-            sessions_dir = Path(get_hermes_home()) / "sessions"
+            from niki_constants import get_niki_home
+            sessions_dir = Path(get_niki_home()) / "sessions"
         except Exception:
             logger.debug("sessions dir unavailable for delete of %s", session_id, exc_info=True)
         try:
@@ -3215,7 +3215,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
             # loop like every other media release: its holder check and unlink are one write txn.
             from gateway.session_ingress_media import collect_unheld_api_images
             await asyncio.to_thread(collect_unheld_api_images, db)
-        return web.json_response({"object": "hermes.session.deleted", "id": session_id, "deleted": bool(deleted)})
+        return web.json_response({"object": "niki.session.deleted", "id": session_id, "deleted": bool(deleted)})
 
     @_require_auth
     async def _handle_session_messages(self, request: web.Request) -> web.Response:
@@ -3293,7 +3293,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
         except ValueError as exc:
             return _error_response(str(exc), 400, code="invalid_title")
         fork = await asyncio.to_thread(db.get_session, fork_id) or {"id": fork_id, "parent_session_id": source_id}
-        return web.json_response({"object": "hermes.session", "session": self._session_response(fork)}, status=201)
+        return web.json_response({"object": "niki.session", "session": self._session_response(fork)}, status=201)
 
     async def _prepare_session_chat(self, request: web.Request) -> tuple:
         """Shared prelude for /api/sessions/{id}/chat[/stream]: header/body validation, then
@@ -3383,7 +3383,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
             # to the requested profile) while the Channels page rendered "The gateway is not running" (it
             # did neither). Cross-container, profile-scoped, and launch-service-managed deployments each hit
             # that split. profile_home is passed when the request was scoped to a named profile:
-            # gateway/status readers resolve process-level paths and do NOT follow the HERMES_HOME
+            # gateway/status readers resolve process-level paths and do NOT follow the NIKI_HOME
             # contextvar override (#56986 / #69143), so the profile's directory has to be handed over
             # explicitly or messaging silently reports another profile's gateway (#71211).
             runtime=runtime,
@@ -3449,7 +3449,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
     async def _answer_through_live_bot_chat(self, ctx: dict[str, Any]) -> Optional[web.Response]:
         """Hand a turn aimed at a canonical Bot Chat that a Desktop holds live to that owner.
 
-        This is the ``hermes peer dm`` transport. Running the turn here would make this process a
+        This is the ``niki peer dm`` transport. Running the turn here would make this process a
         second writer beside the lease holder: the open chat never shows the message or the reply,
         its live context never learns of them, and the two transcripts interleave in state.db.
         Local and relayed DMs already hand such a message to the owner's mailbox
@@ -3465,12 +3465,12 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
         headers = self._session_headers(session_id, ctx["gateway_session_key"])
         if record["status"] == "settled":
             return web.json_response(
-                {"object": "hermes.session.chat.completion", "session_id": session_id,
+                {"object": "niki.session.chat.completion", "session_id": session_id,
                  "message": {"role": "assistant", "content": record.get("reply") or ""},
                  "usage": {}, "runtime": {}, "delivery_id": delivery_id}, headers=headers)
         if record["status"] in ("queued", "claimed"):
             return web.json_response(
-                {"object": "hermes.session.chat.queued", "session_id": session_id,
+                {"object": "niki.session.chat.queued", "session_id": session_id,
                  "status": record["status"], "delivery_id": delivery_id}, status=202, headers=headers)
         return _error_response(record.get("error") or f"Bot Chat delivery {record['status']}", 502,
                                code=record.get("reason") or record["status"], headers=headers)
@@ -3534,7 +3534,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
     @_admit_api_agent_request
     async def _handle_session_chat(self, request: web.Request) -> web.Response:
         """POST /api/sessions/{session_id}/chat — one synchronous agent turn (plus the delivery lanes'
-        one bounded re-run of a transient failure; ``hermes peer dm`` is the client)."""
+        one bounded re-run of a transient failure; ``niki peer dm`` is the client)."""
         from tools.bot_failure_reasons import RETRY_NONE, result_retry_action
         # This turn runs through _run_agent, so it already COUNTS toward the cap (#7483).
         # Spending the budget without checking it refused every other caller while never
@@ -3571,7 +3571,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
             result.get("final_response", "") if is_dict else "")
         headers = self._session_headers(effective_session_id or session_id, gateway_session_key)
         return web.json_response(
-            {"object": "hermes.session.chat.completion", "status": _response_status(result),
+            {"object": "niki.session.chat.completion", "status": _response_status(result),
              "session_id": effective_session_id or session_id,
              "message": {"role": "assistant", "content": final_response}, "usage": usage,
              "runtime": self._effective_turn_runtime(ctx["runtime_request"], result, usage)},
@@ -3766,7 +3766,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
             route_source=runtime_request.get("route_source") or "raw_request",
             model_lock="accepted")
         return web.json_response(
-            {"object": "hermes.session.model_lock", "session_id": session_id, "runtime": runtime})
+            {"object": "niki.session.model_lock", "session_id": session_id, "runtime": runtime})
 
     # -- Cron jobs API ----------------------------------------------------------------
 
@@ -3932,7 +3932,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
         job_id, err = self._cron_request_guard(request, need_job_id=True, check_draining=True)
         if err:
             return err
-        # Optional transient per-run context (standalone `hermes cron run` /
+        # Optional transient per-run context (standalone `niki cron run` /
         # cronjob(action='run', prompt=...)) — same cap + scan as a stored prompt.
         extra_prompt = body = None
         with suppress(Exception):
@@ -3954,7 +3954,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
         a long turn never trips NAS's timeout; the store CAS claim guards double-fire on retry."""
         # Startup-wait budget starts here so a slow JWKS fetch cannot outlast the forwarder timeout.
         received_at = asyncio.get_running_loop().time()
-        from hermes_cli.config import cfg_get, load_config
+        from niki_cli.config import cfg_get, load_config
         from plugins.cron_providers.chronos.verify import get_fire_verifier
         auth = request.headers.get("Authorization", "")
         token = auth[7:].strip() if auth.startswith("Bearer ") else ""
@@ -3984,7 +3984,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
             job_id = (body or {}).get("job_id")
             if not job_id:
                 return web.json_response({"error": "missing job_id"}, status=400)
-            # `hermes pause` ESTOP: refuse the fire and ask NAS to retry later.
+            # `niki pause` ESTOP: refuse the fire and ask NAS to retry later.
             # Placed after JWT verify (don't leak pause state to unauth callers)
             # and after the drain check (drain is transient shutdown, ESTOP is
             # operator override). 503 + Retry-After reschedules the job via NAS
@@ -3994,7 +3994,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
                 from agent.estop import check_paused as _estop_check_paused
                 if _estop_check_paused("cron-webhook", logger):
                     return web.json_response(
-                        {"error": "hermes is paused (ESTOP)", "job_id": job_id},
+                        {"error": "niki is paused (ESTOP)", "job_id": job_id},
                         status=503,
                         headers={"Retry-After": str(60)},
                     )
@@ -4073,7 +4073,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
         declaration or fingerprint-derived identity keeps delegation synchronous.
 
         ``profile`` is the ``/p/<profile>/`` prefix serving the request (``""`` = default). It must
-        reach ``HERMES_SESSION_PROFILE``: the persistent-Docker container key is derived from it, so an
+        reach ``NIKI_SESSION_PROFILE``: the persistent-Docker container key is derived from it, so an
         unbound profile collapses every profile's turns onto the default sandbox (#96370)."""
         from gateway.session_context import set_session_vars
         return set_session_vars(
@@ -4087,7 +4087,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
         route_source: str, confirmed_runtime_lock: bool) -> dict[str, Any]:
         """Sanitized actual-vs-requested runtime for a finished turn; raises RuntimeError when a
         confirmed model lock's provider/model differs from what the agent actually ran with."""
-        runtime = dict(getattr(agent, "_hermes_api_runtime", {}) or {})
+        runtime = dict(getattr(agent, "_niki_api_runtime", {}) or {})
         raw_provider = getattr(agent, "provider", "")
         raw_model = getattr(agent, "model", "")
         actual_provider = self._clean_runtime_id(raw_provider, max_len=80) if isinstance(raw_provider, str) else ""
@@ -4414,7 +4414,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
                 self.name, self._host)
             return False
         try:
-            from hermes_cli.auth import has_usable_secret
+            from niki_cli.auth import has_usable_secret
         except Exception as exc:
             # Fail CLOSED: "could not check" must not mean "start" on a terminal-capable endpoint.
             logger.error(
@@ -4488,7 +4488,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
             if is_network_accessible(self._host):
                 _backend = "local"
                 with suppress(Exception):
-                    from hermes_cli.config import load_config as _load_cfg
+                    from niki_cli.config import load_config as _load_cfg
                     _backend = ((_load_cfg() or {}).get("terminal") or {}).get("backend", "local")
                 if str(_backend).lower() == "local":
                     logger.warning(

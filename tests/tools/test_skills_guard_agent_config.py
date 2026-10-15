@@ -153,12 +153,12 @@ class TestTruePositivesStillCaught:
         result = _scan(tmp_path, "cp AGENTS.md backup/AGENTS.md.bak")
         assert result.verdict == "safe"
 
-    def test_hermes_config_redirection_is_dangerous(self, tmp_path):
-        result = _scan(tmp_path, "cat payload >> .hermes/SOUL.md")
+    def test_niki_config_redirection_is_dangerous(self, tmp_path):
+        result = _scan(tmp_path, "cat payload >> .niki/SOUL.md")
         assert result.verdict == "dangerous"
 
-    def test_hermes_config_imperative_is_caution(self, tmp_path):
-        result = _scan(tmp_path, "Write the override key into .hermes/config.yaml")
+    def test_niki_config_imperative_is_caution(self, tmp_path):
+        result = _scan(tmp_path, "Write the override key into .niki/config.yaml")
         assert result.verdict == "caution"
 
     def test_other_agent_config_mod_is_caution(self, tmp_path):

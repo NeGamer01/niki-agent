@@ -2,11 +2,11 @@
 name: anatomy
 description: Explain an idea as an interactive isometric machine figure.
 version: 1.0.0
-author: Ryan (wheresryan22), ported to Niki by Nous Research
+author: Ryan (wheresryan22), ported to Niki by NeGamer01
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  niki:
     tags: [isometric, svg, webgl, 3d, diagram, explainer, illustration, docs, html, react]
     category: creative
     related_skills: [concept-diagrams, system-atlas, architecture-diagram]
@@ -21,16 +21,16 @@ Output is a standalone HTML page (SVG plus optional WebGL layers), a lone `.svg`
 
 ## Running it in Niki
 
-**Skill directory.** Niki expands `${HERMES_SKILL_DIR}` to this skill's installed directory. Shell variables don't carry over between terminal calls, so repeat the assignment in every call that uses it:
+**Skill directory.** Niki expands `${NIKI_SKILL_DIR}` to this skill's installed directory. Shell variables don't carry over between terminal calls, so repeat the assignment in every call that uses it:
 
 ```bash
-SKILL_DIR="${HERMES_SKILL_DIR}"
+SKILL_DIR="${NIKI_SKILL_DIR}"
 ```
 
 **Never build inside the skill directory.** Every `build.mjs` writes its HTML next to itself, and the examples import `../../kit/` and `../../scripts/`. Lay out a workspace with the same shape: the user's project if they have one, otherwise a folder they name.
 
 ```bash
-SKILL_DIR="${HERMES_SKILL_DIR}"
+SKILL_DIR="${NIKI_SKILL_DIR}"
 WORK="$HOME/figures/pin-lock"
 mkdir -p "$WORK/figures"
 cp -r "$SKILL_DIR/kit" "$SKILL_DIR/scripts" "$WORK/"
@@ -38,7 +38,7 @@ cp -r "$SKILL_DIR/examples/dial-indicator" "$WORK/figures/"
 cd "$WORK/figures/dial-indicator" && node build.mjs && node build.mjs --light
 ```
 
-Start a new figure by copying the closest example into `$WORK/figures/<name>/` and renaming it. Leaving the installed skill untouched keeps `hermes skills update` from flagging it as locally modified.
+Start a new figure by copying the closest example into `$WORK/figures/<name>/` and renaming it. Leaving the installed skill untouched keeps `niki skills update` from flagging it as locally modified.
 
 **The examples ship as source only.** Upstream's built pages are 9 MB of generated HTML. Build an example (as above) to open or capture it, since it takes a few seconds.
 

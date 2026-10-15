@@ -71,7 +71,7 @@ export interface ReapOutcome {
 function isSharedRuntime(imagePath: string): boolean {
   const image = imagePath.replace(/^.*[\\/]/, '').toLowerCase()
 
-  return /^(?:pythonw?(?:[0-9.]+)?|node|hermes(?:-agent|-acp)?)(?:\.exe|\.cmd)?$/.test(image)
+  return /^(?:pythonw?(?:[0-9.]+)?|node|niki(?:-agent|-acp)?)(?:\.exe|\.cmd)?$/.test(image)
 }
 
 /**
@@ -137,7 +137,7 @@ export function listWindowsProcesses(
  * Windows paths are case-insensitive, so the compare is too. The separator
  * check is what keeps the prefix honest: a bare startsWith would match a
  * sibling directory whose name merely begins with a root
- * (`...\HermesBundled_0.21` vs `...\HermesBundled_0.21.20`), and killing
+ * (`...\NikiBundled_0.21` vs `...\NikiBundled_0.21.20`), and killing
  * another package's processes is a far worse bug than the one being fixed.
  */
 export function isUnderInstallRoot(

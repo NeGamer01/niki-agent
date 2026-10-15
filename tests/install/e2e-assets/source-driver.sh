@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Source-only helpers: never search PATH for a different installation.
-source_hermes() {
-  local root="$1" command="$1/.hermes/bin/hermes"
+source_niki() {
+  local root="$1" command="$1/.niki/bin/niki"
   if [ -e "$command" ] || [ -L "$command" ]; then
     [ -f "$command" ] && [ -x "$command" ] || {
       printf 'invalid published launcher: %s\n' "$command" >&2; return 1;
@@ -12,7 +12,7 @@ source_hermes() {
     [ ! -f "$root/pm/lock.json" ] || {
       printf 'missing published launcher: %s\n' "$command" >&2; return 1;
     }
-    command="$root/venv/bin/hermes"
+    command="$root/venv/bin/niki"
     [ -f "$command" ] && [ -x "$command" ] || {
       printf 'no installed Niki command under %s\n' "$root" >&2; return 1;
     }
@@ -38,21 +38,21 @@ accept_installer_marker() {
 # Hand out a command to DRIVE the next ordinary startup, even when the
 # published launcher is not there yet.
 #
-# A pre-handoff release cannot flip during `hermes update` -- there is no
+# A pre-handoff release cannot flip during `niki update` -- there is no
 # retired-hook seam on its update path to reach, so the update ends with the
-# tree at HEAD and no `.hermes/bin/*`. The NEXT ordinary startup is what
-# completes it: hermes_bootstrap calls prepare_launch() before importing
+# tree at HEAD and no `.niki/bin/*`. The NEXT ordinary startup is what
+# completes it: niki_bootstrap calls prepare_launch() before importing
 # anything, which syncs PM and publishes the launchers.
 #
 # Deliberately NOT used for `--version` probes: those stay under
-# HERMES_DISABLE_LAZY_INSTALLS so a probe can never complete an unfinished
+# NIKI_DISABLE_LAZY_INSTALLS so a probe can never complete an unfinished
 # update. Only a real startup may heal.
-source_hermes_for_startup() {
-  local root="$1" command="$1/.hermes/bin/hermes"
+source_niki_for_startup() {
+  local root="$1" command="$1/.niki/bin/niki"
   if [ -f "$command" ] && [ -x "$command" ]; then
     printf '%s\n' "$command"; return 0
   fi
-  command="$root/venv/bin/hermes"
+  command="$root/venv/bin/niki"
   [ -f "$command" ] && [ -x "$command" ] || {
     printf 'no installed Niki command under %s\n' "$root" >&2; return 1
   }

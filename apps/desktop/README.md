@@ -1,19 +1,19 @@
 # Niki Desktop ☤
 
 <p align="center">
-  <a href="https://github.com/NousResearch/hermes-agent/releases"><img src="https://img.shields.io/badge/Download-macOS%20%C2%B7%20Windows%20%C2%B7%20Linux-FFD700?style=for-the-badge" alt="Download"></a>
-  <a href="https://hermes-agent.nousresearch.com/docs/"><img src="https://img.shields.io/badge/Docs-hermes--agent.nousresearch.com-FFD700?style=for-the-badge" alt="Documentation"></a>
-  <a href="https://discord.gg/NousResearch"><img src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
-  <a href="https://github.com/NousResearch/hermes-agent/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License: MIT"></a>
+  <a href="https://github.com/NeGamer01/niki-agent/releases"><img src="https://img.shields.io/badge/Download-macOS%20%C2%B7%20Windows%20%C2%B7%20Linux-FFD700?style=for-the-badge" alt="Download"></a>
+  <a href="https://github.com/NeGamer01/niki-agent/docs/"><img src="https://img.shields.io/badge/Docs-niki--agent.nousresearch.com-FFD700?style=for-the-badge" alt="Documentation"></a>
+  <a href="https://discord.gg/NeGamer01"><img src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
+  <a href="https://github.com/NeGamer01/niki-agent/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License: MIT"></a>
 </p>
 
-**The native desktop app for [Niki Agent](../../README.md) — the self-improving AI agent from [Nous Research](https://nousresearch.com).** Same agent, same skills, same memory as the CLI and gateway, in a polished native window — chat with streaming tool output, side-by-side previews, a file browser, voice, and settings, no terminal required. Available for **macOS, Windows, and Linux**.
+**The native desktop app for [Niki Agent](../../README.md) — the self-improving AI agent from [NeGamer01](https://nousresearch.com).** Same agent, same skills, same memory as the CLI and gateway, in a polished native window — chat with streaming tool output, side-by-side previews, a file browser, voice, and settings, no terminal required. Available for **macOS, Windows, and Linux**.
 
 > **Intel Macs:** the `Niki-Setup.dmg` bootstrap installer is built for
 > Apple Silicon (arm64) only, so on an Intel Mac it reports "not supported on
 > this Mac". Stable releases build the native `darwin-x64` bundle only when
 > cut with `--with macos-intel`; otherwise install the
-> [CLI](../../README.md) and run `hermes desktop`. See
+> [CLI](../../README.md) and run `niki desktop`. See
 > [Platform Support](../../website/docs/getting-started/platform-support.md#build-targets-and-support-priority).
 
 <table>
@@ -34,14 +34,14 @@
 Already have the Niki CLI? Just run:
 
 ```bash
-hermes desktop
+niki desktop
 ```
 
 It builds and launches the GUI against your existing install — same config, keys, sessions, and skills. If Desktop cannot find a usable runtime or saved remote connection, first launch lets you connect to an existing Niki gateway or install Niki locally. Local onboarding then walks you through choosing a provider and model.
 
 ### Prebuilt installers
 
-Prebuilt installers are built and distributed via [the Niki Desktop website.](https://hermes-agent.nousresearch.com/).
+Prebuilt installers are built and distributed via [the Niki Desktop website.](https://github.com/NeGamer01/niki-agent/).
 
 ---
 
@@ -51,7 +51,7 @@ Update through the owner of the installed artifact: Windows App Installer for
 sideload MSIX, Microsoft Store for Store packages, and `electron-updater` for
 macOS bundles. Source-built apps use the checkout update handoff.
 
-`hermes update` updates managed source checkouts; it does not rewrite a bundled
+`niki update` updates managed source checkouts; it does not rewrite a bundled
 payload. See [BUILDING.md](BUILDING.md) for package and release contracts.
 
 ---
@@ -93,10 +93,10 @@ npm run dev          # Vite renderer + Electron, which boots the Python backend
 Point the app at a specific source checkout, or sandbox it away from your real config:
 
 ```bash
-# throwaway HERMES_HOME, separate Electron userData, distinct app name to avoid the single-instance lock
+# throwaway NIKI_HOME, separate Electron userData, distinct app name to avoid the single-instance lock
 ../../scripts/dev-sandbox.sh npm run dev
-HERMES_DESKTOP_HERMES_ROOT=/path/to/clone npm run dev
-HERMES_HOME=$HOME/.hermes/cache/scratch/throwaway npm run dev
+NIKI_DESKTOP_NIKI_ROOT=/path/to/clone npm run dev
+NIKI_HOME=$HOME/.niki/cache/scratch/throwaway npm run dev
 npm run dev:fake-boot   # exercise the startup overlay with deterministic delays
 ```
 
@@ -118,7 +118,7 @@ publishes Windows and macOS packages; Linux desktop legs are disabled.
 
 The bundled app carries the Electron shell, native React chat surface, and
 local agent payload. It runs the payload directly from resources. User data
-lives in `HERMES_HOME` outside the app. Bootstrap builds instead provision a
+lives in `NIKI_HOME` outside the app. Bootstrap builds instead provision a
 source installation. A remote-only Light variant exists as a build target but
 is not published.
 
@@ -128,16 +128,16 @@ The app has three boundaries:
   filesystem/git/window capabilities, and exposes a narrow preload bridge.
 - **React** owns the Desktop routes, panes, interaction state, and
   `@assistant-ui/react` transcript.
-- **Niki Agent** runs as a headless `hermes serve` process and exposes the
+- **Niki Agent** runs as a headless `niki serve` process and exposes the
   `tui_gateway` JSON-RPC/WebSocket API. The renderer connects through
   [`apps/shared`](../shared/), which is also used by the browser dashboard.
 
 A bundled artifact uses its payload. If that payload is unusable, the app
 reports damage rather than installing a second checkout. It does not adopt
-an arbitrary `hermes` command on PATH or a system Python installation.
+an arbitrary `niki` command on PATH or a system Python installation.
 
 Non-bundled builds can use the explicit source-root override, development
-checkout, completed managed install, or `HERMES_DESKTOP_HERMES` deployment
+checkout, completed managed install, or `NIKI_DESKTOP_NIKI` deployment
 override before offering bootstrap. Candidates are probed before use.
 A runtime that predates `serve` falls back to headless
 `dashboard --no-open`. This is compatibility for the backend command only and
@@ -183,7 +183,7 @@ Electron `userData/connection.json` remote block:
 {
   "mode": "remote",
   "remote": {
-    "url": "https://hermes.example.com",
+    "url": "https://niki.example.com",
     "authMode": "token",
     "token": { "encoding": "safeStorage", "value": "..." },
     "headers": {
@@ -230,37 +230,37 @@ release-path changes.
 
 ### Troubleshooting
 
-Boot logs land in `HERMES_HOME/logs/desktop.log` (includes backend output and recent Python tracebacks) — check it first if the app reports a boot failure.
+Boot logs land in `NIKI_HOME/logs/desktop.log` (includes backend output and recent Python tracebacks) — check it first if the app reports a boot failure.
 
 **macOS / Linux:**
 
 ```bash
 # Force a clean first-launch setup
-rm "$HOME/.hermes/hermes-agent/.hermes-bootstrap-complete"
+rm "$HOME/.niki/niki-agent/.niki-bootstrap-complete"
 # Rebuild a broken Python venv
-rm -rf "$HOME/.hermes/hermes-agent/venv"
+rm -rf "$HOME/.niki/niki-agent/venv"
 # Reset a stuck macOS microphone prompt (macOS only)
-tccutil reset Microphone com.nousresearch.hermes
+tccutil reset Microphone com.negamer01.niki
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
 # Force a clean first-launch setup
-Remove-Item "$env:LOCALAPPDATA\hermes\hermes-agent\.hermes-bootstrap-complete"
+Remove-Item "$env:LOCALAPPDATA\niki\niki-agent\.niki-bootstrap-complete"
 # Rebuild a broken Python venv
-Remove-Item -Recurse -Force "$env:LOCALAPPDATA\hermes\hermes-agent\venv"
+Remove-Item -Recurse -Force "$env:LOCALAPPDATA\niki\niki-agent\venv"
 ```
 
-> The default Niki home on Windows is `%LOCALAPPDATA%\hermes`. Set the `HERMES_HOME` env var if you've relocated it.
+> The default Niki home on Windows is `%LOCALAPPDATA%\niki`. Set the `NIKI_HOME` env var if you've relocated it.
 
 ---
 
 ## Community
 
-- 💬 [Discord](https://discord.gg/NousResearch)
-- 📖 [Documentation](https://hermes-agent.nousresearch.com/docs/)
-- 🐛 [Issues](https://github.com/NousResearch/hermes-agent/issues)
+- 💬 [Discord](https://discord.gg/NeGamer01)
+- 📖 [Documentation](https://github.com/NeGamer01/niki-agent/docs/)
+- 🐛 [Issues](https://github.com/NeGamer01/niki-agent/issues)
 
 ---
 
@@ -268,4 +268,4 @@ Remove-Item -Recurse -Force "$env:LOCALAPPDATA\hermes\hermes-agent\venv"
 
 MIT — see [LICENSE](../../LICENSE).
 
-Built by [Nous Research](https://nousresearch.com).
+Built by [NeGamer01](https://nousresearch.com).

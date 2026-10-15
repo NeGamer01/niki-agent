@@ -346,11 +346,11 @@ def _db_flush_failed(agent, e: Exception, batch_rows: list[dict[str, Any]], adop
     agent._db_flush_scan_prefix = None  # full re-scan next flush: an exception mid-loop leaves mixed dispositions
     # The only place the SQLite error is visible before it becomes a bare False — classify it so the turn-end
     # explanation names the real cause.
-    from hermes_state import StateDbCorruptError, StateDbReplacedError, classify_persistence_error, divert_session_transcript_jsonl
-    from hermes_state_errors import CompressionSessionClosedError
+    from niki_state import StateDbCorruptError, StateDbReplacedError, classify_persistence_error, divert_session_transcript_jsonl
+    from niki_state_errors import CompressionSessionClosedError
     agent._last_persistence_error_cause = classify_persistence_error(e)
     if agent._last_persistence_error_cause == "session_row_missing":
-        # The session row was removed under this live agent (`hermes sessions delete`, the Desktop/web
+        # The session row was removed under this live agent (`niki sessions delete`, the Desktop/web
         # delete, bulk prune, a profile-repair move, an in-place store rebuild — none visible to the
         # cached agent, so the cached `_session_db_created` flag is stale and every later append hits
         # the FK). The deletion already erased the session's message rows with it, so the durable

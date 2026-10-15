@@ -7,9 +7,9 @@ from agent.rate_limit_tracker import (
     parse_rate_limit_headers,
 )
 
-# ── Sample headers from Nous inference API ──────────────────────────────
+# ── Sample headers from Niki inference API ──────────────────────────────
 
-NOUS_HEADERS = {
+NIKI_HEADERS = {
     "x-ratelimit-limit-requests": "800",
     "x-ratelimit-limit-requests-1h": "33600",
     "x-ratelimit-limit-tokens": "8000000",
@@ -26,9 +26,9 @@ NOUS_HEADERS = {
 
 class TestParseHeaders:
     def test_basic_parsing(self):
-        state = parse_rate_limit_headers(NOUS_HEADERS, provider="nous")
+        state = parse_rate_limit_headers(NIKI_HEADERS, provider="niki")
         assert state is not None
-        assert state.provider == "nous"
+        assert state.provider == "niki"
         assert state.has_data
 
         assert state.requests_min.limit == 800

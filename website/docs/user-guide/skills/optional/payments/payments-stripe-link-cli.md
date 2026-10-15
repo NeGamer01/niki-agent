@@ -14,7 +14,7 @@ Agent payments via Stripe Link — cards, SPT, approvals.
 
 | | |
 |---|---|
-| Source | Optional — install with `hermes skills install official/payments/stripe-link-cli` |
+| Source | Optional — install with `niki skills install official/payments/stripe-link-cli` |
 | Path | `optional-skills/payments/stripe-link-cli` |
 | Version | `0.1.0` |
 | Author | Teknium (teknium1), Niki Agent |
@@ -148,7 +148,7 @@ For MPP merchants add `--credential-type shared_payment_token`.
 ```
 link-cli spend-request retrieve <lsrq_id> \
   --include card \
-  --output-file ~/.hermes/cache/scratch/link-card.json \
+  --output-file ~/.niki/cache/scratch/link-card.json \
   --format json
 ```
 
@@ -171,7 +171,7 @@ The file is written with `0600` perms; stdout shows only redacted fields (brand,
 Delete the card file as soon as the purchase is done:
 
 ```
-rm -f ~/.hermes/cache/scratch/link-card.json
+rm -f ~/.niki/cache/scratch/link-card.json
 ```
 
 ## Optional: run as an MCP server instead
@@ -179,10 +179,10 @@ rm -f ~/.hermes/cache/scratch/link-card.json
 `@stripe/link-cli --mcp` exposes the same commands as MCP tools over stdio. To register it with Niki' native MCP:
 
 ```
-hermes mcp add stripe-link --command "npx" --args "@stripe/link-cli --mcp"
+niki mcp add stripe-link --command "npx" --args "@stripe/link-cli --mcp"
 ```
 
-Then `hermes mcp list` should show `stripe-link`. The same approval rules apply — MCP doesn't bypass the Link app approval step.
+Then `niki mcp list` should show `stripe-link`. The same approval rules apply — MCP doesn't bypass the Link app approval step.
 
 ## Pitfalls
 

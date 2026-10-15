@@ -16,11 +16,11 @@ on:
         required: true
         default: main
       pin_branch:
-        description: Branch the installer follows at install time (HERMES_BUILD_PIN_BRANCH)
+        description: Branch the installer follows at install time (NIKI_BUILD_PIN_BRANCH)
         required: true
         default: main
       pin_commit:
-        description: Optional commit pin baked in instead (HERMES_BUILD_PIN_COMMIT)
+        description: Optional commit pin baked in instead (NIKI_BUILD_PIN_COMMIT)
         required: false
         default: ''
 
@@ -33,8 +33,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  HERMES_BUILD_PIN_BRANCH: ${{ inputs.pin_branch }}
-  HERMES_BUILD_PIN_COMMIT: ${{ inputs.pin_commit }}
+  NIKI_BUILD_PIN_BRANCH: ${{ inputs.pin_branch }}
+  NIKI_BUILD_PIN_COMMIT: ${{ inputs.pin_commit }}
   CARGO_INCREMENTAL: '0'
   SCCACHE_DISABLE: '1'
 

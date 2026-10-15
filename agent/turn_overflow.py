@@ -43,7 +43,7 @@ _GITHUB_MODELS_HINT = (
     "   💡 GitHub Models free tier (models.inference.ai.azure.com) caps every",
     "      request at ~8K tokens. Niki' system prompt + tool schemas baseline",
     "      exceeds that floor, so this endpoint cannot run an agentic loop.",
-    "      Use the `copilot` provider with a Copilot subscription token (`hermes",
+    "      Use the `copilot` provider with a Copilot subscription token (`niki",
     "      setup` → GitHub Copilot), or pick any other provider.",
 )
 

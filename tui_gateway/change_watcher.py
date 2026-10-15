@@ -19,7 +19,7 @@ def skin_payload(config: dict) -> dict:
     """The ``skin.changed`` / ``gateway.ready`` skin for ``config``'s ``display.skin`` (``{}`` when the
     skin engine fails). Pure of server state: the shared owner calls it under the profile's scope."""
     try:
-        from hermes_cli.skin_engine import init_skin_from_config, get_active_skin
+        from niki_cli.skin_engine import init_skin_from_config, get_active_skin
         init_skin_from_config(config)
         skin = get_active_skin()
         # light/dark are paired palettes: the TUI prefers the block matching terminal polarity.
@@ -42,8 +42,8 @@ _last_skin_sig: tuple[str, float | None] | None = None
 
 def _watcher_home() -> Path:
     """Active profile home for the change watcher's signature probes."""
-    override = get_hermes_home_override()
-    return Path(override if isinstance(override, str) and override else _hermes_home)
+    override = get_niki_home_override()
+    return Path(override if isinstance(override, str) and override else _niki_home)
 
 
 def _watcher_mtime_ns(path: Path):
@@ -97,24 +97,24 @@ def _skin_home_for(profile_id) -> str | None:
     """The profile home a peer's skin follows, or None for the launch home (the ambient scope)."""
     with contextlib.suppress(Exception):
         home = Path(str(profile_id))
-        if home.is_absolute() and home.is_dir() and home.resolve() != Path(_hermes_home).resolve():
+        if home.is_absolute() and home.is_dir() and home.resolve() != Path(_niki_home).resolve():
             return str(home)
     return None
 
 
 def _under_home(home: str, fn):
-    token = set_hermes_home_override(home)
+    token = set_niki_home_override(home)
     try:
         return fn()
     finally:
-        reset_hermes_home_override(token)
+        reset_niki_home_override(token)
 
 
 def _note_skin_broadcast() -> None:
     """Sync the baseline after the /skin RPC emits so the watcher doesn't re-broadcast it."""
     global _last_skin_sig
     with contextlib.suppress(Exception):
-        if home := _skin_home_for(get_hermes_home_override()):
+        if home := _skin_home_for(get_niki_home_override()):
             _skin_sig_by_home[home] = _skin_sig()
         else:
             _last_skin_sig = _skin_sig()
@@ -225,8 +225,8 @@ def _session_db_content_sig(db_path: Path):
     conn = None
     try:
         import hashlib
-        from hermes_state import _connect_tracked_db
-        from hermes_state_holders import read_only_db_uri
+        from niki_state import _connect_tracked_db
+        from niki_state_holders import read_only_db_uri
 
         conn = _connect_tracked_db(read_only_db_uri(db_path), tracking_path=db_path,
                                    uri=True, timeout=0.05)
@@ -328,7 +328,7 @@ def _pairing_roots(home: Path) -> list:
     cached = _pairing_roots_cache
     if cached is not None and cached[0] == home and cached[1] == dir_mtime and now - cached[2] < _PAIRING_ROOTS_TTL_S:
         return cached[3]
-    from hermes_constants import named_profile_is_live
+    from niki_constants import named_profile_is_live
     roots = [home / "pairing", home / "platforms" / "pairing"]
     with contextlib.suppress(OSError):
         for profile_dir in profiles_dir.iterdir():
@@ -431,7 +431,7 @@ def _ensure_skin_watcher() -> None:
             time.sleep(0.5)
             _broadcast_skin_if_changed()
             _broadcast_watched_changes()
-    threading.Thread(target=_loop, name="hermes-change-watcher", daemon=True).start()
+    threading.Thread(target=_loop, name="niki-change-watcher", daemon=True).start()
 
 
 def register(server) -> None:

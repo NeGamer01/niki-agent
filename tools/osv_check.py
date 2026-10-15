@@ -20,7 +20,7 @@ _OSV_ENDPOINT = os.getenv("OSV_ENDPOINT", "https://api.osv.dev/v1/query")
 _TIMEOUT = 10  # seconds
 
 # Result cache: (ecosystem, package, version) -> (expiry_wallclock, result). Reconnect
-# ladders, parked-server self-probes and repeated `hermes mcp test` runs re-run the preflight
+# ladders, parked-server self-probes and repeated `niki mcp test` runs re-run the preflight
 # for the SAME package on every spawn; uncached, a flapping server becomes a sustained OSV/DNS
 # query stream. Clean AND blocked verdicts are reusable; network failures are NOT cached
 # (fail-open covers them and caching one could mask a real advisory later).
@@ -43,15 +43,15 @@ _DISK_CACHE_VERSION = 1
 def _disk_cache_path() -> Optional[Path]:
     """Return the path for the persistent OSV verdict cache.
 
-    Uses ``hermes_constants.get_hermes_home()`` so the cache follows the
+    Uses ``niki_constants.get_niki_home()`` so the cache follows the
     active profile and is isolated across Niki homes. The cache directory
     is created on demand. Returns ``None`` when Niki home cannot be
     resolved, in which case only the in-process cache is used.
     """
     try:
-        from hermes_constants import get_hermes_home
+        from niki_constants import get_niki_home
 
-        home = get_hermes_home()
+        home = get_niki_home()
     except Exception:
         return None
     try:
@@ -262,7 +262,7 @@ def _query_osv(package: str, ecosystem: str, version: Optional[str] = None) -> l
     req = urllib.request.Request(
         _OSV_ENDPOINT,
         data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json", "User-Agent": "hermes-agent-osv-check/1.0"},
+        headers={"Content-Type": "application/json", "User-Agent": "niki-agent-osv-check/1.0"},
         method="POST")
     with urllib.request.urlopen(req, timeout=_TIMEOUT) as resp:
         result = json.loads(resp.read())

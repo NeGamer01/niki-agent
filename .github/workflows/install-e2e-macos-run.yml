@@ -5,7 +5,7 @@
 #   e2e (script arms)       tests/install/installer-script-e2e.sh - the
 #                           OS-agnostic git-redirect driver shared with
 #                           linux. installer-script(+desktop) installs,
-#                           script/updater/hermes-desktop-app-update
+#                           script/updater/niki-desktop-app-update
 #                           updates.
 #   gui-e2e (desktop arm)   tests/install/macos-desktop-e2e.sh - the
 #                           published Niki-Setup.dmg, mounted and run,
@@ -29,7 +29,7 @@ on:
         required: true
         type: string
       update-method:
-        description: 'How the install updates to HEAD. Script installs support hermes-update / installer-script / installer-script+desktop / hermes-desktop-app-update; dmg installs support open-app-update / hermes-desktop-app-update.'
+        description: 'How the install updates to HEAD. Script installs support niki-update / installer-script / installer-script+desktop / niki-desktop-app-update; dmg installs support open-app-update / niki-desktop-app-update.'
         required: true
         type: string
       install-ref:
@@ -81,7 +81,7 @@ permissions:
 
 env:
   # A stable run is on the default branch, so GITHUB_SHA is not the commit under test.
-  HERMES_TESTED_COMMIT: ${{ inputs.commit || github.sha }}
+  NIKI_TESTED_COMMIT: ${{ inputs.commit || github.sha }}
 
 jobs:
   # ---- arm 1: script installs (the shared OS-agnostic driver) --------------
@@ -90,8 +90,8 @@ jobs:
     if: >-
       (inputs.install-method == 'installer-script'
         || (inputs.install-method == 'installer-script+desktop' && inputs.tag-has-desktop))
-      && (contains(fromJSON('["hermes-update", "installer-script"]'), inputs.update-method)
-        || (contains(fromJSON('["installer-script+desktop", "hermes-desktop-app-update"]'), inputs.update-method) && inputs.tag-has-desktop))
+      && (contains(fromJSON('["niki-update", "installer-script"]'), inputs.update-method)
+        || (contains(fromJSON('["installer-script+desktop", "niki-desktop-app-update"]'), inputs.update-method) && inputs.tag-has-desktop))
     uses: ./.github/workflows/install-e2e-run.yml
     with:
       commit: ${{ inputs.commit }}
@@ -111,7 +111,7 @@ jobs:
     name: Niki-Setup.dmg
     if: >-
       inputs.install-method == 'desktop-installer@latest' && inputs.tag-has-desktop
-      && contains(fromJSON('["open-app-update", "hermes-desktop-app-update", "hermes-update", "installer-script", "installer-script+desktop"]'), inputs.update-method)
+      && contains(fromJSON('["open-app-update", "niki-desktop-app-update", "niki-update", "installer-script", "installer-script+desktop"]'), inputs.update-method)
     runs-on: blacksmith-12vcpu-macos-latest
     timeout-minutes: ${{ inputs.timeout-minutes }}
 
@@ -151,7 +151,7 @@ jobs:
             --update-ref '${{ inputs.update-ref }}' \
             --dmg-url '${{ inputs.dmg-url }}'
         env:
-          HERMES_E2E_LOG_DIR: ${{ runner.temp }}/e2e-logs
+          NIKI_E2E_LOG_DIR: ${{ runner.temp }}/e2e-logs
 
       - name: Install ${{ inputs.install-ref }} via Niki-Setup.dmg
         run: |
@@ -161,7 +161,7 @@ jobs:
             --install-ref '${{ inputs.install-ref }}' \
             --dmg-url '${{ inputs.dmg-url }}'
         env:
-          HERMES_E2E_LOG_DIR: ${{ runner.temp }}/e2e-logs
+          NIKI_E2E_LOG_DIR: ${{ runner.temp }}/e2e-logs
 
       - name: Update ${{ inputs.install-ref }} -> ${{ inputs.update-ref }} (${{ inputs.update-method }})
         run: |
@@ -171,7 +171,7 @@ jobs:
             --install-ref '${{ inputs.install-ref }}' \
             --dmg-url '${{ inputs.dmg-url }}'
         env:
-          HERMES_E2E_LOG_DIR: ${{ runner.temp }}/e2e-logs
+          NIKI_E2E_LOG_DIR: ${{ runner.temp }}/e2e-logs
 
       - name: Stop screen recording
         if: always()
@@ -249,7 +249,7 @@ jobs:
           BUNDLE_MANIFEST: ${{ inputs.bundle-manifest-url }}
           BUNDLE_MANIFEST_SHA256: ${{ inputs.bundle-manifest-sha256 }}
           BUNDLE_ARCH: ${{ inputs.bundle-arch }}
-          HERMES_E2E_LOG_DIR: ${{ runner.temp }}/e2e-logs
+          NIKI_E2E_LOG_DIR: ${{ runner.temp }}/e2e-logs
 
       - name: Update to NEW via About -> Update now (${{ inputs.bundle-arch }})
         run: |
@@ -260,7 +260,7 @@ jobs:
           BUNDLE_MANIFEST: ${{ inputs.bundle-manifest-url }}
           BUNDLE_MANIFEST_SHA256: ${{ inputs.bundle-manifest-sha256 }}
           BUNDLE_ARCH: ${{ inputs.bundle-arch }}
-          HERMES_E2E_LOG_DIR: ${{ runner.temp }}/e2e-logs
+          NIKI_E2E_LOG_DIR: ${{ runner.temp }}/e2e-logs
 
       - name: Stop screen recording
         if: always()

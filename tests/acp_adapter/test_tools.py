@@ -26,7 +26,7 @@ from acp.schema import (
 # ---------------------------------------------------------------------------
 
 
-COMMON_HERMES_TOOLS = ["read_file", "search_files", "terminal", "patch", "write_file", "process"]
+COMMON_NIKI_TOOLS = ["read_file", "search_files", "terminal", "patch", "write_file", "process"]
 
 
 class TestToolKindMap:
@@ -85,7 +85,7 @@ class TestBuildToolTitle:
             ("read_file", {"path": "/etc/hosts", "offset": 10}),
             ("search_files", {"pattern": "TODO", "path": "src"}),
             ("web_search", {"query": "niki agent acp"}),
-            ("execute_code", {"code": "\nfrom hermes_tools import terminal\nprint('done')"}),
+            ("execute_code", {"code": "\nfrom niki_tools import terminal\nprint('done')"}),
             ("skill_view", {"name": "github", "file_path": "references/x.md"}),
         ],
     )

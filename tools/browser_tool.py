@@ -20,10 +20,10 @@ import time
 from typing import Dict, Any, Optional, Union
 from pathlib import Path
 from agent.redact import redact_cdp_url
-from hermes_constants import get_hermes_home, hermes_home_key
+from niki_constants import get_niki_home, niki_home_key
 from utils import env_int
-from hermes_cli.config import DEFAULT_CONFIG, cfg_get
-from hermes_cli.observability.shared_metrics_loop import record_browser_call
+from niki_cli.config import DEFAULT_CONFIG, cfg_get
+from niki_cli.observability.shared_metrics_loop import record_browser_call
 
 
 # Env keys re-added to the agent-browser subprocess AFTER credential stripping.
@@ -37,7 +37,7 @@ _BROWSER_PASSTHROUGH_KEYS: tuple[str, ...] = (
 
 
 def warm_agent_browser_npx_cache(timeout: float = 60.0) -> bool:
-    """Frozen old-updater surface (tests/compat/old_updater_surface.json): a pre-PM ``hermes update``
+    """Frozen old-updater surface (tests/compat/old_updater_surface.json): a pre-PM ``niki update``
     still running mid-swap imports this from the NEW tree. Nothing is warmed — PM owns the browser
     runtime — and the permanent definition must live here, not behind the revert-scheduled compat
     pointer."""
@@ -157,7 +157,7 @@ _EMPTY_OK_COMMANDS: frozenset = frozenset({"close", "record"})  # legitimately e
 
 # Process caches (``_cached_X`` + ``_X_resolved`` pairs) for config-derived lookups;
 # reset by ``cleanup_all_browsers``. Written/read by the sibling modules via ``browser_tool_origin``.
-# The config-derived ones are keyed by profile home (``hermes_home_key()``): the multiplexed
+# The config-derived ones are keyed by profile home (``niki_home_key()``): the multiplexed
 # gateway serves every profile from one process, so a single slot would hand the launch
 # profile's browser settings to every other profile.
 _cached_command_timeout: Optional[dict[str, int]] = None
@@ -189,7 +189,7 @@ def _browser_cfg(key: str, default, parse, log_label: str):
     """``parse(browser.<key>)`` from the RAW profile config (loader warnings must not
     leak into tool JSON); ``default`` when absent, not a mapping, or on any error."""
     try:
-        from hermes_cli.config import read_raw_config
+        from niki_cli.config import read_raw_config
         browser_cfg = read_raw_config().get("browser", {})
         if isinstance(browser_cfg, dict) and key in browser_cfg:
             return parse(browser_cfg[key])
@@ -203,7 +203,7 @@ def _cached_browser_cfg(cache_name: str, flag_name: str, key: str, default, pars
     ``cleanup_all_browsers``). The value is stored BEFORE the resolved flag flips so a
     concurrent reader never sees ``resolved=True`` with an empty cache."""
     g = globals()
-    home = hermes_home_key()
+    home = niki_home_key()
     cache = g[cache_name]
     if cache is None:
         cache = g[cache_name] = {}
@@ -264,7 +264,7 @@ from tools import browser_tool_lightpanda_fallback as _lp
 
 # Single shared real-profile copy-browser session: concurrent tasks reuse it
 # instead of each launching a rival Chromium on the same copied user-data-dir.
-_REAL_PROFILE_SESSION = "hermes-real-profile"
+_REAL_PROFILE_SESSION = "niki-real-profile"
 # Keep lock contention well inside the agent's 420-second outer tool deadline.
 # The holder may be an abandoned daemon worker that Python cannot terminate.
 _REAL_PROFILE_CDP_LOCK_TIMEOUT_S = 30.0
@@ -373,8 +373,8 @@ def _last_session_key(task_id: str) -> str:
 
 def _socket_safe_tmpdir() -> str:
     """Temp root short enough for the agent-browser socket dir and Chrome's SingletonSocket
-    (``hermes_constants.socket_safe_tmpdir``)."""
-    from hermes_constants import socket_safe_tmpdir
+    (``niki_constants.socket_safe_tmpdir``)."""
+    from niki_constants import socket_safe_tmpdir
     return socket_safe_tmpdir()
 
 
@@ -1153,11 +1153,11 @@ def _maybe_start_recording(task_id: str):
         if task_id in _recording_sessions:
             return
     try:
-        from hermes_cli.config import read_raw_config
-        hermes_home = get_hermes_home()
+        from niki_cli.config import read_raw_config
+        niki_home = get_niki_home()
         if not cfg_get(read_raw_config(), "browser", "record_sessions", default=False):
             return
-        recordings_dir = hermes_home / "browser_recordings"
+        recordings_dir = niki_home / "browser_recordings"
         recordings_dir.mkdir(parents=True, exist_ok=True)
         _lifecycle._cleanup_old_recordings(max_age_hours=72)
         recording_path = recordings_dir / f"session_{time.strftime('%Y%m%d_%H%M%S')}_{task_id[:16]}.webm"
@@ -1262,8 +1262,8 @@ def browser_vision(question: str, annotate: bool = False, task_id: Optional[str]
         return _camofox("camofox_vision", question, annotate, task_id)
 
     import uuid as uuid_mod
-    from hermes_constants import get_hermes_dir
-    screenshots_dir = get_hermes_dir("cache/screenshots", "browser_screenshots")
+    from niki_constants import get_niki_dir
+    screenshots_dir = get_niki_dir("cache/screenshots", "browser_screenshots")
     screenshot_path = screenshots_dir / f"browser_screenshot_{uuid_mod.uuid4().hex}.png"
     effective_task_id = _last_session_key(task_id or "default")
     blocked = _blocked_private_page_content(effective_task_id)

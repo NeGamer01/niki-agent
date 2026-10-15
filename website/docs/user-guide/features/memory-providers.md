@@ -11,20 +11,20 @@ Niki Agent ships with 2 external memory provider plugins (RetainDB and ByteRover
 ## Quick Start
 
 ```bash
-hermes memory setup      # interactive picker + configuration
-hermes memory status     # check what's active
-hermes memory off        # disable external provider
+niki memory setup      # interactive picker + configuration
+niki memory status     # check what's active
+niki memory off        # disable external provider
 ```
 
-You can also select the active memory provider via `hermes plugins` → Provider Plugins → Memory Provider.
+You can also select the active memory provider via `niki plugins` → Provider Plugins → Memory Provider.
 
-Or set manually in `~/.hermes/config.yaml`:
+Or set manually in `~/.niki/config.yaml`:
 
 ```yaml
 memory:
   provider: retaindb  # or byterover,
                       # or honcho / hindsight / supermemory / mem0 / openviking / holographic
-                      # (plugin catalog — run `hermes plugins install <name>` first)
+                      # (plugin catalog — run `niki plugins install <name>` first)
 ```
 
 ## How It Works
@@ -47,7 +47,7 @@ Everything Niki hands a provider (turns, the transcript including tool output, r
 ### Honcho
 
 :::info Plugin catalog
-Honcho is maintained by [Plastic Labs](https://github.com/plastic-labs/honcho/tree/main/hermes-plugin-honcho) and installed from the [plugin catalog](./plugins.md) rather than bundled with Niki. It is the same provider that used to ship in-tree: tools, config files and the `hermes honcho` commands are unchanged.
+Honcho is maintained by [Plastic Labs](https://github.com/plastic-labs/honcho/tree/main/niki-plugin-honcho) and installed from the [plugin catalog](./plugins.md) rather than bundled with Niki. It is the same provider that used to ship in-tree: tools, config files and the `niki honcho` commands are unchanged.
 :::
 
 AI-native cross-session user modeling with dialectic reasoning, session-scoped context injection, semantic search, and persistent conclusions. Base context now includes the session summary alongside user representation and peer cards, giving the agent awareness of what has already been discussed.
@@ -55,7 +55,7 @@ AI-native cross-session user modeling with dialectic reasoning, session-scoped c
 | | |
 |---|---|
 | **Best for** | Multi-agent systems with cross-session context, user-agent alignment |
-| **Requires** | `hermes plugins install honcho` (installs the `honcho-ai` SDK with it); [API key](https://app.honcho.dev) or self-hosted instance |
+| **Requires** | `niki plugins install honcho` (installs the `honcho-ai` SDK with it); [API key](https://app.honcho.dev) or self-hosted instance |
 | **Data storage** | Honcho Cloud or self-hosted |
 | **Cost** | Honcho pricing (cloud) / free (self-hosted) |
 
@@ -73,15 +73,15 @@ The auto-injected dialectic also scales its reasoning level by query length (lon
 
 **Setup Wizard:**
 ```bash
-hermes plugins install honcho   # from the plugin catalog
-hermes memory setup             # select "honcho" — runs the Honcho-specific post-setup
+niki plugins install honcho   # from the plugin catalog
+niki memory setup             # select "honcho" — runs the Honcho-specific post-setup
 ```
 
-The legacy `hermes honcho setup` command still works (it now redirects to `hermes memory setup`), but is only registered after Honcho is selected as the active memory provider.
+The legacy `niki honcho setup` command still works (it now redirects to `niki memory setup`), but is only registered after Honcho is selected as the active memory provider.
 
 **Headless / remote machines:** for cloud auth on a box without a browser (SSH, remote VM), pick **device** at the wizard's auth-method prompt. The CLI prints a short code and a verification link; open the link in a browser on any other machine, approve, and setup completes — no API key copy-paste. The wizard defaults to this option automatically when it detects no usable local browser.
 
-**Config:** `$HERMES_HOME/honcho.json` (profile-local) or `~/.honcho/config.json` (global). Resolution order: `$HERMES_HOME/honcho.json` > `~/.hermes/honcho.json` > `~/.honcho/config.json`. See the [plugin README](https://github.com/plastic-labs/honcho/tree/main/hermes-plugin-honcho) and the [Honcho integration guide](https://docs.honcho.dev/v3/guides/integrations/hermes).
+**Config:** `$NIKI_HOME/honcho.json` (profile-local) or `~/.honcho/config.json` (global). Resolution order: `$NIKI_HOME/honcho.json` > `~/.niki/honcho.json` > `~/.honcho/config.json`. See the [plugin README](https://github.com/plastic-labs/honcho/tree/main/niki-plugin-honcho) and the [Honcho integration guide](https://docs.honcho.dev/v3/guides/integrations/niki).
 
 <details>
 <summary>Full config reference</summary>
@@ -121,11 +121,11 @@ The legacy `hermes honcho setup` command still works (it now redirects to `herme
 {
   "apiKey": "your-key-from-app.honcho.dev",
   "hosts": {
-    "hermes": {
+    "niki": {
       "enabled": true,
-      "aiPeer": "hermes",
+      "aiPeer": "niki",
       "peerName": "your-name",
-      "workspace": "hermes"
+      "workspace": "niki"
     }
   }
 }
@@ -140,11 +140,11 @@ The legacy `hermes honcho setup` command still works (it now redirects to `herme
 {
   "baseUrl": "http://localhost:8000",
   "hosts": {
-    "hermes": {
+    "niki": {
       "enabled": true,
-      "aiPeer": "hermes",
+      "aiPeer": "niki",
       "peerName": "your-name",
-      "workspace": "hermes"
+      "workspace": "niki"
     }
   }
 }
@@ -152,8 +152,8 @@ The legacy `hermes honcho setup` command still works (it now redirects to `herme
 
 </details>
 
-:::tip Migrating from `hermes honcho`
-If you previously used `hermes honcho setup`, your config and all server-side data are intact. Just re-enable through the setup wizard again or manually set `memory.provider: honcho` to reactivate via the new system.
+:::tip Migrating from `niki honcho`
+If you previously used `niki honcho setup`, your config and all server-side data are intact. Just re-enable through the setup wizard again or manually set `memory.provider: honcho` to reactivate via the new system.
 :::
 
 **Multi-peer setup:**
@@ -166,31 +166,31 @@ The mapping:
 |---------|-----------|
 | **Workspace** | Shared environment. All Niki profiles under one workspace see the same user identity. |
 | **User peer** (`peerName`) | The human. Shared across profiles in the workspace. |
-| **AI peer** (`aiPeer`) | One per Niki profile. Host key `hermes` → default; `hermes.<profile>` for others. |
+| **AI peer** (`aiPeer`) | One per Niki profile. Host key `niki` → default; `niki.<profile>` for others. |
 | **Observation** | Per-peer toggles controlling what Honcho models from whose messages. `directional` (default, all four on) or `unified` (single-observer pool). |
 
 ### New profile, fresh Honcho peer
 
 ```bash
-hermes profile create coder --clone
+niki profile create coder --clone
 ```
 
-`--clone` creates a `hermes.coder` host block in `honcho.json` with `aiPeer: "coder"`, shared `workspace`, inherited `peerName`, `recallMode`, `writeFrequency`, `observation`, etc. The AI peer is eagerly created in Honcho so it exists before the first message.
+`--clone` creates a `niki.coder` host block in `honcho.json` with `aiPeer: "coder"`, shared `workspace`, inherited `peerName`, `recallMode`, `writeFrequency`, `observation`, etc. The AI peer is eagerly created in Honcho so it exists before the first message.
 
 ### Existing profiles, backfill Honcho peers
 
 ```bash
-hermes honcho sync
+niki honcho sync
 ```
 
-Scans every Niki profile, creates host blocks for any profile without one, inherits settings from the default `hermes` block, and creates the new AI peers eagerly. Idempotent — skips profiles that already have a host block.
+Scans every Niki profile, creates host blocks for any profile without one, inherits settings from the default `niki` block, and creates the new AI peers eagerly. Idempotent — skips profiles that already have a host block.
 
 ### Per-profile observation
 
 Each host block can override the observation config independently. Example: a code-focused profile where the AI peer observes the user but doesn't self-model:
 
 ```json
-"hermes.coder": {
+"niki.coder": {
   "aiPeer": "coder",
   "observation": {
     "user": { "observeMe": true, "observeOthers": true },
@@ -225,7 +225,7 @@ The peer model above covers CLI, TUI, and desktop sessions, where every conversa
 | `userPeerAliases` | Maps specific runtime IDs to peers (`{"7654321": "alice"}`). The home for routing distinct identities — including agents that each carry their own peer |
 | `runtimePeerPrefix` | Namespaces any unmapped runtime ID (`telegram_7654321`) so platforms with same-shaped IDs don't collide |
 
-Off-gateway these keys do nothing. `hermes memory setup` only prompts for them when it detects a connected gateway platform. See the [Honcho page](./honcho.md#gateway-identity-mapping) for the resolver ladder and the setup flow.
+Off-gateway these keys do nothing. `niki memory setup` only prompts for them when it detects a connected gateway platform. See the [Honcho page](./honcho.md#gateway-identity-mapping) for the resolver ladder and the setup flow.
 
 <details>
 <summary>Full honcho.json example (multi-profile)</summary>
@@ -233,13 +233,13 @@ Off-gateway these keys do nothing. `hermes memory setup` only prompts for them w
 ```json
 {
   "apiKey": "your-key",
-  "workspace": "hermes",
+  "workspace": "niki",
   "peerName": "eri",
   "hosts": {
-    "hermes": {
+    "niki": {
       "enabled": true,
-      "aiPeer": "hermes",
-      "workspace": "hermes",
+      "aiPeer": "niki",
+      "workspace": "niki",
       "peerName": "eri",
       "recallMode": "hybrid",
       "writeFrequency": "async",
@@ -257,10 +257,10 @@ Off-gateway these keys do nothing. `hermes memory setup` only prompts for them w
       "messageMaxChars": 25000,
       "saveMessages": true
     },
-    "hermes.coder": {
+    "niki.coder": {
       "enabled": true,
       "aiPeer": "coder",
-      "workspace": "hermes",
+      "workspace": "niki",
       "peerName": "eri",
       "recallMode": "tools",
       "observation": {
@@ -268,10 +268,10 @@ Off-gateway these keys do nothing. `hermes memory setup` only prompts for them w
         "ai": { "observeMe": true, "observeOthers": true }
       }
     },
-    "hermes.writer": {
+    "niki.writer": {
       "enabled": true,
       "aiPeer": "writer",
-      "workspace": "hermes",
+      "workspace": "niki",
       "peerName": "eri"
     }
   },
@@ -283,11 +283,11 @@ Off-gateway these keys do nothing. `hermes memory setup` only prompts for them w
 
 </details>
 
-See the [plugin README](https://github.com/plastic-labs/honcho/tree/main/hermes-plugin-honcho) and [Honcho integration guide](https://docs.honcho.dev/v3/guides/integrations/hermes).
+See the [plugin README](https://github.com/plastic-labs/honcho/tree/main/niki-plugin-honcho) and [Honcho integration guide](https://docs.honcho.dev/v3/guides/integrations/niki).
 
 #### Upgrading from the bundled Honcho
 
-Earlier Niki releases shipped Honcho in-tree. If a profile still has `memory.provider: honcho`, Niki installs the catalog plugin automatically the next time it starts or runs `hermes update` — your `~/.honcho/config.json` (or `$HERMES_HOME/honcho.json`), host blocks, peers and session mappings are read exactly as before, so no memory is lost. To do it by hand, or on a machine without network access at startup, run `hermes plugins install honcho`.
+Earlier Niki releases shipped Honcho in-tree. If a profile still has `memory.provider: honcho`, Niki installs the catalog plugin automatically the next time it starts or runs `niki update` — your `~/.honcho/config.json` (or `$NIKI_HOME/honcho.json`), host blocks, peers and session mappings are read exactly as before, so no memory is lost. To do it by hand, or on a machine without network access at startup, run `niki plugins install honcho`.
 
 
 ---
@@ -295,7 +295,7 @@ Earlier Niki releases shipped Honcho in-tree. If a profile still has `memory.pro
 ### OpenViking
 
 :::info Plugin catalog
-OpenViking is maintained by Volcengine and installed from the [plugin catalog](./plugins.md) rather than bundled with Niki. Source: [volcengine/OpenViking — examples/hermes-plugin](https://github.com/volcengine/OpenViking/tree/main/examples/hermes-plugin). Existing setups are migrated automatically — see [Migrating from bundled OpenViking](#migrating-from-bundled-openviking).
+OpenViking is maintained by Volcengine and installed from the [plugin catalog](./plugins.md) rather than bundled with Niki. Source: [volcengine/OpenViking — examples/niki-plugin](https://github.com/volcengine/OpenViking/tree/main/examples/niki-plugin). Existing setups are migrated automatically — see [Migrating from bundled OpenViking](#migrating-from-bundled-openviking).
 :::
 
 Context database by Volcengine (ByteDance) with filesystem-style knowledge hierarchy, tiered retrieval, and automatic memory extraction into 6 categories.
@@ -303,7 +303,7 @@ Context database by Volcengine (ByteDance) with filesystem-style knowledge hiera
 | | |
 |---|---|
 | **Best for** | Self-hosted knowledge management with structured browsing |
-| **Requires** | `hermes plugins install openviking`; OpenViking initialized, validated, and running |
+| **Requires** | `niki plugins install openviking`; OpenViking initialized, validated, and running |
 | **Data storage** | Self-hosted (local or cloud) |
 | **Cost** | Free (open-source, AGPL-3.0) |
 
@@ -317,16 +317,16 @@ openviking-server doctor
 openviking-server
 
 # Then install and configure the Niki plugin
-hermes plugins install openviking
-hermes memory setup    # select "openviking"
+niki plugins install openviking
+niki memory setup    # select "openviking"
 # Or manually:
-hermes config set memory.provider openviking
+niki config set memory.provider openviking
 ```
 
-`hermes memory setup` can reuse or copy connection values from
+`niki memory setup` can reuse or copy connection values from
 `~/.openviking/ovcli.conf`. Manual setup uses the active profile's `.env` file;
-for the default profile that is `~/.hermes/.env`, and for named profiles use
-`~/.hermes/profiles/<profile>/.env`.
+for the default profile that is `~/.niki/.env`, and for named profiles use
+`~/.niki/profiles/<profile>/.env`.
 
 ```text
 OPENVIKING_ENDPOINT=http://127.0.0.1:1933
@@ -365,11 +365,11 @@ linked OpenViking config. Existing memories are not moved or deleted.
 With no peer ID, default search covers user memory and existing peer memories
 under the same OpenViking user. Old peer memories remain searchable at their
 existing paths. Ranking and result limits determine which memories are returned.
-Set `memory.openviking.agent: hermes` to restore the old peer-scoped writes.
+Set `memory.openviking.agent: niki` to restore the old peer-scoped writes.
 Memories written at user scope before this change stay there and remain
 searchable. The setting changes future writes, not existing memory locations.
 
-Niki sends `User-Agent: openviking-memory-hermes/<version>` on OpenViking
+Niki sends `User-Agent: openviking-memory-niki/<version>` on OpenViking
 requests. This standard harness identifier contains no per-user identifier and
 does not add a separate request.
 
@@ -377,18 +377,18 @@ does not add a separate request.
 
 OpenViking used to ship inside the Niki tree. If your `config.yaml` already has `memory.provider: openviking`, there is nothing to do for most users:
 
-- `hermes update` installs the catalog plugin into every profile home that names the provider.
-- If the plugin is still missing on the first agent start (`hermes chat`, the gateway, Desktop), Niki installs it and tells you it did.
-- With `security.allow_lazy_installs: false` the agent-start path does not install anything; it prints the exact `hermes plugins install openviking` command instead.
+- `niki update` installs the catalog plugin into every profile home that names the provider.
+- If the plugin is still missing on the first agent start (`niki chat`, the gateway, Desktop), Niki installs it and tells you it did.
+- With `security.allow_lazy_installs: false` the agent-start path does not install anything; it prints the exact `niki plugins install openviking` command instead.
 
-`memory.provider`, `memory.openviking.*`, the `OPENVIKING_*` keys in `.env`, `~/.openviking/` and the memories on your OpenViking server are untouched. Verify with `hermes memory status` and `hermes plugins list`.
+`memory.provider`, `memory.openviking.*`, the `OPENVIKING_*` keys in `.env`, `~/.openviking/` and the memories on your OpenViking server are untouched. Verify with `niki memory status` and `niki plugins list`.
 
 ---
 
 ### Mem0
 
 :::info Plugin catalog
-Mem0 is maintained by Mem0 and installed from the [plugin catalog](./plugins.md) rather than bundled with Niki. Source: [mem0ai/mem0 — integrations/hermes-plugin-mem0](https://github.com/mem0ai/mem0/tree/main/integrations/hermes-plugin-mem0). Existing setups are migrated automatically — see [Migrating from bundled Mem0](#migrating-from-bundled-mem0).
+Mem0 is maintained by Mem0 and installed from the [plugin catalog](./plugins.md) rather than bundled with Niki. Source: [mem0ai/mem0 — integrations/niki-plugin-mem0](https://github.com/mem0ai/mem0/tree/main/integrations/niki-plugin-mem0). Existing setups are migrated automatically — see [Migrating from bundled Mem0](#migrating-from-bundled-mem0).
 :::
 
 Server-side LLM fact extraction with semantic search, reranking, and automatic deduplication. Three connection modes: **Platform** (Mem0 Cloud), **self-hosted dashboard** (a Mem0 server you run via Docker), and **OSS** (Mem0 in-process with your own LLM + vector store).
@@ -396,49 +396,49 @@ Server-side LLM fact extraction with semantic search, reranking, and automatic d
 | | |
 |---|---|
 | **Best for** | Hands-off memory management — Mem0 handles extraction automatically |
-| **Requires** | `hermes plugins install mem0` (installs the Mem0 SDK with the plugin); API key (platform), a running Mem0 server (self-hosted dashboard), or an LLM + vector store (OSS) |
+| **Requires** | `niki plugins install mem0` (installs the Mem0 SDK with the plugin); API key (platform), a running Mem0 server (self-hosted dashboard), or an LLM + vector store (OSS) |
 | **Data storage** | Mem0 Cloud (platform), your own Mem0 server (self-hosted dashboard), or in-process (OSS) |
 | **Cost** | Mem0 pricing (platform) / free (self-hosted or OSS) |
 
 The mem0ai SDK sends anonymous PostHog usage telemetry unless `MEM0_TELEMETRY=false` is set in
-your shell or `~/.hermes/.env`.
+your shell or `~/.niki/.env`.
 
 **Tools (4):** `mem0_search` (semantic search; optional reranking in platform mode, off by default), `mem0_add` (store verbatim facts), `mem0_update` (update by ID), `mem0_delete` (delete by ID)
 
 **Setup (Platform):**
 ```bash
-hermes plugins install mem0   # from the plugin catalog
-hermes memory setup    # select "mem0" → "Platform"
+niki plugins install mem0   # from the plugin catalog
+niki memory setup    # select "mem0" → "Platform"
 # Or manually:
-hermes config set memory.provider mem0
-echo "MEM0_API_KEY=your-key" >> ~/.hermes/.env
+niki config set memory.provider mem0
+echo "MEM0_API_KEY=your-key" >> ~/.niki/.env
 ```
 
 **Setup (OSS):**
 ```bash
-hermes memory setup    # select "mem0" → "Open Source (self-hosted)"
+niki memory setup    # select "mem0" → "Open Source (self-hosted)"
 # Or via flags:
-hermes memory setup mem0 --mode oss --oss-llm openai --oss-llm-key sk-... --oss-vector qdrant
+niki memory setup mem0 --mode oss --oss-llm openai --oss-llm-key sk-... --oss-vector qdrant
 ```
 
 Preview without writing files:
 ```bash
-hermes memory setup mem0 --mode oss --oss-llm-key sk-... --dry-run
+niki memory setup mem0 --mode oss --oss-llm-key sk-... --dry-run
 ```
 
 **Setup (Self-Hosted Dashboard):** connect to a Mem0 server you run via Docker (the dashboard's REST API):
 
 ```bash
-hermes memory setup    # select "mem0" → "Self-hosted server"
+niki memory setup    # select "mem0" → "Self-hosted server"
 # Or via flags:
-hermes memory setup mem0 --mode selfhosted --host http://localhost:8888 --api-key your-admin-api-key
+niki memory setup mem0 --mode selfhosted --host http://localhost:8888 --api-key your-admin-api-key
 ```
 
 Or configure manually — either as env vars:
 
 ```bash
-echo "MEM0_HOST=http://localhost:8888" >> ~/.hermes/.env
-echo "MEM0_API_KEY=your-admin-api-key" >> ~/.hermes/.env
+echo "MEM0_HOST=http://localhost:8888" >> ~/.niki/.env
+echo "MEM0_API_KEY=your-admin-api-key" >> ~/.niki/.env
 ```
 
 or in `mem0.json`:
@@ -449,14 +449,14 @@ or in `mem0.json`:
 
 The plugin authenticates with `X-API-Key` and uses the server's `/search` / `/memories` routes. `api_key` is optional (omit only for `AUTH_DISABLED` servers). Don't set `mode: oss` — it takes precedence over `host`.
 
-**Config:** `$HERMES_HOME/mem0.json` (behavioral settings). Only the secret `MEM0_API_KEY` belongs in `~/.hermes/.env`.
+**Config:** `$NIKI_HOME/mem0.json` (behavioral settings). Only the secret `MEM0_API_KEY` belongs in `~/.niki/.env`.
 
 | Key | Default | Description |
 |-----|---------|-------------|
 | `mode` | `platform` | `platform` (Mem0 Cloud) or `oss` (self-managed, in-process) |
 | `host` | — | Self-hosted Mem0 server URL (Docker dashboard). Routes over HTTP with `X-API-Key`; don't combine with `mode: oss` |
-| `user_id` | `hermes-user` | User identifier |
-| `agent_id` | `hermes` | Agent identifier |
+| `user_id` | `niki-user` | User identifier |
+| `agent_id` | `niki` | Agent identifier |
 | `rerank` | `false` | Rerank search results for relevance (platform mode only) |
 | `sync_max_chars` | `450` | Per-message character cap applied before each turn is sent for fact extraction, cut at the last sentence boundary. The default fits 512-token embedders (Ollama `bge-small-zh-v1.5`, `all-minilm`); raise it (e.g. `6000`) for 8k-token embedders such as `text-embedding-3-small`, `jina-embeddings-v3` or `bge-m3` |
 
@@ -468,24 +468,24 @@ The plugin authenticates with `X-API-Key` and uses the server's `/search` / `/me
 | Embedder | openai, ollama |
 | Vector Store | qdrant (local/server), pgvector |
 
-**Switching modes:** Re-run `hermes memory setup mem0 --mode <platform|selfhosted|oss>` or edit `mem0.json` directly.
+**Switching modes:** Re-run `niki memory setup mem0 --mode <platform|selfhosted|oss>` or edit `mem0.json` directly.
 
 ### Migrating from bundled Mem0
 
-Mem0 used to ship inside the Niki tree (and as the `hermes-agent[mem0]` pip extra). If your `config.yaml` already has `memory.provider: mem0`, there is nothing to do for most users:
+Mem0 used to ship inside the Niki tree (and as the `niki-agent[mem0]` pip extra). If your `config.yaml` already has `memory.provider: mem0`, there is nothing to do for most users:
 
-- `hermes update` installs the catalog plugin into every profile home that names the provider.
-- If the plugin is still missing on the first agent start (`hermes chat`, the gateway, Desktop), Niki installs it and tells you it did.
-- With `security.allow_lazy_installs: false` the agent-start path does not install anything; it prints the exact `hermes plugins install mem0` command instead.
+- `niki update` installs the catalog plugin into every profile home that names the provider.
+- If the plugin is still missing on the first agent start (`niki chat`, the gateway, Desktop), Niki installs it and tells you it did.
+- With `security.allow_lazy_installs: false` the agent-start path does not install anything; it prints the exact `niki plugins install mem0` command instead.
 
-`memory.provider`, `$HERMES_HOME/mem0.json`, the `MEM0_*` keys in `.env` and the memories stored in Mem0 Cloud, your Mem0 server or the local OSS store are untouched. Verify with `hermes memory status` and `hermes plugins list`.
+`memory.provider`, `$NIKI_HOME/mem0.json`, the `MEM0_*` keys in `.env` and the memories stored in Mem0 Cloud, your Mem0 server or the local OSS store are untouched. Verify with `niki memory status` and `niki plugins list`.
 
 ---
 
 ### Hindsight
 
 :::info Plugin catalog
-Hindsight is maintained by [vectorize-io](https://github.com/vectorize-io/hindsight) and installed from the [plugin catalog](./plugins.md) rather than bundled with Niki. Setup details live in the upstream docs: [hindsight.vectorize.io/sdks/integrations/hermes](https://hindsight.vectorize.io/sdks/integrations/hermes).
+Hindsight is maintained by [vectorize-io](https://github.com/vectorize-io/hindsight) and installed from the [plugin catalog](./plugins.md) rather than bundled with Niki. Setup details live in the upstream docs: [hindsight.vectorize.io/sdks/integrations/niki](https://hindsight.vectorize.io/sdks/integrations/niki).
 :::
 
 Long-term memory with knowledge graph, entity resolution, and multi-strategy retrieval. The `hindsight_reflect` tool provides cross-memory synthesis that no other provider offers. Automatically retains full conversation turns (including tool calls) with session-level document tracking.
@@ -493,7 +493,7 @@ Long-term memory with knowledge graph, entity resolution, and multi-strategy ret
 | | |
 |---|---|
 | **Best for** | Knowledge graph-based recall with entity relationships |
-| **Requires** | `hermes plugins install hindsight`. Cloud: API key from [ui.hindsight.vectorize.io](https://ui.hindsight.vectorize.io). Local: LLM API key (OpenAI, Groq, OpenRouter, etc.) |
+| **Requires** | `niki plugins install hindsight`. Cloud: API key from [ui.hindsight.vectorize.io](https://ui.hindsight.vectorize.io). Local: LLM API key (OpenAI, Groq, OpenRouter, etc.) |
 | **Data storage** | Hindsight Cloud, local embedded PostgreSQL, or an external local Hindsight server |
 | **Cost** | Hindsight pricing (cloud) or free (local) |
 
@@ -501,23 +501,23 @@ Long-term memory with knowledge graph, entity resolution, and multi-strategy ret
 
 **Setup:**
 ```bash
-hermes plugins install hindsight   # from the plugin catalog; answer "Use 'hindsight' as the memory provider now?"
-hermes memory setup                # select "hindsight"
+niki plugins install hindsight   # from the plugin catalog; answer "Use 'hindsight' as the memory provider now?"
+niki memory setup                # select "hindsight"
 # Or manually:
-hermes config set memory.provider hindsight
-echo "HINDSIGHT_API_KEY=your-key" >> ~/.hermes/.env
+niki config set memory.provider hindsight
+echo "HINDSIGHT_API_KEY=your-key" >> ~/.niki/.env
 ```
 
-The plugin lands in `~/.hermes/plugins/hindsight/` (per profile home). A memory provider is activated by `memory.provider` in `config.yaml`, not `plugins.enabled`: accepting the install prompt (or passing `--enable`) sets it, and declining leaves it unchanged so `hermes memory setup` can pick it later. `hermes plugins enable hindsight` does not activate a memory provider. `hermes memory setup`, `hermes memory status`, `hermes plugins list` and the dashboard Memory settings all work with the catalog-installed plugin. In local embedded mode the plugin installs `hindsight-all` on first use through Niki' lazy-install path, which honours `security.allow_lazy_installs`.
+The plugin lands in `~/.niki/plugins/hindsight/` (per profile home). A memory provider is activated by `memory.provider` in `config.yaml`, not `plugins.enabled`: accepting the install prompt (or passing `--enable`) sets it, and declining leaves it unchanged so `niki memory setup` can pick it later. `niki plugins enable hindsight` does not activate a memory provider. `niki memory setup`, `niki memory status`, `niki plugins list` and the dashboard Memory settings all work with the catalog-installed plugin. In local embedded mode the plugin installs `hindsight-all` on first use through Niki' lazy-install path, which honours `security.allow_lazy_installs`.
 
-**Local mode UI:** `hindsight-embed -p hermes ui start`
+**Local mode UI:** `hindsight-embed -p niki ui start`
 
-**Config:** `$HERMES_HOME/hindsight/config.json`
+**Config:** `$NIKI_HOME/hindsight/config.json`
 
 | Key | Default | Description |
 |-----|---------|-------------|
 | `mode` | `cloud` | `cloud`, `local_embedded`, or `local_external` |
-| `bank_id` | `hermes` | Memory bank identifier |
+| `bank_id` | `niki` | Memory bank identifier |
 | `recall_budget` | `mid` | Recall thoroughness: `low` / `mid` / `high` |
 | `memory_mode` | `hybrid` | `hybrid` (context + tools), `context` (auto-inject only), `tools` (tools only) |
 | `auto_retain` | `true` | Automatically retain conversation turns |
@@ -530,21 +530,21 @@ The plugin lands in `~/.hermes/plugins/hindsight/` (per profile home). A memory 
 | `retain_assistant_prefix` | `Assistant` | Label used before assistant turns in auto-retained transcripts |
 | `recall_tags` | — | Tags to filter on recall |
 
-See the [upstream Niki integration docs](https://hindsight.vectorize.io/sdks/integrations/hermes) for the full configuration reference.
+See the [upstream Niki integration docs](https://hindsight.vectorize.io/sdks/integrations/niki) for the full configuration reference.
 
 #### Migrating from bundled Hindsight
 
-Hindsight used to ship inside the Niki tree (and as the `hermes-agent[hindsight]` pip extra). If your `config.yaml` already has `memory.provider: hindsight`, there is nothing to do for most users:
+Hindsight used to ship inside the Niki tree (and as the `niki-agent[hindsight]` pip extra). If your `config.yaml` already has `memory.provider: hindsight`, there is nothing to do for most users:
 
-- `hermes update` installs the catalog plugin into every profile home that names the provider. Each line names the profile it is about. In a terminal it asks before preparing the plugin's Python dependencies; when several profiles use the provider, the questions are asked once and the answers apply to all of them. Without a terminal (the Desktop app, a script, a service) nobody can answer, so each profile prepares them unattended when its `security.allow_lazy_installs` is on (the default); a profile with it off gets the exact `hermes -p <profile> plugins install hindsight` command instead, and the other profiles still migrate.
-- If the plugin is still missing on the first agent start (`hermes chat`, Desktop, the gateway, …), Niki installs it, dependencies included, and shows ``✓ Memory provider 'hindsight' moved out of core — installed its plugin from the catalog (memory.provider and your stored memories are unchanged; check its settings with `hermes memory status`).`` Messaging platforms get the line with the first reply.
-- When the agent-start install cannot happen, you see why instead of silently running without external memory: with `security.allow_lazy_installs: false` the warning names the install command for that profile; offline or declined installs show the error and the same command. After a failed attempt, agent starts in the next hour skip the install and only repeat the command; `hermes update` always retries.
-- Agent start never asks a question (the chat prompt owns the terminal). A catalog provider that never shipped with Niki (for example `mnemosyne`) is therefore not installed on agent start: the warning names `hermes plugins install <name>` for that profile, or install it from the dashboard/Desktop Plugins page.
+- `niki update` installs the catalog plugin into every profile home that names the provider. Each line names the profile it is about. In a terminal it asks before preparing the plugin's Python dependencies; when several profiles use the provider, the questions are asked once and the answers apply to all of them. Without a terminal (the Desktop app, a script, a service) nobody can answer, so each profile prepares them unattended when its `security.allow_lazy_installs` is on (the default); a profile with it off gets the exact `niki -p <profile> plugins install hindsight` command instead, and the other profiles still migrate.
+- If the plugin is still missing on the first agent start (`niki chat`, Desktop, the gateway, …), Niki installs it, dependencies included, and shows ``✓ Memory provider 'hindsight' moved out of core — installed its plugin from the catalog (memory.provider and your stored memories are unchanged; check its settings with `niki memory status`).`` Messaging platforms get the line with the first reply.
+- When the agent-start install cannot happen, you see why instead of silently running without external memory: with `security.allow_lazy_installs: false` the warning names the install command for that profile; offline or declined installs show the error and the same command. After a failed attempt, agent starts in the next hour skip the install and only repeat the command; `niki update` always retries.
+- Agent start never asks a question (the chat prompt owns the terminal). A catalog provider that never shipped with Niki (for example `mnemosyne`) is therefore not installed on agent start: the warning names `niki plugins install <name>` for that profile, or install it from the dashboard/Desktop Plugins page.
 
-What changes on disk: the plugin appears in `~/.hermes/plugins/hindsight/` and `config.yaml` gains `plugins.enabled: [hindsight]`. `memory.provider`, `$HERMES_HOME/hindsight/config.json`, `HINDSIGHT_API_KEY` in `.env` and your memory bank data are untouched. Verify with `hermes memory status` (provider active) and `hermes plugins list` (plugin installed and enabled).
+What changes on disk: the plugin appears in `~/.niki/plugins/hindsight/` and `config.yaml` gains `plugins.enabled: [hindsight]`. `memory.provider`, `$NIKI_HOME/hindsight/config.json`, `HINDSIGHT_API_KEY` in `.env` and your memory bank data are untouched. Verify with `niki memory status` (provider active) and `niki plugins list` (plugin installed and enabled).
 
 :::warning Where the plugin reads its config
-Hindsight reads `$HERMES_HOME/hindsight/config.json` (per profile home), `~/.hindsight/config.json` (legacy shared), and the `HINDSIGHT_*` variables in `.env`. It does not read a `memory.hindsight` section of `config.yaml`: a `memory.hindsight.*` key there is ignored. Edit the plugin's own `config.json` (key table above) or use `hermes memory setup`.
+Hindsight reads `$NIKI_HOME/hindsight/config.json` (per profile home), `~/.hindsight/config.json` (legacy shared), and the `HINDSIGHT_*` variables in `.env`. It does not read a `memory.hindsight` section of `config.yaml`: a `memory.hindsight.*` key there is ignored. Edit the plugin's own `config.json` (key table above) or use `niki memory setup`.
 :::
 
 ---
@@ -552,7 +552,7 @@ Hindsight reads `$HERMES_HOME/hindsight/config.json` (per profile home), `~/.hin
 ### Holographic
 
 :::info Plugin catalog
-Holographic is maintained by [itpartypattaya](https://github.com/itpartypattaya/hermes-plugin-holographic) and installed from the [plugin catalog](./plugins.md) rather than bundled with Niki. It is the provider that used to ship in-tree, with the same provider name, settings and database. Existing setups are migrated automatically — see [Migrating from bundled Holographic](#migrating-from-bundled-holographic).
+Holographic is maintained by [itpartypattaya](https://github.com/itpartypattaya/niki-plugin-holographic) and installed from the [plugin catalog](./plugins.md) rather than bundled with Niki. It is the provider that used to ship in-tree, with the same provider name, settings and database. Existing setups are migrated automatically — see [Migrating from bundled Holographic](#migrating-from-bundled-holographic).
 :::
 
 Local SQLite fact store with FTS5 full-text search, trust scoring, and HRR (Holographic Reduced Representations) for compositional algebraic queries.
@@ -568,17 +568,17 @@ Local SQLite fact store with FTS5 full-text search, trust scoring, and HRR (Holo
 
 **Setup:**
 ```bash
-hermes plugins install holographic   # from the plugin catalog
-hermes memory setup                  # select "holographic"
+niki plugins install holographic   # from the plugin catalog
+niki memory setup                  # select "holographic"
 # Or manually:
-hermes config set memory.provider holographic
+niki config set memory.provider holographic
 ```
 
-**Config:** `config.yaml` under `plugins.hermes-memory-store`
+**Config:** `config.yaml` under `plugins.niki-memory-store`
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `db_path` | `$HERMES_HOME/memory_store.db` | SQLite database path |
+| `db_path` | `$NIKI_HOME/memory_store.db` | SQLite database path |
 | `auto_extract` | `false` | Auto-extract facts at session end |
 | `default_trust` | `0.5` | Default trust score (0.0–1.0) |
 
@@ -588,19 +588,19 @@ hermes config set memory.provider holographic
 - `contradict` — automated detection of conflicting facts
 - Trust scoring with asymmetric feedback (+0.05 helpful / -0.10 unhelpful)
 
-The catalog plugin has its own release notes and options beyond this list; see its [README](https://github.com/itpartypattaya/hermes-plugin-holographic) for the current tool actions and settings.
+The catalog plugin has its own release notes and options beyond this list; see its [README](https://github.com/itpartypattaya/niki-plugin-holographic) for the current tool actions and settings.
 
 #### Migrating from bundled Holographic
 
 Holographic used to ship inside the Niki tree. If your `config.yaml` already has `memory.provider: holographic`, there is nothing to do:
 
-- `hermes update` installs the catalog plugin into every profile home that names the provider.
-- If the plugin is still missing on the first agent start (`hermes chat`, the gateway, Desktop), Niki installs it and tells you it did.
-- With `security.allow_lazy_installs: false` the agent-start path does not install anything; it prints the exact `hermes plugins install holographic` command instead.
+- `niki update` installs the catalog plugin into every profile home that names the provider.
+- If the plugin is still missing on the first agent start (`niki chat`, the gateway, Desktop), Niki installs it and tells you it did.
+- With `security.allow_lazy_installs: false` the agent-start path does not install anything; it prints the exact `niki plugins install holographic` command instead.
 
-Your facts (`$HERMES_HOME/memory_store.db`, or the `db_path` you set) and your `plugins.hermes-memory-store` settings are read exactly as before, so no memory is lost. Verify with `hermes memory status` and `hermes plugins list`.
+Your facts (`$NIKI_HOME/memory_store.db`, or the `db_path` you set) and your `plugins.niki-memory-store` settings are read exactly as before, so no memory is lost. Verify with `niki memory status` and `niki plugins list`.
 
-If you installed Nous Research's interim copy by URL (`NousResearch/hermes-plugin-holographic`, now archived), `hermes plugins update holographic` moves it onto the catalog entry; your data stays where it is.
+If you installed NeGamer01's interim copy by URL (`NousResearch/hermes-plugin-holographic`, now archived), `niki plugins update holographic` moves it onto the catalog entry; your data stays where it is.
 
 ---
 
@@ -619,10 +619,10 @@ Cloud memory API with hybrid search (Vector + BM25 + Reranking), 7 memory types,
 
 **Setup:**
 ```bash
-hermes memory setup    # select "retaindb"
+niki memory setup    # select "retaindb"
 # Or manually:
-hermes config set memory.provider retaindb
-echo "RETAINDB_API_KEY=your-key" >> ~/.hermes/.env
+niki config set memory.provider retaindb
+echo "RETAINDB_API_KEY=your-key" >> ~/.niki/.env
 ```
 
 ---
@@ -646,14 +646,14 @@ Persistent memory via the `brv` CLI — hierarchical knowledge tree with tiered 
 curl -fsSL https://byterover.dev/install.sh | sh
 
 # Then configure Niki
-hermes memory setup    # select "byterover"
+niki memory setup    # select "byterover"
 # Or manually:
-hermes config set memory.provider byterover
+niki config set memory.provider byterover
 ```
 
 **Key features:**
 - Automatic pre-compression extraction (saves insights before context compression discards them)
-- Knowledge tree stored at `$HERMES_HOME/byterover/` (profile-scoped)
+- Knowledge tree stored at `$NIKI_HOME/byterover/` (profile-scoped)
 - SOC2 Type II certified cloud sync (optional)
 
 ---
@@ -661,7 +661,7 @@ hermes config set memory.provider byterover
 ### Supermemory
 
 :::info Plugin catalog
-Supermemory is maintained by Supermemory and installed from the [plugin catalog](./plugins.md) rather than bundled with Niki. Source and full configuration reference: [supermemoryai/hermes-supermemory](https://github.com/supermemoryai/hermes-supermemory). Existing setups are migrated automatically — see [Migrating from bundled Supermemory](#migrating-from-bundled-supermemory).
+Supermemory is maintained by Supermemory and installed from the [plugin catalog](./plugins.md) rather than bundled with Niki. Source and full configuration reference: [supermemoryai/niki-supermemory](https://github.com/supermemoryai/niki-supermemory). Existing setups are migrated automatically — see [Migrating from bundled Supermemory](#migrating-from-bundled-supermemory).
 :::
 
 Semantic long-term memory with profile recall, semantic search, explicit memory tools, and per-turn conversation capture (one document per session per 4-hour window).
@@ -669,7 +669,7 @@ Semantic long-term memory with profile recall, semantic search, explicit memory 
 | | |
 |---|---|
 | **Best for** | Semantic recall with user profiling and session-level graph building |
-| **Requires** | `hermes plugins install supermemory` (installs the Supermemory SDK with the plugin); [cloud API key](http://app.supermemory.ai/integrations?connect=hermes), or a [self-hosted server](https://supermemory.ai/docs/self-hosting/overview) |
+| **Requires** | `niki plugins install supermemory` (installs the Supermemory SDK with the plugin); [cloud API key](http://app.supermemory.ai/integrations?connect=niki), or a [self-hosted server](https://supermemory.ai/docs/self-hosting/overview) |
 | **Data storage** | Supermemory Cloud or self-hosted |
 | **Cost** | Supermemory pricing (cloud) / free (self-hosted) |
 
@@ -677,11 +677,11 @@ Semantic long-term memory with profile recall, semantic search, explicit memory 
 
 **Setup:**
 ```bash
-hermes plugins install supermemory   # from the plugin catalog
-hermes memory setup                  # select "supermemory"
+niki plugins install supermemory   # from the plugin catalog
+niki memory setup                  # select "supermemory"
 # Or manually:
-hermes config set memory.provider supermemory
-echo 'SUPERMEMORY_API_KEY=***' >> ~/.hermes/.env
+niki config set memory.provider supermemory
+echo 'SUPERMEMORY_API_KEY=***' >> ~/.niki/.env
 ```
 
 Self-hosted setup:
@@ -690,8 +690,8 @@ Self-hosted setup:
 npx supermemory local
 ```
 
-After `hermes plugins install supermemory` and before running `hermes memory setup`, set `base_url` in
-`$HERMES_HOME/supermemory.json`:
+After `niki plugins install supermemory` and before running `niki memory setup`, set `base_url` in
+`$NIKI_HOME/supermemory.json`:
 
 ```json
 {
@@ -699,16 +699,16 @@ After `hermes plugins install supermemory` and before running `hermes memory set
 }
 ```
 
-Then run `hermes memory setup` and enter the API key printed by the local
+Then run `niki memory setup` and enter the API key printed by the local
 server. Configuring the endpoint first ensures the setup connection probe also
 stays local.
 
-**Config:** `$HERMES_HOME/supermemory.json`
+**Config:** `$NIKI_HOME/supermemory.json`
 
 | Key | Default | Description |
 |-----|---------|-------------|
 | `base_url` | `https://api.supermemory.ai` | API endpoint for hosted or self-hosted Supermemory. Takes priority over `SUPERMEMORY_BASE_URL`. |
-| `container_tag` | `hermes` | Container tag used for search and writes. Supports `{identity}` template for profile-scoped tags. |
+| `container_tag` | `niki` | Container tag used for search and writes. Supports `{identity}` template for profile-scoped tags. |
 | `auto_recall` | `true` | Inject relevant memory context before turns |
 | `auto_capture` | `true` | Store cleaned user-assistant turns after each response |
 | `max_recall_results` | `10` | Max recalled items to format into context |
@@ -727,7 +727,7 @@ Base URL precedence is `supermemory.json` → `SUPERMEMORY_BASE_URL` → `https:
 - Failed turn writes are retried (at-least-once) on the next turn, session end, `/reset`, or shutdown
 - End-to-end self-hosted routing — SDK and probe requests use the same configured endpoint
 - Profile facts injected on first turn and at configurable intervals
-- **Profile-scoped containers** — use `{identity}` in `container_tag` (e.g. `hermes-{identity}` → `hermes-coder`) to isolate memories per Niki profile
+- **Profile-scoped containers** — use `{identity}` in `container_tag` (e.g. `niki-{identity}` → `niki-coder`) to isolate memories per Niki profile
 - **Multi-container mode** — enable `enable_custom_container_tags` with a `custom_containers` list to let the agent read/write across named containers. Automatic operations stay on the primary container.
 
 <details>
@@ -735,7 +735,7 @@ Base URL precedence is `supermemory.json` → `SUPERMEMORY_BASE_URL` → `https:
 
 ```json
 {
-  "container_tag": "hermes",
+  "container_tag": "niki",
   "enable_custom_container_tags": true,
   "custom_containers": ["project-alpha", "shared-knowledge"],
   "custom_container_instructions": "Use project-alpha for coding context."
@@ -748,13 +748,13 @@ Base URL precedence is `supermemory.json` → `SUPERMEMORY_BASE_URL` → `https:
 
 ### Migrating from bundled Supermemory
 
-Supermemory used to ship inside the Niki tree (and as the `hermes-agent[supermemory]` pip extra). If your `config.yaml` already has `memory.provider: supermemory`, there is nothing to do for most users:
+Supermemory used to ship inside the Niki tree (and as the `niki-agent[supermemory]` pip extra). If your `config.yaml` already has `memory.provider: supermemory`, there is nothing to do for most users:
 
-- `hermes update` installs the catalog plugin into every profile home that names the provider (this runs even when `security.allow_lazy_installs` is `false`).
-- If the plugin is still missing on the first agent start (`hermes chat`, the gateway, …), Niki installs it and prints `✓ Memory provider 'supermemory' moved out of core — installed its plugin from the catalog (your memory.supermemory settings and data are unchanged).`
-- With `security.allow_lazy_installs: false`, the agent-start path instead logs one line — ``Memory provider 'supermemory' is not installed; security.allow_lazy_installs is off — run `hermes plugins install supermemory`.`` — and you run `hermes plugins install supermemory` yourself.
+- `niki update` installs the catalog plugin into every profile home that names the provider (this runs even when `security.allow_lazy_installs` is `false`).
+- If the plugin is still missing on the first agent start (`niki chat`, the gateway, …), Niki installs it and prints `✓ Memory provider 'supermemory' moved out of core — installed its plugin from the catalog (your memory.supermemory settings and data are unchanged).`
+- With `security.allow_lazy_installs: false`, the agent-start path instead logs one line — ``Memory provider 'supermemory' is not installed; security.allow_lazy_installs is off — run `niki plugins install supermemory`.`` — and you run `niki plugins install supermemory` yourself.
 
-What changes on disk: the plugin appears in `~/.hermes/plugins/supermemory/` and `config.yaml` gains `plugins.enabled: [supermemory]`. The Supermemory SDK is installed from the plugin's own package metadata, so the `hermes-agent[supermemory]` extra is no longer needed. `memory.provider`, `$HERMES_HOME/supermemory.json`, the `SUPERMEMORY_*` keys in `.env` and the memories stored in your Supermemory account are untouched. Verify with `hermes memory status` (provider active) and `hermes plugins list` (plugin installed and enabled).
+What changes on disk: the plugin appears in `~/.niki/plugins/supermemory/` and `config.yaml` gains `plugins.enabled: [supermemory]`. The Supermemory SDK is installed from the plugin's own package metadata, so the `niki-agent[supermemory]` extra is no longer needed. `memory.provider`, `$NIKI_HOME/supermemory.json`, the `SUPERMEMORY_*` keys in `.env` and the memories stored in your Supermemory account are untouched. Verify with `niki memory status` (provider active) and `niki plugins list` (plugin installed and enabled).
 
 ### Memori
 
@@ -763,7 +763,7 @@ Structured long-term memory using Memori Cloud, with background completed-turn c
 | | |
 |---|---|
 | **Best for** | Agent-controlled recall with structured project and session attribution |
-| **Requires** | Externally supplied `hermes-memori` CLI and provider integration + [Memori API key](https://app.memorilabs.ai/signup) |
+| **Requires** | Externally supplied `niki-memori` CLI and provider integration + [Memori API key](https://app.memorilabs.ai/signup) |
 | **Data storage** | Memori Cloud |
 | **Cost** | Memori pricing |
 
@@ -771,7 +771,7 @@ Structured long-term memory using Memori Cloud, with background completed-turn c
 
 **Setup:**
 
-`hermes-memori` is an external integration, not a managed PM tool name. Follow
+`niki-memori` is an external integration, not a managed PM tool name. Follow
 its publisher's instructions to install the CLI in an independent environment.
 Before running its installer, confirm that it targets the intended Niki home
 and supplies a provider with declared Python dependencies. Do not let an external
@@ -781,13 +781,13 @@ distribution needs an owner-managed build that includes it.
 
 ```bash
 # Run only after confirming the external installer's integration contract above.
-hermes-memori install
-hermes config set memory.provider memori
-hermes memory setup
+niki-memori install
+niki config set memory.provider memori
+niki memory setup
 ```
 
 If the installer does not support PM-managed directory-provider admission, ask
-the publisher for that integration rather than inventing a `hermes pm install`
+the publisher for that integration rather than inventing a `niki pm install`
 package command. Restart Niki after successful dependency preparation.
 
 ---
@@ -796,22 +796,22 @@ package command. Restart Niki after successful dependency preparation.
 
 | Provider | Storage | Cost | Tools | Dependencies | Unique Feature |
 |----------|---------|------|-------|-------------|----------------|
-| **Honcho** (plugin catalog) | Cloud/Self-hosted | Paid/Free | 5 | `hermes plugins install honcho` | Dialectic user modeling + session-scoped context |
-| **OpenViking** (plugin catalog) | Self-hosted | Free | 6 | `hermes plugins install openviking` + server | Filesystem hierarchy + tiered loading |
-| **Mem0** (plugin catalog) | Cloud/Self-hosted | Free/Paid | 4 | `hermes plugins install mem0` | Server-side LLM extraction + self-hosted/OSS modes |
-| **Hindsight** (plugin catalog) | Cloud/Local | Free/Paid | 3 | `hermes plugins install hindsight` | Knowledge graph + reflect synthesis |
-| **Holographic** (plugin catalog) | Local | Free | 2 | `hermes plugins install holographic` | HRR algebra + trust scoring |
+| **Honcho** (plugin catalog) | Cloud/Self-hosted | Paid/Free | 5 | `niki plugins install honcho` | Dialectic user modeling + session-scoped context |
+| **OpenViking** (plugin catalog) | Self-hosted | Free | 6 | `niki plugins install openviking` + server | Filesystem hierarchy + tiered loading |
+| **Mem0** (plugin catalog) | Cloud/Self-hosted | Free/Paid | 4 | `niki plugins install mem0` | Server-side LLM extraction + self-hosted/OSS modes |
+| **Hindsight** (plugin catalog) | Cloud/Local | Free/Paid | 3 | `niki plugins install hindsight` | Knowledge graph + reflect synthesis |
+| **Holographic** (plugin catalog) | Local | Free | 2 | `niki plugins install holographic` | HRR algebra + trust scoring |
 | **RetainDB** | Cloud | $20/mo | 10 | `requests` | Delta compression |
 | **ByteRover** | Local/Cloud | Free/Paid | 3 | `brv` CLI | Pre-compression extraction |
-| **Supermemory** (plugin catalog) | Cloud/Self-hosted | Free/Paid | 4 | `hermes plugins install supermemory` | Context fencing + session graph ingest + multi-container |
-| **Memori** | Cloud | Free/Paid | 5 | `hermes-memori` | Tool-aware memory + structured recall |
+| **Supermemory** (plugin catalog) | Cloud/Self-hosted | Free/Paid | 4 | `niki plugins install supermemory` | Context fencing + session graph ingest + multi-container |
+| **Memori** | Cloud | Free/Paid | 5 | `niki-memori` | Tool-aware memory + structured recall |
 
 ## Profile Isolation
 
 Each provider's data is isolated per [profile](../profiles.md):
 
-- **Local storage providers** (Holographic, ByteRover) use `$HERMES_HOME/` paths which differ per profile
-- **Config file providers** (Honcho, Mem0, Hindsight, Supermemory) store config in `$HERMES_HOME/` so each profile has its own credentials
+- **Local storage providers** (Holographic, ByteRover) use `$NIKI_HOME/` paths which differ per profile
+- **Config file providers** (Honcho, Mem0, Hindsight, Supermemory) store config in `$NIKI_HOME/` so each profile has its own credentials
 - **Cloud providers** (RetainDB) auto-derive profile-scoped project names
 - **Env var providers** (OpenViking) are configured via each profile's `.env` file
 
@@ -829,12 +829,12 @@ maintained by itpartypattaya, see
 ByteRover leave core on October 15, 2026; their standalone repositories are unmaintained and
 open for a new maintainer. Nothing changes for you: the
 provider name, the settings it reads, its data directory and its tools stay the same.
-When a provider you have configured stops shipping with Niki, `hermes update` installs its
+When a provider you have configured stops shipping with Niki, `niki update` installs its
 catalog plugin for every profile that names it; if you update through the Desktop app, the
 agent does the same the first time it starts. Every outcome is shown to you — in the terminal,
 in Desktop, or with the first reply on a messaging platform. If the install cannot happen
 (`security.allow_lazy_installs: false`, offline, declined), the warning includes the exact
-`hermes plugins install <name>` command.
+`niki plugins install <name>` command.
 
 ## Building a Memory Provider
 

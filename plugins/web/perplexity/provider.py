@@ -23,7 +23,7 @@ Env vars::
 
 No anonymous tier at Perplexity itself. The managed route serves search through
 ``perplexity-gateway.<TOOL_GATEWAY_DOMAIN>`` as ``search_type: "fast"``, which the
-gateway serves to any Nous identity (paid, unpaid or anonymous guest); a direct key
+gateway serves to any Niki identity (paid, unpaid or anonymous guest); a direct key
 takes precedence.
 Managed extract stays on Firecrawl.
 
@@ -43,7 +43,7 @@ from urllib.parse import urlparse
 import httpx
 
 from agent.web_search_provider import WebSearchProvider
-from hermes_cli.version_info import get_version_info
+from niki_cli.version_info import get_version_info
 
 logger = logging.getLogger(__name__)
 
@@ -54,10 +54,10 @@ _KEY_URL = "https://www.perplexity.ai/account/api"
 # OpenCode, plus Perplexity's integration header. No per-user identifier and no separate
 # request; the call already carries the user's own API key.
 _HEADERS = {
-    "HTTP-Referer": "https://hermes-agent.nousresearch.com",
+    "HTTP-Referer": "https://github.com/NeGamer01/niki-agent",
     "X-Title": "Niki Agent",
-    "User-Agent": f"HermesAgent/{get_version_info().base_version}",
-    "X-Pplx-Integration": "hermes-agent",
+    "User-Agent": f"NikiAgent/{get_version_info().base_version}",
+    "X-Pplx-Integration": "niki-agent",
 }
 
 
@@ -73,7 +73,7 @@ def _missing_key_error() -> str:
 
 
 def _managed_gateway(token_reader=None):
-    """Nous Tool Gateway config when web_search is on the managed route, else None."""
+    """Niki Tool Gateway config when web_search is on the managed route, else None."""
     from tools import managed_tool_gateway as gw
     from tools.web_tools import _managed_web_search
 
@@ -94,8 +94,8 @@ def _perplexity_request(endpoint: str, payload: dict[str, Any], gateway=None) ->
     api_key = get_provider_env("PERPLEXITY_API_KEY")
     headers = _HEADERS
     if gateway is not None:
-        # Nous-owned key behind the gateway: identify the harness only, not a per-user integration.
-        base_url, api_key, headers = gateway.gateway_origin.rstrip("/"), gateway.nous_user_token, {"User-Agent": _HEADERS["User-Agent"]}
+        # Niki-owned key behind the gateway: identify the harness only, not a per-user integration.
+        base_url, api_key, headers = gateway.gateway_origin.rstrip("/"), gateway.niki_user_token, {"User-Agent": _HEADERS["User-Agent"]}
     elif api_key:
         base_url = (get_provider_env("PERPLEXITY_BASE_URL") or _DEFAULT_BASE_URL).rstrip("/")
     else:
@@ -185,7 +185,7 @@ class PerplexityWebSearchProvider(WebSearchProvider):
         return "Perplexity"
 
     def is_available(self) -> bool:
-        """True with a ``PERPLEXITY_API_KEY``, or on the managed route with a likely-usable Nous token."""
+        """True with a ``PERPLEXITY_API_KEY``, or on the managed route with a likely-usable Niki token."""
         from agent.web_search_provider import get_provider_env
         from tools.managed_tool_gateway import peek_nous_access_token
 
@@ -218,10 +218,10 @@ class PerplexityWebSearchProvider(WebSearchProvider):
             managed = False if direct else _managed_web_search()
             gateway = resolve_free_search_gateway() if managed else None
             if gateway is None and managed:
-                from tools.tool_backend_helpers import NOUS_MANAGED_PROVIDER, selection_error
+                from tools.tool_backend_helpers import NIKI_MANAGED_PROVIDER, selection_error
 
                 raise ValueError(selection_error(
-                    "web", NOUS_MANAGED_PROVIDER, "there is no usable Nous identity (sign in with `/login`)"))
+                    "web", NIKI_MANAGED_PROVIDER, "there is no usable Niki identity (sign in with `/login`)"))
             logger.info("Perplexity search: '%s' (limit=%d%s)", query, limit, ", managed" if gateway else "")
             payload = {
                 "query": query,

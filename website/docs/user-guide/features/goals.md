@@ -32,17 +32,17 @@ Tasks where the agent does one turn and stops don't need `/goal`. Tasks where *y
 | You want | Reach for |
 |---|---|
 | Keep iterating on one task in this chat until it's done | `/goal <text>` |
-| Many independent tasks, with dependencies, handoffs, or multiple profiles | [Kanban](./kanban) — `hermes kanban create …` |
+| Many independent tasks, with dependencies, handoffs, or multiple profiles | [Kanban](./kanban) — `niki kanban create …` |
 | One card on the board that should keep iterating until its acceptance criteria are met | A kanban card with `--goal` |
 
 :::note
-If you want work on the board, put it there yourself (`hermes kanban create …`) — `/goal` won't do it for you. The reverse is also true: pausing, resuming, or clearing a goal in this chat never creates, claims, or moves a kanban card.
+If you want work on the board, put it there yourself (`niki kanban create …`) — `/goal` won't do it for you. The reverse is also true: pausing, resuming, or clearing a goal in this chat never creates, claims, or moves a kanban card.
 :::
 
 ## Quick start
 
 ```
-/goal Fix every failing test in tests/hermes_cli/ and make sure scripts/run_tests.sh passes for that directory
+/goal Fix every failing test in tests/niki_cli/ and make sure scripts/run_tests.sh passes for that directory
 ```
 
 What you'll see:
@@ -139,7 +139,7 @@ A completion contract makes the judge stricter, but the judge is still an LLM re
 
 ```
 /goal Fix the flaky session tests
-/goal gate add scripts/run_tests.sh tests/hermes_cli/test_goals.py
+/goal gate add scripts/run_tests.sh tests/niki_cli/test_goals.py
 ```
 
 How it works, each turn:
@@ -224,7 +224,7 @@ The continuation prompt is a plain user-role message appended to history. It doe
 
 ## Configuration
 
-Add to `~/.hermes/config.yaml`:
+Add to `~/.niki/config.yaml`:
 
 ```yaml
 goals:
@@ -250,31 +250,31 @@ The judge call is small (~200 output tokens) and runs once per turn, so a cheap 
 ## Example walkthrough
 
 ```
-You: /goal Create four files ~/.hermes/cache/scratch/note_{1..4}.txt, one per turn, each containing its number as text
+You: /goal Create four files ~/.niki/cache/scratch/note_{1..4}.txt, one per turn, each containing its number as text
 
-  ⊙ Goal set (20-turn budget): Create four files ~/.hermes/cache/scratch/note_{1..4}.txt, one per turn, each containing its number as text
+  ⊙ Goal set (20-turn budget): Create four files ~/.niki/cache/scratch/note_{1..4}.txt, one per turn, each containing its number as text
 
-Niki: Creating ~/.hermes/cache/scratch/note_1.txt now.
-  💻 echo "1" > ~/.hermes/cache/scratch/note_1.txt   (0.1s)
-  I've created ~/.hermes/cache/scratch/note_1.txt with the content "1". I'll continue with the remaining files on the next turn as you specified.
+Niki: Creating ~/.niki/cache/scratch/note_1.txt now.
+  💻 echo "1" > ~/.niki/cache/scratch/note_1.txt   (0.1s)
+  I've created ~/.niki/cache/scratch/note_1.txt with the content "1". I'll continue with the remaining files on the next turn as you specified.
 
   ↻ Continuing toward goal (1/20): Only 1 of 4 files has been created; 3 files remain.
 
 Niki: [Continuing toward your standing goal]
-  💻 echo "2" > ~/.hermes/cache/scratch/note_2.txt   (0.1s)
-  Created ~/.hermes/cache/scratch/note_2.txt. Two more to go.
+  💻 echo "2" > ~/.niki/cache/scratch/note_2.txt   (0.1s)
+  Created ~/.niki/cache/scratch/note_2.txt. Two more to go.
 
   ↻ Continuing toward goal (2/20): 2 of 4 files created; 2 remain.
 
 Niki: [Continuing toward your standing goal]
-  💻 echo "3" > ~/.hermes/cache/scratch/note_3.txt   (0.1s)
-  Created ~/.hermes/cache/scratch/note_3.txt.
+  💻 echo "3" > ~/.niki/cache/scratch/note_3.txt   (0.1s)
+  Created ~/.niki/cache/scratch/note_3.txt.
 
   ↻ Continuing toward goal (3/20): 3 of 4 files created; 1 remains.
 
 Niki: [Continuing toward your standing goal]
-  💻 echo "4" > ~/.hermes/cache/scratch/note_4.txt   (0.1s)
-  All four files have been created: ~/.hermes/cache/scratch/note_1.txt through ~/.hermes/cache/scratch/note_4.txt, each containing its number.
+  💻 echo "4" > ~/.niki/cache/scratch/note_4.txt   (0.1s)
+  All four files have been created: ~/.niki/cache/scratch/note_1.txt through ~/.niki/cache/scratch/note_4.txt, each containing its number.
 
   ✓ Goal achieved: All four files were created with the specified content, completing the goal.
 

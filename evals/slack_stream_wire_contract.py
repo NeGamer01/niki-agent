@@ -52,7 +52,7 @@ async def run(repo: str, out: str):
 
     sys.path.insert(0, repo)
     for m in list(sys.modules):
-        if m.startswith(("gateway", "plugins", "tools", "hermes", "agent")):
+        if m.startswith(("gateway", "plugins", "tools", "niki", "agent")):
             del sys.modules[m]
     from slack_sdk.web.async_client import AsyncWebClient
     from gateway.config import PlatformConfig
@@ -122,8 +122,8 @@ def main():
     ap.add_argument("--repo", required=True)
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
-    os.environ.setdefault("HERMES_HOME", os.path.join(os.path.dirname(a.out), "hermes-home-probe"))
-    os.makedirs(os.environ["HERMES_HOME"], exist_ok=True)
+    os.environ.setdefault("NIKI_HOME", os.path.join(os.path.dirname(a.out), "niki-home-probe"))
+    os.makedirs(os.environ["NIKI_HOME"], exist_ok=True)
     sys.exit(asyncio.run(run(os.path.abspath(a.repo), a.out)))
 
 

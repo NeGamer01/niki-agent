@@ -44,9 +44,9 @@ def _sticky_key(session_id: str | None) -> str | None:
     return _cache_scope_from_session_id(get_affinity_scope() or get_conversation_context() or session_id)
 
 
-# OpenAI speed tiers. Nous Portal serves them as distinct slugs (``-fast``/``-flex``); OpenRouter
+# OpenAI speed tiers. Niki Portal serves them as distinct slugs (``-fast``/``-flex``); OpenRouter
 # serves them as ENDPOINTS of the base model (tags ``openai/fast``, ``openai/flex``) and silently
-# routes an unknown suffix to the standard tier at standard price. So the picker carries the Nous
+# routes an unknown suffix to the standard tier at standard price. So the picker carries the Niki
 # slugs for both providers, and here the wire model becomes the base slug with ``provider.only``
 # pinned to that tier's endpoints; the base slug is pinned to the standard endpoints so default
 # routing never lands on flex/fast.
@@ -79,15 +79,15 @@ class OpenRouterProfile(ProviderProfile):
         if not effort and not disabled:
             return cfg
         try:
-            from hermes_cli.models import clamp_reasoning_effort_to_supported
-            from hermes_cli.models_reasoning_caps import openrouter_model_reasoning_capabilities
+            from niki_cli.models import clamp_reasoning_effort_to_supported
+            from niki_cli.models_reasoning_caps import openrouter_model_reasoning_capabilities
 
             caps = openrouter_model_reasoning_capabilities(model)
             if not caps or not caps.get("supports_reasoning"):
                 return cfg
             # A reasoning-mandatory route 400s on a disable ("Reasoning is
             # mandatory for this endpoint and cannot be disabled") — omit
-            # the field and let the model think, same as the Nous profile.
+            # the field and let the model think, same as the Niki profile.
             # OpenRouter's catalog lists ``none`` for openai/gpt-6.1-sol, but upstream 400s on it
             # (live 2026-09-29), so the OpenAI ladder in agent.reasoning_effort wins over the catalog.
             if disabled:
@@ -110,7 +110,7 @@ class OpenRouterProfile(ProviderProfile):
         self, *, api_key: str | None = None, base_url: str | None = None, timeout: float = 8.0
     ) -> list[str] | None:
         """Public OpenRouter catalog (no auth), cached per process. Tool-call
-        filtering happens in hermes_cli/models.py, which the picker reaches first."""
+        filtering happens in niki_cli/models.py, which the picker reaches first."""
         global _CACHE
         if _CACHE is not None:
             return _CACHE
@@ -172,12 +172,12 @@ class OpenRouterProfile(ProviderProfile):
             # pointless and actively harmful: - any enabled form, on a tool-continuation turn whose prior
             # assistant tool_call carries no thinking block (chat_completions never replays signed thinking
             # blocks), ALSO makes OpenRouter emit ``thinking: {type: "disabled"}`` → the same 400 on every
-            # turn after the first tool call. See hermes-agent#42991 (disable case) and the tool-replay
+            # turn after the first tool call. See niki-agent#42991 (disable case) and the tool-replay
             # follow-up. ``reasoning.effort`` being ignored does NOT mean these models have no effort lever
             # — OpenRouter honors the requested effort on the top-level ``verbosity`` field instead (it maps
             # to Anthropic's ``output_config.effort``; ``reasoning.effort`` is accepted but ignored —
             # confirmed by OpenRouter's Claude migration docs and a live token-spend probe in
-            # hermes-agent#43432). Route the existing ``reasoning_config["effort"]`` (sourced from
+            # niki-agent#43432). Route the existing ``reasoning_config["effort"]`` (sourced from
             # ``agent.reasoning_effort``) onto ``verbosity`` so the knob the user already sets keeps working
             # for these models.
             if _anthropic_reasoning_is_mandatory(model):

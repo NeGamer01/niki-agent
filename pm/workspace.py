@@ -200,7 +200,7 @@ def enabled_plugin_dirs(*, proposed_home=None, enabled=None, disabled=None,
 def enabled_member_dirs(*, proposed_home=None, enabled=None, disabled=None) -> list[Path]:
     """Keep every selected member or refuse an incompatible selection.
 
-    A member whose requires_hermes rejects the running version sits out instead: the
+    A member whose requires_niki rejects the running version sits out instead: the
     verdict is only as good as our version identity (an untagged source checkout reads
     as an older release), the loader skips that plugin anyway, and the member rejoins
     as soon as the verdict flips. Enabling one is still refused at admission.
@@ -210,10 +210,10 @@ def enabled_member_dirs(*, proposed_home=None, enabled=None, disabled=None) -> l
     members = []
     for path in selected:
         # Per plugin: with none selected, PM must not import the application's manifest module.
-        from hermes_cli.plugins_manifest import requires_hermes_error
+        from niki_cli.plugins_manifest import requires_niki_error
 
         declaration = read_python_declaration(path)
-        if requires_hermes_error(declaration.manifest):
+        if requires_niki_error(declaration.manifest):
             continue
         reason = manifest_version_error(declaration.manifest, path.name)
         if reason:
@@ -226,7 +226,7 @@ def enabled_member_dirs(*, proposed_home=None, enabled=None, disabled=None) -> l
 def _member_key(identity: Path) -> str:
     """``<plugin dir name>-<sha256(path)[:16]>``: the hash keeps two same-named plugins from
     different homes apart; the name is what a user sees in uv's conflict text
-    (``hermes-plugin-<key> depends on …``) — a bare hash told them nothing to disable."""
+    (``niki-plugin-<key> depends on …``) — a bare hash told them nothing to disable."""
     import re
 
     digest = hashlib.sha256(str(identity.resolve()).encode()).hexdigest()[:16]
@@ -271,7 +271,7 @@ def _workspace_member(plugin_dir: Path, root: Path, *, identity: Path) -> Path:
                 spec["path"] = (identity / relative).resolve().as_posix()
                 changed = True
         if virtual:
-            document.setdefault("project", {})["name"] = f"hermes-plugin-{key}"
+            document.setdefault("project", {})["name"] = f"niki-plugin-{key}"
         project = document.get("project")
         # uv rejects any [project] table whose version is neither set nor dynamic, at
         # parse time and for buildable members too, so a version-less member would abort
@@ -290,7 +290,7 @@ def _workspace_member(plugin_dir: Path, root: Path, *, identity: Path) -> Path:
     member = root / "plugin-deps" / key
     member.mkdir(parents=True)
     (member / "pyproject.toml").write_text(
-        f'[project]\nname = "hermes-plugin-{key}"\nversion = "0.0.0"\n'
+        f'[project]\nname = "niki-plugin-{key}"\nversion = "0.0.0"\n'
         'requires-python = ">=3.11"\n'
         f'dependencies = {json.dumps(specs)}\n[tool.uv]\npackage = false\n',
         encoding="utf-8",
@@ -317,7 +317,7 @@ def install_node_sidecar(
 
     # Tool availability does not authorize mutation of the sidecar itself.
     if not explicit and not lazy_installs_allowed():
-        return "lazy installs are disabled — run `hermes plugins install` and approve Node dependencies"
+        return "lazy installs are disabled — run `niki plugins install` and approve Node dependencies"
 
     # a lockfile means reproducible `npm ci`; plain `npm install` otherwise
     install_cmd = ["ci"] if (plugin_dir / "package-lock.json").is_file() else ["install"]

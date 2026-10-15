@@ -33,8 +33,8 @@ Niki Agent 内置完整的浏览器自动化工具集，支持多种后端选项
 
 ## 配置
 
-:::tip Nous 订阅用户
-如果您拥有付费 [Nous Portal](https://portal.nousresearch.com) 订阅，可通过 **[Tool Gateway](tool-gateway.md)** 使用浏览器自动化功能，无需单独的 API 密钥。新安装可运行 `hermes setup --portal` 登录并一次性开启所有 gateway 工具；已有安装可通过 `hermes model` 或 `hermes tools` 选择 **Nous Subscription** 作为浏览器提供商。
+:::tip Niki 订阅用户
+如果您拥有付费 [Niki Portal](https://portal.nousresearch.com) 订阅，可通过 **[Tool Gateway](tool-gateway.md)** 使用浏览器自动化功能，无需单独的 API 密钥。新安装可运行 `niki setup --portal` 登录并一次性开启所有 gateway 工具；已有安装可通过 `niki model` 或 `niki tools` 选择 **Niki Subscription** 作为浏览器提供商。
 :::
 
 ### Browserbase 云端模式
@@ -42,7 +42,7 @@ Niki Agent 内置完整的浏览器自动化工具集，支持多种后端选项
 要使用 Browserbase 托管的云端浏览器，请添加：
 
 ```bash
-# Add to ~/.hermes/.env
+# Add to ~/.niki/.env
 BROWSERBASE_API_KEY=***
 BROWSERBASE_PROJECT_ID=your-project-id-here
 ```
@@ -54,7 +54,7 @@ BROWSERBASE_PROJECT_ID=your-project-id-here
 要使用 Browser Use 作为云端浏览器提供商，请添加：
 
 ```bash
-# Add to ~/.hermes/.env
+# Add to ~/.niki/.env
 BROWSER_USE_API_KEY=***
 ```
 
@@ -65,14 +65,14 @@ BROWSER_USE_API_KEY=***
 要使用 Firecrawl 作为云端浏览器提供商，请添加：
 
 ```bash
-# Add to ~/.hermes/.env
+# Add to ~/.niki/.env
 FIRECRAWL_API_KEY=fc-***
 ```
 
 在 [firecrawl.dev](https://firecrawl.dev) 获取 API 密钥，然后选择 Firecrawl 作为浏览器提供商：
 
 ```bash
-hermes setup tools
+niki setup tools
 # → Browser Automation → Firecrawl
 ```
 
@@ -95,7 +95,7 @@ FIRECRAWL_BROWSER_TTL=600
 该功能**默认开启**。如需禁用（所有 URL 均走已配置的云端提供商，与之前行为一致）：
 
 ```yaml
-# ~/.hermes/config.yaml
+# ~/.niki/config.yaml
 browser:
   cloud_provider: browserbase
   auto_local_for_private_urls: false
@@ -103,7 +103,7 @@ browser:
 
 禁用自动路由后，私有 URL 将被拒绝并返回 `"Blocked: URL targets a private or internal address"`，除非同时设置 `browser.allow_private_urls: true`（允许云端提供商尝试访问，但通常无法成功，因为 Browserbase 等无法访问您的 LAN）。
 
-要求：本地辅助进程使用与纯本地模式相同的 `agent-browser` CLI，因此需要先安装（`hermes setup tools → Browser Automation` 会自动安装）。从公网 URL 导航后重定向到私有地址的情况仍会被阻止（无法通过公网路径的重定向访问 LAN）。
+要求：本地辅助进程使用与纯本地模式相同的 `agent-browser` CLI，因此需要先安装（`niki setup tools → Browser Automation` 会自动安装）。从公网 URL 导航后重定向到私有地址的情况仍会被阻止（无法通过公网路径的重定向访问 LAN）。
 
 ### Camofox 本地模式
 
@@ -164,19 +164,19 @@ make down
 # then run the custom docker run command above
 ```
 
-然后在 `~/.hermes/.env` 中设置：
+然后在 `~/.niki/.env` 中设置：
 
 ```bash
 CAMOFOX_URL=http://localhost:9377
 ```
 
-或通过 `hermes tools` → Browser Automation → Camofox 进行配置。
+或通过 `niki tools` → Browser Automation → Camofox 进行配置。
 
-设置 `CAMOFOX_URL` 仅提供服务器地址。要启用 Camofox，请在 `hermes tools` → Browser Automation 中选择 Camofox（写入 `browser.cloud_provider: camofox`）——一旦存在浏览器后端选择，仅设置 `CAMOFOX_URL` 不再自动切换后端（从未配置过的环境仍会自动检测）。
+设置 `CAMOFOX_URL` 仅提供服务器地址。要启用 Camofox，请在 `niki tools` → Browser Automation 中选择 Camofox（写入 `browser.cloud_provider: camofox`）——一旦存在浏览器后端选择，仅设置 `CAMOFOX_URL` 不再自动切换后端（从未配置过的环境仍会自动检测）。
 
 #### 持久化浏览器会话
 
-默认情况下，每个 Camofox 会话使用随机身份 — Cookie 和登录状态不会在 Agent 重启后保留。要启用持久化浏览器会话，请在 `~/.hermes/config.yaml` 中添加：
+默认情况下，每个 Camofox 会话使用随机身份 — Cookie 和登录状态不会在 Agent 重启后保留。要启用持久化浏览器会话，请在 `~/.niki/config.yaml` 中添加：
 
 ```yaml
 browser:
@@ -218,7 +218,7 @@ managed_persistence: true
 
 ##### 状态存储位置
 
-Niki 从 profile 范围目录 `~/.hermes/browser_auth/camofox/`（非默认 profile 则在 `$HERMES_HOME` 下的对应位置）派生稳定的 `userId`。实际浏览器 profile 数据存储在 Camofox 服务器端，以该 `userId` 为键。要完全重置持久化 profile，请在 Camofox 服务器端清除对应数据，并删除相应 Niki profile 的状态目录。
+Niki 从 profile 范围目录 `~/.niki/browser_auth/camofox/`（非默认 profile 则在 `$NIKI_HOME` 下的对应位置）派生稳定的 `userId`。实际浏览器 profile 数据存储在 Camofox 服务器端，以该 `userId` 为键。要完全重置持久化 profile，请在 Camofox 服务器端清除对应数据，并删除相应 Niki profile 的状态目录。
 
 #### 外部管理的 Camofox 会话
 
@@ -275,7 +275,7 @@ CAMOFOX_ADOPT_EXISTING_TAB=true
 除云端提供商外，您还可以通过 Chrome DevTools Protocol（CDP）将 Niki 浏览器工具连接到本地运行的 Chrome、Brave、Chromium 或 Edge 实例。当您希望实时查看 Agent 操作、与需要自身 Cookie/会话的页面交互，或避免云端浏览器费用时，此方式非常有用。
 
 :::note
-`/browser connect` 是**交互式 CLI 斜杠命令** — 不由 gateway 分发。若在 WebUI、Telegram、Discord 或其他 gateway 聊天中尝试运行，消息将作为纯文本发送给 Agent，命令不会执行。请从终端启动 Niki（`hermes` 或 `hermes chat`）并在那里执行 `/browser connect`。
+`/browser connect` 是**交互式 CLI 斜杠命令** — 不由 gateway 分发。若在 WebUI、Telegram、Discord 或其他 gateway 聊天中尝试运行，消息将作为纯文本发送给 Agent，命令不会执行。请从终端启动 Niki（`niki` 或 `niki chat`）并在那里执行 `/browser connect`。
 :::
 
 在 CLI 中使用：
@@ -296,28 +296,28 @@ CAMOFOX_ADOPT_EXISTING_TAB=true
 # Linux — Brave
 brave-browser \
   --remote-debugging-port=9222 \
-  --user-data-dir=$HOME/.hermes/chrome-debug \
+  --user-data-dir=$HOME/.niki/chrome-debug \
   --no-first-run \
   --no-default-browser-check &
 
 # Linux — Google Chrome
 google-chrome \
   --remote-debugging-port=9222 \
-  --user-data-dir=$HOME/.hermes/chrome-debug \
+  --user-data-dir=$HOME/.niki/chrome-debug \
   --no-first-run \
   --no-default-browser-check &
 
 # macOS — Brave
 "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" \
   --remote-debugging-port=9222 \
-  --user-data-dir="$HOME/.hermes/chrome-debug" \
+  --user-data-dir="$HOME/.niki/chrome-debug" \
   --no-first-run \
   --no-default-browser-check &
 
 # macOS — Google Chrome
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
   --remote-debugging-port=9222 \
-  --user-data-dir="$HOME/.hermes/chrome-debug" \
+  --user-data-dir="$HOME/.niki/chrome-debug" \
   --no-first-run \
   --no-default-browser-check &
 ```
@@ -343,7 +343,7 @@ google-chrome \
 
 具体配置请参阅 MCP 指南：
 
-- [在 Niki 中使用 MCP](../../guides/use-mcp-with-hermes.md#wsl2-bridge-hermes-in-wsl-to-windows-chrome)
+- [在 Niki 中使用 MCP](../../guides/use-mcp-with-niki.md#wsl2-bridge-niki-in-wsl-to-windows-chrome)
 
 ### 本地浏览器模式
 
@@ -385,7 +385,7 @@ npm install
 ```
 
 :::info
-`browser` 工具集必须包含在配置的 `toolsets` 列表中，或通过 `hermes config set toolsets '["hermes-cli", "browser"]'` 启用。
+`browser` 工具集必须包含在配置的 `toolsets` 列表中，或通过 `niki config set toolsets '["niki-cli", "browser"]'` 启用。
 :::
 
 ## 可用工具
@@ -395,7 +395,7 @@ npm install
 导航到指定 URL。必须在其他任何浏览器工具之前调用。初始化 Browserbase 会话。
 
 ```
-Navigate to https://github.com/NousResearch
+Navigate to https://github.com/NeGamer01
 ```
 
 :::tip
@@ -409,7 +409,7 @@ Navigate to https://github.com/NousResearch
 - **`full=false`**（默认）：仅显示交互元素的紧凑视图
 - **`full=true`**：完整页面内容
 
-超过 15,000 字符的快照将按行边界自动截断（与 `web_extract` 使用相同的单页预算 —— 无 LLM 摘要）。发生截断时，完整快照会保存到 `~/.hermes/cache/web/`，工具输出中包含文件路径和可直接使用的 `read_file` 调用，代理无需重新截图即可翻阅完整的可访问性树（包括被截断部分的元素 ref）。
+超过 15,000 字符的快照将按行边界自动截断（与 `web_extract` 使用相同的单页预算 —— 无 LLM 摘要）。发生截断时，完整快照会保存到 `~/.niki/cache/web/`，工具输出中包含文件路径和可直接使用的 `read_file` 调用，代理无需重新截图即可翻阅完整的可访问性树（包括被截断部分的元素 ref）。
 
 ### `browser_click`
 
@@ -463,7 +463,7 @@ Press Enter to submit the form
 What does the chart on this page show?
 ```
 
-截图存储在 `~/.hermes/cache/screenshots/`，24 小时后自动清理。
+截图存储在 `~/.niki/cache/screenshots/`，24 小时后自动清理。
 
 ### `browser_console`
 
@@ -595,7 +595,7 @@ browser:
   record_sessions: true  # default: false
 ```
 
-启用后，录制在首次 `browser_navigate` 时自动开始，会话关闭时保存到 `~/.hermes/browser_recordings/`。本地模式和云端模式（Browserbase）均支持。超过 72 小时的录制文件自动清理。
+启用后，录制在首次 `browser_navigate` 时自动开始，会话关闭时保存到 `~/.niki/browser_recordings/`。本地模式和云端模式（Browserbase）均支持。超过 72 小时的录制文件自动清理。
 
 ## 隐身功能
 
@@ -623,7 +623,7 @@ Browserbase 提供自动隐身能力：
 ## 限制
 
 - **基于文本的交互** — 依赖无障碍树，而非像素坐标
-- **快照大小** — 大型页面在 15,000 字符处被截断（与 `web_extract` 一致；无 LLM 摘要）；完整快照会保存到 `~/.hermes/cache/web/`，输出中给出路径供 `read_file` 翻阅
+- **快照大小** — 大型页面在 15,000 字符处被截断（与 `web_extract` 一致；无 LLM 摘要）；完整快照会保存到 `~/.niki/cache/web/`，输出中给出路径供 `read_file` 翻阅
 - **会话超时** — 云端会话根据提供商计划设置过期
 - **费用** — 云端会话消耗提供商额度；对话结束或非活跃后会话自动清理。使用 `/browser connect` 可免费本地浏览。
 - **不支持文件下载** — 无法从浏览器下载文件

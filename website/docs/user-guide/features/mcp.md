@@ -15,7 +15,7 @@ MCP lets Niki Agent connect to external tool servers so the agent can use tools 
 If you have ever wanted Niki to use a tool that already exists somewhere else, MCP is usually the cleanest way to do it.
 
 :::tip Coming from Claude Code?
-The `mcpServers` block in your `~/.claude.json` maps to `mcp_servers` in Niki' `config.yaml` — and `hermes import-agent claude-code` migrates it (along with skills and instructions) automatically. See [Import from Other Agents](../import-from-other-agents.md).
+The `mcpServers` block in your `~/.claude.json` maps to `mcp_servers` in Niki' `config.yaml` — and `niki import-agent claude-code` migrates it (along with skills and instructions) automatically. See [Import from Other Agents](../import-from-other-agents.md).
 :::
 
 ## What MCP gives you
@@ -30,7 +30,7 @@ The `mcpServers` block in your `~/.claude.json` maps to `mcp_servers` in Niki' `
 
 1. MCP support ships with the standard install — no extra step needed.
 
-2. Add an MCP server to `~/.hermes/config.yaml`:
+2. Add an MCP server to `~/.niki/config.yaml`:
 
 ```yaml
 mcp_servers:
@@ -42,7 +42,7 @@ mcp_servers:
 3. Start Niki:
 
 ```bash
-hermes chat
+niki chat
 ```
 
 4. Ask Niki to use the MCP-backed capability.
@@ -55,16 +55,16 @@ List the files in /home/user/projects and summarize the repo structure.
 
 Niki will discover the MCP server's tools and use them like any other tool.
 
-## Catalog: one-click install for Nous-approved MCPs
+## Catalog: one-click install for Niki-approved MCPs
 
-Niki ships a curated catalog of MCP servers that Nous staff has reviewed
+Niki ships a curated catalog of MCP servers that Niki staff has reviewed
 and merged. They're disabled by default — install only what you actually
 want.
 
 You can also ask in chat: "add the Linear MCP". The agent calls
 `manage_connections` with an `mcp: true` target and a setup card appears. The
 card works the same way in the desktop app (a dialog), the terminal UI
-(`hermes --tui`, a callout above the composer) and the classic CLI (a panel):
+(`niki --tui`, a callout above the composer) and the classic CLI (a panel):
 
 1. **Fields.** If the entry declares setup values, the card shows all of them
    at once. A plain value is prefilled with its default. A secret is masked.
@@ -90,9 +90,9 @@ card works the same way in the desktop app (a dialog), the terminal UI
 In messaging apps there is no card; the agent relays the commands below.
 
 ```bash
-hermes mcp                   # interactive picker (default)
-hermes mcp catalog           # plain-text list, scriptable
-hermes mcp install deepwiki  # install a catalog entry by name
+niki mcp                   # interactive picker (default)
+niki mcp catalog           # plain-text list, scriptable
+niki mcp install deepwiki  # install a catalog entry by name
 ```
 
 The picker shows each entry with its current status:
@@ -105,8 +105,8 @@ github       installed (disabled)   GitHub repo + PR tools
 
 Hit `Enter` on a row to install (and walk through any required credentials),
 enable, disable, or uninstall. Catalog entries are stored under
-`optional-mcps/` in the hermes-agent repo — presence in that directory means
-Nous approval. There is no community submission tier; entries are added by
+`optional-mcps/` in the niki-agent repo — presence in that directory means
+Niki approval. There is no community submission tier; entries are added by
 merging a PR.
 
 The third-party n8n bridge is no longer available for catalog installation.
@@ -120,11 +120,11 @@ available. This change does not migrate existing connections to
 Catalog entries can require:
 
 - **API key** — Niki prompts at install time and writes the value to
-  `~/.hermes/.env`. Non-secret values (base URLs) go to the same file.
+  `~/.niki/.env`. Non-secret values (base URLs) go to the same file.
 - **OAuth** (remote MCP) — written as `auth: oauth` in your config; the MCP
   client opens a browser on first connection.
 - **OAuth** (third-party provider like Google/GitHub) — Niki points you at
-  `hermes auth <provider>` if you haven't authenticated already.
+  `niki auth <provider>` if you haven't authenticated already.
 
 ### n8n's official MCP server
 
@@ -136,10 +136,10 @@ API key is required.
 2. Open **Connect** and copy the full **Server URL** ending in
    `/mcp-server/http`, not the editor URL. Older versions show the endpoint
    directly on the MCP settings page.
-3. Run `hermes mcp install n8n-official` and enter that URL when prompted.
-4. Complete browser OAuth. If needed, run `hermes mcp login n8n-official`
+3. Run `niki mcp install n8n-official` and enter that URL when prompted.
+4. Complete browser OAuth. If needed, run `niki mcp login n8n-official`
    or use **Authorize** on the configured server in Desktop or the dashboard.
-5. Review tools with `hermes mcp configure n8n-official`, then start a new
+5. Review tools with `niki mcp configure n8n-official`, then start a new
    session or use `/reload-mcp`.
 
 The Niki backend must be able to reach the URL. n8n controls permissions
@@ -186,7 +186,7 @@ written (cleanest config shape, identical behavior).
 **If the probe fails** (server unreachable, OAuth not yet completed,
 backing service not running), the install still succeeds: the manifest's
 `tools.default_enabled` is applied directly (if declared), or no filter is
-written (if not). Re-run `hermes mcp configure <name>` once the server is
+written (if not). Re-run `niki mcp configure <name>` once the server is
 reachable to refine.
 
 ### Trust model
@@ -194,13 +194,13 @@ reachable to refine.
 Installing a catalog entry runs whatever the manifest specifies — `git clone`,
 the entry's `bootstrap` commands (`pip install`, `npm install`, etc.), and
 ultimately the MCP server's own code. Manifests are gated by PR review into
-the hermes-agent repo, so Nous has reviewed each entry before it shipped —
+the niki-agent repo, so Niki has reviewed each entry before it shipped —
 **but you should still read the manifest before installing**, especially the
 `source:` field's repository, the `install.bootstrap:` commands, and any
 `transport.command:` invocation.
 
 Manifests live at
-[`optional-mcps/<name>/manifest.yaml`](https://github.com/NousResearch/hermes-agent/tree/main/optional-mcps)
+[`optional-mcps/<name>/manifest.yaml`](https://github.com/NeGamer01/niki-agent/tree/main/optional-mcps)
 on GitHub. The picker also prints the manifest's `source:` URL at install
 time so you can quickly verify the upstream repo. The web dashboard's MCP
 page surfaces the same detail per catalog entry — transport, auth type, the
@@ -214,14 +214,14 @@ before clicking Install.
 Manifests pin a `manifest_version`. The catalog is forward-compatible: if a
 PR adds an entry with a newer `manifest_version` than your installed Niki
 understands, the picker will surface a warning (`⚠ '<name>' requires a newer
-Niki`) for that entry instead of silently hiding it. Run `hermes update`
+Niki`) for that entry instead of silently hiding it. Run `niki update`
 to install the latest Niki when you see that.
 
 ### Runtime `${ENV_VAR}` substitution
 
 Inside an entry's `transport.command`, `transport.args`, `transport.url`,
 and `headers`, `${VAR}` placeholders are resolved at server-connect time
-from environment variables (which include everything in `~/.hermes/.env`).
+from environment variables (which include everything in `~/.niki/.env`).
 This is useful when a catalog entry wants to reference a value the user
 configured elsewhere — e.g. `${HOME}/foo` or `${MY_PROVIDER_TOKEN}`.
 
@@ -261,19 +261,19 @@ mcp_servers:
 ```
 
 Read the entry's `post_install` notes for the exact app type and redirect URL
-to register, then run `hermes mcp login <name>` and restart (or
+to register, then run `niki mcp login <name>` and restart (or
 `/reload-mcp`) the session or gateway that should expose the tools. The
 dashboard / Desktop **Authorize** button works too: because the client is
 pre-registered with a pinned `redirect_port`, Niki keeps the registered
 loopback callback (`http://localhost:27890/callback`) instead of the
 dashboard's own callback URL — so the browser you approve in must run on the
-same machine as the Niki process. For a remote host, use `hermes mcp login`
+same machine as the Niki process. For a remote host, use `niki mcp login`
 over SSH port-forwarding.
 
 ### Updating tool selection later
 
 ```bash
-hermes mcp configure linear
+niki mcp configure linear
 ```
 
 Reopens the same checklist with your current selection pre-checked. Use this
@@ -282,11 +282,11 @@ you want to opt into.
 
 ### Updating the catalog manifest
 
-MCPs are never auto-updated. Re-run `hermes mcp install <name>` to refresh
+MCPs are never auto-updated. Re-run `niki mcp install <name>` to refresh
 after a Niki update if a manifest version changed.
 
 To add an MCP to the catalog, open a PR against
-[`optional-mcps/`](https://github.com/NousResearch/hermes-agent/tree/main/optional-mcps).
+[`optional-mcps/`](https://github.com/NeGamer01/niki-agent/tree/main/optional-mcps).
 
 ### Suggestion metadata (`suggest:`)
 
@@ -363,7 +363,7 @@ mcp_servers:
     auth: oauth
 ```
 
-Or: `hermes mcp install figma`, then `hermes mcp login figma`.
+Or: `niki mcp install figma`, then `niki mcp login figma`.
 :::
 
 ```yaml
@@ -373,21 +373,21 @@ mcp_servers:
     auth: oauth
 ```
 
-On first connect, Niki prints an authorize URL, opens your browser when possible, and waits for the OAuth callback on a local loopback port. Tokens are cached at `~/.hermes/mcp-tokens/<server>.json` with 0o600 perms; subsequent runs reuse them silently until refresh fails.
+On first connect, Niki prints an authorize URL, opens your browser when possible, and waits for the OAuth callback on a local loopback port. Tokens are cached at `~/.niki/mcp-tokens/<server>.json` with 0o600 perms; subsequent runs reuse them silently until refresh fails.
 
 Refresh tokens are bound to the authorization server that granted them: Niki records the discovered issuer alongside the cached tokens and, if a server's advertised authorization server ever changes (server migration, metadata edit, or hijack), the stored refresh token is dropped instead of being sent to the new issuer. The current access token keeps working until it expires, then a normal re-authorization runs against the new issuer.
 
-The redirect back from the authorization server is checked against RFC 9207: when the server's metadata advertises `authorization_response_iss_parameter_supported`, a redirect without a matching `iss` is rejected. Figma's authorization server (`https://api.figma.com`) advertises that support and then omits `iss`; Niki fills the missing value from the discovered issuer for that one issuer and logs a warning, so `hermes mcp login figma` completes. A present-but-different `iss` is still rejected, and no other server gets the exemption.
+The redirect back from the authorization server is checked against RFC 9207: when the server's metadata advertises `authorization_response_iss_parameter_supported`, a redirect without a matching `iss` is rejected. Figma's authorization server (`https://api.figma.com`) advertises that support and then omits `iss`; Niki fills the missing value from the discovered issuer for that one issuer and logs a warning, so `niki mcp login figma` completes. A present-but-different `iss` is still rejected, and no other server gets the exemption.
 
 The authorization server's metadata document must name the server the resource advertised (RFC 8414 §3.3); a document for a different server is rejected before any registration or login. One shape is accepted without an exact match: a server advertised with a path (`https://host/path`) whose document, fetched from `https://host/.well-known/oauth-authorization-server/path`, names the origin `https://host` as its issuer — Strava's MCP connector publishes exactly that pair. Only the origin's operator controls that well-known location, so the document is treated as the advertised server's own; a document naming another origin or another path, or one reached only through a redirect or a fallback location, still fails with `Authorization server metadata issuer mismatch`.
 
-**Google-hosted servers (Gmail, Calendar).** Google only issues a refresh token when the authorization request carries `access_type=offline`, which MCP discovery never advertises. Niki adds it (plus `prompt=consent`, so a repeat login is re-granted one) whenever the discovered authorization server is `accounts.google.com`, so the connection persists across restarts and works from `hermes gateway`. Other issuers' requests are untouched.
+**Google-hosted servers (Gmail, Calendar).** Google only issues a refresh token when the authorization request carries `access_type=offline`, which MCP discovery never advertises. Niki adds it (plus `prompt=consent`, so a repeat login is re-granted one) whenever the discovered authorization server is `accounts.google.com`, so the connection persists across restarts and works from `niki gateway`. Other issuers' requests are untouched.
 
 **Remote / headless hosts.** When Niki runs on a different machine than your browser, the loopback callback can't reach your laptop. Ways to complete the flow:
 
 - **Niki Desktop (automatic):** when you run the OAuth sign-in from the Desktop app's MCP setup UI against a remote backend, Desktop hosts the callback listener on *your* machine and relays the authorization back to the gateway automatically — no tunnel, paste, or proxy needed. Requires both the Desktop app and the backend to be up to date.
 - **Paste-back (no setup):** on an interactive terminal Niki prints "Or paste the redirect URL here…" alongside the authorize URL. Open the URL in your browser, approve, copy the full URL the browser ends up on (the redirect will show a connection error — that's expected), paste it at the prompt. Bare `?code=…&state=…` query strings work too.
-- **Device-code login (no callback at all):** if the server's authorization server advertises a device authorization endpoint, run `hermes mcp login <server> --flow device` on the machine running Niki. It prints a verification URL and a short code; open the URL on any device, enter the code, and Niki polls for approval. No browser is launched on the host and no callback listener is needed. Set `oauth.flow: device` on the server to make `login` and `reauth` use it by default. Details: [Device-code login](../../reference/mcp-config-reference.md#device-code-login-rfc-8628).
+- **Device-code login (no callback at all):** if the server's authorization server advertises a device authorization endpoint, run `niki mcp login <server> --flow device` on the machine running Niki. It prints a verification URL and a short code; open the URL on any device, enter the code, and Niki polls for approval. No browser is launched on the host and no callback listener is needed. Set `oauth.flow: device` on the server to make `login` and `reauth` use it by default. Details: [Device-code login](../../reference/mcp-config-reference.md#device-code-login-rfc-8628).
 - **SSH port forward:** `ssh -N -L <port>:127.0.0.1:<port> user@host` in a separate terminal, then let the redirect flow normally.
 - **Proxied callback (`redirect_uri`):** when a public HTTPS endpoint forwards to the host (e.g. a Tailscale Funnel or reverse proxy pointed at the callback port), set `oauth.redirect_uri` and the browser redirect reaches Niki on its own — no tunnel or paste needed:
 
@@ -405,9 +405,9 @@ For fully headless gateways (messaging bot, no interactive terminal at all), the
 
 **Pitfall — WAF rejects `127.0.0.1` redirect URIs.** A few providers front their authorization server with a WAF that 403s any authorize request whose query string contains a literal `127.0.0.1` (Reclaim.ai's AWS API Gateway is a known example — every attempt returns `{"message":"Forbidden"}` before reaching the OAuth app). Set `oauth.redirect_host: localhost` to use `http://localhost:<port>/callback` instead; the callback listener still binds `127.0.0.1` either way.
 
-See [OAuth over SSH / Remote Hosts](../../guides/oauth-over-ssh.md#mcp-servers) for the full walkthrough, including DCR-less servers (e.g. Slack), pre-registered `client_id`/`client_secret`, scope customization, and re-auth via `hermes mcp login <server>`.
+See [OAuth over SSH / Remote Hosts](../../guides/oauth-over-ssh.md#mcp-servers) for the full walkthrough, including DCR-less servers (e.g. Slack), pre-registered `client_id`/`client_secret`, scope customization, and re-auth via `niki mcp login <server>`.
 
-**Pitfall — providers that don't support automatic registration (Google Drive, Atlassian).** Some servers reject the dynamic client registration step (RFC 7591) that bare `auth: oauth` relies on — Google's official Drive server (`https://drivemcp.googleapis.com/mcp/v1`) returns a `400 Bad Request`, so no OAuth client is created and no token is acquired. The symptom is subtle: these servers also serve `tools/list` *without* auth, so `hermes mcp login` can list the tools and look like it worked, but every real tool call later times out. `hermes mcp login` now detects this (it checks that a token actually landed on disk) and tells you to supply your own OAuth client. Create one in the provider's console and add it to config:
+**Pitfall — providers that don't support automatic registration (Google Drive, Atlassian).** Some servers reject the dynamic client registration step (RFC 7591) that bare `auth: oauth` relies on — Google's official Drive server (`https://drivemcp.googleapis.com/mcp/v1`) returns a `400 Bad Request`, so no OAuth client is created and no token is acquired. The symptom is subtle: these servers also serve `tools/list` *without* auth, so `niki mcp login` can list the tools and look like it worked, but every real tool call later times out. `niki mcp login` now detects this (it checks that a token actually landed on disk) and tells you to supply your own OAuth client. Create one in the provider's console and add it to config:
 
 ```yaml
 mcp_servers:
@@ -419,11 +419,11 @@ mcp_servers:
       client_secret: "<your-oauth-client-secret>"
 ```
 
-Then run `hermes mcp login googledrive` — with the pre-registered client, Niki skips registration and runs the normal browser authorization flow.
+Then run `niki mcp login googledrive` — with the pre-registered client, Niki skips registration and runs the normal browser authorization flow.
 
-**Pitfall — config auto-reload race.** When you edit `~/.hermes/config.yaml` from inside a running Niki session, the CLI auto-reloads MCP connections with a 30s timeout. That's not enough for an interactive OAuth flow. Add the entry, then run `hermes mcp login <server>` from a fresh terminal — it waits the full 5 minutes for you to complete auth.
+**Pitfall — config auto-reload race.** When you edit `~/.niki/config.yaml` from inside a running Niki session, the CLI auto-reloads MCP connections with a 30s timeout. That's not enough for an interactive OAuth flow. Add the entry, then run `niki mcp login <server>` from a fresh terminal — it waits the full 5 minutes for you to complete auth.
 
-**Need longer than 5 minutes to approve?** Set `oauth.timeout` on the server entry (seconds). `hermes mcp login`, the dashboard and Desktop re-auth all wait `oauth.timeout` + 15 s (or the entry's `connect_timeout`, whichever is longer); a login that still runs out of time reports `Connecting to MCP server '<name>' timed out after Ns` naming both knobs instead of a blank failure line.
+**Need longer than 5 minutes to approve?** Set `oauth.timeout` on the server entry (seconds). `niki mcp login`, the dashboard and Desktop re-auth all wait `oauth.timeout` + 15 s (or the entry's `connect_timeout`, whichever is longer); a login that still runs out of time reports `Connecting to MCP server '<name>' timed out after Ns` naming both knobs instead of a blank failure line.
 
 ## mTLS / client certificates
 
@@ -481,7 +481,7 @@ An explicit entry in the server's `headers` mapping with the same name (any casi
 
 ## Basic configuration reference
 
-Niki reads MCP config from `~/.hermes/config.yaml` under `mcp_servers`.
+Niki reads MCP config from `~/.niki/config.yaml` under `mcp_servers`.
 
 ### Common keys
 
@@ -543,7 +543,7 @@ mcp_servers:
 
 ## Built-in presets
 
-For well-known MCP servers, `hermes mcp add` accepts a `--preset` flag that fills in the transport details so you don't have to look up the command and args. The preset only supplies defaults — anything else (env vars, headers, filtering) you pass on the same command line still wins.
+For well-known MCP servers, `niki mcp add` accepts a `--preset` flag that fills in the transport details so you don't have to look up the command and args. The preset only supplies defaults — anything else (env vars, headers, filtering) you pass on the same command line still wins.
 
 | Preset | What it wires up |
 |---|---|
@@ -551,7 +551,7 @@ For well-known MCP servers, `hermes mcp add` accepts a `--preset` flag that fill
 
 ```bash
 # Add Codex CLI as an MCP server in one line
-hermes mcp add codex --preset codex
+niki mcp add codex --preset codex
 ```
 
 That writes the equivalent of:
@@ -563,7 +563,7 @@ mcp_servers:
     args: ["mcp-server"]
 ```
 
-You can pick any local name (`hermes mcp add my-codex --preset codex` is fine); the preset only provides the `command`/`args` defaults.
+You can pick any local name (`niki mcp add my-codex --preset codex` is fine); the preset only provides the `command`/`args` defaults.
 
 ## How Niki registers MCP tools
 
@@ -784,9 +784,9 @@ If you change MCP config, use:
 
 This reloads MCP servers from config and refreshes the available tool list. It is also the explicit way to re-probe availability-gated tools (Docker, plugin credentials such as `HASS_TOKEN`, OAuth…): a session's tool set is otherwise frozen, so a credential or daemon that appears mid-session is only picked up on `/reload-mcp`, `/new`, or context compaction. For runtime tool changes pushed by the server itself, see [Dynamic Tool Discovery](#dynamic-tool-discovery) above.
 
-A running messaging gateway (`hermes gateway run`) also watches `config.yaml` on its own: within about a minute of you removing an `mcp_servers` entry or setting `enabled: false`, that server's connection is torn down; a newly added entry is connected. A server whose first connect failed (an unreachable host, or an OAuth server on a headless box that had no token yet) is retried automatically on its connect cooldown schedule (30 s, doubling up to 10 min) once you fix the cause. No restart or `/reload-mcp` needed for the edit to take effect.
+A running messaging gateway (`niki gateway run`) also watches `config.yaml` on its own: within about a minute of you removing an `mcp_servers` entry or setting `enabled: false`, that server's connection is torn down; a newly added entry is connected. A server whose first connect failed (an unreachable host, or an OAuth server on a headless box that had no token yet) is retried automatically on its connect cooldown schedule (30 s, doubling up to 10 min) once you fix the cause. No restart or `/reload-mcp` needed for the edit to take effect.
 
-**Expired OAuth tokens in the background.** The gateway, `/reload-mcp`, and the periodic self-probe of a parked server never open a browser — nobody is there to complete the flow. When a refresh token dies, the server parks with a warning in `gateway.log` and you re-authorize once with `hermes mcp login <server>` (or the Desktop/dashboard *Authorize* button); the parked server picks the new token up on its next probe. Until the token files change, starting new sessions does not retry the rejected token: only the timed self-probe does, so a dead grant cannot hammer the provider's token endpoint.
+**Expired OAuth tokens in the background.** The gateway, `/reload-mcp`, and the periodic self-probe of a parked server never open a browser — nobody is there to complete the flow. When a refresh token dies, the server parks with a warning in `gateway.log` and you re-authorize once with `niki mcp login <server>` (or the Desktop/dashboard *Authorize* button); the parked server picks the new token up on its next probe. Until the token files change, starting new sessions does not retry the rejected token: only the timed self-probe does, so a dead grant cannot hammer the provider's token endpoint.
 
 ### Toolsets
 
@@ -877,7 +877,7 @@ Check:
 
 ```bash
 # Verify MCP deps are installed (already included in standard install)
-cd ~/.hermes/hermes-agent && python -c "import pm; pm.sync_venv(['mcp'], explicit=True)"
+cd ~/.niki/niki-agent && python -c "import pm; pm.sync_venv(['mcp'], explicit=True)"
 
 node --version
 npx --version
@@ -897,7 +897,7 @@ failure is listed as `not attempted (in retry cooldown)`.
 
 ### Remote (HTTP) server rejects the connection
 
-`hermes mcp test <name>` reports what the server actually answered. When the MCP SDK can only say
+`niki mcp test <name>` reports what the server actually answered. When the MCP SDK can only say
 `Server returned an error response` (a 4xx/5xx whose body is not a JSON-RPC error), Niki appends
 the HTTP status, the URL it requested and the start of the response body:
 
@@ -909,7 +909,7 @@ Streamable HTTP: Server returned an error response (HTTP 400 from POST http://ho
 Read the status and body first: a `400`/`405` on the `initialize` POST usually means the endpoint
 speaks SSE only (set `transport: sse`) or a proxy in front of it rejects the request; a `401`/`403`
 means the token or OAuth grant is wrong; an HTML body means the URL points at a web page, not an MCP
-endpoint. `hermes logs --level debug` additionally shows the exact endpoint each connect attempt used.
+endpoint. `niki logs --level debug` additionally shows the exact endpoint each connect attempt used.
 
 ### Tools not appearing
 
@@ -1010,7 +1010,7 @@ In addition to connecting **to** MCP servers, Niki can also **be** an MCP server
 ### Quick start
 
 ```bash
-hermes mcp serve
+niki mcp serve
 ```
 
 This starts a stdio MCP server. The MCP client (not you) manages the process lifecycle.
@@ -1022,8 +1022,8 @@ Add Niki to your MCP client config. For example, in Claude Code's `~/.claude/cla
 ```json
 {
   "mcpServers": {
-    "hermes": {
-      "command": "hermes",
+    "niki": {
+      "command": "niki",
       "args": ["mcp", "serve"]
     }
   }
@@ -1035,8 +1035,8 @@ Or if you installed Niki in a specific location:
 ```json
 {
   "mcpServers": {
-    "hermes": {
-      "command": "/home/user/.hermes/hermes-agent/venv/bin/hermes",
+    "niki": {
+      "command": "/home/user/.niki/niki-agent/venv/bin/niki",
       "args": ["mcp", "serve"]
     }
   }
@@ -1079,26 +1079,26 @@ The event queue is in-memory and starts when the bridge connects. Older messages
 ### Options
 
 ```bash
-hermes mcp serve              # Normal mode
-hermes mcp serve --verbose    # Debug logging on stderr
+niki mcp serve              # Normal mode
+niki mcp serve --verbose    # Debug logging on stderr
 ```
 
 ### How it works
 
-The MCP server reads conversation data directly from Niki's session store — `~/.hermes/state.db` is the primary source, with `sessions.json` kept only as a legacy fallback. A background thread polls the database for new messages and maintains an in-memory event queue. For sending messages, it uses the same internal send engine (`tools/send_message_tool.py`) that powers cron delivery and the `hermes send` CLI.
+The MCP server reads conversation data directly from Niki's session store — `~/.niki/state.db` is the primary source, with `sessions.json` kept only as a legacy fallback. A background thread polls the database for new messages and maintains an in-memory event queue. For sending messages, it uses the same internal send engine (`tools/send_message_tool.py`) that powers cron delivery and the `niki send` CLI.
 
 The gateway does NOT need to be running for read operations (listing conversations, reading history, polling events). It DOES need to be running for send operations, since the platform adapters need active connections.
 
 ### Current limits
 
-- The embedded `hermes mcp serve` exposes a **stdio-only** MCP server today. If you need an HTTP MCP server, run a separate adapter — or, much more commonly, use the MCP **client** side of Niki, which already speaks both stdio and HTTP (`url` + `headers` in `mcp_servers.yaml` / `config.yaml`; see [HTTP servers](#http-servers) above).
+- The embedded `niki mcp serve` exposes a **stdio-only** MCP server today. If you need an HTTP MCP server, run a separate adapter — or, much more commonly, use the MCP **client** side of Niki, which already speaks both stdio and HTTP (`url` + `headers` in `mcp_servers.yaml` / `config.yaml`; see [HTTP servers](#http-servers) above).
 - Event polling at ~200ms intervals via mtime-optimized DB polling (skips work when files are unchanged)
 - No `claude/channel` push notification protocol yet
 - Text-only sends (no media/attachment sending through `messages_send`)
 
 ## Related docs
 
-- [Use MCP with Niki](../../guides/use-mcp-with-hermes.md)
+- [Use MCP with Niki](../../guides/use-mcp-with-niki.md)
 - [CLI Commands](../../reference/cli-commands.md)
 - [Slash Commands](../../reference/slash-commands.md)
 - [FAQ](../../reference/faq.md)

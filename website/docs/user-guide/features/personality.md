@@ -8,7 +8,7 @@ description: "Customize Niki Agent's personality with a global SOUL.md, built-in
 
 Niki Agent's personality is fully customizable. `SOUL.md` is the **primary identity** — it's the first thing in the system prompt and defines who the agent is.
 
-- `SOUL.md` — a durable persona file that lives in `HERMES_HOME` and serves as the agent's identity (slot #1 in the system prompt)
+- `SOUL.md` — a durable persona file that lives in `NIKI_HOME` and serves as the agent's identity (slot #1 in the system prompt)
 - built-in or custom `/personality` presets — session-level system-prompt overlays
 
 If you want to change who Niki is — or replace it with an entirely different agent persona — edit `SOUL.md`.
@@ -18,13 +18,13 @@ If you want to change who Niki is — or replace it with an entirely different a
 Niki now seeds a default `SOUL.md` automatically in:
 
 ```text
-~/.hermes/SOUL.md
+~/.niki/SOUL.md
 ```
 
-More precisely, it uses the current instance's `HERMES_HOME`, so if you run Niki with a custom home directory, it will use:
+More precisely, it uses the current instance's `NIKI_HOME`, so if you run Niki with a custom home directory, it will use:
 
 ```text
-$HERMES_HOME/SOUL.md
+$NIKI_HOME/SOUL.md
 ```
 
 ### Important behavior
@@ -32,7 +32,7 @@ $HERMES_HOME/SOUL.md
 - **SOUL.md is the agent's primary identity.** It occupies slot #1 in the system prompt, replacing the hardcoded default identity.
 - Niki creates a starter `SOUL.md` automatically if one does not exist yet
 - Existing user `SOUL.md` files are never overwritten
-- Niki loads `SOUL.md` only from `HERMES_HOME`
+- Niki loads `SOUL.md` only from `NIKI_HOME`
 - Niki does not look in the current working directory for `SOUL.md`
 - If `SOUL.md` exists but is empty, or cannot be loaded, Niki falls back to a built-in default identity
 - If `SOUL.md` has content, that content is injected verbatim after security scanning and truncation
@@ -44,23 +44,23 @@ That makes `SOUL.md` a true per-user or per-instance identity, not just an addit
 
 This keeps personality predictable.
 
-If Niki loaded `SOUL.md` from whatever directory you happened to launch it in, your personality could change unexpectedly between projects. By loading only from `HERMES_HOME`, the personality belongs to the Niki instance itself.
+If Niki loaded `SOUL.md` from whatever directory you happened to launch it in, your personality could change unexpectedly between projects. By loading only from `NIKI_HOME`, the personality belongs to the Niki instance itself.
 
 That also makes it easier to teach users:
-- "Edit `~/.hermes/SOUL.md` to change Niki' default personality."
+- "Edit `~/.niki/SOUL.md` to change Niki' default personality."
 
 ## Where to edit it
 
 For most users:
 
 ```bash
-~/.hermes/SOUL.md
+~/.niki/SOUL.md
 ```
 
 If you use a custom home:
 
 ```bash
-$HERMES_HOME/SOUL.md
+$NIKI_HOME/SOUL.md
 ```
 
 ## What should go in SOUL.md?
@@ -124,7 +124,7 @@ The content goes through:
 - prompt-injection scanning
 - truncation if it is too large
 
-If the file is empty, whitespace-only, or cannot be read, Niki falls back to a built-in default identity ("You are Niki Agent, built by Nous Research. Be direct: match the length of your reply to the weight of the ask..."). This fallback also applies when `skip_context_files` is set (e.g., in subagent/delegation contexts).
+If the file is empty, whitespace-only, or cannot be read, Niki falls back to a built-in default identity ("You are Niki Agent, built by NeGamer01. Be direct: match the length of your reply to the weight of the ask..."). This fallback also applies when `skip_context_files` is set (e.g., in subagent/delegation contexts).
 
 ## Security scanning
 
@@ -211,7 +211,7 @@ These are convenient overlays, but your global `SOUL.md` still gives Niki its pe
 
 ## Custom personalities in config
 
-Built-in personalities are always available on every surface (CLI, messaging platforms, TUI, and the desktop app). You can add your own — or override a built-in by reusing its name — in `~/.hermes/config.yaml` under `agent.personalities` (a top-level `personalities:` block works too; `agent.personalities` wins if the same name appears in both).
+Built-in personalities are always available on every surface (CLI, messaging platforms, TUI, and the desktop app). You can add your own — or override a built-in by reusing its name — in `~/.niki/config.yaml` under `agent.personalities` (a top-level `personalities:` block works too; `agent.personalities` wins if the same name appears in both).
 
 ```yaml
 agent:
@@ -249,7 +249,7 @@ Older Niki versions saved personality state inconsistently across surfaces, whic
 
 A strong default setup is:
 
-1. Keep a thoughtful global `SOUL.md` in `~/.hermes/SOUL.md`
+1. Keep a thoughtful global `SOUL.md` in `~/.niki/SOUL.md`
 2. Put project instructions in `AGENTS.md`
 3. Use `/personality` only when you want a temporary mode shift
 
@@ -277,7 +277,7 @@ At a high level, the prompt stack includes:
 - [Context Files](./context-files.md)
 - [Configuration](../configuration.md)
 - [Tips & Best Practices](../../guides/tips.md)
-- [SOUL.md Guide](../../guides/use-soul-with-hermes.md)
+- [SOUL.md Guide](../../guides/use-soul-with-niki.md)
 
 ## CLI appearance vs conversational personality
 

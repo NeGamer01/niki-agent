@@ -5,11 +5,11 @@ reserved for framed events before runtime imports redirect ordinary output.
 Neither assignment secrets nor launch credentials appear in argv or logs.
 """
 # Spawned as a bare ``sys.executable -m``: in a PM install that interpreter carries no dependencies
-# until hermes_bootstrap selects the committed environment, so it must be the first import.
+# until niki_bootstrap selects the committed environment, so it must be the first import.
 try:
-    import hermes_bootstrap
+    import niki_bootstrap
 except ModuleNotFoundError as exc:
-    if exc.name != "hermes_bootstrap":
+    if exc.name != "niki_bootstrap":
         raise
 
 import json
@@ -305,8 +305,8 @@ def tool_frame(call_id, name, args, *result):
 
 
 def execute(frame, channel):
-    # The owner RPC below imports gateway/config modules (hermes_cli.config, providers,
-    # hermes_cli.plugins) transitively; the policy must already be frozen when they load.
+    # The owner RPC below imports gateway/config modules (niki_cli.config, providers,
+    # niki_cli.plugins) transitively; the policy must already be frozen when they load.
     bind_worker_policy(frame)
     from agent.runtime_session_store import RuntimeSessionStore, WorkerRPC
     scope = dict(frame['scope'])
@@ -330,7 +330,7 @@ def execute(frame, channel):
     from tools.approval import register_gateway_notify, unregister_gateway_notify
     from tools.approval_context import set_current_session_key
     set_current_session_key(frame['route'])
-    os.environ['HERMES_GATEWAY_SESSION'] = '1'
+    os.environ['NIKI_GATEWAY_SESSION'] = '1'
     from gateway.session_worker_construct import checkpoint_agent_kwargs, construct_kwargs, routing_agent_kwargs
     construct = {'ephemeral_system_prompt': policy.skills_prompt, **construct_kwargs(frame)}
     controls = WorkerControls(channel, frame['route'])

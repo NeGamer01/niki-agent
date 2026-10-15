@@ -1,4 +1,4 @@
-"""``session.usage`` / ``session.stats``: the session-cumulative counters main's HermesCLI read off its
+"""``session.usage`` / ``session.stats``: the session-cumulative counters main's NikiCLI read off its
 in-process agent (status bar, /usage, exit summary), published from the gateway (wave A2, CALLMAP W3)."""
 from __future__ import annotations
 

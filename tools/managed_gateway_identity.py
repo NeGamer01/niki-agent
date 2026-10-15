@@ -2,7 +2,7 @@
 
 ``user_agent()`` goes on every request. The correlation headers name the conversation, turn and tool
 call, so they go only to connector routes and only when the profile has opted in to sending
-telemetry. The gateway strips every ``x-nous-`` header before it calls a vendor.
+telemetry. The gateway strips every ``x-niki-`` header before it calls a vendor.
 """
 
 from __future__ import annotations
@@ -24,9 +24,9 @@ __all__ = [
     "user_agent",
 ]
 
-SESSION_HEADER = "x-nous-hermes-session"
-TURN_HEADER = "x-nous-hermes-turn"
-TOOL_CALL_HEADER = "x-nous-hermes-tool-call"
+SESSION_HEADER = "x-niki-niki-session"
+TURN_HEADER = "x-niki-niki-turn"
+TOOL_CALL_HEADER = "x-niki-niki-tool-call"
 REQUEST_ID_HEADER = "x-request-id"
 
 # sys.platform -> the shared-metrics OS family.
@@ -59,27 +59,27 @@ def _platform_name() -> str:
         return turn.lease.platform
     if platform := session_platform():
         return platform
-    return "cron" if is_truthy_value(get_session_env("HERMES_CRON_SESSION", "")) else "cli"
+    return "cron" if is_truthy_value(get_session_env("NIKI_CRON_SESSION", "")) else "cli"
 
 
 def request_surface() -> str:
-    from hermes_cli.observability.shared_metrics_contract import execution_surface
+    from niki_cli.observability.shared_metrics_contract import execution_surface
 
     surface = execution_surface({"execution_surface": _platform_name()})
     return "other" if surface == "unknown" else surface
 
 
 def user_agent() -> str:
-    from hermes_cli.version_info import get_version_info
-    from hermes_platform.host.facts import os_family
+    from niki_cli.version_info import get_version_info
+    from niki_platform.host.facts import os_family
 
     os_name = _OS_FAMILY.get(os_family(), "unknown")
-    return f"hermes-agent/{get_version_info().base_version} ({request_surface()}; {os_name})"
+    return f"niki-agent/{get_version_info().base_version} ({request_surface()}; {os_name})"
 
 
 def _send_consented() -> bool:
-    from hermes_cli.config import read_raw_config_readonly
-    from hermes_cli.observability.shared_metrics_send_config import resolve_send_config
+    from niki_cli.config import read_raw_config_readonly
+    from niki_cli.observability.shared_metrics_send_config import resolve_send_config
 
     return resolve_send_config(read_raw_config_readonly() or {}).send is True
 
@@ -88,7 +88,7 @@ def _conversation_id() -> Optional[str]:
     from agent.portal_tags import get_conversation_context
     from gateway.session_context import get_session_env
 
-    return get_conversation_context() or get_session_env("HERMES_SESSION_ID", "") or None
+    return get_conversation_context() or get_session_env("NIKI_SESSION_ID", "") or None
 
 
 def correlation_headers(call: Optional[CallRef] = None) -> dict[str, str]:

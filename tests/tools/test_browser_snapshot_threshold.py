@@ -6,7 +6,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from hermes_cli.config import DEFAULT_CONFIG
+from niki_cli.config import DEFAULT_CONFIG
 from tools import browser_camofox, browser_tool
 from tools import browser_tool_cloud as bt_cloud
 from tools import browser_tool_lifecycle as bt_lifecycle
@@ -16,7 +16,7 @@ from tools import browser_tool_session as bt_session
 @pytest.fixture(autouse=True)
 def isolated_snapshot_threshold(tmp_path, monkeypatch):
     """Use a real, isolated config file and reset module-level caches."""
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("NIKI_HOME", str(tmp_path))
 
     original_cached = browser_tool._cached_snapshot_threshold
     original_resolved = browser_tool._snapshot_threshold_resolved
@@ -27,15 +27,15 @@ def isolated_snapshot_threshold(tmp_path, monkeypatch):
     browser_tool._snapshot_threshold_resolved = original_resolved
 
 
-def _write_threshold(hermes_home, value):
+def _write_threshold(niki_home, value):
     # Atomic replace, like the real config writers: an in-place same-size rewrite within one coarse
     # kernel timestamp tick keeps (mtime, size, ino, ctime), so read_raw_config's cache can't see it.
-    tmp = hermes_home / "config.yaml.tmp"
+    tmp = niki_home / "config.yaml.tmp"
     tmp.write_text(
         f"browser:\n  snapshot_threshold: {value}\n",
         encoding="utf-8",
     )
-    os.replace(tmp, hermes_home / "config.yaml")
+    os.replace(tmp, niki_home / "config.yaml")
 
 
 def _long_snapshot(chars: int) -> str:

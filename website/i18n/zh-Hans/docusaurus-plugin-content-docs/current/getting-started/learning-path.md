@@ -55,7 +55,7 @@ Niki Agent 功能丰富——CLI 助手、Telegram/Discord 机器人、任务自
 4. [Telegram 配置](../user-guide/messaging/telegram.md)
 5. [Discord 配置](../user-guide/messaging/discord.md)
 6. [语音模式](../user-guide/features/voice-mode.md)
-7. [在 Niki 中使用语音模式](../guides/use-voice-mode-with-hermes.md)
+7. [在 Niki 中使用语音模式](../guides/use-voice-mode-with-niki.md)
 8. [安全](../user-guide/security.md)
 
 完整项目示例请参阅：
@@ -99,7 +99,7 @@ Cron 任务让 Niki Agent 按计划执行任务——每日摘要、定期检查
 
 1. [快速入门](./quickstart.md)
 2. [配置](../user-guide/configuration.md)
-3. [Atropos 强化学习环境](https://github.com/NousResearch/atropos)（外部）
+3. [Atropos 强化学习环境](https://github.com/NeGamer01/atropos)（外部）
 4. [Provider 路由](../user-guide/features/provider-routing.md)
 5. [架构](../developer-guide/architecture.md)
 
@@ -135,7 +135,7 @@ Cron 任务让 Niki Agent 按计划执行任务——每日摘要、定期检查
 | **浏览器** | 网页浏览与抓取 | [浏览器](../user-guide/features/browser.md) |
 | **Hooks** | 事件驱动的回调与中间件 | [Hooks](../user-guide/features/hooks.md) |
 | **批处理** | 批量处理多个输入 | [批处理](../user-guide/features/batch-processing.md) |
-| **强化学习训练** | 使用强化学习微调模型 | [Atropos](https://github.com/NousResearch/atropos)（外部） |
+| **强化学习训练** | 使用强化学习微调模型 | [Atropos](https://github.com/NeGamer01/atropos)（外部） |
 | **Provider 路由** | 在多个 LLM provider 之间路由请求 | [Provider 路由](../user-guide/features/provider-routing.md) |
 
 ## 下一步阅读

@@ -81,7 +81,7 @@ def _make_agent(monkeypatch, provider, api_mode="chat_completions", base_url="ht
     )
     if model:
         kwargs["model"] = model
-    elif provider == "nous":
+    elif provider == "niki":
         kwargs["model"] = "gpt-5"
     return AIAgent(**kwargs)
 
@@ -346,17 +346,17 @@ class TestBuildApiKwargsAIGateway:
 
 class TestBuildApiKwargsNousPortal:
     def test_includes_nous_product_tags(self, monkeypatch):
-        from agent.portal_tags import nous_portal_tags
+        from agent.portal_tags import niki_portal_tags
         agent = _make_agent(
             monkeypatch,
-            "nous",
+            "niki",
             base_url="https://inference-api.nousresearch.com/v1",
             model="gpt-5",
         )
         messages = [{"role": "user", "content": "hi"}]
         kwargs = agent._build_api_kwargs(messages)
         extra = kwargs.get("extra_body", {})
-        assert extra.get("tags") == nous_portal_tags(session_id=agent.session_id)
+        assert extra.get("tags") == niki_portal_tags(session_id=agent.session_id)
 
 
 
@@ -639,7 +639,7 @@ class TestChatMessagesToResponsesInputMessageItems:
 
 
 
-# ── Chat completions response handling (OpenRouter/Nous) ─────────────────────
+# ── Chat completions response handling (OpenRouter/Niki) ─────────────────────
 
 class TestBuildAssistantMessage:
     """Verify _build_assistant_message works for all provider response formats."""
@@ -720,18 +720,18 @@ class TestAuxiliaryClientProviderPriority:
     def test_nous_when_no_openrouter(self, monkeypatch):
         monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
         from agent.auxiliary_client import _NOUS_MODEL, get_text_auxiliary_client
-        nous_auth = {
+        niki_auth = {
             "access_token": _fake_invoke_jwt(),
             "scope": "inference:invoke",
         }
-        with patch("agent.auxiliary_client._read_nous_auth", return_value=nous_auth), \
+        with patch("agent.auxiliary_client._read_nous_auth", return_value=niki_auth), \
              patch("agent.auxiliary_client.OpenAI"), \
-             patch("hermes_cli.models.get_nous_recommended_aux_model", return_value=None):
+             patch("niki_cli.models.get_nous_recommended_aux_model", return_value=None):
             _client, model = get_text_auxiliary_client()
         assert model == _NOUS_MODEL
 
-    def test_custom_endpoint_when_no_nous(self, monkeypatch):
-        """Custom endpoint is used when no OpenRouter/Nous keys are available.
+    def test_custom_endpoint_when_no_niki(self, monkeypatch):
+        """Custom endpoint is used when no OpenRouter/Niki keys are available.
 
         Since the March 2026 config refactor, OPENAI_BASE_URL env var is no
         longer consulted — base_url comes from config.yaml via

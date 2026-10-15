@@ -1,5 +1,5 @@
 """Thin HTTP client for the agent -> NAS ``agent-cron`` endpoints (Chronos): arm one-shot / cancel /
-list, authenticated with the existing Nous Portal token.
+list, authenticated with the existing Niki Portal token.
 Wire contract: ``website/docs/developer-guide/chronos-managed-cron-contract.md``."""
 
 from __future__ import annotations
@@ -42,8 +42,8 @@ class NasCronClient:
         self.timeout_seconds = timeout_seconds
 
     def _headers(self) -> dict[str, str]:
-        """Bearer auth with the agent's existing Nous Portal access token (refresh-aware)."""
-        from hermes_cli.auth import resolve_nous_access_token
+        """Bearer auth with the agent's existing Niki Portal access token (refresh-aware)."""
+        from niki_cli.auth import resolve_nous_access_token
         return {"Authorization": f"Bearer {resolve_nous_access_token()}",
                 "Content-Type": "application/json"}
 

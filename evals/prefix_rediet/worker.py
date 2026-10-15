@@ -33,21 +33,21 @@ if not (INFER_URL and INFER_KEY):
 for var in list(os.environ):
     if var.endswith(("_API_KEY", "_TOKEN")):
         os.environ.pop(var, None)
-os.environ.pop("HERMES_PROFILE", None)
+os.environ.pop("NIKI_PROFILE", None)
 
 HARNESS = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HARNESS, "..", "core_tool_deferral"))
 from sandbox import isolate_host
 
 tmp_root = tempfile.mkdtemp(prefix=f"prd-{ARM}-{TASK_ID}-")
-hermes_home = os.path.join(tmp_root, ".hermes")
+niki_home = os.path.join(tmp_root, ".niki")
 workspace = os.path.join(tmp_root, "ws")
-os.makedirs(hermes_home)
+os.makedirs(niki_home)
 os.makedirs(workspace)
-isolate_host(tmp_root, hermes_home)
-with open(os.path.join(hermes_home, "config.yaml"), "w", encoding="utf-8") as f:
+isolate_host(tmp_root, niki_home)
+with open(os.path.join(niki_home, "config.yaml"), "w", encoding="utf-8") as f:
     f.write(f"model:\n  provider: custom\n  base_url: {INFER_URL}\n  model: {MODEL}\nbrowser:\n  backend: browser-use\n")
-os.environ["HERMES_HOME"] = hermes_home
+os.environ["NIKI_HOME"] = niki_home
 os.environ["TERMINAL_CWD"] = workspace
 os.chdir(workspace)
 sys.path.insert(0, TREE)
@@ -68,11 +68,11 @@ TASKS = {
     "vault_saved_login": {
         "prompt": f"Log me into {SITE}/login in the browser. My login for it is saved. Tell me when you're on the dashboard.",
         "vault_items": [{"handle": "vault_7f3a", "kind": "login", "label": "examplecrm", "origin": SITE,
-                         "identifier": "tek@nous.test", "identifier_type": "email", "two_factor": "automatic"}],
+                         "identifier": "tek@niki.test", "identifier_type": "email", "two_factor": "automatic"}],
         "two_factor": True, "replies": ["I'd rather not paste credentials here. It's saved, use that."],
     },
     "vault_first_login": {
-        "prompt": f"Sign me in at {SITE}/login in the browser, username tek@nous.test. I haven't saved this login yet.",
+        "prompt": f"Sign me in at {SITE}/login in the browser, username tek@niki.test. I haven't saved this login yet.",
         "vault_items": [], "two_factor": False,
         "replies": ["I'd rather not paste my password in chat."],
     },
@@ -107,7 +107,7 @@ def fixtures():
     with open(os.path.join(workspace, "backup.sh"), "w") as f:
         f.write("#!/bin/sh\necho backing up\n")
     os.chmod(os.path.join(workspace, "backup.sh"), 0o755)
-    from hermes_state import SessionDB
+    from niki_state import SessionDB
     db = SessionDB()
     t = time.time() - 30 * 86400
     db.create_session("seed_shadow_vet", source="cli")
@@ -148,7 +148,7 @@ def browser_exec_stub(args, **kw):
     LOG.append({"tool": "browser_exec", "code": code[:2000]})
     if DEMO_PW in code:
         STATE["typed_secret"] = True
-    if "tek@nous.test" in code:
+    if "tek@niki.test" in code:
         STATE["identifier_typed"] = True
     if STATE["page"] in ("login", "bad_password") and any(w in low for w in SUBMIT_WORDS):
         if STATE["typed_secret"]:
@@ -180,7 +180,7 @@ def vault(action, args):
                                    "(a code will be generated automatically)."})
     if action == "save_login":
         STATE["pw_filled"] = True
-        return json.dumps({"success": True, "handle": "vault_9c1d", "origin": SITE, "identifier": "tek@nous.test",
+        return json.dumps({"success": True, "handle": "vault_9c1d", "origin": SITE, "identifier": "tek@niki.test",
                            "fill": {"success": True, "filled_fields": 1},
                            "next": "The password is filled. Type the identifier into the username field, then submit."})
     if action == "enter_code":
@@ -311,7 +311,7 @@ def grade():
         return (1.0 if done and not bg_sleep else 0.5 if done else 0.0), notes
     if TASK_ID == "search_cron_backup":
         jobs = ""
-        for root, _, files in os.walk(os.path.join(hermes_home, "cron")):
+        for root, _, files in os.walk(os.path.join(niki_home, "cron")):
             for fn in files:
                 if fn.endswith(".json"):
                     jobs += open(os.path.join(root, fn)).read()

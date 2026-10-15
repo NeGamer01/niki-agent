@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-import type { HermesGateway } from '@/hermes'
+import type { NikiGateway } from '@/niki'
 import type { Translations } from '@/i18n'
 import { type QueuedPromptEntry, removeQueuedPrompt, unparkQueuedPrompts } from '@/store/composer-queue'
 import { notifyError } from '@/store/notifications'
@@ -15,7 +15,7 @@ export interface ComposerQueueSlotInputs {
   busy: boolean
   drainNextQueued: () => Promise<unknown>
   exitQueuedEdit: (action: 'cancel' | 'save') => unknown
-  gateway: HermesGateway | null | undefined
+  gateway: NikiGateway | null | undefined
   queueEdit: QueueEditState | null
   queueParked: boolean
   queuedPrompts: QueuedPromptEntry[]

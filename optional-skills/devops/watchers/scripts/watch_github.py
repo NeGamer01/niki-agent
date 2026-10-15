@@ -3,13 +3,13 @@
 
 Usage (via cron with --no-agent):
 
-    hermes cron create hermes-issues \\
+    niki cron create niki-issues \\
       --schedule "*/5 * * * *" --no-agent \\
-      --script "$HERMES_HOME/skills/devops/watchers/scripts/watch_github.py" \\
-      --script-args "--name hermes-issues --repo NousResearch/hermes-agent --scope issues"
+      --script "$NIKI_HOME/skills/devops/watchers/scripts/watch_github.py" \\
+      --script-args "--name niki-issues --repo NeGamer01/niki-agent --scope issues"
 
 Set GITHUB_TOKEN (or GH_TOKEN) in the Niki .env file
-(``${HERMES_HOME:-~/.hermes}/.env``) to avoid the 60 req/hr
+(``${NIKI_HOME:-~/.niki}/.env``) to avoid the 60 req/hr
 anonymous rate limit.
 
 Scopes: issues | pulls | releases | commits.  Or pass --search QUERY to

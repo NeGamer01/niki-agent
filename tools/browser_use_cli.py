@@ -19,7 +19,7 @@ import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List, NamedTuple, Optional
 
-from hermes_constants import get_hermes_home
+from niki_constants import get_niki_home
 from utils import is_truthy_value
 
 logger = logging.getLogger(__name__)
@@ -32,18 +32,18 @@ _SESSION_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
 
 # Set on the env dict by the CDP resolvers when the resolved browser is EXCLUSIVE to this named session
 # (per-name provider / named BU cloud / Lightpanda). Popped before the subprocess launches — never exported.
-_PRIVATE_BROWSER_SENTINEL = "_HERMES_BU_PRIVATE_BROWSER"
+_PRIVATE_BROWSER_SENTINEL = "_NIKI_BU_PRIVATE_BROWSER"
 # Internal route provenance: this exec resolved to a browser on the Bot Desktop display and must use
 # the same human-control lease fence as the built-in browser tools. Popped before launching the CLI.
-_BOT_DESKTOP_BROWSER_SENTINEL = "_HERMES_BU_BOT_DESKTOP_BROWSER"
+_BOT_DESKTOP_BROWSER_SENTINEL = "_NIKI_BU_BOT_DESKTOP_BROWSER"
 
 # Prepended to the model's code for named sessions on SHARED browsers (a /browser connect CDP override): the
 # harness daemon attaches to the first existing page at startup, so two fresh named daemons can land on the
 # SAME tab. Steering each onto a tab it created prevents clobbering. Runs once per daemon (marker keyed by
 # BU_NAME + daemon pid).
 _OWN_TAB_PREAMBLE = """\
-# hermes: pin this named session to its own tab (once per daemon process)
-def _hermes_ensure_own_tab():
+# niki: pin this named session to its own tab (once per daemon process)
+def _niki_ensure_own_tab():
     import os as _os, tempfile as _tf
     _name = _os.environ.get("BU_NAME", "default")
     try:
@@ -56,7 +56,7 @@ def _hermes_ensure_own_tab():
         _dpid = "0"
     _uid = _os.getuid() if hasattr(_os, "getuid") else 0
     _marker = _os.path.join(
-        _tf.gettempdir(), "hermes-bu-owntab-%s-%s-%s" % (_uid, _name, _dpid)
+        _tf.gettempdir(), "niki-bu-owntab-%s-%s-%s" % (_uid, _name, _dpid)
     )
     if _os.path.exists(_marker):
         return
@@ -72,8 +72,8 @@ def _hermes_ensure_own_tab():
         open(_marker, "w").close()
     except OSError:
         pass
-_hermes_ensure_own_tab()
-del _hermes_ensure_own_tab
+_niki_ensure_own_tab()
+del _niki_ensure_own_tab
 """
 
 _DEFAULT_TIMEOUT_S = 300
@@ -194,7 +194,7 @@ def _floor_subprocess_path(path: str) -> str:
 def _read_browser_cfg() -> dict:
     """Return the ``browser:`` config section, or {} on any failure."""
     try:
-        from hermes_cli.config import cfg_get, read_raw_config
+        from niki_cli.config import cfg_get, read_raw_config
         cfg = cfg_get(read_raw_config(), "browser", default={})
         return cfg if isinstance(cfg, dict) else {}
     except Exception as e:
@@ -203,17 +203,17 @@ def _read_browser_cfg() -> dict:
 
 
 def _use_gateway(browser_cfg: dict) -> bool:
-    """True when the browser section selects the Nous Tool Gateway — by the current ``hermes tools``
-    picker row (``cloud_provider: nous``) or the pre-picker ``use_gateway: true`` flag. Reading only
+    """True when the browser section selects the Niki Tool Gateway — by the current ``niki tools``
+    picker row (``cloud_provider: niki``) or the pre-picker ``use_gateway: true`` flag. Reading only
     the legacy flag missed every picker-configured gateway, and the direct-API branch it fell into
     holds no credentials in managed mode (#108310)."""
     if is_truthy_value(browser_cfg.get("use_gateway"), default=False):
         return True
     try:
-        from tools.tool_backend_helpers import NOUS_MANAGED_PROVIDER
+        from tools.tool_backend_helpers import NIKI_MANAGED_PROVIDER
     except Exception:  # pragma: no cover — helper ships with the package
         return False
-    return str(browser_cfg.get("cloud_provider") or "").strip().lower() == NOUS_MANAGED_PROVIDER
+    return str(browser_cfg.get("cloud_provider") or "").strip().lower() == NIKI_MANAGED_PROVIDER
 
 
 def get_browser_backend() -> str:
@@ -226,7 +226,7 @@ def get_browser_backend() -> str:
 def set_browser_use_mode(enabled: bool) -> None:
     """``/browser use [off]`` on every surface: persist ``browser.backend`` for the current profile and drop
     cached tool availability. A live agent keeps its tools (prompt cache); the next one built gets the swap."""
-    from hermes_cli.config import load_config, save_config
+    from niki_cli.config import load_config, save_config
     from tools.registry import invalidate_check_fn_cache
     config = load_config()
     config.setdefault("browser", {})["backend"] = _BACKEND_KEY if enabled else BACKEND_DISABLED
@@ -270,7 +270,7 @@ def default_downgrade_notice() -> Optional[str]:
     try:
         if get_browser_backend() or _camofox_active() or _find_cli() is not None:
             return None  # explicit choice / Camofox / CLI present — nothing downgraded
-        stamp = Path(get_hermes_home()) / "cache" / ".browser_use_default_notice"
+        stamp = Path(get_niki_home()) / "cache" / ".browser_use_default_notice"
         now = time.time()
         with contextlib.suppress(OSError):
             if 0 <= now - stamp.stat().st_mtime < 24 * 3600:
@@ -280,7 +280,7 @@ def default_downgrade_notice() -> Optional[str]:
             stamp.touch()
             os.utime(stamp, (now, now))
         return ("browser-harness is missing from Niki's Python environment — using the built-in browser tools. "
-                "Run `hermes update` to re-sync it, or set `browser.backend: off` in config.yaml to silence this.")
+                "Run `niki update` to re-sync it, or set `browser.backend: off` in config.yaml to silence this.")
     except Exception as e:  # pragma: no cover — a notice must never break startup
         logger.debug("browser-use downgrade notice failed: %s", e)
         return None
@@ -308,7 +308,7 @@ def _workspace_dir(task_id: Optional[str]) -> Optional[str]:
         return os.environ["BH_AGENT_WORKSPACE"]
     try:
         safe = _TASK_ID_SAFE_RE.sub("_", str(task_id or "default"))[:80] or "default"
-        path = Path(get_hermes_home()) / "cache" / "browser-use" / "workspace" / safe
+        path = Path(get_niki_home()) / "cache" / "browser-use" / "workspace" / safe
         path.mkdir(parents=True, exist_ok=True)
         return str(path)
     except Exception as e:
@@ -354,8 +354,8 @@ def _served_profile_tag() -> str:
     """``""`` outside a served-profile scope (every legacy key stays byte-identical); under a
     multiplexed turn, the routed profile's home key — one profile's browser must never be handed
     to another that happens to use the same session name or task id (#110032)."""
-    from hermes_constants import get_hermes_home_override, hermes_home_key
-    return "" if get_hermes_home_override() is None else hermes_home_key()
+    from niki_constants import get_niki_home_override, niki_home_key
+    return "" if get_niki_home_override() is None else niki_home_key()
 
 
 def _backend_cache_key(task_id: Optional[str], session_name: str = "", sidecar: bool = False) -> str:
@@ -391,7 +391,7 @@ def _resolve_lightpanda_cdp(env: dict, task_id: Optional[str], session_name: str
     err = _export_session_cdp(
         env, _get_session_info, _backend_cache_key(task_id, session_name, sidecar),
         lambda e: (f"Lightpanda could not be started: {e} Set browser.engine to auto "
-                   "to use local Chrome, or switch backends via `hermes tools` → Browser Automation."),
+                   "to use local Chrome, or switch backends via `niki tools` → Browser Automation."),
         "Lightpanda session returned no CDP endpoint. Set browser.engine to auto to use local Chrome.",
     )
     if err is None:
@@ -445,7 +445,7 @@ def _resolve_managed_chromium_cdp(env: dict, task_id: Optional[str], session_nam
     cdp = str(((res or {}).get("data") or {}).get("cdpUrl") or "") if (res or {}).get("success") else ""
     if not cdp:
         return (f"The local browser could not be started: {(res or {}).get('error') or 'agent-browser returned no CDP endpoint'} "
-                "Run `hermes tools` → Browser Automation to (re)install Chromium, or switch backends.")
+                "Run `niki tools` → Browser Automation to (re)install Chromium, or switch backends.")
     cdp = _reach_sandbox_cdp(cdp)
     _set_cdp_env(env, cdp)
     env[_PRIVATE_BROWSER_SENTINEL] = "1"  # one Chromium per cache key: nothing to share a tab with
@@ -500,7 +500,7 @@ def _resolve_backend_cdp(env: dict, task_id: Optional[str], session_name: str = 
         return _resolve_local_engine_cdp(env, task_id, session_name)
 
     # Browser Use direct-API configs: the CLI talks to BU cloud natively (BU_AUTOSPAWN) — the
-    # legacy provider would create a second, redundant session. Nous-gateway configs (cloud_provider: nous
+    # legacy provider would create a second, redundant session. Niki-gateway configs (cloud_provider: niki
     # from the picker, or the pre-picker use_gateway: true) DO resolve through the provider: the gateway
     # provisions the browser server-side and returns its CDP URL. Without BROWSER_USE_API_KEY the CLI cannot
     # autospawn, and the provider is either the managed gateway (autodetect on a never-configured install) or
@@ -521,7 +521,7 @@ def _resolve_backend_cdp(env: dict, task_id: Optional[str], session_name: str = 
     err = _export_session_cdp(
         env, _session_info, _backend_cache_key(task_id, session_name),
         lambda e: (f"Cloud browser provider {provider_name} failed to provide a session: {e}. "
-                   "Fix the provider configuration or switch backends via `hermes tools` → Browser Automation."),
+                   "Fix the provider configuration or switch backends via `niki tools` → Browser Automation."),
         f"Cloud browser provider {provider_name} returned no CDP endpoint, so Browser Use mode "
         "cannot drive it. Switch to the built-in browser tools for this provider.",
     )
@@ -540,7 +540,7 @@ def _resolve_backend_cdp(env: dict, task_id: Optional[str], session_name: str = 
 
 def _resolve_real_profile_cdp(env: dict, force_local: bool) -> Optional[str]:
     """Point the harness at the user's real-profile copy-browser (a SNAPSHOT of their default Chromium
-    profile, hermes_cli.browser_connect) when consented. Two ways in: the effective backend is already local
+    profile, niki_cli.browser_connect) when consented. Two ways in: the effective backend is already local
     (no provider, CDP override, or legacy BU cloud config) → silent upgrade; or ``force_local`` (consent-gated
     ``local`` arg) → the user's browser even under a cloud backend. Operator overrides (BU_CDP_* env,
     /browser connect, ``browser.cdp_url``) own the session either way. Fail closed: a launch error is
@@ -610,7 +610,7 @@ def _group_popen_kwargs() -> dict:
     timeout can take down every process that inherited the capture pipes, not just the CLI
     child. Windows also hides the console the .cmd shim would flash (as browser_tool does)."""
     def _flags() -> dict:
-        from hermes_cli._subprocess_compat import windows_hide_flags
+        from niki_cli._subprocess_compat import windows_hide_flags
         si = subprocess.STARTUPINFO()
         si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         return {"creationflags": windows_hide_flags() | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0),
@@ -634,7 +634,7 @@ def _kill_cli_process_group(proc) -> None:
     """SIGKILL the CLI's whole process group (POSIX; ``start_new_session`` made pgid == pid) or,
     on Windows, its process tree via ``taskkill /T /F`` — the only group-wide kill it offers."""
     if os.name == "nt":
-        from hermes_cli._subprocess_compat import windows_hide_flags
+        from niki_cli._subprocess_compat import windows_hide_flags
         with contextlib.suppress(OSError, subprocess.SubprocessError):
             subprocess.run(["taskkill", "/T", "/F", "/PID", str(proc.pid)], stdin=subprocess.DEVNULL,
                            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=10,
@@ -711,7 +711,7 @@ def browser_exec(code: str, session: str = "", timeout_s: int = _DEFAULT_TIMEOUT
     cmd = _find_cli()
     if not cmd:
         return tool_error("browser-harness is missing from Niki's Python environment. "
-                          "Run `hermes update` to re-sync it.")
+                          "Run `niki update` to re-sync it.")
 
     env = _base_subprocess_env()
     if session:
@@ -881,7 +881,7 @@ BROWSER_EXEC_SCHEMA = {
     "name": "browser_exec",
     # Static fallback description, used only when the managed CLI is unavailable
     "description": (_HEADER_BASE + _HELPERS_DIGEST
-                    + "\n\n(The browser-use CLI is not installed yet. Install it with `hermes tools` (Browser Automation → Browser Use).)"),
+                    + "\n\n(The browser-use CLI is not installed yet. Install it with `niki tools` (Browser Automation → Browser Use).)"),
     "parameters": {
         "type": "object",
         "properties": {

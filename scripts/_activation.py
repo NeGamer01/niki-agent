@@ -23,7 +23,7 @@ Activating from the shebang
 
 A POSIX script can run itself in the environment, so ``./scripts/foo.py`` works
 from any cwd with no manual ``source``: its shebang hands the file to
-``scripts/run-in-hermes-env`` (the line, staleness rules and portability limits
+``scripts/run-in-niki-env`` (the line, staleness rules and portability limits
 are documented there). Windows keeps using ``python scripts\\foo.py`` with the
 guard.
 """
@@ -33,7 +33,7 @@ from __future__ import annotations
 import os
 import sys
 
-ACTIVATION_ENV_VAR = "__HERMES_ACTIVATED"
+ACTIVATION_ENV_VAR = "__NIKI_ACTIVATED"
 POSIX_COMMAND = "source ./activate"
 WINDOWS_COMMAND = ". .\\activate.ps1"
 

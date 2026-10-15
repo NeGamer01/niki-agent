@@ -11,14 +11,14 @@ export const esBoot = {
       loadingSessions: 'Cargando sesiones recientes',
       retryingRemoteBackend: 'Reconectando al backend remoto de Niki…',
       startingDesktopConnection: 'Iniciando la conexión de escritorio',
-      startingHermesDesktop: 'Iniciando Niki Desktop…'
+      startingNikiDesktop: 'Iniciando Niki Desktop…'
     },
     errors: {
       backgroundExited:
         'El servicio que ejecuta tus chats se cerró de forma inesperada. Reinícialo para continuar; tus chats y ajustes están a salvo.',
       backgroundExitedDuringStartup: 'Niki se detuvo justo después de iniciarse.',
       backendStopped: 'Niki dejó de funcionar en segundo plano',
-      restartHermes: 'Reiniciar Niki',
+      restartNiki: 'Reiniciar Niki',
       openLogs: 'Abrir registros',
       desktopBootFailed: 'Niki no pudo iniciarse',
       gatewayConnectionLost: 'Niki perdió la conexión',
@@ -58,11 +58,11 @@ export const esBoot = {
         `Cierra la sesión guardada del navegador remoto y abre ${signInLabel}. Usa el gateway local para cambiar al backend incluido.`,
       signOutAndSignIn: 'Cerrar sesión e iniciar sesión',
       remoteFailureHint: 'Revisa la URL e inicia sesión en Configuración del gateway, o cambia al gateway local.',
-      cloudDownTitle: 'El agente de Nous Cloud no está disponible',
+      cloudDownTitle: 'El agente de Niki Cloud no está disponible',
       cloudDownDescription:
-        'El agente en la nube administrado por Nous al que se conecta este gateway devuelve un error de servidor. No se puede reiniciar desde aquí: revisa su estado, cambia al gateway local o pide ayuda.',
+        'El agente en la nube administrado por Niki al que se conecta este gateway devuelve un error de servidor. No se puede reiniciar desde aquí: revisa su estado, cambia al gateway local o pide ayuda.',
       cloudDownHint:
-        'Los botones de abajo abren el Nous Portal (estado y controles de la instancia) y nuestro Discord para obtener ayuda.',
+        'Los botones de abajo abren el Niki Portal (estado y controles de la instancia) y nuestro Discord para obtener ayuda.',
       cloudDownCheckPortal: 'Ver el estado en el Portal',
       cloudDownDiscord: 'Pedir ayuda en Discord',
       hideRecentLogs: 'Ocultar registros recientes',
@@ -89,7 +89,7 @@ export const esBoot = {
       since: time => `Esperando desde ${time}`,
       lastChecked: time => `Última comprobación ${time}`,
       recoveryHint:
-        'Esto suele resolverse en unos minutos. Si no: cierra Niki, termina los procesos git o hermes que queden (o reinicia el equipo) y vuelve a abrir Niki.',
+        'Esto suele resolverse en unos minutos. Si no: cierra Niki, termina los procesos git o niki que queden (o reinicia el equipo) y vuelve a abrir Niki.',
       checkAgain: 'Comprobar de nuevo',
       quit: 'Salir de Niki',
       openLogs: 'Abrir registros',

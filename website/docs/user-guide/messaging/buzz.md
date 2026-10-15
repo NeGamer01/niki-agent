@@ -8,7 +8,7 @@ Files sent **to** the agent are fetched back off the relay with the agent's auth
 
 Inbound messages arrive over a persistent NIP-42-authenticated Nostr WebSocket subscription by default (near-instant delivery), with automatic fallback to CLI polling when the WebSocket can't be established. Outbound messages always go through the `buzz` CLI. Control it with `transport` / `BUZZ_TRANSPORT`: `auto` (default), `websocket` (require WS, fail otherwise), or `poll`. If your relay membership uses NIP-OA owner attestation, set `BUZZ_AUTH_TAG` to the four-string auth tag JSON.
 
-> Run `hermes gateway setup` and pick **Buzz** for a guided walk-through.
+> Run `niki gateway setup` and pick **Buzz** for a guided walk-through.
 
 ## Prerequisites
 
@@ -18,7 +18,7 @@ Inbound messages arrive over a persistent NIP-42-authenticated Nostr WebSocket s
 
 ## Configure Niki
 
-You can configure Buzz two ways — the `gateway` block in `config.yaml` (canonical) or environment variables (which override it). The private key is a **secret** and always belongs in `~/.hermes/.env`.
+You can configure Buzz two ways — the `gateway` block in `config.yaml` (canonical) or environment variables (which override it). The private key is a **secret** and always belongs in `~/.niki/.env`.
 
 ### Option A — config.yaml
 
@@ -39,7 +39,7 @@ gateway:
         allowed_users: []          # empty = allow all; hex pubkeys or npubs
 ```
 
-Plus, in `~/.hermes/.env`:
+Plus, in `~/.niki/.env`:
 
 ```
 BUZZ_PRIVATE_KEY=nsec1...
@@ -148,10 +148,10 @@ retrieval through the Buzz CLI is not handled by this native public-URL path.
 ## Run the gateway
 
 ```bash
-hermes gateway start
+niki gateway start
 ```
 
-Check status with `hermes gateway status` — Buzz connection state is reported there, including for env-only setups.
+Check status with `niki gateway status` — Buzz connection state is reported there, including for env-only setups.
 
 ## Notes and limitations
 

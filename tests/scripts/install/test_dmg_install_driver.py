@@ -31,7 +31,7 @@ def test_dmg_driver_requires_complete_pm_source_install(tmp_path, missing, expec
         (root / "pm/lock.json").write_text("{}", encoding="utf-8")
     if missing != "checkout":
         (root / ".git").mkdir()
-    launcher = root / ".hermes/bin/hermes"
+    launcher = root / ".niki/bin/niki"
     if missing not in {"launcher", "legacy"}:
         launcher.parent.mkdir(parents=True)
         launcher.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
@@ -39,9 +39,9 @@ def test_dmg_driver_requires_complete_pm_source_install(tmp_path, missing, expec
     if missing != "app":
         (root / "apps/desktop/release/mac-arm64/Niki.app").mkdir(parents=True)
     if missing not in {"completion", "historical", "wrong-root-log"}:
-        (root / ".hermes-bootstrap-complete").write_text("completed", encoding="utf-8")
+        (root / ".niki-bootstrap-complete").write_text("completed", encoding="utf-8")
     # The legacy file must not mask a missing PM publication.
-    legacy = root / "venv/bin/hermes"
+    legacy = root / "venv/bin/niki"
     legacy.parent.mkdir(parents=True)
     legacy.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
     legacy.chmod(0o755)
@@ -63,11 +63,11 @@ def test_dmg_driver_requires_complete_pm_source_install(tmp_path, missing, expec
     home = tmp_path / "home"
     home.mkdir()
     if missing not in {"completion", "marker-only"}:
-        logs = home / ".hermes/logs"
+        logs = home / ".niki/logs"
         logs.mkdir(parents=True)
         logged_root = tmp_path / "other-install" if missing == "wrong-root-log" else root
         (logs / "bootstrap-installer.log").write_text(
-            f"INFO hermes_bootstrap_lib::bootstrap: bootstrap complete install_root={logged_root}\n",
+            f"INFO niki_bootstrap_lib::bootstrap: bootstrap complete install_root={logged_root}\n",
             encoding="utf-8",
         )
     result = subprocess.run(

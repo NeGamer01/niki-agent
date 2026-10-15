@@ -8,8 +8,8 @@ without a cycle.
 """
 from __future__ import annotations
 
-WARNING_OPEN = "<!-- hermes-release:draft-warning -->"
-WARNING_CLOSE = "<!-- /hermes-release:draft-warning -->"
+WARNING_OPEN = "<!-- niki-release:draft-warning -->"
+WARNING_CLOSE = "<!-- /niki-release:draft-warning -->"
 
 _WARNING = """> [!CAUTION]
 > ## **DO NOT PUBLISH THIS RELEASE FROM GITHUB.**

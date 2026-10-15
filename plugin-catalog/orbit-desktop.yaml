@@ -1,7 +1,7 @@
 name: orbit-desktop
 repo: https://github.com/mojomast/orbitdesktop
 sha: 98b9a5ee13cb1841e819d7a9c873d7de427ba347
-subdir: hermes-plugin
+subdir: niki-plugin
 description: >-
   Your workspace, shaped by your agent: a bundled browser desktop powered by Niki. Describe the
   workflow you need; the agent can rearrange windows and panes, customize appearance, build versioned
@@ -12,7 +12,7 @@ description: >-
   and 100,000-character chat messages, guidance and drafts. Includes Devplan Studio for guided
   interviews, specifications, phased devplans and circular-development handoff exports. Optional
   conversational interviews require explicit service setup and a working Niki provider login, and
-  send project context to that provider. Includes 14 distinctive interface presets including Nous
+  send project context to that provider. Includes 14 distinctive interface presets including Niki
   Atelier, with local wallpapers, themed icons and taskbar treatments. Agent chats include inline
   expandable tool activity, running/completed/failed summaries, an activity strip, a workspace agent
   overview and responsive toolbar controls. Missing tool-call IDs are explicitly uncorrelated.
@@ -29,13 +29,13 @@ description: >-
   provisioning. Optional api.typesafe.ai requests require explicit consent and a user-supplied key.
   The 0.2.7 web app's opt-in Show tools panel displays tool call arguments and results for the current
   Niki conversation, fetched from the local Orbit server and local Niki session API and kept in
-  the browser only. The Nous Atelier theme contains Nous Research logo artwork and is unofficial;
-  Orbit is not affiliated with Nous Research.
+  the browser only. The Niki Atelier theme contains NeGamer01 logo artwork and is unofficial;
+  Orbit is not affiliated with NeGamer01.
 maintainer: mojomast
 tier: community
 category: desktop
 version: "0.2.7"
-docs_url: https://github.com/mojomast/orbitdesktop/blob/98b9a5ee13cb1841e819d7a9c873d7de427ba347/hermes-plugin/README.md
+docs_url: https://github.com/mojomast/orbitdesktop/blob/98b9a5ee13cb1841e819d7a9c873d7de427ba347/niki-plugin/README.md
 platforms: [linux]
 capabilities:
   provides_tools: [orbit_workspace]

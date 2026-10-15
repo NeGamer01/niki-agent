@@ -9,7 +9,7 @@ description: "Add or override UI languages for the CLI, gateway, TUI and Desktop
 Niki ships 17 UI languages (`display.language`). The list is **pluggable**: a language pack is a
 plugin (or a folder in your Niki home) that adds a new language or overrides the wording of an
 existing one — for the Python side (CLI approval prompts, gateway replies, tool verbs, tips), the
-`hermes --tui` interface and the Desktop app, all from one pack.
+`niki --tui` interface and the Desktop app, all from one pack.
 
 What a pack translates is the **static UI text**. Agent responses, tool output, logs and slash-command
 *names* stay as they are; to make the agent itself answer in another language, say so in your prompt.
@@ -20,50 +20,50 @@ When Niki looks up a string it walks these layers, top first, and takes the firs
 
 1. **Plugin language packs** — every installed plugin that declares `provides_locales` (the last one
    loaded wins when two packs cover the same key).
-2. **Your overlay** — `<HERMES_HOME>/locales/<lang>.yaml` (per profile: each profile home has its own
+2. **Your overlay** — `<NIKI_HOME>/locales/<lang>.yaml` (per profile: each profile home has its own
    `locales/` folder).
 3. **Bundled** — the `locales/<lang>.yaml` files shipped with Niki.
 4. The same three layers for English, then the raw key.
 
 Every layer may be **partial**: a pack or overlay only needs the keys it changes.
 
-`hermes config set display.language <id>` accepts any id one of these layers supplies. Unknown ids
+`niki config set display.language <id>` accepts any id one of these layers supplies. Unknown ids
 are refused with the list of available languages:
 
 ```
-$ hermes config set display.language pl
+$ niki config set display.language pl
 ✗ Unknown language 'pl' for display.language. Available: en, af, ar, de, es, ...
-  Install a language pack plugin (hermes plugins install <pack>) or drop <HERMES_HOME>/locales/<id>.yaml to add one.
+  Install a language pack plugin (niki plugins install <pack>) or drop <NIKI_HOME>/locales/<id>.yaml to add one.
 ```
 
 ## Using a pack
 
 ```bash
-hermes plugins install https://github.com/teknium1/hermes-lang-pl   # or a catalog name
-hermes config set display.language pl
+niki plugins install https://github.com/teknium1/niki-lang-pl   # or a catalog name
+niki config set display.language pl
 ```
 
 Restart running gateways/TUIs so they pick up the pack. The TUI and Desktop language switchers list
 bundled languages, your overlay languages and every installed pack by their native name (endonym).
-The `HERMES_LANGUAGE` entry in `.env` still overrides `display.language`.
+The `NIKI_LANGUAGE` entry in `.env` still overrides `display.language`.
 
 ## Writing a pack
 
 A pack needs **no Python code**. Minimal layout:
 
 ```
-hermes-lang-pl/
+niki-lang-pl/
   plugin.yaml
   locales/
     pl.yaml            # core: Python-side strings (approval.*, gateway.*, cli.*, display.*, slash.*, tips.*, ...)
-    pl.tui.yaml        # optional: hermes --tui strings
+    pl.tui.yaml        # optional: niki --tui strings
     pl.desktop.yaml    # optional: Niki Desktop strings
 ```
 
 `plugin.yaml`:
 
 ```yaml
-name: hermes-lang-pl
+name: niki-lang-pl
 version: 1.0.0
 description: Polish language pack for Niki
 provides_locales:
@@ -98,7 +98,7 @@ When the manifest declares `provides_locales`, the plugin loader registers every
 ### Validate
 
 ```bash
-hermes plugins validate ./hermes-lang-pl
+niki plugins validate ./niki-lang-pl
 ```
 
 The validator checks that every declared id has `locales/<id>.yaml`, that each file parses and is
@@ -130,22 +130,22 @@ never changes `display.language`.
 Drop a partial file into your Niki home:
 
 ```yaml
-# ~/.hermes/locales/en.yaml — only the keys you want to change
+# ~/.niki/locales/en.yaml — only the keys you want to change
 approval:
   denied: "      ✗ Nope."
 ```
 
-The overlay applies to that profile only (`~/.hermes/profiles/<name>/locales/` for a named profile).
+The overlay applies to that profile only (`~/.niki/profiles/<name>/locales/` for a named profile).
 Overlay files for a language Niki does not bundle make that language selectable too. Edits are read
 on the next start or the next `display.language` change.
 
 ## Troubleshooting
 
 - **`Unknown language ... for display.language`** — the pack is not installed or not enabled
-  (`hermes plugins list`), or the id in `provides_locales` does not match the file name
+  (`niki plugins list`), or the id in `provides_locales` does not match the file name
   (`pl` needs `locales/pl.yaml`).
 - **A translated string still shows in English** — the key is not in the English catalog (run
-  `hermes plugins validate`; unknown keys are listed), or the placeholder set differs from English.
+  `niki plugins validate`; unknown keys are listed), or the placeholder set differs from English.
 - **Language listed but the TUI/Desktop is still English** — the pack has no `.tui.yaml` /
   `.desktop.yaml`; those surfaces render English plus whatever the pack provides. For the 16 bundled
   languages the TUI ships its own `locales/<lang>.tui.yaml` in the Niki tree (the Desktop bundles

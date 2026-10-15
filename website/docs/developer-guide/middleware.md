@@ -39,8 +39,8 @@ def register(ctx):
 
 Every middleware callback receives:
 
-- `telemetry_schema_version`: currently `hermes.observer.v1`
-- `middleware_schema_version`: currently `hermes.middleware.v1`
+- `telemetry_schema_version`: currently `niki.observer.v1`
+- `middleware_schema_version`: currently `niki.middleware.v1`
 - Runtime context such as `session_id`, `task_id`, `turn_id`,
   `api_request_id`, `provider`, `model`, `api_mode`, `tool_name`, and
   `tool_call_id` when applicable.
@@ -124,17 +124,17 @@ rewritten path, command, or URL is the value downstream policy will evaluate.
 Middleware only runs for enabled plugins. For a bundled plugin:
 
 ```bash
-hermes plugins enable <plugin-name>
+niki plugins enable <plugin-name>
 ```
 
-For isolated local testing, use one `HERMES_HOME` for plugin enablement and the
+For isolated local testing, use one `NIKI_HOME` for plugin enablement and the
 agent run:
 
 ```bash
-export HERMES_HOME=$HOME/.hermes/cache/scratch/hermes-middleware-test
-mkdir -p "$HERMES_HOME"
-hermes plugins enable <plugin-name>
-hermes chat --query 'Reply exactly ok'
+export NIKI_HOME=$HOME/.niki/cache/scratch/niki-middleware-test
+mkdir -p "$NIKI_HOME"
+niki plugins enable <plugin-name>
+niki chat --query 'Reply exactly ok'
 ```
 
 For source checkouts, use the [PM developer workflow](../reference/package-management.md#developer-workflow)
@@ -142,11 +142,11 @@ and a separate development home so the runtime sees plugins and middleware from
 the working tree:
 
 ```bash
-export HERMES_HOME="$HOME/hermes-middleware-test"
-export HERMES_RUNTIME_DIR="$HERMES_HOME/tools"
+export NIKI_HOME="$HOME/niki-middleware-test"
+export NIKI_RUNTIME_DIR="$NIKI_HOME/tools"
 source ./activate
-python hermes plugins enable <plugin-name>
-python hermes chat --query 'Reply exactly ok'
+python niki plugins enable <plugin-name>
+python niki chat --query 'Reply exactly ok'
 ```
 
 ## Generic Plugin Examples
@@ -166,7 +166,7 @@ def register(ctx):
 def tag_llm_request(**kwargs):
     request = dict(kwargs["request"])
     extra_body = dict(request.get("extra_body") or {})
-    extra_body.setdefault("metadata", {})["hermes_middleware_demo"] = True
+    extra_body.setdefault("metadata", {})["niki_middleware_demo"] = True
     request["extra_body"] = extra_body
     return {
         "request": request,
@@ -194,7 +194,7 @@ def normalize_terminal_workdir(**kwargs):
     if kwargs.get("tool_name") != "terminal":
         return None
     args = dict(kwargs["args"])
-    args.setdefault("workdir", str(Path.home() / ".hermes" / "cache" / "scratch" / "hermes-middleware-demo"))
+    args.setdefault("workdir", str(Path.home() / ".niki" / "cache" / "scratch" / "niki-middleware-demo"))
     return {
         "args": args,
         "source": "middleware-demo",
@@ -250,7 +250,7 @@ payload to later middleware and the base tool dispatcher.
 Plugin-specific examples should live with the plugin that owns the behavior.
 NeMo Relay execution middleware is installed through Relay's discovered user
 and system configuration, or through an explicit `plugins.toml` selected with
-`HERMES_NEMO_RELAY_PLUGINS_TOML`; see
+`NIKI_NEMO_RELAY_PLUGINS_TOML`; see
 [Relay shared metrics](relay-shared-metrics.md).
 
 ## Safety Notes

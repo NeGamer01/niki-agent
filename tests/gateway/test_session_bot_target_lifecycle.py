@@ -19,9 +19,9 @@ async def bot(tmp_path, monkeypatch):
     from gateway.config import GatewayConfig
     from gateway.session import SessionStore
     from gateway.session_authority import initialize_session_authority
-    from hermes_state import SessionDB
+    from niki_state import SessionDB
 
-    monkeypatch.setenv('HERMES_HOME', str(tmp_path))
+    monkeypatch.setenv('NIKI_HOME', str(tmp_path))
     monkeypatch.setattr(run, '_load_gateway_config',
                         lambda: {'platform_toolsets': {'cli': []}, 'model': {'default': 'fixture'}})
     store = SessionStore(tmp_path / 'sessions', GatewayConfig())

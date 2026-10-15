@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from hermes_state import SessionDB
+from niki_state import SessionDB
 
 SESSION_ID = "switch-session"
 
@@ -22,8 +22,8 @@ def _stored_prompt(model: str, provider: str) -> str:
 
 @pytest.fixture()
 def db(tmp_path, monkeypatch):
-    """Real SessionDB on a temp state.db, isolated from the live HERMES_HOME."""
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes-home"))
+    """Real SessionDB on a temp state.db, isolated from the live NIKI_HOME."""
+    monkeypatch.setenv("NIKI_HOME", str(tmp_path / "niki-home"))
     session_db = SessionDB(db_path=tmp_path / "state.db")
     yield session_db
     session_db.close()
@@ -45,7 +45,7 @@ _ROUTE_COMMITS = {
 @pytest.mark.parametrize("commit", _ROUTE_COMMITS.values(), ids=_ROUTE_COMMITS.keys())
 def test_route_commits_keep_the_stored_prompt(db, commit):
     """Each switch-path writer leaves the stored prompt in place."""
-    prompt = _stored_prompt("x-ai/grok-4.5", "nous")
+    prompt = _stored_prompt("x-ai/grok-4.5", "niki")
     db.create_session(SESSION_ID, source="discord", model="x-ai/grok-4.5")
     db.update_system_prompt(SESSION_ID, prompt)
 
@@ -129,7 +129,7 @@ def _run_turn(db, model: str, provider: str, prose: str = "") -> MagicMock:
 
 @pytest.mark.parametrize(
     ("live_model", "live_provider"),
-    [("x-ai/grok-4.5", ""), ("", "nous")],
+    [("x-ai/grok-4.5", ""), ("", "niki")],
     ids=["provider_empty", "model_empty"],
 )
 def test_emptied_live_identity_rebuilds_once_then_reuses(db, live_model, live_provider):
@@ -138,7 +138,7 @@ def test_emptied_live_identity_rebuilds_once_then_reuses(db, live_model, live_pr
     omits the empty line, and memory/context prose carrying its own ``Provider:``/``Model:`` lines
     must not stand in for it, or every turn would rebuild (a prompt-cache miss per turn)."""
     prose = "MEMORY\nProvider: openrouter\nModel: some/other-model\n\n"
-    stale = _stored_prompt("x-ai/grok-4.5", "nous")
+    stale = _stored_prompt("x-ai/grok-4.5", "niki")
     db.create_session(SESSION_ID, source="discord", model="x-ai/grok-4.5")
     db.update_system_prompt(SESSION_ID, stale)
 

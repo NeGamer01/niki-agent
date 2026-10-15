@@ -14,14 +14,14 @@ description: "使用 GitNexus 为代码库建立索引，并通过 Web UI + Clou
 
 | | |
 |---|---|
-| 来源 | 可选 — 使用 `hermes skills install official/research/gitnexus-explorer` 安装 |
+| 来源 | 可选 — 使用 `niki skills install official/research/gitnexus-explorer` 安装 |
 | 路径 | `optional-skills/research/gitnexus-explorer` |
 | 版本 | `1.0.0` |
 | 作者 | Niki Agent + Teknium |
 | 许可证 | MIT |
 | 平台 | linux, macos, windows |
 | 标签 | `gitnexus`, `code-intelligence`, `knowledge-graph`, `visualization` |
-| 相关 skill | [`hermes-agent`](/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-hermes-agent), [`codebase-inspection`](/user-guide/skills/bundled/github/github-codebase-inspection) |
+| 相关 skill | [`niki-agent`](/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-niki-agent), [`codebase-inspection`](/user-guide/skills/bundled/github/github-codebase-inspection) |
 
 ## 参考：完整 SKILL.md
 

@@ -14,7 +14,7 @@ Yuanbao (元宝) groups: @mention users, query info/members.
 
 | | |
 |---|---|
-| Source | Optional — install with `hermes skills install official/yuanbao/yuanbao` |
+| Source | Optional — install with `niki skills install official/yuanbao/yuanbao` |
 | Path | `optional-skills/yuanbao` |
 | Version | `1.0.0` |
 | Author | Teknium (teknium1), Niki Agent |

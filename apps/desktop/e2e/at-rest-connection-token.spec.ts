@@ -14,7 +14,7 @@
  *   1. ABSENT FROM DISK. After the app has been configured with a remote
  *      gateway token, the token's plaintext value must not appear anywhere in
  *      `connection.json`, in any sibling file the app writes under userData,
- *      or in HERMES_HOME (logs included).
+ *      or in NIKI_HOME (logs included).
  *   2. STILL FUNCTIONAL. After a restart, the app must still be able to USE
  *      that credential — it decrypts the stored blob and puts the exact
  *      original token on the wire.
@@ -85,7 +85,7 @@ import { allowErrorBanners, type ElectronApplication, expect, type Page, test } 
  * the identity function over this alphabet, so the raw-bytes needle also
  * covers the URL-encoded form the WS dialer builds (`?token=…`).
  */
-const SENTINEL_TOKEN = 'hermes-e2e-at-rest-sentinel-Zq7Z4hV9nX2pL8sK3tB6wR1yM5jD0fG'
+const SENTINEL_TOKEN = 'niki-e2e-at-rest-sentinel-Zq7Z4hV9nX2pL8sK3tB6wR1yM5jD0fG'
 
 /** Skip absurdly large files during the leak scan (Chromium caches). */
 const MAX_SCAN_BYTES = 16 * 1024 * 1024
@@ -99,7 +99,7 @@ const MAX_SCAN_BYTES = 16 * 1024 * 1024
  * one worker at a time and both launches here are sequential; the
  * single-instance lock keys off userData, which is per-sandbox.
  */
-const STABLE_APP_NAME = 'HermesE2EAtRestStorage'
+const STABLE_APP_NAME = 'NikiE2EAtRestStorage'
 
 // ─── Fake gateway ───────────────────────────────────────────────────────
 
@@ -124,7 +124,7 @@ async function startFakeGateway(): Promise<FakeGateway> {
   const sessionTokens: string[] = []
 
   const server = http.createServer((req, res) => {
-    const token = req.headers['x-hermes-session-token']
+    const token = req.headers['x-niki-session-token']
 
     if (typeof token === 'string' && token) {
       sessionTokens.push(token)
@@ -316,17 +316,17 @@ function expectOwnerOnlyMode(filePath: string, why: string): void {
  *
  * The credential path we are testing is entirely main-process (IPC handler →
  * coerce → safeStorage → userData write) and does not need a live agent
- * backend, so we skip spawning `hermes serve` (no Python needed, ~3s launch,
+ * backend, so we skip spawning `niki serve` (no Python needed, ~3s launch,
  * hermetic). This is also a real user situation rather than an artificial one:
  * the boot-failure overlay's own recovery affordance is "Connection settings",
  * i.e. pointing the app at a remote gateway is exactly what a user does from
- * this state. BOOT_FAKE_ERROR short-circuits startHermes() *before* remote
+ * this state. BOOT_FAKE_ERROR short-circuits startNiki() *before* remote
  * resolution, so no launch ever dials the fake gateway on its own.
  */
 async function launchAgainst(sandbox: Sandbox): Promise<{ app: ElectronApplication; page: Page }> {
   const env = buildAppEnv(sandbox, {
-    HERMES_DESKTOP_APP_NAME: STABLE_APP_NAME,
-    HERMES_DESKTOP_BOOT_FAKE_ERROR: 'E2E at-rest storage spec: local backend intentionally not started',
+    NIKI_DESKTOP_APP_NAME: STABLE_APP_NAME,
+    NIKI_DESKTOP_BOOT_FAKE_ERROR: 'E2E at-rest storage spec: local backend intentionally not started',
   })
 
   const { app, page } = await launchDesktop(env)
@@ -334,7 +334,7 @@ async function launchAgainst(sandbox: Sandbox): Promise<{ app: ElectronApplicati
   // The capability bridge is what we drive; it lands with the preload, well
   // before the app would be "ready" in the boot sense.
   await page.waitForFunction(
-    () => Boolean((window as unknown as { hermesDesktop?: Record<string, unknown> }).hermesDesktop?.saveConnectionConfig),
+    () => Boolean((window as unknown as { nikiDesktop?: Record<string, unknown> }).nikiDesktop?.saveConnectionConfig),
     undefined,
     { timeout: 60_000 },
   )
@@ -406,7 +406,7 @@ interface SaveOutcome {
 async function saveRemoteToken(page: Page, remoteUrl: string, remoteToken?: string): Promise<SaveOutcome> {
   return page.evaluate(
     async ([url, token]) => {
-      const desktop = (window as unknown as { hermesDesktop: any }).hermesDesktop
+      const desktop = (window as unknown as { nikiDesktop: any }).nikiDesktop
 
       try {
         const config = await desktop.saveConnectionConfig({
@@ -435,7 +435,7 @@ async function saveRemoteToken(page: Page, remoteUrl: string, remoteToken?: stri
  */
 async function exerciseStoredToken(page: Page, remoteUrl: string): Promise<{ error: null | string }> {
   return page.evaluate(async url => {
-    const desktop = (window as unknown as { hermesDesktop: any }).hermesDesktop
+    const desktop = (window as unknown as { nikiDesktop: any }).nikiDesktop
 
     try {
       await desktop.testConnectionConfig({ mode: 'remote', remoteUrl: url })
@@ -561,14 +561,14 @@ test.describe('remote gateway session token at rest', () => {
     ).toEqual([])
 
     // …and not in any sibling file the app writes alongside it, nor in
-    // HERMES_HOME (desktop.log lives there).
+    // NIKI_HOME (desktop.log lives there).
     expect(
       scanTreeForSecret(userDataDir, needles),
       'the gateway session token leaked into a userData file',
     ).toEqual([])
     expect(
-      scanTreeForSecret(sandbox.hermesHome, needles),
-      'the gateway session token leaked into a HERMES_HOME file (logs included)',
+      scanTreeForSecret(sandbox.nikiHome, needles),
+      'the gateway session token leaked into a NIKI_HOME file (logs included)',
     ).toEqual([])
 
     if (!capability.available) {
@@ -592,7 +592,7 @@ test.describe('remote gateway session token at rest', () => {
     ).toBe(userDataDir)
 
     const reread = await second.page.evaluate(async () => {
-      const desktop = (window as unknown as { hermesDesktop: any }).hermesDesktop
+      const desktop = (window as unknown as { nikiDesktop: any }).nikiDesktop
 
       return desktop.getConnectionConfig()
     })
@@ -653,7 +653,7 @@ test.describe('remote gateway session token at rest', () => {
     app = second.app
 
     const reread = await second.page.evaluate(async () => {
-      const desktop = (window as unknown as { hermesDesktop: any }).hermesDesktop
+      const desktop = (window as unknown as { nikiDesktop: any }).nikiDesktop
 
       return desktop.getConnectionConfig()
     })
@@ -731,7 +731,7 @@ test.describe('remote gateway session token at rest', () => {
     app = second.app
 
     const reread = await second.page.evaluate(async () => {
-      const desktop = (window as unknown as { hermesDesktop: any }).hermesDesktop
+      const desktop = (window as unknown as { nikiDesktop: any }).nikiDesktop
 
       return desktop.getConnectionConfig()
     })
@@ -796,7 +796,7 @@ test.describe('remote gateway session token at rest', () => {
     app = launched.app
 
     const reread = await launched.page.evaluate(async () => {
-      const desktop = (window as unknown as { hermesDesktop: any }).hermesDesktop
+      const desktop = (window as unknown as { nikiDesktop: any }).nikiDesktop
 
       return desktop.getConnectionConfig()
     })

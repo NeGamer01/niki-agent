@@ -1,8 +1,8 @@
 import {
-  buildHermesWebSocketUrl,
+  buildNikiWebSocketUrl,
   type ModelOptionProvider,
   type ModelOptionsResult,
-} from "@hermes/shared";
+} from "@niki/shared";
 import { createDashboardSessionMutations } from "./session-mutations";
 
 const mutateSessionHttp = createDashboardSessionMutations(fetchJSON);
@@ -17,22 +17,22 @@ import { dashboardServingProfile } from "./profile-bootstrap";
 
 // The dashboard can be served either at the root of its host (e.g.
 // https://kanban.tilos.com/) or under a URL prefix when reverse-proxied
-// (e.g. https://mission-control.tilos.com/hermes/). The Python backend
-// injects ``window.__HERMES_BASE_PATH__`` into index.html based on the
+// (e.g. https://mission-control.tilos.com/niki/). The Python backend
+// injects ``window.__NIKI_BASE_PATH__`` into index.html based on the
 // incoming ``X-Forwarded-Prefix`` header so the SPA can address its own
 // ``/api/...`` and ``/dashboard-plugins/...`` URLs correctly without a
 // rebuild. Empty string means "served at root".
 function readBasePath(): string {
   if (typeof window === "undefined") return "";
-  const raw = window.__HERMES_BASE_PATH__ ?? "";
+  const raw = window.__NIKI_BASE_PATH__ ?? "";
   if (!raw) return "";
   // Normalise: ensure leading slash, strip trailing slash.
   const withLead = raw.startsWith("/") ? raw : `/${raw}`;
   return withLead.replace(/\/+$/, "");
 }
 
-export const HERMES_BASE_PATH = readBasePath();
-const BASE = HERMES_BASE_PATH;
+export const NIKI_BASE_PATH = readBasePath();
+const BASE = NIKI_BASE_PATH;
 
 import type { DashboardTheme } from "@/themes/types";
 import {
@@ -46,13 +46,13 @@ import type { AutomationBlueprint } from "@/lib/automation-blueprints";
 // Injected into index.html by the server — never fetched via API.
 declare global {
   interface Window {
-    __HERMES_SESSION_TOKEN__?: string;
-    __HERMES_BASE_PATH__?: string;
+    __NIKI_SESSION_TOKEN__?: string;
+    __NIKI_BASE_PATH__?: string;
     /** Server-injected flag: ``true`` when the dashboard's OAuth gate is
      * engaged (public bind, no ``--insecure``). Toggles the SPA's
      * WS-upgrade path from legacy ``?token=`` to single-use ``?ticket=``
      * fetched via :func:`getWsTicket`. */
-    __HERMES_AUTH_REQUIRED__?: boolean;
+    __NIKI_AUTH_REQUIRED__?: boolean;
   }
 }
 const SESSION_HEADER = "X-Niki-Session-Token";
@@ -169,7 +169,7 @@ export async function fetchJSON<T>(
   url = withManagementProfile(url);
   // Inject the session token into all /api/ requests.
   const headers = new Headers(init?.headers);
-  const token = window.__HERMES_SESSION_TOKEN__;
+  const token = window.__NIKI_SESSION_TOKEN__;
   if (token) {
     setSessionHeader(headers, token);
   }
@@ -217,7 +217,7 @@ export async function fetchJSON<T>(
       // fallback the post-login handler can read.
       try {
         sessionStorage.setItem(
-          "hermes.lastLocation",
+          "niki.lastLocation",
           window.location.pathname + window.location.search,
         );
       } catch {
@@ -228,15 +228,15 @@ export async function fetchJSON<T>(
       return new Promise<T>(() => {});
     }
     // Loopback mode: ``_SESSION_TOKEN`` rotates on every server restart
-    // (``hermes update``, ``hermes gateway restart``, etc.). A tab kept
+    // (``niki update``, ``niki gateway restart``, etc.). A tab kept
     // open across the restart holds the OLD token in
-    // ``window.__HERMES_SESSION_TOKEN__`` from the previous HTML render,
+    // ``window.__NIKI_SESSION_TOKEN__`` from the previous HTML render,
     // so every fetch returns 401. The HTML is served ``Cache-Control:
     // no-store`` so a reload picks up the freshly-injected token. Trigger
     // that reload once on the first stale-token 401 — gated mode is
     // handled above, so reaching here in gated mode means a real
     // middleware failure that should not reload-loop.
-    if (!window.__HERMES_AUTH_REQUIRED__ && !options?.allowUnauthorized) {
+    if (!window.__NIKI_AUTH_REQUIRED__ && !options?.allowUnauthorized) {
       if (attemptDashboardTokenReloadOnce()) {
         return new Promise<T>(() => {});
       }
@@ -244,7 +244,7 @@ export async function fetchJSON<T>(
   }
   if (res.ok) {
     // Clear the stale-token reload guard: a successful 2xx proves the
-    // current ``window.__HERMES_SESSION_TOKEN__`` is valid, so the next
+    // current ``window.__NIKI_SESSION_TOKEN__`` is valid, so the next
     // 401 — if any — should be allowed to trigger its own reload cycle.
     clearDashboardTokenReloadAttempt();
   }
@@ -265,7 +265,7 @@ function pluginPath(name: string): string {
 /**
  * Fetch a single-use ticket for a WebSocket upgrade in gated mode.
  *
- * The dashboard's gated-mode WS auth (``hermes_cli.web_server._ws_auth_ok``)
+ * The dashboard's gated-mode WS auth (``niki_cli.web_server._ws_auth_ok``)
  * rejects the legacy ``?token=<_SESSION_TOKEN>`` path and only accepts
  * ``?ticket=<minted>`` consumed against the in-memory ticket store. Browsers
  * can't set ``Authorization`` on a WS upgrade, so this round-trip via the
@@ -291,11 +291,11 @@ export async function getWsTicket(): Promise<{ ticket: string; ttl_seconds: numb
  * mode returns the injected session token.
  */
 export async function buildWsAuthParam(): Promise<[string, string]> {
-  if (window.__HERMES_AUTH_REQUIRED__) {
+  if (window.__NIKI_AUTH_REQUIRED__) {
     const { ticket } = await getWsTicket();
     return ["ticket", ticket];
   }
-  const token = window.__HERMES_SESSION_TOKEN__ ?? "";
+  const token = window.__NIKI_SESSION_TOKEN__ ?? "";
   return ["token", token];
 }
 
@@ -308,7 +308,7 @@ export async function buildWsAuthParam(): Promise<[string, string]> {
  * Auth, in both modes, exactly as ``fetchJSON`` does it:
  *  - loopback / ``--insecure``: attach the ``X-Niki-Session-Token`` header.
  *  - gated OAuth: no token header (it's absent by design); the
- *    ``hermes_session_at`` cookie rides along via ``credentials: 'include'``.
+ *    ``niki_session_at`` cookie rides along via ``credentials: 'include'``.
  *
  * Unlike ``fetchJSON`` this does NOT parse the body, does NOT throw on
  * non-2xx (the caller decides — a 404 on a download is meaningful), and
@@ -326,7 +326,7 @@ export async function authedFetch(
   // 400s is exactly how the next hole gets in.
   url = withManagementProfile(url);
   const headers = new Headers(init?.headers);
-  const token = window.__HERMES_SESSION_TOKEN__;
+  const token = window.__NIKI_SESSION_TOKEN__;
   if (token) {
     setSessionHeader(headers, token);
   }
@@ -342,7 +342,7 @@ export async function authedFetch(
  * with the correct auth query param appended for the active mode (fresh
  * single-use ``ticket`` in gated mode, ``token`` in loopback). Plugins and
  * the SPA should use this instead of hand-assembling a WS URL + reading
- * ``window.__HERMES_SESSION_TOKEN__`` directly, so the gated-mode ticket
+ * ``window.__NIKI_SESSION_TOKEN__`` directly, so the gated-mode ticket
  * path can never be forgotten.
  *
  * ``path`` is the dashboard-relative path (e.g.
@@ -354,7 +354,7 @@ export async function buildWsUrl(
   path: string,
   params?: Record<string, string>,
 ): Promise<string> {
-  return buildHermesWebSocketUrl({
+  return buildNikiWebSocketUrl({
     authParam: await buildWsAuthParam(),
     basePath: BASE,
     params,
@@ -1046,11 +1046,11 @@ export const api = {
     fetchJSON<GatewayMigratePlan>("/api/gateway/migrate/plan"),
   migrateGatewayToMultiplex: () =>
     fetchJSON<ActionResponse>("/api/gateway/migrate", { method: "POST" }),
-  updateHermes: () =>
-    fetchJSON<ActionResponse>("/api/hermes/update", { method: "POST" }),
-  checkHermesUpdate: (force = false) =>
+  updateNiki: () =>
+    fetchJSON<ActionResponse>("/api/niki/update", { method: "POST" }),
+  checkNikiUpdate: (force = false) =>
     fetchJSON<UpdateCheckResponse>(
-      `/api/hermes/update/check${force ? "?force=true" : ""}`,
+      `/api/niki/update/check${force ? "?force=true" : ""}`,
     ),
   getActionStatus: (name: string, lines = 200) =>
     fetchJSON<ActionStatusResponse>(
@@ -1445,7 +1445,7 @@ export const api = {
  * Returned by the dashboard's gated middleware when a valid session cookie
  * is attached, or as a synthetic ``provider=loopback`` identity after token
  * validation in local mode. ``email`` and ``display_name`` are empty strings under the
- * Nous Portal contract V1 (the access token has no email/name claims —
+ * Niki Portal contract V1 (the access token has no email/name claims —
  * see Contract Anchor C4 in the plan). The AuthWidget surfaces a
  * truncated ``user_id`` instead.
  */
@@ -1458,7 +1458,7 @@ export interface AuthMeResponse {
   expires_at: number;
 }
 
-/** Preflight for `hermes gateway migrate --multiplex` (mirrors the CLI plan JSON). */
+/** Preflight for `niki gateway migrate --multiplex` (mirrors the CLI plan JSON). */
 export interface GatewayMigratePlan {
   already_multiplexed: boolean;
   blockers: string[];
@@ -1539,7 +1539,7 @@ export interface SkillHubSource {
   label: string;
   /** GitHub only: whether the API is currently rate-limited. */
   rate_limited?: boolean;
-  /** hermes-index only: whether the centralized index loaded. */
+  /** niki-index only: whether the centralized index loaded. */
   available?: boolean;
 }
 
@@ -1914,7 +1914,7 @@ export interface SystemStats {
   hostname: string;
   python_version: string;
   python_impl: string;
-  hermes_version: string;
+  niki_version: string;
   cpu_count: number | null;
   psutil: boolean;
   cpu_percent?: number;
@@ -1999,7 +1999,7 @@ export interface StatusResponse {
    * (public bind, no ``--insecure``). Read alongside ``auth_providers``
    * to render a "gated / loopback" badge. */
   auth_required?: boolean;
-  /** Phase 7: registered ``DashboardAuthProvider`` names (e.g. ``["nous"]``).
+  /** Phase 7: registered ``DashboardAuthProvider`` names (e.g. ``["niki"]``).
    * Empty in loopback mode; empty + ``auth_required=true`` is a
    * fail-closed state (the dashboard will refuse to bind). */
   auth_providers?: string[];
@@ -2013,15 +2013,15 @@ export interface StatusResponse {
    * desktop falls back to the embedded-webview flow. */
   auth_flows?: string[];
   /** False when the dashboard is running in a hosted/managed layout where
-   * updates are handled by the outer launcher instead of ``hermes update``. */
-  can_update_hermes?: boolean;
+   * updates are handled by the outer launcher instead of ``niki update``. */
+  can_update_niki?: boolean;
   config_path: string;
   config_version: number;
   env_path: string;
   gateway_exit_reason: string | null;
   /** Why a multi-profile host's gateway came up STANDALONE on a boot guard (unset
    * ``gateway.multiplex_profiles`` refused): the other profiles' bots are silent until
-   * ``hermes gateway migrate --multiplex`` runs. null/absent when it multiplexes or only one
+   * ``niki gateway migrate --multiplex`` runs. null/absent when it multiplexes or only one
    * profile exists. */
   multiplex_standalone_reason?: string | null;
   /** Every profile installed on this host (multiplex or not). */
@@ -2040,12 +2040,12 @@ export interface StatusResponse {
   gateway_shared_with?: string[] | null;
   gateway_state: string | null;
   gateway_updated_at: string | null;
-  hermes_home: string;
+  niki_home: string;
   latest_config_version: number;
   /** NS-656: memory-pressure rollup from the gateway heartbeat +
    * lifecycle ledger. Absent on older gateways. */
   memory?: MemoryPressureStatus;
-  /** NS-656: disk-usage rollup for the HERMES_HOME volume. Absent on
+  /** NS-656: disk-usage rollup for the NIKI_HOME volume. Absent on
    * older gateways. */
   disk?: DiskPressureStatus;
   release_date: string;
@@ -2071,7 +2071,7 @@ export interface MemoryPressureStatus {
 }
 
 /** NS-656: coarse disk telemetry served by /api/status. Live statvfs
- * sample of the HERMES_HOME volume — no staleness dimension, so no
+ * sample of the NIKI_HOME volume — no staleness dimension, so no
  * sampled_at. */
 export interface DiskPressureStatus {
   pressure: "ok" | "elevated" | "critical" | "unknown";
@@ -2400,7 +2400,7 @@ export interface CronJob {
   id: string;
   profile?: string | null;
   profile_name?: string | null;
-  hermes_home?: string | null;
+  niki_home?: string | null;
   is_default_profile?: boolean;
   name?: string | null;
   prompt?: string | null;
@@ -2769,7 +2769,7 @@ export interface CatalogEntry {
   sha_short: string;
   tier: "official" | "community";
   maintainer: string;
-  requires_hermes: string;
+  requires_niki: string;
   platforms: string[];
   capabilities: CatalogCapabilities;
   docs_url: string;

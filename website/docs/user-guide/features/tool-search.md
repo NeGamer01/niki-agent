@@ -19,7 +19,7 @@ specific tool's schema on demand.
 Niki keeps its working-set core tools (`terminal`, `read_file`, `write_file`,
 `patch`, `search_files`, `todo`, `memory`, `browser_*`, `web_search`,
 `web_extract`, `clarify`, `execute_code`, `delegate_task`, and the rest of
-`_HERMES_CORE_TOOLS`) loaded directly by default. Cold, event-triggered built-ins
+`_NIKI_CORE_TOOLS`) loaded directly by default. Cold, event-triggered built-ins
 may be deferred when they are named in `tools.tool_search.defer`; the shipped
 curated list covers tools such as `computer_use`, `session_search`, and selected
 desktop helpers. MCP and non-core plugin tools remain eligible automatically.
@@ -121,7 +121,7 @@ tools:
 ```
 
 The default `defer` list also includes the selected desktop GUI helpers listed
-in `hermes_cli/config_defaults.py`. It is the single source of truth for the
+in `niki_cli/config_defaults.py`. It is the single source of truth for the
 shipped curated set; the runtime fallback uses the same value.
 
 | Key | Default | Meaning |
@@ -182,16 +182,16 @@ tools:
                     # behaves exactly as if the feature didn't exist
 ```
 
-Connectors need a Nous identity. You do not have to sign in for one: if you
-have no Nous account, the first `manage_connections` action (or opening the
-desktop Connectors page) creates a free Nous identity for you, on every
+Connectors need a Niki identity. You do not have to sign in for one: if you
+have no Niki account, the first `manage_connections` action (or opening the
+desktop Connectors page) creates a free Niki identity for you, on every
 surface. It does not change your model provider: outside builds that ship
-the Nous free tier it is used for connectors and managed tools only. Until it exists, `tool_search` sends nothing to the
+the Niki free tier it is used for connectors and managed tools only. Until it exists, `tool_search` sends nothing to the
 gateway and its result says that hosted connectors are not set up yet and
 that `manage_connections` sets them up. To opt out, set:
 
 ```yaml
-nous:
+niki:
   guest: false
 ```
 
@@ -206,7 +206,7 @@ shows a card, blocks until each app is connected or skipped, and reports the
 outcomes; elsewhere it returns a connect link per app for the user to open.
 Disconnecting an account is done by the user in the Portal. The same tool also installs, enables and authorizes
 local MCP servers from the catalog (targets with `mcp: true`); those actions
-never create a Nous identity.
+never create a Niki identity.
 
 You can link more than one account of the same app, each with its own name
 (see [Multiple connector accounts](./tool-gateway.md#multiple-connector-accounts)).

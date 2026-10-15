@@ -19,9 +19,9 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from hermes_cli import kanban_db as kb
-from hermes_cli import kanban_db_connect as kbc
-from hermes_cli import kanban_db_dispatch as kbd
+from niki_cli import kanban_db as kb
+from niki_cli import kanban_db_connect as kbc
+from niki_cli import kanban_db_dispatch as kbd
 
 
 # ---------------------------------------------------------------------------
@@ -31,9 +31,9 @@ from hermes_cli import kanban_db_dispatch as kbd
 
 @pytest.fixture
 def kanban_home(tmp_path, monkeypatch):
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".niki"
     home.mkdir()
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("NIKI_HOME", str(home))
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     kb.init_db()
     return home
@@ -51,7 +51,7 @@ def _load_plugin_router():
     plugin_file = repo_root / "plugins" / "kanban" / "dashboard" / "plugin_api.py"
     assert plugin_file.exists(), f"plugin file missing: {plugin_file}"
     spec = importlib.util.spec_from_file_location(
-        "hermes_dashboard_plugin_kanban_model_override_test", plugin_file,
+        "niki_dashboard_plugin_kanban_model_override_test", plugin_file,
     )
     assert spec is not None and spec.loader is not None
     mod = importlib.util.module_from_spec(spec)
@@ -134,8 +134,8 @@ def test_spawn_resolves_claimed_task_policy(
     """The worker passes identity, while the owner reads overrides from SQLite."""
     from gateway.session_contract import Principal
     from gateway.session_kanban import build_kanban_policy
-    from hermes_cli import kanban_worker_client
-    from hermes_state_runtime import RuntimeStoreError
+    from niki_cli import kanban_worker_client
+    from niki_state_runtime import RuntimeStoreError
 
     profile = kanban_home / "profiles" / "elias"
     profile.mkdir(parents=True)
@@ -155,8 +155,8 @@ def test_spawn_resolves_claimed_task_policy(
 
     monkeypatch.setattr(subprocess, "Popen", fake_popen)
     kbd._default_spawn(task, str(workspace))
-    assert captured["cmd"] == [sys.executable, "-m", "hermes_cli.kanban_worker_client"]
-    assert captured["env"]["HERMES_HOME"] == str(profile)
+    assert captured["cmd"] == [sys.executable, "-m", "niki_cli.kanban_worker_client"]
+    assert captured["env"]["NIKI_HOME"] == str(profile)
     actor = Principal("owner", str(profile), frozenset({"session:create"}), "transport")
     connection = SimpleNamespace(
         authority=SimpleNamespace(profile_id=str(profile)), actor=actor, native_owner=True)
@@ -228,7 +228,7 @@ def test_bulk_model_override(client):
         json={
             "ids": [t1["id"], t2["id"]],
             "model_override": "fallback-model",
-            "provider_override": "nous",
+            "provider_override": "niki",
         },
     )
     assert r.status_code == 200, r.text
@@ -236,7 +236,7 @@ def test_bulk_model_override(client):
     for tid in (t1["id"], t2["id"]):
         got = client.get(f"/api/plugins/kanban/tasks/{tid}").json()["task"]
         assert got["model_override"] == "fallback-model"
-        assert got["provider_override"] == "nous"
+        assert got["provider_override"] == "niki"
 
 
 def test_model_options_endpoint_shape(client, monkeypatch):

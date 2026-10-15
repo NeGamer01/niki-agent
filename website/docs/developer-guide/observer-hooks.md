@@ -48,7 +48,7 @@ def on_post_tool_call(**kwargs):
 The plugin manager injects this field into every hook payload:
 
 ```text
-telemetry_schema_version = "hermes.observer.v1"
+telemetry_schema_version = "niki.observer.v1"
 ```
 
 Hook callbacks are fail-open. Niki catches callback exceptions, logs a
@@ -339,7 +339,7 @@ observability for turns, provider requests, and tool calls.
 
 The native NeMo Relay SDK integration maps Niki session, turn, LLM, and tool
 lifecycles to Relay. Relay's discovered user and system configuration, or an
-explicit file selected with `HERMES_NEMO_RELAY_PLUGINS_TOML`, can add
+explicit file selected with `NIKI_NEMO_RELAY_PLUGINS_TOML`, can add
 [ATOF, ATIF, or OTEL](https://docs.nvidia.com/nemo/relay/configure-plugins/observability/about)
 exporters and execution middleware; see
 [Relay shared metrics](relay-shared-metrics.md).

@@ -11,8 +11,8 @@ const home = mkdtempSync(join(tmpdir(), 'ink-bootstrap-test-'))
 afterEach(() => { vi.unstubAllEnvs(); rmSync(home, { recursive: true, force: true }) })
 
 it('reports failed canonical bootstrap without creating an independent owner or retrying ensure', async () => {
-  vi.stubEnv('HERMES_HOME', home)
-  vi.stubEnv('HERMES_TUI_GATEWAY_URL', '')
+  vi.stubEnv('NIKI_HOME', home)
+  vi.stubEnv('NIKI_TUI_GATEWAY_URL', '')
   const bootstrap = vi.fn().mockRejectedValue(new Error('gateway draining: update_paused'))
   const gw = new GatewayClient(bootstrap)
   const events: any[] = []

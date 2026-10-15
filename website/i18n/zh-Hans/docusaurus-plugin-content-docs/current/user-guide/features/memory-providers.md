@@ -11,14 +11,14 @@ Niki Agent 内置 8 个外部记忆提供者插件，为 Agent 提供跨会话�
 ## 快速开始
 
 ```bash
-hermes memory setup      # 交互式选择器 + 配置
-hermes memory status     # 查看当前激活状态
-hermes memory off        # 禁用外部提供者
+niki memory setup      # 交互式选择器 + 配置
+niki memory status     # 查看当前激活状态
+niki memory off        # 禁用外部提供者
 ```
 
-也可以通过 `hermes plugins` → Provider Plugins → Memory Provider 选择激活的记忆提供者。
+也可以通过 `niki plugins` → Provider Plugins → Memory Provider 选择激活的记忆提供者。
 
-或在 `~/.hermes/config.yaml` 中手动设置：
+或在 `~/.niki/config.yaml` 中手动设置：
 
 ```yaml
 memory:
@@ -43,7 +43,7 @@ memory:
 ### Honcho
 
 :::info 插件目录
-Honcho 由 [Plastic Labs](https://github.com/plastic-labs/honcho/tree/main/hermes-plugin-honcho) 维护，从[插件目录](./plugins.md)安装，不再随 Niki 内置。它就是之前内置的同一个提供者：工具、配置文件和 `hermes honcho` 命令都没有变化。
+Honcho 由 [Plastic Labs](https://github.com/plastic-labs/honcho/tree/main/niki-plugin-honcho) 维护，从[插件目录](./plugins.md)安装，不再随 Niki 内置。它就是之前内置的同一个提供者：工具、配置文件和 `niki honcho` 命令都没有变化。
 :::
 
 AI 原生的跨会话用户建模，具备辩证推理、会话范围上下文注入、语义搜索和持久化结论。基础上下文现在包含会话摘要以及用户表示和 peer card，使 Agent 能感知已讨论的内容。
@@ -51,7 +51,7 @@ AI 原生的跨会话用户建模，具备辩证推理、会话范围上下文�
 | | |
 |---|---|
 | **适合场景** | 具有跨会话上下文的多 Agent 系统、用户-Agent 对齐 |
-| **依赖** | `hermes plugins install honcho`（同时安装 `honcho-ai` SDK）；[API key](https://app.honcho.dev) 或自托管实例 |
+| **依赖** | `niki plugins install honcho`（同时安装 `honcho-ai` SDK）；[API key](https://app.honcho.dev) 或自托管实例 |
 | **数据存储** | Honcho Cloud 或自托管 |
 | **费用** | Honcho 定价（云端）/ 免费（自托管） |
 
@@ -67,12 +67,12 @@ AI 原生的跨会话用户建模，具备辩证推理、会话范围上下文�
 
 **安装向导：**
 ```bash
-hermes memory setup        # 选择 "honcho" — 运行 Honcho 专属的安装后配置
+niki memory setup        # 选择 "honcho" — 运行 Honcho 专属的安装后配置
 ```
 
-旧版 `hermes honcho setup` 命令仍然有效（现在会重定向到 `hermes memory setup`），但只有在 Honcho 被选为激活记忆提供者后才会注册。
+旧版 `niki honcho setup` 命令仍然有效（现在会重定向到 `niki memory setup`），但只有在 Honcho 被选为激活记忆提供者后才会注册。
 
-**配置：** `$HERMES_HOME/honcho.json`（profile 本地）或 `~/.honcho/config.json`（全局）。解析顺序：`$HERMES_HOME/honcho.json` > `~/.hermes/honcho.json` > `~/.honcho/config.json`。参见[插件 README](https://github.com/plastic-labs/honcho/tree/main/hermes-plugin-honcho)和 [Honcho 集成指南](https://docs.honcho.dev/v3/guides/integrations/hermes)。
+**配置：** `$NIKI_HOME/honcho.json`（profile 本地）或 `~/.honcho/config.json`（全局）。解析顺序：`$NIKI_HOME/honcho.json` > `~/.niki/honcho.json` > `~/.honcho/config.json`。参见[插件 README](https://github.com/plastic-labs/honcho/tree/main/niki-plugin-honcho)和 [Honcho 集成指南](https://docs.honcho.dev/v3/guides/integrations/niki)。
 
 <details>
 <summary>完整配置参考</summary>
@@ -109,11 +109,11 @@ hermes memory setup        # 选择 "honcho" — 运行 Honcho 专属的安装�
 {
   "apiKey": "your-key-from-app.honcho.dev",
   "hosts": {
-    "hermes": {
+    "niki": {
       "enabled": true,
-      "aiPeer": "hermes",
+      "aiPeer": "niki",
       "peerName": "your-name",
-      "workspace": "hermes"
+      "workspace": "niki"
     }
   }
 }
@@ -128,11 +128,11 @@ hermes memory setup        # 选择 "honcho" — 运行 Honcho 专属的安装�
 {
   "baseUrl": "http://localhost:8000",
   "hosts": {
-    "hermes": {
+    "niki": {
       "enabled": true,
-      "aiPeer": "hermes",
+      "aiPeer": "niki",
       "peerName": "your-name",
-      "workspace": "hermes"
+      "workspace": "niki"
     }
   }
 }
@@ -140,8 +140,8 @@ hermes memory setup        # 选择 "honcho" — 运行 Honcho 专属的安装�
 
 </details>
 
-:::tip 从 `hermes honcho` 迁移
-如果你之前使用过 `hermes honcho setup`，你的配置和所有服务端数据均完好无损。只需通过安装向导重新启用，或手动设置 `memory.provider: honcho`，即可通过新系统重新激活。
+:::tip 从 `niki honcho` 迁移
+如果你之前使用过 `niki honcho setup`，你的配置和所有服务端数据均完好无损。只需通过安装向导重新启用，或手动设置 `memory.provider: honcho`，即可通过新系统重新激活。
 :::
 
 **多 peer 配置：**
@@ -154,31 +154,31 @@ Honcho 将对话建模为 peer 之间的消息交换——每个 Niki profile �
 |---------|-----------|
 | **Workspace** | 共享环境。同一 workspace 下的所有 Niki profile 共享同一用户身份。 |
 | **用户 peer**（`peerName`） | 人类用户。在 workspace 内跨 profile 共享。 |
-| **AI peer**（`aiPeer`） | 每个 Niki profile 一个。host key `hermes` → 默认；其他 profile 使用 `hermes.<profile>`。 |
+| **AI peer**（`aiPeer`） | 每个 Niki profile 一个。host key `niki` → 默认；其他 profile 使用 `niki.<profile>`。 |
 | **Observation** | 每个 peer 的开关，控制 Honcho 从哪些消息中建模。`directional`（默认，全部开启）或 `unified`（单一观察者池）。 |
 
 ### 新建 profile，创建新 Honcho peer
 
 ```bash
-hermes profile create coder --clone
+niki profile create coder --clone
 ```
 
-`--clone` 在 `honcho.json` 中创建一个 `hermes.coder` host 块，包含 `aiPeer: "coder"`、共享的 `workspace`、继承的 `peerName`、`recallMode`、`writeFrequency`、`observation` 等。AI peer 会在 Honcho 中提前创建，确保在第一条消息之前就已存在。
+`--clone` 在 `honcho.json` 中创建一个 `niki.coder` host 块，包含 `aiPeer: "coder"`、共享的 `workspace`、继承的 `peerName`、`recallMode`、`writeFrequency`、`observation` 等。AI peer 会在 Honcho 中提前创建，确保在第一条消息之前就已存在。
 
 ### 为现有 profile 补充 Honcho peer
 
 ```bash
-hermes honcho sync
+niki honcho sync
 ```
 
-扫描所有 Niki profile，为没有 host 块的 profile 创建 host 块，从默认 `hermes` 块继承设置，并提前创建新的 AI peer。幂等操作——跳过已有 host 块的 profile。
+扫描所有 Niki profile，为没有 host 块的 profile 创建 host 块，从默认 `niki` 块继承设置，并提前创建新的 AI peer。幂等操作——跳过已有 host 块的 profile。
 
 ### 每个 profile 的 observation 配置
 
 每个 host 块可以独立覆盖 observation 配置。示例：一个以代码为中心的 profile，AI peer 观察用户但不自我建模：
 
 ```json
-"hermes.coder": {
+"niki.coder": {
   "aiPeer": "coder",
   "observation": {
     "user": { "observeMe": true, "observeOthers": true },
@@ -209,13 +209,13 @@ hermes honcho sync
 ```json
 {
   "apiKey": "your-key",
-  "workspace": "hermes",
+  "workspace": "niki",
   "peerName": "eri",
   "hosts": {
-    "hermes": {
+    "niki": {
       "enabled": true,
-      "aiPeer": "hermes",
-      "workspace": "hermes",
+      "aiPeer": "niki",
+      "workspace": "niki",
       "peerName": "eri",
       "recallMode": "hybrid",
       "writeFrequency": "async",
@@ -233,10 +233,10 @@ hermes honcho sync
       "messageMaxChars": 25000,
       "saveMessages": true
     },
-    "hermes.coder": {
+    "niki.coder": {
       "enabled": true,
       "aiPeer": "coder",
-      "workspace": "hermes",
+      "workspace": "niki",
       "peerName": "eri",
       "recallMode": "tools",
       "observation": {
@@ -244,10 +244,10 @@ hermes honcho sync
         "ai": { "observeMe": true, "observeOthers": true }
       }
     },
-    "hermes.writer": {
+    "niki.writer": {
       "enabled": true,
       "aiPeer": "writer",
-      "workspace": "hermes",
+      "workspace": "niki",
       "peerName": "eri"
     }
   },
@@ -259,11 +259,11 @@ hermes honcho sync
 
 </details>
 
-参见[插件 README](https://github.com/plastic-labs/honcho/tree/main/hermes-plugin-honcho)和 [Honcho 集成指南](https://docs.honcho.dev/v3/guides/integrations/hermes)。
+参见[插件 README](https://github.com/plastic-labs/honcho/tree/main/niki-plugin-honcho)和 [Honcho 集成指南](https://docs.honcho.dev/v3/guides/integrations/niki)。
 
 #### 从内置 Honcho 升级
 
-早期 Niki 版本内置了 Honcho。如果某个 profile 仍配置 `memory.provider: honcho`，Niki 会在下次启动或运行 `hermes update` 时自动安装插件目录中的插件——你的 `~/.honcho/config.json`（或 `$HERMES_HOME/honcho.json`）、host 块、peer 和会话映射都按原样读取，记忆不会丢失。如需手动安装，或启动时机器无法联网，请运行 `hermes plugins install honcho`。
+早期 Niki 版本内置了 Honcho。如果某个 profile 仍配置 `memory.provider: honcho`，Niki 会在下次启动或运行 `niki update` 时自动安装插件目录中的插件——你的 `~/.honcho/config.json`（或 `$NIKI_HOME/honcho.json`）、host 块、peer 和会话映射都按原样读取，记忆不会丢失。如需手动安装，或启动时机器无法联网，请运行 `niki plugins install honcho`。
 
 
 ---
@@ -275,7 +275,7 @@ hermes honcho sync
 | | |
 |---|---|
 | **适合场景** | 具有结构化浏览功能的自托管知识管理 |
-| **依赖** | 独立部署的 OpenViking 服务器；通过 `hermes memory setup` 准备 Niki 端依赖 |
+| **依赖** | 独立部署的 OpenViking 服务器；通过 `niki memory setup` 准备 Niki 端依赖 |
 | **数据存储** | 自托管（本地或云端） |
 | **费用** | 免费（开源，AGPL-3.0） |
 
@@ -289,10 +289,10 @@ openviking-server doctor
 openviking-server
 
 # 然后配置 Niki
-hermes memory setup    # 选择 "openviking"
+niki memory setup    # 选择 "openviking"
 # 或手动配置：
-hermes config set memory.provider openviking
-echo "OPENVIKING_ENDPOINT=http://localhost:1933" >> ~/.hermes/.env
+niki config set memory.provider openviking
+echo "OPENVIKING_ENDPOINT=http://localhost:1933" >> ~/.niki/.env
 ```
 
 当端点为本地地址且没有进程在监听时，Niki 会在后台启动 `openviking-server`。该服务器会获得你的模型提供商密钥（供其嵌入和 VLM 模型使用）、你的 `HOME` 与 `OPENVIKING_CONFIG_FILE`，但绝不会获得机器人、网关或中继令牌，也不会获得 Niki 的 `PYTHONPATH`。服务器需要的其他设置请写入 `ov.conf`。
@@ -311,7 +311,7 @@ echo "OPENVIKING_ENDPOINT=http://localhost:1933" >> ~/.hermes/.env
 | | |
 |---|---|
 | **适合场景** | 免维护的记忆管理——Mem0 自动处理提取 |
-| **依赖** | `hermes memory setup` 通过 PM 准备 Mem0 SDK；API key 或自托管/OSS 服务配置 |
+| **依赖** | `niki memory setup` 通过 PM 准备 Mem0 SDK；API key 或自托管/OSS 服务配置 |
 | **数据存储** | Mem0 Cloud |
 | **费用** | Mem0 定价 |
 
@@ -319,18 +319,18 @@ echo "OPENVIKING_ENDPOINT=http://localhost:1933" >> ~/.hermes/.env
 
 **安装：**
 ```bash
-hermes memory setup    # 选择 "mem0"
+niki memory setup    # 选择 "mem0"
 # 或手动配置：
-hermes config set memory.provider mem0
-echo "MEM0_API_KEY=your-key" >> ~/.hermes/.env
+niki config set memory.provider mem0
+echo "MEM0_API_KEY=your-key" >> ~/.niki/.env
 ```
 
-**配置：** `$HERMES_HOME/mem0.json`
+**配置：** `$NIKI_HOME/mem0.json`
 
 | 键 | 默认值 | 描述 |
 |-----|---------|-------------|
-| `user_id` | `hermes-user` | 用户标识符 |
-| `agent_id` | `hermes` | Agent 标识符 |
+| `user_id` | `niki-user` | 用户标识符 |
+| `agent_id` | `niki` | Agent 标识符 |
 
 ---
 
@@ -349,22 +349,22 @@ echo "MEM0_API_KEY=your-key" >> ~/.hermes/.env
 
 **安装：**
 ```bash
-hermes memory setup    # 选择 "hindsight"
+niki memory setup    # 选择 "hindsight"
 # 或手动配置：
-hermes config set memory.provider hindsight
-echo "HINDSIGHT_API_KEY=your-key" >> ~/.hermes/.env
+niki config set memory.provider hindsight
+echo "HINDSIGHT_API_KEY=your-key" >> ~/.niki/.env
 ```
 
 安装向导会自动安装依赖，并仅安装所选模式所需的内容（云端用 `hindsight-client`，本地用 `hindsight-all`）。需要 `hindsight-client >= 0.4.22`（会话启动时若版本过旧则自动升级）。
 
-**本地模式 UI：** `hindsight-embed -p hermes ui start`
+**本地模式 UI：** `hindsight-embed -p niki ui start`
 
-**配置：** `$HERMES_HOME/hindsight/config.json`
+**配置：** `$NIKI_HOME/hindsight/config.json`
 
 | 键 | 默认值 | 描述 |
 |-----|---------|-------------|
 | `mode` | `cloud` | `cloud`、`local_embedded` 或 `local_external` |
-| `bank_id` | `hermes` | 记忆库标识符 |
+| `bank_id` | `niki` | 记忆库标识符 |
 | `recall_budget` | `mid` | 召回彻底程度：`low` / `mid` / `high` |
 | `memory_mode` | `hybrid` | `hybrid`（上下文 + 工具）、`context`（仅自动注入）、`tools`（仅工具） |
 | `auto_retain` | `true` | 自动保留对话轮次 |
@@ -377,7 +377,7 @@ echo "HINDSIGHT_API_KEY=your-key" >> ~/.hermes/.env
 | `retain_assistant_prefix` | `Assistant` | 自动保留的对话记录中助手轮次前的标签 |
 | `recall_tags` | — | 召回时用于过滤的标签 |
 
-完整配置参考参见[插件 README](https://github.com/NousResearch/hermes-agent/blob/main/plugins/memory/hindsight/README.md)。
+完整配置参考参见[插件 README](https://github.com/NeGamer01/niki-agent/blob/main/plugins/memory/hindsight/README.md)。
 
 ---
 
@@ -396,16 +396,16 @@ echo "HINDSIGHT_API_KEY=your-key" >> ~/.hermes/.env
 
 **安装：**
 ```bash
-hermes memory setup    # 选择 "holographic"
+niki memory setup    # 选择 "holographic"
 # 或手动配置：
-hermes config set memory.provider holographic
+niki config set memory.provider holographic
 ```
 
-**配置：** `plugins.hermes-memory-store` 下的 `config.yaml`
+**配置：** `plugins.niki-memory-store` 下的 `config.yaml`
 
 | 键 | 默认值 | 描述 |
 |-----|---------|-------------|
-| `db_path` | `$HERMES_HOME/memory_store.db` | SQLite 数据库路径 |
+| `db_path` | `$NIKI_HOME/memory_store.db` | SQLite 数据库路径 |
 | `auto_extract` | `false` | 会话结束时自动提取事实 |
 | `default_trust` | `0.5` | 默认信任评分（0.0–1.0） |
 
@@ -432,10 +432,10 @@ hermes config set memory.provider holographic
 
 **安装：**
 ```bash
-hermes memory setup    # 选择 "retaindb"
+niki memory setup    # 选择 "retaindb"
 # 或手动配置：
-hermes config set memory.provider retaindb
-echo "RETAINDB_API_KEY=your-key" >> ~/.hermes/.env
+niki config set memory.provider retaindb
+echo "RETAINDB_API_KEY=your-key" >> ~/.niki/.env
 ```
 
 ---
@@ -459,14 +459,14 @@ echo "RETAINDB_API_KEY=your-key" >> ~/.hermes/.env
 curl -fsSL https://byterover.dev/install.sh | sh
 
 # 然后配置 Niki
-hermes memory setup    # 选择 "byterover"
+niki memory setup    # 选择 "byterover"
 # 或手动配置：
-hermes config set memory.provider byterover
+niki config set memory.provider byterover
 ```
 
 **主要特性：**
 - 自动预压缩提取（在上下文压缩丢弃内容前保存洞察）
-- 知识树存储于 `$HERMES_HOME/byterover/`（profile 范围隔离）
+- 知识树存储于 `$NIKI_HOME/byterover/`（profile 范围隔离）
 - SOC2 Type II 认证的云端同步（可选）
 
 ---
@@ -478,7 +478,7 @@ hermes config set memory.provider byterover
 | | |
 |---|---|
 | **适合场景** | 带用户 profile 和会话级图谱构建的语义召回 |
-| **依赖** | `hermes memory setup` 通过 PM 准备 Supermemory SDK；[云端 API key](http://app.supermemory.ai/integrations?connect=hermes)，或[自托管服务器](https://supermemory.ai/docs/self-hosting/overview) |
+| **依赖** | `niki memory setup` 通过 PM 准备 Supermemory SDK；[云端 API key](http://app.supermemory.ai/integrations?connect=niki)，或[自托管服务器](https://supermemory.ai/docs/self-hosting/overview) |
 | **数据存储** | Supermemory 云端或自托管 |
 | **费用** | 云端按 Supermemory 定价 / 自托管免费 |
 
@@ -486,10 +486,10 @@ hermes config set memory.provider byterover
 
 **安装：**
 ```bash
-hermes memory setup    # 选择 "supermemory"
+niki memory setup    # 选择 "supermemory"
 # 或手动配置：
-hermes config set memory.provider supermemory
-echo 'SUPERMEMORY_API_KEY=***' >> ~/.hermes/.env
+niki config set memory.provider supermemory
+echo 'SUPERMEMORY_API_KEY=***' >> ~/.niki/.env
 ```
 
 自托管安装：
@@ -498,8 +498,8 @@ echo 'SUPERMEMORY_API_KEY=***' >> ~/.hermes/.env
 npx supermemory local
 ```
 
-在运行 `hermes memory setup` **之前**，先在
-`$HERMES_HOME/supermemory.json` 中设置 `base_url`：
+在运行 `niki memory setup` **之前**，先在
+`$NIKI_HOME/supermemory.json` 中设置 `base_url`：
 
 ```json
 {
@@ -507,14 +507,14 @@ npx supermemory local
 }
 ```
 
-然后运行 `hermes memory setup` 并输入本地服务器打印的 API key。先配置端点可确保安装连接探测也只访问本地服务器。
+然后运行 `niki memory setup` 并输入本地服务器打印的 API key。先配置端点可确保安装连接探测也只访问本地服务器。
 
-**配置：** `$HERMES_HOME/supermemory.json`
+**配置：** `$NIKI_HOME/supermemory.json`
 
 | 键 | 默认值 | 描述 |
 |-----|---------|-------------|
 | `base_url` | `https://api.supermemory.ai` | 托管或自托管 Supermemory 的 API 端点。优先级高于 `SUPERMEMORY_BASE_URL`。 |
-| `container_tag` | `hermes` | 用于搜索和写入的容器标签。支持 `{identity}` 模板用于 profile 范围隔离。 |
+| `container_tag` | `niki` | 用于搜索和写入的容器标签。支持 `{identity}` 模板用于 profile 范围隔离。 |
 | `auto_recall` | `true` | 在每轮对话前注入相关记忆上下文 |
 | `auto_capture` | `true` | 每次响应后存储清理过的用户-助手轮次 |
 | `max_recall_results` | `10` | 格式化为上下文的最大召回条目数 |
@@ -533,7 +533,7 @@ Base URL 优先级为 `supermemory.json` → `SUPERMEMORY_BASE_URL` → `https:/
 - 失败的轮次写入会重试（至少一次语义）：下一轮、会话结束、`/reset` 或关闭时
 - 端到端自托管路由——SDK 和探测请求使用同一配置端点
 - 在第一轮及可配置间隔注入 profile 事实
-- **Profile 范围容器**——在 `container_tag` 中使用 `{identity}`（例如 `hermes-{identity}` → `hermes-coder`），按 Niki profile 隔离记忆
+- **Profile 范围容器**——在 `container_tag` 中使用 `{identity}`（例如 `niki-{identity}` → `niki-coder`），按 Niki profile 隔离记忆
 - **多容器模式**——启用 `enable_custom_container_tags` 并配置 `custom_containers` 列表，让 Agent 跨命名容器读写。自动操作（同步、预取）保持在主容器上。
 
 <details>
@@ -541,7 +541,7 @@ Base URL 优先级为 `supermemory.json` → `SUPERMEMORY_BASE_URL` → `https:/
 
 ```json
 {
-  "container_tag": "hermes",
+  "container_tag": "niki",
   "enable_custom_container_tags": true,
   "custom_containers": ["project-alpha", "shared-knowledge"],
   "custom_container_instructions": "Use project-alpha for coding context."
@@ -571,8 +571,8 @@ Base URL 优先级为 `supermemory.json` → `SUPERMEMORY_BASE_URL` → `https:/
 
 每个提供者的数据按 [profile](../profiles.md) 隔离：
 
-- **本地存储提供者**（Holographic、ByteRover）使用 `$HERMES_HOME/` 路径，各 profile 路径不同
-- **配置文件提供者**（Honcho、Mem0、Hindsight、Supermemory）将配置存储在 `$HERMES_HOME/` 中，每个 profile 拥有独立凭证
+- **本地存储提供者**（Holographic、ByteRover）使用 `$NIKI_HOME/` 路径，各 profile 路径不同
+- **配置文件提供者**（Honcho、Mem0、Hindsight、Supermemory）将配置存储在 `$NIKI_HOME/` 中，每个 profile 拥有独立凭证
 - **云端提供者**（RetainDB）自动派生 profile 范围的项目名称
 - **环境变量提供者**（OpenViking）通过每个 profile 的 `.env` 文件配置
 

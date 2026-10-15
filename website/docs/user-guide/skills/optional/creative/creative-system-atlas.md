@@ -14,10 +14,10 @@ Build explorable isometric architecture atlases as HTML.
 
 | | |
 |---|---|
-| Source | Optional — install with `hermes skills install official/creative/system-atlas` |
+| Source | Optional — install with `niki skills install official/creative/system-atlas` |
 | Path | `optional-skills/creative/system-atlas` |
 | Version | `1.0.0` |
-| Author | Harshyt Goel (adapted by Nous Research) |
+| Author | Harshyt Goel (adapted by NeGamer01) |
 | License | MIT |
 | Platforms | linux, macos |
 | Tags | `architecture`, `diagrams`, `isometric`, `documentation` |

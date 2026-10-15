@@ -2,13 +2,13 @@
  * Process census for the core lane, per platform.
  *
  * Linux reads /proc: a process belongs to a sandbox when its environment names the sandbox
- * HERMES_HOME (orphans reparented to init included). Other platforms have no readable foreign
+ * NIKI_HOME (orphans reparented to init included). Other platforms have no readable foreign
  * environment, so membership is the process tree rooted at every gateway pid a sandbox
  * `gateway.lock` has ever recorded (remembered per sandbox, so the census still sees a stopped
  * gateway's orphans after its lock is gone). Windows keeps a dead parent's id in
  * ParentProcessId, so the tree walk still reaches orphans there.
  *
- * `HERMES_E2E_PROC_CENSUS=ps` forces the tree census on Linux (how the non-/proc path is tested).
+ * `NIKI_E2E_PROC_CENSUS=ps` forces the tree census on Linux (how the non-/proc path is tested).
  */
 
 import { spawnSync } from 'node:child_process'
@@ -21,7 +21,7 @@ export interface ProcInfo {
   cmdline: string
 }
 
-export const procfsCensus = process.env.HERMES_E2E_PROC_CENSUS !== 'ps' && fs.existsSync('/proc/self/environ')
+export const procfsCensus = process.env.NIKI_E2E_PROC_CENSUS !== 'ps' && fs.existsSync('/proc/self/environ')
 
 export function readProc(pid: number): null | { environ: string; cmdline: string; ppid: number } {
   try {
@@ -74,9 +74,9 @@ export function listProcesses(): ProcInfo[] {
 const recordedRoots = new Map<string, Set<number>>()
 
 /** Gateway pids recorded in the sandbox's `gateway.lock` files (launch home + each profile home). */
-function lockedGatewayPids(hermesHome: string): number[] {
-  const profilesDir = path.join(hermesHome, 'profiles')
-  const homes = [hermesHome, ...(fs.existsSync(profilesDir) ? fs.readdirSync(profilesDir).map(name => path.join(profilesDir, name)) : [])]
+function lockedGatewayPids(nikiHome: string): number[] {
+  const profilesDir = path.join(nikiHome, 'profiles')
+  const homes = [nikiHome, ...(fs.existsSync(profilesDir) ? fs.readdirSync(profilesDir).map(name => path.join(profilesDir, name)) : [])]
 
   return homes.flatMap(home => {
     try {
@@ -89,10 +89,10 @@ function lockedGatewayPids(hermesHome: string): number[] {
   })
 }
 
-/** Every live process belonging to the sandbox whose HERMES_HOME is `hermesHome` (orphans included). */
-export function sandboxProcessesOf(hermesHome: string, exclude = process.pid): ProcInfo[] {
+/** Every live process belonging to the sandbox whose NIKI_HOME is `nikiHome` (orphans included). */
+export function sandboxProcessesOf(nikiHome: string, exclude = process.pid): ProcInfo[] {
   if (procfsCensus) {
-    const needle = `HERMES_HOME=${hermesHome}\0`
+    const needle = `NIKI_HOME=${nikiHome}\0`
 
     return fs.readdirSync('/proc').flatMap(entry => {
       const pid = Number(entry)
@@ -103,12 +103,12 @@ export function sandboxProcessesOf(hermesHome: string, exclude = process.pid): P
     })
   }
 
-  const roots = recordedRoots.get(hermesHome) ?? new Set<number>()
-  recordedRoots.set(hermesHome, roots)
+  const roots = recordedRoots.get(nikiHome) ?? new Set<number>()
+  recordedRoots.set(nikiHome, roots)
   const all = listProcesses()
   const live = new Set(all.map(proc => proc.pid))
 
-  for (const pid of lockedGatewayPids(hermesHome)) {
+  for (const pid of lockedGatewayPids(nikiHome)) {
     if (live.has(pid)) {
       roots.add(pid)
     }
@@ -133,8 +133,8 @@ export function sandboxProcessesOf(hermesHome: string, exclude = process.pid): P
 }
 
 /** True while `pid` is still a live member of the sandbox (a recycled pid never matches). */
-export function isSandboxProcess(pid: number, hermesHome: string): boolean {
-  return sandboxProcessesOf(hermesHome).some(proc => proc.pid === pid)
+export function isSandboxProcess(pid: number, nikiHome: string): boolean {
+  return sandboxProcessesOf(nikiHome).some(proc => proc.pid === pid)
 }
 
 /** Every live process whose command line carries `tag`. */

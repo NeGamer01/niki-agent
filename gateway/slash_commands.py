@@ -30,7 +30,7 @@ from gateway.slash_commands_model import GatewayModelCommandsMixin
 from gateway.slash_commands_session import GatewaySessionCommandsMixin
 from gateway.slash_commands_login import GatewayLoginCommandsMixin
 from gateway.slash_commands_status import GatewayStatusCommandsMixin, history_unreadable
-from hermes_cli.config import atomic_config_write, cfg_get
+from niki_cli.config import atomic_config_write, cfg_get
 from utils import atomic_json_write, is_truthy_value
 
 logger = logging.getLogger("gateway.run")
@@ -90,7 +90,7 @@ def _nested_dict(root: dict, *keys: str) -> dict:
 def _write_raw_config_leaf(config_path: Path, keys: tuple, value) -> None:
     """Set one leaf through a strict raw round-trip. The behavioral read is fail-open (``{}``) and
     expanded, so writing it back wipes the file after a read error and persists ``${VAR}`` values."""
-    from hermes_cli.config import read_user_config_raw
+    from niki_cli.config import read_user_config_raw
     raw = read_user_config_raw(config_path)
     *parents, leaf = keys
     _nested_dict(raw, *parents)[leaf] = value
@@ -103,7 +103,7 @@ def _preview(text: str, limit: int = 60) -> str:
 
 def _execute(command: str, **ctx_kwargs):
     """Run *command* through the shared slash executor on the gateway surface."""
-    from hermes_cli.slash_exec import CommandContext, execute_command
+    from niki_cli.slash_exec import CommandContext, execute_command
     return execute_command(command, CommandContext(surface="gateway", **ctx_kwargs))
 
 
@@ -123,25 +123,25 @@ def _restart_notify_payload(event: MessageEvent) -> dict:
     return data
 
 
-def _spawn_detached_update(hermes_cmd, output_path, exit_code_path) -> None:
-    """Spawn ``hermes update --gateway`` detached so it survives the gateway restart it may trigger.
+def _spawn_detached_update(niki_cmd, output_path, exit_code_path) -> None:
+    """Spawn ``niki update --gateway`` detached so it survives the gateway restart it may trigger.
     setsid is portable (works where ``systemd-run --user`` lacks a D-Bus session); ``--gateway``
     enables file-based IPC so interactive prompts are forwarded; PYTHONUNBUFFERED lets the gateway
     stream output live.  Windows has no setsid: an inline helper runs the updater as a module under
-    this interpreter (not venv\\Scripts\\hermes.exe — that shim holds its own file open, and the
+    this interpreter (not venv\\Scripts\\niki.exe — that shim holds its own file open, and the
     update must replace it), redirects both outputs to one file and writes the exit code."""
     import shutil
     import subprocess
     if sys.platform == "win32":
-        from hermes_cli._subprocess_compat import windows_detach_popen_kwargs
+        from niki_cli._subprocess_compat import windows_detach_popen_kwargs
         subprocess.Popen(
             [sys.executable, "-c", _WINDOWS_UPDATE_HELPER, str(output_path), str(exit_code_path),
-             sys.executable, "-m", "hermes_cli.main", "update", "--gateway"],
+             sys.executable, "-m", "niki_cli.main", "update", "--gateway"],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, **windows_detach_popen_kwargs())
         return
-    hermes_cmd_str = " ".join(shlex.quote(part) for part in hermes_cmd)
+    niki_cmd_str = " ".join(shlex.quote(part) for part in niki_cmd)
     update_cmd = (
-        f"PYTHONUNBUFFERED=1 {hermes_cmd_str} update --gateway"
+        f"PYTHONUNBUFFERED=1 {niki_cmd_str} update --gateway"
         f" > {shlex.quote(str(output_path))} 2>&1; "
         # Avoid `status=$?`: `status` is read-only in zsh and this template is reused in
         # macOS/zsh operator wrappers, so keep it zsh-safe even though bash runs it here.
@@ -208,7 +208,7 @@ class GatewaySlashCommandsMixin(
 
     @staticmethod
     def _session_db_unavailable_reply() -> str:
-        from hermes_state import format_session_db_unavailable
+        from niki_state import format_session_db_unavailable
         return format_session_db_unavailable(prefix=t("gateway.shared.session_db_unavailable_prefix"))
 
     def _reply_metadata(self, event: MessageEvent):
@@ -244,7 +244,7 @@ class GatewaySlashCommandsMixin(
         from gateway.run import _gateway_config_home
         # Persist to config (default) unless --session opted out, mirroring the text /model command path
         # above so a picked model survives across sessions like a typed one (#49066).
-        from hermes_cli.config import read_user_config_raw
+        from niki_cli.config import read_user_config_raw
         config_path = _gateway_config_home() / "config.yaml"
         session_key = self._session_key_for_source(event.source)
 
@@ -301,7 +301,7 @@ class GatewaySlashCommandsMixin(
         gateway the process-level profile is the multiplexer's own ("default" in every chat), so
         with ``multiplex_profiles`` on report ``source.profile`` and resolve home under that
         profile's runtime scope; when off the stamp is ignored, mirroring ``_run_agent``."""
-        from hermes_constants import display_hermes_home
+        from niki_constants import display_niki_home
         source = getattr(event, "source", None)
         profile_name = display = ""
         if getattr(getattr(self, "config", None), "multiplex_profiles", False):
@@ -309,9 +309,9 @@ class GatewaySlashCommandsMixin(
             try:
                 from gateway.run import _profile_runtime_scope
                 with _profile_runtime_scope(self._resolve_profile_home_for_source(source)):
-                    display = display_hermes_home()
+                    display = display_niki_home()
             except Exception:
-                display = display_hermes_home()
+                display = display_niki_home()
 
         # Shared executor resolves process-level fallbacks; the multiplexed per-source overrides
         # (when any) ride in via options.
@@ -342,7 +342,7 @@ class GatewaySlashCommandsMixin(
     async def _handle_kanban_command(self, event: MessageEvent) -> str:
         """Handle /kanban — delegate to the shared kanban CLI (DB work in a thread pool). Allowed
         while an agent runs: the board is profile-agnostic and never touches agent state."""
-        from hermes_cli.kanban import run_slash
+        from niki_cli.kanban import run_slash
 
         # Strip the leading "/kanban" (with or without slash), leaving args.
         text = (event.text or "").strip().lstrip("/")
@@ -397,9 +397,9 @@ class GatewaySlashCommandsMixin(
             return False
 
         def _sub():
-            from hermes_cli import kanban_db as _kb
-            from hermes_cli import kanban_db_connect as _kbc
-            from hermes_cli import kanban_db_notify as _kbn
+            from niki_cli import kanban_db as _kb
+            from niki_cli import kanban_db_connect as _kbc
+            from niki_cli import kanban_db_notify as _kbn
             conn = _kbc.connect(board=requested_board)
             try:
                 _kbn.add_notify_sub(
@@ -529,7 +529,7 @@ class GatewaySlashCommandsMixin(
 
     async def _handle_restart_command(self, event: MessageEvent) -> str | EphemeralReply:
         """Handle /restart command - drain active work, then restart the gateway."""
-        from gateway.run import _hermes_home
+        from gateway.run import _niki_home
         # Idempotency check: if the previous gateway process recorded this same /restart (platform +
         # update_id) and we see it *again*, it's a redelivery from PTB's graceful-shutdown get_updates
         # ACK failing on the way out. Ignoring it prevents a loop where every fresh gateway re-restarts.
@@ -546,7 +546,7 @@ class GatewaySlashCommandsMixin(
 
         async def _write_marker(name: str, build, label: str) -> None:
             try:
-                await asyncio.to_thread(atomic_json_write, _hermes_home / name, build(), indent=None)
+                await asyncio.to_thread(atomic_json_write, _niki_home / name, build(), indent=None)
             except Exception as e:
                 logger.debug("Failed to write restart %s: %s", label, e)
 
@@ -647,7 +647,7 @@ class GatewaySlashCommandsMixin(
             return t("gateway.set_home.save_failed", error=e)
         # Preserve legacy home env vars for existing cron/setup consumers.
         try:
-            from hermes_cli.config import save_env_value
+            from niki_cli.config import save_env_value
             save_env_value(_home_target_env_var(platform_name), str(chat_id))
             save_env_value(_home_thread_env_var(platform_name), str(thread_id or ""))
         except Exception as e:
@@ -887,7 +887,7 @@ class GatewaySlashCommandsMixin(
     async def _handle_memory_command(self, event: MessageEvent) -> str:
         """Handle /memory — review pending memory writes + toggle the approval gate. Entries are small
         enough to review inline, so the full flow works on every platform."""
-        from hermes_cli.write_approval_commands import handle_pending_subcommand
+        from niki_cli.write_approval_commands import handle_pending_subcommand
         from tools import write_approval as wa
         from tools.memory_tool import load_on_disk_store
         # Apply approved writes against a fresh on-disk store (the gateway has no long-lived agent;
@@ -901,7 +901,7 @@ class GatewaySlashCommandsMixin(
         """Handle /skills on the gateway — pending skill-write review only (hub stays CLI-only). Gated
         by ``skills.write_approval`` but still answers when staged writes exist after the gate is off
         (never stranded). ``diff`` is truncated for chat."""
-        from hermes_cli.write_approval_commands import handle_pending_subcommand
+        from niki_cli.write_approval_commands import handle_pending_subcommand
         from tools import write_approval as wa
         args = event.get_command_args().strip().split()
         sub = args[0].lower() if args else ""
@@ -914,7 +914,7 @@ class GatewaySlashCommandsMixin(
             return t("gateway.skills.unknown_subcommand")
 
         # Chat bubbles can't hold a full skill diff — truncate and point at the pending JSON file
-        # (NOT `hermes skills diff <name>`, which diffs a bundled skill against its stock version).
+        # (NOT `niki skills diff <name>`, which diffs a bundled skill against its stock version).
         if sub == "diff" and len(out) > 3000:
             pending_id = args[1] if len(args) > 1 else "<id>"
             out = out[:3000] + t("gateway.skills.diff_truncated", pending_id=pending_id)
@@ -923,7 +923,7 @@ class GatewaySlashCommandsMixin(
     async def _handle_approvals_command(self, event: MessageEvent) -> str:
         """Show or persist the profile-wide dangerous-command approval mode."""
         from gateway.slash_access import policy_for_runner_source
-        from hermes_cli.approval_mode import run_approval_mode_command
+        from niki_cli.approval_mode import run_approval_mode_command
         requested = event.get_command_args().strip() or None
         # This mutates profile-wide security policy. The central slash gate can allow selected
         # commands to non-admin users, so enforce admin again at this side-effect boundary.
@@ -1095,7 +1095,7 @@ class GatewaySlashCommandsMixin(
             from agent.skill_commands import reload_skills
 
             # _run_in_executor_with_context, not a bare hop: the rescan walks
-            # get_hermes_home()/skills, a contextvar override under multiplex.
+            # get_niki_home()/skills, a contextvar override under multiplex.
             result = await self._run_in_executor_with_context(reload_skills)
             added, removed = result.get("added", []), result.get("removed", [])  # [{"name", "description"}]
             total = result.get("total", 0)
@@ -1221,12 +1221,12 @@ class GatewaySlashCommandsMixin(
         return await self._deliver_approval_confirmation(event, confirmation_text, "deny")
 
     async def _handle_curator_command(self, event: MessageEvent) -> str:
-        """Handle /curator — the ``hermes curator`` handler set (status by default), as main's CLI ran
+        """Handle /curator — the ``niki curator`` handler set (status by default), as main's CLI ran
         it in-process; its printed report is the reply. Runs in the executor with the session's
         context so the profile's skills tree and curator state are the ones read and written."""
         import io
         from contextlib import redirect_stderr, redirect_stdout
-        from hermes_cli.curator import cli_main
+        from niki_cli.curator import cli_main
         tokens = shlex.split(event.get_command_args() or "") or ["status"]
 
         def _run() -> str:
@@ -1244,11 +1244,11 @@ class GatewaySlashCommandsMixin(
 
     async def _handle_debug_command(self, event: MessageEvent) -> str:
         """Handle /debug — upload ONLY the summary (system info + log tails), never full logs, to
-        protect privacy; ``hermes debug share`` from the CLI does full uploads."""
-        from hermes_cli.debug import (_GATEWAY_PRIVACY_NOTICE, _best_effort_sweep_expired_pastes,
+        protect privacy; ``niki debug share`` from the CLI does full uploads."""
+        from niki_cli.debug import (_GATEWAY_PRIVACY_NOTICE, _best_effort_sweep_expired_pastes,
                                       _capture_dump, _is_dpaste_url, _schedule_auto_delete,
                                       collect_debug_report, upload_to_pastebin)
-        from hermes_cli.debug_redaction import redact_debug_support_text
+        from niki_cli.debug_redaction import redact_debug_support_text
 
         def _collect_and_upload():  # blocking I/O (dump capture, log reads, uploads) -> thread
             _best_effort_sweep_expired_pastes()
@@ -1269,16 +1269,16 @@ class GatewaySlashCommandsMixin(
                               t("gateway.debug.share_hint")])
 
         # _run_in_executor_with_context, not a bare hop: this collects the profile's logs/config off
-        # ``get_hermes_home()`` and uploads them to a public paste. Losing the contextvar override
+        # ``get_niki_home()`` and uploads them to a public paste. Losing the contextvar override
         # would publish the DEFAULT profile's diagnostics from another profile's chat.
         return await self._run_in_executor_with_context(_collect_and_upload)
 
     async def _handle_update_command(self, event: MessageEvent) -> str:
-        """Handle /update — spawn ``hermes update`` detached (``setsid``) so it survives the gateway
+        """Handle /update — spawn ``niki update`` detached (``setsid``) so it survives the gateway
         restart it may trigger; marker files let this or the next gateway process notify the user."""
         import json
-        from gateway.run import _hermes_home, _resolve_hermes_bin
-        from hermes_cli.config import is_managed, format_managed_message
+        from gateway.run import _niki_home, _resolve_niki_bin
+        from niki_cli.config import is_managed, format_managed_message
         # Block non-messaging platforms (API server, webhooks, ACP); plugin platforms with
         # allow_update_command=True are also allowed.
         src = event.source
@@ -1297,9 +1297,9 @@ class GatewaySlashCommandsMixin(
 
         # Not a git-managed install (docker/nix/desktop-app/source): refuse
         # with the steward's own update mechanism instead of git-pulling a
-        # tree `hermes update` does not own.
+        # tree `niki update` does not own.
         try:
-            from hermes_cli.config import (
+            from niki_cli.config import (
                 detect_install_method,
                 recommended_update_command_for_method,
             )
@@ -1315,12 +1315,12 @@ class GatewaySlashCommandsMixin(
 
         if not git_dir.exists():
             return t("gateway.update.not_git_repo")
-        hermes_cmd = _resolve_hermes_bin()
-        if not hermes_cmd:
-            return t("gateway.update.hermes_cmd_not_found")
-        pending_path = _hermes_home / ".update_pending.json"
-        output_path = _hermes_home / ".update_output.txt"
-        exit_code_path = _hermes_home / ".update_exit_code"
+        niki_cmd = _resolve_niki_bin()
+        if not niki_cmd:
+            return t("gateway.update.niki_cmd_not_found")
+        pending_path = _niki_home / ".update_pending.json"
+        output_path = _niki_home / ".update_output.txt"
+        exit_code_path = _niki_home / ".update_exit_code"
         pending = {
             "platform": src.platform.value, "chat_id": src.chat_id, "chat_type": src.chat_type,
             "user_id": src.user_id, "session_key": self._session_key_for_source(src),
@@ -1334,7 +1334,7 @@ class GatewaySlashCommandsMixin(
         _tmp_pending.replace(pending_path)
         exit_code_path.unlink(missing_ok=True)
         try:
-            _spawn_detached_update(hermes_cmd, output_path, exit_code_path)
+            _spawn_detached_update(niki_cmd, output_path, exit_code_path)
         except Exception as e:
             pending_path.unlink(missing_ok=True)
             exit_code_path.unlink(missing_ok=True)

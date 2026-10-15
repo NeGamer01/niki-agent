@@ -21,11 +21,11 @@ echo "═══ Checking required API keys ═══"
 
 check_key() {
     local var="$1"
-    local kc_account="${2:-hermes}"
+    local kc_account="${2:-niki}"
     local kc_service="${3:-$1}"
-    local _hermes_env="${HERMES_HOME:-$HOME/.hermes}/.env"
-    if grep -q "^${var}=" "$_hermes_env" 2>/dev/null && \
-       [ -n "$(grep "^${var}=" "$_hermes_env" | cut -d= -f2-)" ]; then
+    local _niki_env="${NIKI_HOME:-$HOME/.niki}/.env"
+    if grep -q "^${var}=" "$_niki_env" 2>/dev/null && \
+       [ -n "$(grep "^${var}=" "$_niki_env" | cut -d= -f2-)" ]; then
         echo "  ✓ ${var} (env)"
         return 0
     fi
@@ -34,7 +34,7 @@ check_key() {
         echo "  ✓ ${var} (Keychain ${kc_account}/${kc_service})"
         return 0
     fi
-    echo "  ✗ ${var} not set in ${_hermes_env} or Keychain (${kc_account}/${kc_service})"
+    echo "  ✗ ${var} not set in ${_niki_env} or Keychain (${kc_account}/${kc_service})"
     return 1
 }
 
@@ -88,7 +88,7 @@ profile, toolsets_json, skills_json, workspace = sys.argv[1:5]
 toolsets = json.loads(toolsets_json)
 skills = json.loads(skills_json)
 
-p = os.path.expanduser(f"~/.hermes/profiles/{profile}/config.yaml")
+p = os.path.expanduser(f"~/.niki/profiles/{profile}/config.yaml")
 if not os.path.exists(p):
     print(f"  ✗ profile config not found: {p}", file=sys.stderr)
     sys.exit(1)
@@ -103,7 +103,7 @@ cfg["skills"]["always_load"] = skills
 
 # Note: we do NOT touch cfg["approvals"] — that's a security-sensitive
 # setting (manual confirmation of tool calls). Workspace cwd is overridden
-# per-task by `--workspace dir:<path>` on `hermes kanban create`, so we
+# per-task by `--workspace dir:<path>` on `niki kanban create`, so we
 # don't need to mutate cfg["terminal"]["cwd"] either.
 
 with open(p, "w") as f:
@@ -159,7 +159,7 @@ TEAM_EOF
 # ─────────────────────────────────────────────────────────────────────
 echo "═══ Firing initial kanban task ═══"
 
-hermes kanban create "Direct production of {{TITLE}}" \
+niki kanban create "Direct production of {{TITLE}}" \
     --assignee director \
     --workspace dir:"$WORKSPACE" \
     --tenant "$TENANT" \
@@ -184,8 +184,8 @@ echo ""
 echo "═══ Setup complete ═══"
 echo ""
 echo "Monitor with:"
-echo "  hermes kanban watch --tenant $TENANT"
-echo "  hermes kanban list  --tenant $TENANT"
-echo "  hermes dashboard"
+echo "  niki kanban watch --tenant $TENANT"
+echo "  niki kanban list  --tenant $TENANT"
+echo "  niki dashboard"
 echo ""
 echo "Workspace: $WORKSPACE"

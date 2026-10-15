@@ -3,7 +3,7 @@
 ``resolve_anthropic_token()`` order: ``ANTHROPIC_TOKEN`` / ``CLAUDE_CODE_OAUTH_TOKEN``,
 ``ANTHROPIC_API_KEY``, Niki-owned OAuth grants in the ``auth.json`` credential
 pool, then ``~/.claude/.credentials.json`` / macOS Keychain as a borrowed fallback.
-``~/.hermes/.anthropic_oauth.json`` (Niki PKCE) and
+``~/.niki/.anthropic_oauth.json`` (Niki PKCE) and
 the Claude Code file are *singletons*: ``credential_pool._seed_from_singletons()``
 re-reads them on every ``load_pool()``, so a failed write here is a failed refresh
 (``CredentialPersistError``), not a cache miss.
@@ -26,7 +26,7 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from hermes_constants import get_hermes_home
+from niki_constants import get_niki_home
 from utils import atomic_json_write, base_url_hostname
 from agent.secret_scope import get_secret as _get_secret
 
@@ -149,7 +149,7 @@ _SPENT_ROTATION_SIDECAR_COMMENT = (
 
 
 def _spent_rotation_sidecar_path(source_path: Path) -> Path:
-    return source_path.with_name(source_path.name + ".hermes-spent-rotations.json")
+    return source_path.with_name(source_path.name + ".niki-spent-rotations.json")
 
 
 def spent_rotation_source_path(source: Any) -> Optional[Path]:
@@ -225,7 +225,7 @@ def is_rotation_consumed_uncommitted(secret: Any, *, source_path: Optional[Path]
 # ── Claude Code credentials (Keychain / ~/.claude/.credentials.json) ──
 # Only singleton-backed pool sources have a cross-process authority boundary.
 _SINGLETON_SOURCE_PATHS = {
-    "claude_code": lambda: claude_code_credentials_path(), "hermes_pkce": lambda: _get_hermes_oauth_file()
+    "claude_code": lambda: claude_code_credentials_path(), "niki_pkce": lambda: _get_niki_oauth_file()
 }
 
 
@@ -344,7 +344,7 @@ def _read_claude_code_credentials_from_keychain() -> Optional[dict[str, Any]]:
 
 def claude_code_credentials_path() -> Path:
     """Claude Code's shared OAuth file; every profile reads/writes this same path. Honours ``CLAUDE_CONFIG_DIR``
-    like the Claude CLI itself (blank = unset, as in ``hermes_cli.foreign_sessions``). The supported opt-out of
+    like the Claude CLI itself (blank = unset, as in ``niki_cli.foreign_sessions``). The supported opt-out of
     borrowing the login is ``auth.adopt_external_logins: false`` in config.yaml."""
     override = os.environ.get("CLAUDE_CONFIG_DIR", "").strip()
     root = Path(override).expanduser() if override else Path.home() / ".claude"
@@ -476,8 +476,8 @@ def _refresh_oauth_token(creds: dict[str, Any]) -> Optional[str]:
     token instead of racing it into ``invalid_grant``. Read, decision, POST and write-back share the pool's
     path-keyed cross-process lock (else two profiles can spend one refresh token)."""
     try:
-        from hermes_cli.auth import AUTH_LOCK_TIMEOUT_SECONDS, _auth_store_lock, env_float
-        refresh_timeout_seconds = env_float("HERMES_ANTHROPIC_REFRESH_TIMEOUT_SECONDS", 20)
+        from niki_cli.auth import AUTH_LOCK_TIMEOUT_SECONDS, _auth_store_lock, env_float
+        refresh_timeout_seconds = env_float("NIKI_ANTHROPIC_REFRESH_TIMEOUT_SECONDS", 20)
         lock_timeout_seconds = max(float(AUTH_LOCK_TIMEOUT_SECONDS), float(refresh_timeout_seconds) + 5.0)
         cred_path = claude_code_credentials_path()
         with _auth_store_lock(timeout_seconds=lock_timeout_seconds, target_path=cred_path):
@@ -496,7 +496,7 @@ def _refresh_oauth_token(creds: dict[str, Any]) -> Optional[str]:
             # Another process may have spent this token and lost the commit; its sidecar verdict is authoritative.
             if is_rotation_consumed_uncommitted(refresh_token, source_path=cred_path):
                 logger.debug("Refresh token was already consumed by an uncommitted rotation "
-                             "- refusing to replay it; run 'hermes auth add anthropic'")
+                             "- refusing to replay it; run 'niki auth add anthropic'")
                 return None
             fingerprint = hashlib.sha256(refresh_token.encode("utf-8")).hexdigest()[:32]
             if fingerprint in _DEAD_REFRESH_TOKEN_FINGERPRINTS:
@@ -509,7 +509,7 @@ def _refresh_oauth_token(creds: dict[str, Any]) -> Optional[str]:
                     _DEAD_REFRESH_TOKEN_FINGERPRINTS.add(fingerprint)
                     logger.warning(
                         "Claude Code OAuth refresh token is terminally invalid (%s); Niki cannot use this "
-                        "login. Run 'hermes auth add anthropic' to give Niki its own login.", e)
+                        "login. Run 'niki auth add anthropic' to give Niki its own login.", e)
                 else:
                     logger.debug("Failed to refresh Claude Code token: %s", e)
                 return None
@@ -524,7 +524,7 @@ def _refresh_oauth_token(creds: dict[str, Any]) -> Optional[str]:
                 logger.error(
                     "Anthropic OAuth refresh rotated the single-use token but could not "
                     "commit it to %s (%s) — treating the refresh as failed; "
-                    "run 'hermes auth add anthropic' to give Niki its own login",
+                    "run 'niki auth add anthropic' to give Niki its own login",
                     cred_path, e,
                 )
                 mark_rotation_consumed_uncommitted(
@@ -632,7 +632,7 @@ def _resolve_claude_code_token_from_credentials(creds: Optional[dict[str, Any]] 
     logger.debug("Claude Code credentials expired — attempting refresh")
     refreshed = _refresh_oauth_token(creds)
     if not refreshed:
-        logger.debug("Token refresh failed — run 'hermes auth add anthropic' to give Niki its own login")
+        logger.debug("Token refresh failed — run 'niki auth add anthropic' to give Niki its own login")
     return refreshed or None
 
 
@@ -650,7 +650,7 @@ def _prefer_refreshable_claude_code_token(env_token: str, creds: Optional[dict[s
 
 def _resolve_anthropic_pool_token(*, skip_borrowed: bool = False) -> Optional[str]:
     """First available Anthropic OAuth token from credential_pool, read-only: enumerates with ``clear_expired=False,
-    refresh=False`` (never ``select()``) so diagnostic call sites (account_usage, ``hermes models``) never mutate
+    refresh=False`` (never ``select()``) so diagnostic call sites (account_usage, ``niki models``) never mutate
     auth.json or hit the network; refresh-on-expiry belongs to the API call path's pool recovery."""
     try:
         from agent.credential_pool import AUTH_TYPE_OAUTH, load_pool
@@ -735,20 +735,20 @@ def run_oauth_setup_token() -> Optional[str]:
     return _first_env("CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_TOKEN") or None
 
 
-# ── Niki-native PKCE OAuth flow (~/.hermes/.anthropic_oauth.json); mirrors Claude Code / pi-ai / OpenCode ──
+# ── Niki-native PKCE OAuth flow (~/.niki/.anthropic_oauth.json); mirrors Claude Code / pi-ai / OpenCode ──
 
 
-def _get_hermes_oauth_file() -> Path:
-    return get_hermes_home() / ".anthropic_oauth.json"
+def _get_niki_oauth_file() -> Path:
+    return get_niki_home() / ".anthropic_oauth.json"
 
 
-def _root_hermes_oauth_file() -> Optional[Path]:
+def _root_niki_oauth_file() -> Optional[Path]:
     """Global-root ``.anthropic_oauth.json`` inside a named profile (None in classic mode); used to commit a
     rotation of a grant the profile borrowed via the pool's root fallback."""
     try:
-        from hermes_constants import get_default_hermes_root
-        root = get_default_hermes_root()
-        return None if root.resolve(strict=False) == get_hermes_home().resolve(strict=False) else root / ".anthropic_oauth.json"
+        from niki_constants import get_default_niki_root
+        root = get_default_niki_root()
+        return None if root.resolve(strict=False) == get_niki_home().resolve(strict=False) else root / ".anthropic_oauth.json"
     except Exception:
         return None
 
@@ -760,7 +760,7 @@ def _generate_pkce() -> tuple:
     return verifier, challenge
 
 
-def run_hermes_oauth_login_pure() -> Optional[dict[str, Any]]:
+def run_niki_oauth_login_pure() -> Optional[dict[str, Any]]:
     """Run Niki-native OAuth PKCE flow and return credential state."""
     import webbrowser
     from urllib.parse import urlencode
@@ -780,7 +780,7 @@ def run_hermes_oauth_login_pure() -> Optional[dict[str, Any]]:
         "", f"  {auth_url}", "",
     ]))
     try:
-        from hermes_cli.auth import _can_open_graphical_browser as _can_open_gui
+        from niki_cli.auth import _can_open_graphical_browser as _can_open_gui
     except Exception:
         _can_open_gui = lambda: True
     if _can_open_gui():
@@ -815,21 +815,21 @@ def run_hermes_oauth_login_pure() -> Optional[dict[str, Any]]:
     return _oauth_token_state(result)
 
 
-def read_hermes_oauth_credentials() -> Optional[dict[str, Any]]:
-    """Read Niki-managed OAuth credentials from ~/.hermes/.anthropic_oauth.json."""
-    data = _load_json_if_exists(_get_hermes_oauth_file(), "Niki OAuth credentials")
+def read_niki_oauth_credentials() -> Optional[dict[str, Any]]:
+    """Read Niki-managed OAuth credentials from ~/.niki/.anthropic_oauth.json."""
+    data = _load_json_if_exists(_get_niki_oauth_file(), "Niki OAuth credentials")
     return data if data is not None and data.get("accessToken") else None
 
 
-def _write_hermes_oauth_credentials(
+def _write_niki_oauth_credentials(
     access_token: str, refresh_token: Optional[str], expires_at_ms: Optional[int], *, target: Optional[Path] = None
 ) -> None:
-    """Commit refreshed hermes_pkce tokens to ~/.hermes/.anthropic_oauth.json (``CredentialPersistError`` on failure).
+    """Commit refreshed niki_pkce tokens to ~/.niki/.anthropic_oauth.json (``CredentialPersistError`` on failure).
     ``target`` lets a named profile commit a grant it BORROWED from the global root back to the ROOT singleton
-    instead of forking a copy under its own HERMES_HOME; without this write-through the next ``load_pool()``
+    instead of forking a copy under its own NIKI_HOME; without this write-through the next ``load_pool()``
     re-seeds the stale (consumed) pair from the file over the rotated pool entry."""
     _commit_private_json(
-        target if target is not None else _get_hermes_oauth_file(),
+        target if target is not None else _get_niki_oauth_file(),
         {"accessToken": access_token, "refreshToken": refresh_token, "expiresAt": expires_at_ms},
         "Niki OAuth credentials",
     )

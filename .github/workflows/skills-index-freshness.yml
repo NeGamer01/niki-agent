@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   check-freshness:
-    if: github.repository == 'NousResearch/hermes-agent'
+    if: github.repository == 'NeGamer01/niki-agent'
     runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 10
     environment: trusted-automation
@@ -39,7 +39,7 @@ jobs:
         id: probe
         run: |
           set -e
-          URL="https://hermes-agent.nousresearch.com/docs/api/skills-index.json"
+          URL="https://github.com/NeGamer01/niki-agent/docs/api/skills-index.json"
           echo "Probing $URL"
           # -L follows redirects; -f fails on HTTP errors; -s suppresses progress
           if ! curl -fsSL --retry 3 --retry-delay 10 -o /tmp/skills-index.json "$URL"; then
@@ -171,11 +171,11 @@ jobs:
           fi
 
   check-catalog-cors:
-    # Desktop's hermes://plugin/install?catalog= links fetch /docs/api/plugins.json
+    # Desktop's niki://plugin/install?catalog= links fetch /docs/api/plugins.json
     # cross-origin. A browser rejects that fetch when any response in the redirect
     # chain lacks Access-Control-Allow-Origin (#136483). The probe above uses
     # curl -L, which never checks CORS, so it stays green while Desktop is blocked.
-    if: github.repository == 'NousResearch/hermes-agent'
+    if: github.repository == 'NeGamer01/niki-agent'
     runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 5
     environment: trusted-automation
@@ -225,7 +225,7 @@ jobs:
           **Status:** \`$STATUS\`
           **Detail:** $DETAIL
 
-          Desktop's \`hermes://plugin/install?catalog=\` links fetch \`/docs/api/plugins.json\` cross-origin.
+          Desktop's \`niki://plugin/install?catalog=\` links fetch \`/docs/api/plugins.json\` cross-origin.
           A browser rejects that fetch when any response in the redirect chain, including the docs host's
           redirect to GitHub Pages, lacks \`Access-Control-Allow-Origin\`. Every catalog install link then
           shows \"Could not load the Niki plugin catalog\". Background: #136483.

@@ -96,7 +96,7 @@ def _escape_unresolved_presentation_mention(content: str, error: str) -> Optiona
 
 _FETCH_LIMIT = 50  # events per poll / seed call
 _SEEN_CAP = 500  # per-channel de-dupe set bound (events)
-_CURSOR_STATE_SUBDIR = "buzz"  # per-channel cursors survive a restart under HERMES_HOME
+_CURSOR_STATE_SUBDIR = "buzz"  # per-channel cursors survive a restart under NIKI_HOME
 _CURSOR_STATE_FILENAME = "channel-cursors.json"
 _DM_DISCOVERY_EVERY = 5  # re-run DM discovery every N poll sweeps
 _DEFAULT_POLL_INTERVAL = 4.0
@@ -149,7 +149,7 @@ _WS_AUTH_TIMEOUT = 20.0
 _WS_READ_IDLE_TIMEOUT = 300.0
 _WS_MAX_MESSAGE_BYTES = 2_000_000
 _WS_MEMBERSHIP_KIND = 44100  # Buzz channel-membership event — live DM discovery
-_WS_MEMBERSHIP_SUB_ID = "hermes-buzz-membership"
+_WS_MEMBERSHIP_SUB_ID = "niki-buzz-membership"
 # Credentials JSON fallback when BUZZ_PRIVATE_KEY is not set; module-level so tests can point it at a tmpdir.
 _DEFAULT_CREDENTIALS_DIR = Path("~/.config/buzz").expanduser()
 # Buzz-hosted media is private to the community: same-relay URLs must be authenticated + localised for vision.
@@ -392,9 +392,9 @@ async def _exec_buzz(
     input_text: Optional[str] = None, timeout: float = _CLI_TIMEOUT,
 ) -> tuple[int, str, str]:
     """Run the buzz CLI (argv, never a shell) -> ``(rc, stdout, stderr)``. Key travels via env only."""
-    from tools.environments.local import hermes_subprocess_env
-    env = hermes_subprocess_env()  # a third-party CLI: its own key only, never Niki' credentials
-    env["HOME"] = env["HERMES_REAL_HOME"]  # its own config and credentials file live under the user's HOME
+    from tools.environments.local import niki_subprocess_env
+    env = niki_subprocess_env()  # a third-party CLI: its own key only, never Niki' credentials
+    env["HOME"] = env["NIKI_REAL_HOME"]  # its own config and credentials file live under the user's HOME
     env["BUZZ_RELAY_URL"] = relay_url
     env["BUZZ_PRIVATE_KEY"] = private_key
     env.pop("BUZZ_AUTH_TAG", None)
@@ -1055,8 +1055,8 @@ class BuzzAdapter(BasePlatformAdapter):
         for index, channel_id in enumerate(list(self._channel_state)):
             if channel_id in self._restricted_channels:
                 continue
-            subscriptions[f"hermes-buzz-{index}"] = channel_id
-            await self._send_channel_subscription(websocket, f"hermes-buzz-{index}", channel_id)
+            subscriptions[f"niki-buzz-{index}"] = channel_id
+            await self._send_channel_subscription(websocket, f"niki-buzz-{index}", channel_id)
         if self._self_pubkey:
             membership = {"kinds": [_WS_MEMBERSHIP_KIND], "#p": [self._self_pubkey], "since": max(self._membership_since - 1, 0)}
             await self._send_req(websocket, _WS_MEMBERSHIP_SUB_ID, membership)
@@ -1070,7 +1070,7 @@ class BuzzAdapter(BasePlatformAdapter):
         for channel_id in list(self._channel_state):
             if channel_id in before:
                 continue
-            subscription_id = f"hermes-buzz-dm-{len(subscriptions)}"
+            subscription_id = f"niki-buzz-dm-{len(subscriptions)}"
             subscriptions[subscription_id] = channel_id
             await self._send_channel_subscription(websocket, subscription_id, channel_id)
             logger.info("Buzz: subscribed to new conversation %s", channel_id)
@@ -1231,8 +1231,8 @@ class BuzzAdapter(BasePlatformAdapter):
 
     @staticmethod
     def _cursor_path() -> Path:
-        from hermes_constants import get_hermes_home
-        return get_hermes_home() / _CURSOR_STATE_SUBDIR / _CURSOR_STATE_FILENAME
+        from niki_constants import get_niki_home
+        return get_niki_home() / _CURSOR_STATE_SUBDIR / _CURSOR_STATE_FILENAME
 
     def _load_cursors(self) -> None:
         """Read persisted cursors; another identity/relay's file is ignored (ids collide), failures seed from history."""
@@ -1745,7 +1745,7 @@ class BuzzAdapter(BasePlatformAdapter):
                 continue
             label = f"{path_match.group('sha')[:12]}{(path_match.group('ext') or '.bin').lower()}"
             try:
-                with tempfile.TemporaryDirectory(prefix="hermes-buzz-media-") as temp_dir:
+                with tempfile.TemporaryDirectory(prefix="niki-buzz-media-") as temp_dir:
                     download_path = Path(temp_dir) / f"buzz_{label}"
                     code, _out, _err = await self._run_cli(["media", "get", "-o", str(download_path), url])
                     if code != 0 or not download_path.is_file():
@@ -1825,9 +1825,9 @@ def _profile_buzz_extra() -> dict:
         return {}
     try:
         from gateway.config_loader import platform_section
-        from hermes_constants import get_hermes_home
-        from hermes_cli.config import read_user_config_raw
-        cfg = read_user_config_raw(Path(get_hermes_home()) / "config.yaml")
+        from niki_constants import get_niki_home
+        from niki_cli.config import read_user_config_raw
+        cfg = read_user_config_raw(Path(get_niki_home()) / "config.yaml")
     except Exception:
         return {}
     if not isinstance(cfg, dict):
@@ -1956,11 +1956,11 @@ async def _standalone_send(
 
 
 def interactive_setup() -> None:
-    """Interactive ``hermes gateway setup`` flow (lazy CLI imports keep the plugin importable elsewhere)."""
-    from hermes_cli.setup import (
+    """Interactive ``niki gateway setup`` flow (lazy CLI imports keep the plugin importable elsewhere)."""
+    from niki_cli.setup import (
         prompt, prompt_yes_no, save_env_value, get_env_value, print_header, print_info, print_warning, print_success,
     )
-    from hermes_cli.setup_platforms import declines_reconfigure
+    from niki_cli.setup_platforms import declines_reconfigure
     def ask(label: str, env: str) -> str:
         return prompt(label, default=get_env_value(env) or "")
 
@@ -1998,8 +1998,8 @@ def interactive_setup() -> None:
         allowed = ask("Allowed users (comma-separated npubs or hex pubkeys, empty to deny everyone)", "BUZZ_ALLOWED_USERS")
         save_env_value("BUZZ_ALLOWED_USERS", allowed.replace(" ", "") if allowed else "")
     print()
-    print_success("Buzz configuration saved to ~/.hermes/.env")
-    print_info("Restart the gateway for changes to take effect: hermes gateway restart")
+    print_success("Buzz configuration saved to ~/.niki/.env")
+    print_info("Restart the gateway for changes to take effect: niki gateway restart")
 
 
 def register(ctx):

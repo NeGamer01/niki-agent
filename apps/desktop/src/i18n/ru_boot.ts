@@ -11,7 +11,7 @@ export const ruBoot = {
       loadingSessions: 'Загрузка последних сеансов',
       retryingRemoteBackend: 'Переподключение к удалённому бэкенду Niki…',
       startingDesktopConnection: 'Запуск подключения приложения',
-      startingHermesDesktop: 'Запуск Niki Desktop…'
+      startingNikiDesktop: 'Запуск Niki Desktop…'
     },
     errors: {
       backgroundExited: 'Фоновый процесс Niki завершён.',

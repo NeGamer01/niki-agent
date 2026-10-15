@@ -2,7 +2,7 @@
 
 OpenAI-SDK-shaped backends (groq, openai, deepinfra), Mistral Voxtral, REST multipart
 backends (xAI, ElevenLabs), and OpenAI audio credential resolution (config > keyless
-local server > env > managed Nous gateway). Facade-owned state and helpers
+local server > env > managed Niki gateway). Facade-owned state and helpers
 (``_HAS_OPENAI``, ``_resolve_provider_key``, ``_resolve_stt_language``, ``_load_stt_config``)
 are read lazily from ``tools.transcription_tools``.
 """
@@ -165,7 +165,7 @@ def _transcribe_openai(
                 create_kwargs["prompt"] = prompt
             with open(path, "rb") as audio_file:
                 return client.audio.transcriptions.create(file=audio_file, **create_kwargs)
-        with tempfile.TemporaryDirectory(prefix="hermes-stt-") as work_dir:
+        with tempfile.TemporaryDirectory(prefix="niki-stt-") as work_dir:
             try:
                 transcription = _create_transcription(file_path)
             except APIStatusError as exc:
@@ -253,7 +253,7 @@ def _transcribe_xai(
     file_path: str, model_name: str, *, language: Optional[str] = None, prompt: Optional[str] = None
 ) -> dict[str, Any]:
     """Transcribe via xAI ``POST /v1/stt`` (multipart). Supports ITN, diarization, word timestamps."""
-    from hermes_cli.config import get_env_value
+    from niki_cli.config import get_env_value
     from tools.transcription_tools import _load_stt_config, _resolve_stt_language
     from tools.xai_http import resolve_xai_http_credentials
     if prompt:
@@ -266,7 +266,7 @@ def _transcribe_xai(
              } if direct_api_key else resolve_xai_http_credentials()
     api_key = str(creds.get("api_key") or "").strip()
     if not api_key:
-        return _error_result("No xAI credentials found. Configure xAI OAuth in `hermes model` or set XAI_API_KEY")
+        return _error_result("No xAI credentials found. Configure xAI OAuth in `niki model` or set XAI_API_KEY")
     stt_config = _load_stt_config()
     xai_config = stt_config.get("xai") or {}
 
@@ -281,7 +281,7 @@ def _transcribe_xai(
     language = language or _resolve_stt_language("xai", stt_config) or ""
 
     def _post() -> Any:
-        from tools.xai_http import hermes_xai_user_agent
+        from tools.xai_http import niki_xai_user_agent
         # Always name the model: xAI moved the server default from 1.0 to 2.0 mid-September and
         # will retire 1.0, so an omitted field silently changes what Niki runs.
         resolved_model = normalize_xai_stt_model(model_name)
@@ -295,7 +295,7 @@ def _transcribe_xai(
         data.update({flag: "true" for flag, default in flags if is_truthy_value(xai_config.get(flag, default))})
 
         def _post_transcription(bearer: str, endpoint_base_url: str):
-            headers = {"Authorization": f"Bearer {bearer}", "User-Agent": hermes_xai_user_agent()}
+            headers = {"Authorization": f"Bearer {bearer}", "User-Agent": niki_xai_user_agent()}
             return _post_audio_multipart(f"{endpoint_base_url}/stt", headers, file_path, data)
 
         response = _post_transcription(api_key, _resolve_base_url(creds))
@@ -330,7 +330,7 @@ def _transcribe_elevenlabs(
     file_path: str, model_name: str, *, language: Optional[str] = None, prompt: Optional[str] = None
 ) -> dict[str, Any]:
     """Transcribe using ElevenLabs Scribe STT API."""
-    from hermes_cli.config import get_env_value
+    from niki_cli.config import get_env_value
     from tools.transcription_tools import _load_stt_config, _resolve_provider_key, _resolve_stt_language
     if prompt:
         _log_prompt_unsupported("STT provider 'elevenlabs'")
@@ -364,12 +364,12 @@ def _transcribe_elevenlabs(
 def _transcribe_deepinfra(
     file_path: str, model_name: str, *, language: Optional[str] = None, prompt: Optional[str] = None
 ) -> dict[str, Any]:
-    """Resolve DeepInfra credentials/model (shared ``hermes_cli.models`` helpers), then delegate to :func:`_transcribe_openai`."""
+    """Resolve DeepInfra credentials/model (shared ``niki_cli.models`` helpers), then delegate to :func:`_transcribe_openai`."""
     from tools.transcription_tools import _load_stt_config, _resolve_provider_key
     api_key = _resolve_provider_key("DEEPINFRA_API_KEY", "deepinfra")
     if not api_key:
         return _error_result("DEEPINFRA_API_KEY not set")
-    from hermes_cli.models import deepinfra_base_url, deepinfra_model_ids
+    from niki_cli.models import deepinfra_base_url, deepinfra_model_ids
     # ``stt.deepinfra: null`` in YAML yields None, not {} — coalesce.
     base_url = deepinfra_base_url(_get_stt_section(_load_stt_config(), "deepinfra"))
     model_name = model_name or next(iter(deepinfra_model_ids("stt")), None)
@@ -413,13 +413,13 @@ def _direct_openai_credentials(cfg_api_key: str, cfg_base_url: str) -> Optional[
 
 def _resolve_openai_audio_client_config() -> tuple[str, str]:
     """``(api_key, base_url)`` for the OpenAI STT client, strict on the stored ``stt`` selection:
-    ``"nous"`` -> managed gateway ONLY (a direct OPENAI_API_KEY must NOT override it); any other
+    ``"niki"`` -> managed gateway ONLY (a direct OPENAI_API_KEY must NOT override it); any other
     stored provider -> direct credentials ONLY (no silent managed fallback); never-configured ->
     legacy ladder: direct credentials, then the managed gateway. Failures raise ValueError."""
     from tools.transcription_tools import _load_stt_config
     from tools.managed_tool_gateway import resolve_managed_tool_gateway
     from tools.tool_backend_helpers import (
-        NOUS_MANAGED_PROVIDER, managed_nous_tools_enabled, nous_tool_gateway_unavailable_message,
+        NIKI_MANAGED_PROVIDER, managed_nous_tools_enabled, niki_tool_gateway_unavailable_message,
         read_selection, selection_error)
     openai_cfg = _load_stt_config().get("openai") or {}
     selected = read_selection("stt")
@@ -428,13 +428,13 @@ def _resolve_openai_audio_client_config() -> tuple[str, str]:
         gateway = resolve_managed_tool_gateway("openai-audio")
         if gateway is None:
             return None
-        return gateway.nous_user_token, urljoin(f"{gateway.gateway_origin.rstrip('/')}/", "v1")
+        return gateway.niki_user_token, urljoin(f"{gateway.gateway_origin.rstrip('/')}/", "v1")
 
-    if selected == NOUS_MANAGED_PROVIDER:
+    if selected == NIKI_MANAGED_PROVIDER:
         managed = _managed()
         if managed is None:
-            raise ValueError(selection_error("stt", NOUS_MANAGED_PROVIDER,
-                                             "the Nous Tool Gateway is not available (not entitled or unreachable)"))
+            raise ValueError(selection_error("stt", NIKI_MANAGED_PROVIDER,
+                                             "the Niki Tool Gateway is not available (not entitled or unreachable)"))
         return managed
     direct = _direct_openai_credentials(openai_cfg.get("api_key", ""), openai_cfg.get("base_url", ""))
     if direct is not None:
@@ -447,7 +447,7 @@ def _resolve_openai_audio_client_config() -> tuple[str, str]:
     if managed is None:
         message = "Neither stt.openai.api_key in config nor VOICE_TOOLS_OPENAI_KEY/OPENAI_API_KEY is set"
         if managed_nous_tools_enabled():
-            message += ". " + nous_tool_gateway_unavailable_message("managed OpenAI audio for transcription")
+            message += ". " + niki_tool_gateway_unavailable_message("managed OpenAI audio for transcription")
         raise ValueError(message)
     return managed
 

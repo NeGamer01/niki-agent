@@ -6,7 +6,7 @@ author: Ben Barclay (benbarclay), Niki Agent
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  niki:
     tags: [Documents, OCR, Action-Items, Deadlines, Extraction]
     related_skills: [pdf, pdf, docx, notion]
 ---

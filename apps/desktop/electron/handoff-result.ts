@@ -2,7 +2,7 @@
  * Consume the detached update hand-off's result file (#82328 follow-up).
  *
  * scripts/desktop-update/windows.ps1 runs hidden/detached — the user never sees its
- * console. It writes HERMES_HOME/.hermes-update-result.json on every exit
+ * console. It writes NIKI_HOME/.niki-update-result.json on every exit
  * path; the relaunched Desktop reads it exactly once on boot and surfaces
  * failures (a silent failed update looks identical to "nothing happened",
  * which is how the 2026-08-09 'closed the app then nothing' report was
@@ -44,8 +44,8 @@ export interface HandoffResult {
   warnings: string[]
 }
 
-export function handoffResultPath(hermesHome: string): string {
-  return path.join(hermesHome, '.hermes-update-result.json')
+export function handoffResultPath(nikiHome: string): string {
+  return path.join(nikiHome, '.niki-update-result.json')
 }
 
 /** Read, parse, then consume the result file; null when absent or unparseable (a JSON `null` body is
@@ -150,7 +150,7 @@ function toHandoffResult(parsed: any, manual: boolean): HandoffResult {
  * time inside the run (started_at..finished_at), never as its exact start.
  */
 export function readAndConsumeHandoffResult(
-  hermesHome: string,
+  nikiHome: string,
   {
     now = Date.now,
     maxAgeMs = HANDOFF_RESULT_MAX_AGE_MS,
@@ -165,7 +165,7 @@ export function readAndConsumeHandoffResult(
     log?: (line: string) => void
   } = {}
 ): HandoffResult | null {
-  const consumed = consumeHandoffResultFile(handoffResultPath(hermesHome), log)
+  const consumed = consumeHandoffResultFile(handoffResultPath(nikiHome), log)
 
   if (consumed === null) {
     return null

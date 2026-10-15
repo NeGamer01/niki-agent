@@ -10,7 +10,7 @@
 
 /** The dashboard's own backend could not be reached at all (fetch rejected). */
 export const API_UNREACHABLE_MESSAGE =
-  "Niki dashboard cannot reach the Niki service. Is `hermes dashboard` still running?";
+  "Niki dashboard cannot reach the Niki service. Is `niki dashboard` still running?";
 
 /** Status → plain sentence, used when the body carries no usable `detail`. */
 const STATUS_COPY: Record<number, string> = {

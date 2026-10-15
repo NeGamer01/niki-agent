@@ -1,4 +1,4 @@
-"""Content-free ``hermes.compaction`` v1 records for every history rewrite, and their fan-out.
+"""Content-free ``niki.compaction`` v1 records for every history rewrite, and their fan-out.
 
 One record per ``compress_context`` attempt (built from the attempt telemetry seam), per
 micro-compaction pass, per committed proactive tool-result prune, and per Codex-native thread
@@ -21,7 +21,7 @@ from agent.model_metadata import estimate_messages_tokens_rough
 
 logger = logging.getLogger(__name__)
 
-SCHEMA_NAME = "hermes.compaction"
+SCHEMA_NAME = "niki.compaction"
 SCHEMA_VERSION = "1"
 # Relay's reserved mark name: it resets the owning agent scope's LLM-history freshness, so it is used only
 # for a committed rewrite of what the model will see next. Everything else is an ordinary attempt mark.
@@ -94,14 +94,14 @@ _warned = False
 
 @functools.cache
 def _failure_classes() -> frozenset[str]:
-    from hermes_cli.observability.shared_metrics_contract import COMPRESSION_FAILURE_CLASSES
+    from niki_cli.observability.shared_metrics_contract import COMPRESSION_FAILURE_CLASSES
 
     return COMPRESSION_FAILURE_CLASSES | _EXTRA_FAILURE_CLASSES
 
 
 @functools.cache
 def _skip_classes() -> frozenset[str]:
-    from hermes_cli.observability.shared_metrics_contract import COMPRESSION_SKIP_CLASSES
+    from niki_cli.observability.shared_metrics_contract import COMPRESSION_SKIP_CLASSES
 
     return COMPRESSION_SKIP_CLASSES
 
@@ -134,7 +134,7 @@ def event_name(payload: dict[str, Any]) -> str:
 
 def _payload(**values: Any) -> dict[str, Any]:
     payload = dict.fromkeys(_FIELDS)
-    payload.update(values, harness="hermes")
+    payload.update(values, harness="niki")
     payload["kind"] = _closed(payload["kind"], _KINDS)
     payload["scope"] = _closed(payload["scope"], _SCOPES)
     payload["method"] = _closed(payload["method"], _METHODS) or "none"

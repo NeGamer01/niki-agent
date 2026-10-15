@@ -34,24 +34,24 @@ The transport reuses the `anthropic_messages` adapter (MiniMax exposes an Anthro
 
 ```bash
 # Launch the provider and model picker
-hermes model
+niki model
 # → Select "MiniMax (OAuth)" from the provider list
 # → Niki opens your browser to the MiniMax authorization page
 # → Approve access in the browser
 # → Select a model (MiniMax-M2.7 or MiniMax-M2.7-highspeed)
 # → Start chatting
 
-hermes
+niki
 ```
 
-After the first login, credentials are stored under `~/.hermes/auth.json` and are refreshed automatically before each session.
+After the first login, credentials are stored under `~/.niki/auth.json` and are refreshed automatically before each session.
 
 ## Logging In Manually
 
 You can trigger a login without going through the model picker:
 
 ```bash
-hermes auth add minimax-oauth
+niki auth add minimax-oauth
 ```
 
 ### China region
@@ -59,7 +59,7 @@ hermes auth add minimax-oauth
 If your account is on the China platform (`minimaxi.com`), use the API-key-based `minimax-cn` provider instead — `minimax-cn` is registered with `auth_type="api_key"` only (no OAuth flow). Configure `MINIMAX_CN_API_KEY` (and optionally `MINIMAX_CN_BASE_URL`) directly:
 
 ```bash
-echo 'MINIMAX_CN_API_KEY=your-key' >> ~/.hermes/.env
+echo 'MINIMAX_CN_API_KEY=your-key' >> ~/.niki/.env
 ```
 
 ### Remote / headless sessions
@@ -67,7 +67,7 @@ echo 'MINIMAX_CN_API_KEY=your-key' >> ~/.hermes/.env
 On servers or containers where no browser is available:
 
 ```bash
-hermes auth add minimax-oauth --no-browser
+niki auth add minimax-oauth --no-browser
 ```
 
 Niki will print the verification URL and user code — open the URL on any device and enter the code when prompted.
@@ -80,14 +80,14 @@ Niki implements a PKCE browser OAuth flow against the MiniMax OAuth endpoints:
 2. It POSTs to `{base_url}/oauth/code` with the challenge and receives a `user_code` and `verification_uri`.
 3. Your browser opens `verification_uri`. If prompted, enter the `user_code`.
 4. Niki polls `{base_url}/oauth/token` until the token arrives (or the deadline passes).
-5. Tokens (`access_token`, `refresh_token`, expiry) are saved to `~/.hermes/auth.json` under the `minimax-oauth` key.
+5. Tokens (`access_token`, `refresh_token`, expiry) are saved to `~/.niki/auth.json` under the `minimax-oauth` key.
 
 Token refresh (standard OAuth `refresh_token` grant) runs automatically at each session start when the access token is within 60 seconds of expiry.
 
 ## Checking Login Status
 
 ```bash
-hermes doctor
+niki doctor
 ```
 
 The `◆ Auth Providers` section will show:
@@ -105,7 +105,7 @@ or, if not logged in:
 ## Switching Models
 
 ```bash
-hermes model
+niki model
 # → Select "MiniMax (OAuth)"
 # → Pick from the model list
 ```
@@ -113,13 +113,13 @@ hermes model
 Or set the model directly:
 
 ```bash
-hermes config set model.default MiniMax-M2.7
-hermes config set model.provider minimax-oauth
+niki config set model.default MiniMax-M2.7
+niki config set model.provider minimax-oauth
 ```
 
 ## Configuration Reference
 
-After login, `~/.hermes/config.yaml` will contain entries similar to:
+After login, `~/.niki/config.yaml` will contain entries similar to:
 
 ```yaml
 model:
@@ -140,10 +140,10 @@ model:
 All of the following resolve to `minimax-oauth`:
 
 ```bash
-hermes --provider minimax-oauth    # canonical
-hermes --provider minimax-portal   # alias
-hermes --provider minimax-global   # alias
-hermes --provider minimax_oauth    # alias (underscore form)
+niki --provider minimax-oauth    # canonical
+niki --provider minimax-portal   # alias
+niki --provider minimax-global   # alias
+niki --provider minimax_oauth    # alias (underscore form)
 ```
 
 ## Environment Variables
@@ -155,10 +155,10 @@ The `minimax-oauth` provider does **not** use `MINIMAX_API_KEY` or `MINIMAX_BASE
 | `MINIMAX_API_KEY` | Used by `minimax` provider only — ignored for `minimax-oauth` |
 | `MINIMAX_CN_API_KEY` | Used by `minimax-cn` provider only — ignored for `minimax-oauth` |
 
-To use `minimax-oauth` as the active provider, set `model.provider: minimax-oauth` in `config.yaml` (use `hermes setup` for the guided flow), or pass `--provider minimax-oauth` for a single invocation:
+To use `minimax-oauth` as the active provider, set `model.provider: minimax-oauth` in `config.yaml` (use `niki setup` for the guided flow), or pass `--provider minimax-oauth` for a single invocation:
 
 ```bash
-hermes --provider minimax-oauth
+niki --provider minimax-oauth
 ```
 
 ## Models
@@ -180,13 +180,13 @@ Niki refreshes the token on every session start if it is within 60 seconds of ex
 
 When the refresh failure is terminal (HTTP 4xx, `invalid_grant`, revoked grant, etc.), Niki marks the refresh token as dead and quarantines it locally so it doesn't keep replaying the doomed exchange. The agent surfaces a single "re-authentication required" message and stays out of the way until you log in again.
 
-**Fix:** run `hermes auth add minimax-oauth` again to start a fresh login. The quarantine clears on the next successful exchange.
+**Fix:** run `niki auth add minimax-oauth` again to start a fresh login. The quarantine clears on the next successful exchange.
 
 ### Authorization timed out
 
 The device-code flow has a finite expiry window. If you don't approve the login in time, Niki raises a timeout error.
 
-**Fix:** re-run `hermes auth add minimax-oauth` (or `hermes model`). The flow starts fresh.
+**Fix:** re-run `niki auth add minimax-oauth` (or `niki model`). The flow starts fresh.
 
 ### State mismatch (possible CSRF)
 
@@ -196,10 +196,10 @@ Niki detected that the `state` value returned by the authorization server does n
 
 ### Logging in from a remote server
 
-If `hermes` cannot open a browser window, use `--no-browser`:
+If `niki` cannot open a browser window, use `--no-browser`:
 
 ```bash
-hermes auth add minimax-oauth --no-browser
+niki auth add minimax-oauth --no-browser
 ```
 
 Niki prints the URL and code. Open the URL on any device and complete the flow there.
@@ -208,20 +208,20 @@ Niki prints the URL and code. Open the URL on any device and complete the flow t
 
 The auth store has no credentials for `minimax-oauth`. You have not logged in yet, or the credential file was deleted.
 
-**Fix:** run `hermes model` and select MiniMax (OAuth), or run `hermes auth add minimax-oauth`.
+**Fix:** run `niki model` and select MiniMax (OAuth), or run `niki auth add minimax-oauth`.
 
 ### "Provider 'minimax-oauth' is set in config.yaml but no credentials were found"
 
 The main agent or an auxiliary task (compression, vision, …) is pinned to `minimax-oauth` and the auth store has no login. There is no `MINIMAX_API_KEY`-style environment variable for the OAuth provider — `MINIMAX_API_KEY` belongs to the plain API-key `minimax` provider.
 
-**Fix:** run `hermes auth add minimax-oauth` to sign in, or switch that provider to `minimax` with an API key.
+**Fix:** run `niki auth add minimax-oauth` to sign in, or switch that provider to `minimax` with an API key.
 
 ## Logging Out
 
 To remove stored MiniMax OAuth credentials:
 
 ```bash
-hermes auth logout minimax-oauth
+niki auth logout minimax-oauth
 ```
 
 ## See Also
@@ -229,4 +229,4 @@ hermes auth logout minimax-oauth
 - [AI Providers reference](../integrations/providers.md)
 - [Environment Variables](../reference/environment-variables.md)
 - [Configuration](../user-guide/configuration.md)
-- [hermes doctor](../reference/cli-commands.md)
+- [niki doctor](../reference/cli-commands.md)

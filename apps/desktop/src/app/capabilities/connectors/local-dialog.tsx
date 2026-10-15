@@ -1,8 +1,8 @@
-import { compactNumber } from '@hermes/shared'
+import { compactNumber } from '@niki/shared'
 import { useLocation, useNavigate } from 'react-router'
 
 import { PanelEmpty } from '@/app/overlays/panel'
-import type { ProfileScope } from '@/hermes'
+import type { ProfileScope } from '@/niki'
 import { useI18n } from '@/i18n'
 
 import type { McpServersController } from '../mcp/use-mcp-servers'

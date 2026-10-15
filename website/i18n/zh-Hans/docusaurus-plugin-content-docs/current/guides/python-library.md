@@ -15,8 +15,8 @@ Niki 不仅仅是一个 CLI 工具。你可以直接导入 `AIAgent`，在自己
 克隆 Niki 并创建受支持的可编辑开发环境：
 
 ```bash
-git clone https://github.com/NousResearch/hermes-agent.git
-cd hermes-agent
+git clone https://github.com/NeGamer01/niki-agent.git
+cd niki-agent
 source ./activate
 ```
 
@@ -258,7 +258,7 @@ client = discord.Client(intents=discord.Intents.default())
 async def on_message(message):
     if message.author == client.user:
         return
-    if message.content.startswith("!hermes "):
+    if message.content.startswith("!niki "):
         query = message.content[8:]
         agent = AIAgent(
             model="anthropic/claude-sonnet-4",

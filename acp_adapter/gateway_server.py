@@ -14,8 +14,8 @@ from acp.schema import (
     SessionCapabilities, SessionForkCapabilities, SessionListCapabilities, SessionResumeCapabilities,
 )
 
-from hermes_cli.gateway_client import GatewayClientError, connect_gateway
-from hermes_constants import get_hermes_home
+from niki_cli.gateway_client import GatewayClientError, connect_gateway
+from niki_constants import get_niki_home
 from acp_adapter.session import _translate_acp_cwd, _normalize_cwd_for_compare
 
 logger = logging.getLogger(__name__)
@@ -85,7 +85,7 @@ def _slash_command(text):
     name = stripped.split(None, 1)[0][1:]
     if not name or '/' in name:
         return None
-    from hermes_cli.commands import resolve_command
+    from niki_cli.commands import resolve_command
     command = resolve_command(name)
     return command.name if command is not None else None
 
@@ -103,16 +103,16 @@ def _submit_fingerprint(session_id, text, attachments):
 
 def _bypass_route():
     """--safe-mode / --ignore-user-config read no profile default route, so the session freezes the
-    launch's explicit one (``hermes -m <model> --provider <name> --safe-mode acp``). Both, refused at
+    launch's explicit one (``niki -m <model> --provider <name> --safe-mode acp``). Both, refused at
     session/new: a model alone is accepted by the owner, then its first turn cannot build the agent."""
-    model = (os.environ.get("HERMES_MODEL") or os.environ.get("HERMES_INFERENCE_MODEL") or "").strip()
+    model = (os.environ.get("NIKI_MODEL") or os.environ.get("NIKI_INFERENCE_MODEL") or "").strip()
     if not model:
         raise GatewayClientError("--safe-mode / --ignore-user-config read no profile default model: launch "
-                                 "with one, e.g. hermes -m <model> --provider <provider> --safe-mode acp")
-    provider = os.environ.get("HERMES_INFERENCE_PROVIDER", "").strip()
+                                 "with one, e.g. niki -m <model> --provider <provider> --safe-mode acp")
+    provider = os.environ.get("NIKI_INFERENCE_PROVIDER", "").strip()
     if not provider:
         raise GatewayClientError("--safe-mode / --ignore-user-config read no profile provider: launch with "
-                                 "--provider too, e.g. hermes -m <model> --provider <provider> --safe-mode acp")
+                                 "--provider too, e.g. niki -m <model> --provider <provider> --safe-mode acp")
     return {"model": model, "provider": provider}
 
 
@@ -128,7 +128,7 @@ class GatewayACPAgent(acp.Agent):
         self._gateway = None
         self._connection = None
         self._connect_lock = asyncio.Lock()
-        self._home = get_hermes_home().resolve()
+        self._home = get_niki_home().resolve()
         self._snapshots = {}
         self._event_task = None
         self._terminals = {}
@@ -160,7 +160,7 @@ class GatewayACPAgent(acp.Agent):
         # Editor-held compression-tip id -> logical session id (see ``_resume``).
         self._aliases = {}
         self._form_elicitation = False
-        from hermes_cli.gateway_mutations import PreparedMutations
+        from niki_cli.gateway_mutations import PreparedMutations
         self._mutations = PreparedMutations()
         # Session -> title the editor was last shown (``session_info_update`` fires on a change).
         self._titles = {}
@@ -183,10 +183,10 @@ class GatewayACPAgent(acp.Agent):
             self._form_elicitation = client_supports_form_elicitation(message.get("params"))
 
     async def initialize(self, **kwargs):
-        from hermes_cli import __version__
+        from niki_cli import __version__
         from acp_adapter.auth import build_auth_methods
         return InitializeResponse(protocol_version=acp.PROTOCOL_VERSION,
-            agent_info=Implementation(name="hermes-agent", version=__version__),
+            agent_info=Implementation(name="niki-agent", version=__version__),
             agent_capabilities=AgentCapabilities(load_session=True,
                 prompt_capabilities=PromptCapabilities(image=True),
                 session_capabilities=SessionCapabilities(fork=SessionForkCapabilities(), list=SessionListCapabilities(),
@@ -194,8 +194,8 @@ class GatewayACPAgent(acp.Agent):
             auth_methods=build_auth_methods())
 
     async def authenticate(self, method_id, **kwargs):
-        from acp_adapter.server import HermesACPAgent
-        return await HermesACPAgent.authenticate(self, method_id, **kwargs)
+        from acp_adapter.server import NikiACPAgent
+        return await NikiACPAgent.authenticate(self, method_id, **kwargs)
 
     async def _client(self):
         async with self._connect_lock:
@@ -227,7 +227,7 @@ class GatewayACPAgent(acp.Agent):
         The fresh snapshot carries the new replay epoch/sequence and the authority's current
         pending rows (a turn lost in the restart is ``unknown`` there, never resubmitted); the
         editor's borrowed MCP servers are re-attached because a restarted owner has none."""
-        from hermes_cli.gateway_client import GatewayRPCError
+        from niki_cli.gateway_client import GatewayRPCError
         for session_id in list(self._snapshots):
             params = {"editor": self._editor_mcp[session_id]} if session_id in self._editor_mcp else {}
             try:
@@ -283,8 +283,8 @@ class GatewayACPAgent(acp.Agent):
         if ("acp" not in descriptor.get("session_create", {}).get("sources", [])
                 or "acp-editor-policy-v1" not in descriptor.get("capabilities", [])):
             raise GatewayClientError("acp_policy_unavailable")
-        from hermes_cli.gateway_chat import env_launch_flags
-        # `hermes acp --yolo` / `--safe-mode` / ... reach this process as their env equivalents; the
+        from niki_cli.gateway_chat import env_launch_flags
+        # `niki acp --yolo` / `--safe-mode` / ... reach this process as their env equivalents; the
         # owner does not inherit them, so they freeze into this session's policy or not at all.
         flags = env_launch_flags()
         if flags.get("safe_mode") or flags.get("ignore_user_config"):
@@ -333,7 +333,7 @@ class GatewayACPAgent(acp.Agent):
     async def _attach_info(self, client, session_id):
         """``session.info`` for a session to attach. A thread main's in-process server wrote has no
         gateway policy yet; ``session.resume`` is the verb that adopts it (``LEGACY_LOCAL_SOURCES``)."""
-        from hermes_cli.gateway_client import GatewayRPCError
+        from niki_cli.gateway_client import GatewayRPCError
         try:
             return await client.rpc("session.info", session_id=session_id)
         except GatewayRPCError as exc:
@@ -346,7 +346,7 @@ class GatewayACPAgent(acp.Agent):
     async def _resume(self, cwd, held_id, mcp_servers):
         client = await self._client()
         from acp_adapter.catalog import logical_session_id
-        from hermes_cli.gateway_client import GatewayRPCError
+        from niki_cli.gateway_client import GatewayRPCError
         session_id = await asyncio.to_thread(logical_session_id, self._home / "state.db", held_id)
         # The latest load names the id this editor addresses the conversation by.
         self._aliases = {held: sid for held, sid in self._aliases.items() if sid != session_id}
@@ -495,7 +495,7 @@ class GatewayACPAgent(acp.Agent):
         async def confirm(refusal):
             from acp.schema import AllowedOutcome, PermissionOption
             from agent.i18n import t
-            from hermes_cli.gateway_mutations import confirmation_title
+            from niki_cli.gateway_mutations import confirmation_title
             title = confirmation_title(refusal)
             tool_call = acp.update_tool_call(
                 f"model-confirm-{uuid.uuid4().hex[:12]}", title=f"{title}: {refusal.get('target_model', '')}",
@@ -582,7 +582,7 @@ class GatewayACPAgent(acp.Agent):
             link = self._link
             receipt = await client.rpc("prompt.submit", session_id=session_id, input_id=input_id, **submit)
         except BaseException as exc:
-            from hermes_cli.gateway_client import GatewayRPCError
+            from niki_cli.gateway_client import GatewayRPCError
             if not isinstance(exc, GatewayRPCError):
                 # Transport loss, timeout or cancel before the ack: the owner may hold this admission.
                 # Keep its identity for the editor's retry of the same prompt (latest 64 sessions).
@@ -663,11 +663,11 @@ class GatewayACPAgent(acp.Agent):
 
         ACP has no discard affordance; the classic chat's fenced ``/discard`` (``prompt.resolve_unknown``)
         acknowledges the exact lost admission without replaying it, and the queue then continues."""
-        from hermes_constants import profile_name_for_home
+        from niki_constants import profile_name_for_home
         lost = [row["admission_id"] for row in self._snapshots.get(session_id, {}).get("pending", [])
                 if row.get("status") == "unknown"] or [admission_id]
         profile = profile_name_for_home(self._home)
-        command = "hermes" + (f" -p {profile}" if profile not in (None, "default") else "")
+        command = "niki" + (f" -p {profile}" if profile not in (None, "default") else "")
         state = ("your input is accepted and kept" if submitted else "nothing was submitted")
         return (f"unknown_execution: do not resend accepted input; a turn in this session was lost when the "
                 f"gateway restarted and its outcome is unknown ({state}). Resolve it in a terminal with "
@@ -896,12 +896,12 @@ class GatewayACPAgent(acp.Agent):
     async def _answer_permission(self, session_id, prompt):
         from acp.schema import AllowedOutcome
         from acp_adapter.permissions import (
-            _build_permission_options, _build_permission_tool_call, _OPTION_ID_TO_HERMES,
+            _build_permission_options, _build_permission_tool_call, _OPTION_ID_TO_NIKI,
         )
         choices = prompt["choices"]
         options = [option for option in _build_permission_options(
             allow_permanent="always" in choices, allow_session="session" in choices)
-            if _OPTION_ID_TO_HERMES[option.option_id] in choices]
+            if _OPTION_ID_TO_NIKI[option.option_id] in choices]
         try:
             if 'edit' in prompt:
                 from acp_adapter.edit_approval import EditProposal, build_acp_edit_tool_call
@@ -918,7 +918,7 @@ class GatewayACPAgent(acp.Agent):
                 return False
             await self._gateway.rpc("approval.respond", session_id=session_id,
                 prompt_id=prompt["prompt_id"], execution_generation=prompt["execution_generation"],
-                choice=_OPTION_ID_TO_HERMES[response.outcome.option_id])
+                choice=_OPTION_ID_TO_NIKI[response.outcome.option_id])
             return True
         except Exception:
             # Boundary: a detached viewer or expired control is not a denial; the canonical

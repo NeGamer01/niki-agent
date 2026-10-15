@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 # ACP permission option id -> Niki approval result. Ids are stable across the
 # ``allow_permanent=True`` and ``False`` paths even though the option list differs.
-_OPTION_ID_TO_HERMES = {
+_OPTION_ID_TO_NIKI = {
     "allow_once": "once", "allow_session": "session", "allow_always": "always", "deny": "deny", "deny_always": "deny"
 }
 
@@ -64,14 +64,14 @@ def _build_permission_tool_call(command: str, description: str):
     )
 
 
-def _map_outcome_to_hermes(outcome: object, *, allowed_option_ids: set[str]) -> str:
+def _map_outcome_to_niki(outcome: object, *, allowed_option_ids: set[str]) -> str:
     """Map an ACP permission outcome into Niki approval strings."""
     if not isinstance(outcome, AllowedOutcome):
         return "deny"
     if outcome.option_id not in allowed_option_ids:
         logger.warning("Permission request returned unknown option_id: %s", outcome.option_id)
         return "deny"
-    return _OPTION_ID_TO_HERMES.get(outcome.option_id, "deny")
+    return _OPTION_ID_TO_NIKI.get(outcome.option_id, "deny")
 
 
 def await_permission(
@@ -148,6 +148,6 @@ def make_approval_callback(request_permission_fn: Callable, loop: asyncio.Abstra
             return "timeout"
         if response is None:
             return "deny"
-        return _map_outcome_to_hermes(response.outcome, allowed_option_ids={option.option_id for option in options})
+        return _map_outcome_to_niki(response.outcome, allowed_option_ids={option.option_id for option in options})
 
     return _callback

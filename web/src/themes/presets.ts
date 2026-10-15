@@ -1,4 +1,4 @@
-import { parseColor, THEME_PRESET_PALETTES, type ThemePresetPalette } from "@hermes/shared";
+import { parseColor, THEME_PRESET_PALETTES, type ThemePresetPalette } from "@niki/shared";
 import type { DashboardTheme, ThemePalette, ThemeTypography, ThemeLayout } from "./types";
 
 /**
@@ -9,10 +9,10 @@ import type { DashboardTheme, ThemePalette, ThemeTypography, ThemeLayout } from 
  * corner-radius all shift to match the theme's personality.
  *
  * Theme names must stay in sync with the backend's
- * `_BUILTIN_DASHBOARD_THEMES` list in `hermes_cli/web_server.py`.
+ * `_BUILTIN_DASHBOARD_THEMES` list in `niki_cli/web_server.py`.
  *
  * Presets that also ship on the desktop (midnight, ember, mono, cyberpunk)
- * take their colours from `@hermes/shared` `THEME_PRESET_PALETTES` so both
+ * take their colours from `@niki/shared` `THEME_PRESET_PALETTES` so both
  * surfaces render one palette; only typography/layout/overrides live here.
  */
 
@@ -199,11 +199,11 @@ export const roseTheme: DashboardTheme = {
   },
 };
 
-/** Light mode — vivid Nous-blue accents on a cream canvas. */
+/** Light mode — vivid Niki-blue accents on a cream canvas. */
 export const nousBlueTheme: DashboardTheme = {
-  name: "nous-blue",
-  label: "Nous Blue",
-  description: "Light mode — vivid Nous-blue accents on cream canvas",
+  name: "niki-blue",
+  label: "Niki Blue",
+  description: "Light mode — vivid Niki-blue accents on cream canvas",
   palette: {
     background: { hex: "#E8F2FD", alpha: 1 },
     midground: { hex: "#0053FD", alpha: 1 },
@@ -246,7 +246,7 @@ export const defaultLargeTheme: DashboardTheme = {
 export const BUILTIN_THEMES: Record<string, DashboardTheme> = {
   default: defaultTheme,
   "default-large": defaultLargeTheme,
-  "nous-blue": nousBlueTheme,
+  "niki-blue": nousBlueTheme,
   midnight: midnightTheme,
   ember: emberTheme,
   mono: monoTheme,

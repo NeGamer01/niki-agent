@@ -131,7 +131,7 @@ export const zhOverrides = {
       loadingSessions: '正在加载最近会话',
       retryingRemoteBackend: '正在重新连接远程 Niki 后端…',
       startingDesktopConnection: '正在启动桌面连接',
-      startingHermesDesktop: '正在启动 Niki 桌面版…'
+      startingNikiDesktop: '正在启动 Niki 桌面版…'
     },
     errors: {
       backgroundExited: 'Niki 后台进程已退出。',
@@ -162,10 +162,10 @@ export const zhOverrides = {
         `先退出已保存的远程浏览器会话，然后打开${signInLabel}。也可以使用本地网关切换到随应用提供的后端。`,
       signOutAndSignIn: '退出并重新登录',
       remoteFailureHint: '在“网关设置”中检查网关 URL 和登录，或切换到本地网关。',
-      cloudDownTitle: 'Nous Cloud 代理已宕机',
+      cloudDownTitle: 'Niki Cloud 代理已宕机',
       cloudDownDescription:
-        '此网关连接的 Nous 托管云代理正在返回服务器错误。无法在此处重启——请检查其状态、切换到本地网关或获取支持。',
-      cloudDownHint: '使用下方按钮打开 Nous Portal（查看实例状态与操作）或加入 Discord 获取支持。',
+        '此网关连接的 Niki 托管云代理正在返回服务器错误。无法在此处重启——请检查其状态、切换到本地网关或获取支持。',
+      cloudDownHint: '使用下方按钮打开 Niki Portal（查看实例状态与操作）或加入 Discord 获取支持。',
       cloudDownCheckPortal: '查看 Portal 状态',
       cloudDownDiscord: '在 Discord 获取帮助',
       hideRecentLogs: '隐藏最近日志',
@@ -199,7 +199,7 @@ export const zhOverrides = {
     desktopOutOfDateMessage: '此 Niki 应用早于所连接的后端，可能无法正常工作。请更新应用以保持一致。',
     updateDesktopApp: '更新应用',
     installMethodUnsupportedTitle: '不受支持的安装方式',
-    updateHermes: '更新 Niki',
+    updateNiki: '更新 Niki',
     updateReadyTitle: '有可用更新',
     updateReadyMessage: count => `有 ${count} 项新更改可用。`,
     updateReadyMessageUnknown: '有新更新可用。',
@@ -273,7 +273,7 @@ export const zhOverrides = {
   ...zhNotices,
 
   billingBlock: {
-    titleNous: 'Nous 额度已用尽',
+    titleNous: 'Niki 额度已用尽',
     titleProvider: provider => `额度已用尽 — ${provider}`,
     fallbackMessage: '您的账户额度已用尽。请充值以继续使用。',
     openBilling: '打开账单',
@@ -282,9 +282,9 @@ export const zhOverrides = {
   },
 
   sendDiagnostics: {
-    title: '向 Nous 发送诊断信息',
+    title: '向 Niki 发送诊断信息',
     privacyNotice:
-      '这会将调试包上传到 Nous 内部存储（并非公开粘贴板）。内容包括系统信息（操作系统、版本、服务商、已配置的 API 密钥种类 — 绝不包含密钥本身）以及完整的 agent、gateway 和桌面端日志（每个最多 512 KB，很可能包含对话内容、工具输出与文件路径）。上传前会先脱敏。仅 Nous 员工与获准的 Discord 版主可查看，14 天后自动删除。',
+      '这会将调试包上传到 Niki 内部存储（并非公开粘贴板）。内容包括系统信息（操作系统、版本、服务商、已配置的 API 密钥种类 — 绝不包含密钥本身）以及完整的 agent、gateway 和桌面端日志（每个最多 512 KB，很可能包含对话内容、工具输出与文件路径）。上传前会先脱敏。仅 Niki 员工与获准的 Discord 版主可查看，14 天后自动删除。',
     upload: '上传',
     uploading: '上传中…',
     cancel: '取消',
@@ -295,11 +295,11 @@ export const zhOverrides = {
     doneDescription: '调试包已私密上传。在您的支持会话中分享以下链接，团队即可查看您的日志。',
     failedTitle: '上传失败',
     failedHint:
-      '您也可以在终端运行 `hermes debug share --nous`，或运行 `hermes debug share --local` 在不上传的情况下查看报告。',
+      '您也可以在终端运行 `niki debug share --niki`，或运行 `niki debug share --local` 在不上传的情况下查看报告。',
     handoffLead: '在以下位置继续讨论:',
     links: {
       github: 'GitHub Issues',
-      portal: 'Nous Portal 支持',
+      portal: 'Niki Portal 支持',
       discord: 'Discord'
     }
   },
@@ -664,7 +664,7 @@ export const zhOverrides = {
         missingEnv: (_name, vars) => `缺少环境变量：${vars}。请在设置 → 密钥中添加。`,
         verified: '已验证',
         unverified: '未验证',
-        reviewedByNous: '已由 Nous 审核。',
+        reviewedByNous: '已由 Niki 审核。',
         installsAndEnables: profile => `安装到 ${profile}，并立即启用。`,
         installsOnly: profile => `安装到 ${profile}。`,
         advanced: '高级',
@@ -1171,7 +1171,7 @@ export const zhOverrides = {
     uninstallSection: {
       dangerZone: '危险操作',
       checkingInstalled: '正在检查已安装内容…',
-      uninstallHermes: '卸载 Niki',
+      uninstallNiki: '卸载 Niki',
       chooseHowMuch: '选择要删除的内容。应用会关闭以完成卸载；随时重新打开安装程序即可恢复。',
       confirmUninstall: '确认卸载',
       confirmBody: what => `这将删除${what}。此操作无法撤销。`,
@@ -1436,7 +1436,7 @@ export const zhOverrides = {
       intro:
         'Niki Desktop 默认会启动自己的本地网关。当你希望此应用控制另一台机器上或可信代理后的现有 Niki 后端时，可以使用远程网关。网关连接属于本机级设置；profile 是从所连接的网关中发现的。',
       envOverrideTitle: '环境变量正在控制此桌面会话。',
-      envOverrideDesc: '取消设置 HERMES_DESKTOP_REMOTE_URL 和 HERMES_DESKTOP_REMOTE_TOKEN 后才会使用下面保存的设置。',
+      envOverrideDesc: '取消设置 NIKI_DESKTOP_REMOTE_URL 和 NIKI_DESKTOP_REMOTE_TOKEN 后才会使用下面保存的设置。',
       modeTitle: '连接模式',
       localTitle: '本地网关',
       localDesc: '在 localhost 启动私有 Niki 后端。这是默认方式，并且可离线工作。',
@@ -1458,7 +1458,7 @@ export const zhOverrides = {
       cloudLoadingAgents: '正在加载你的智能体…',
       cloudNoAgents: {
         before: '此账户下未找到智能体。请在',
-        linkText: 'Nous 门户',
+        linkText: 'Niki 门户',
         after: '中创建一个，然后刷新。'
       },
       cloudRefresh: '刷新',
@@ -1479,7 +1479,7 @@ export const zhOverrides = {
       cloudAgentProvisioning: '正在配置…',
       cloudStatusLabel: status => `状态：${status}`,
       remoteUrlTitle: '远程 URL',
-      remoteUrlDesc: '远程 dashboard 后端的基础 URL。支持路径前缀，例如 /hermes。',
+      remoteUrlDesc: '远程 dashboard 后端的基础 URL。支持路径前缀，例如 /niki。',
       probing: '正在检查此网关的认证方式…',
       probeError: '暂时无法访问此网关。请检查 URL；网关响应后会显示认证方式。',
       signedIn: '已登录',
@@ -1550,9 +1550,9 @@ export const zhOverrides = {
       sshPortDesc: '留空 = 22 或 ~/.ssh/config 中的端口。',
       sshKeyTitle: '密钥文件',
       sshKeyDesc: '私钥路径。留空 = ssh-agent 或 ~/.ssh/config。',
-      sshHermesPathTitle: 'Niki 路径（可选）',
-      sshHermesPathDesc: '远程 hermes 可执行文件的完整路径。留空 = 自动检测。',
-      sshHermesPathPlaceholder: '自动检测',
+      sshNikiPathTitle: 'Niki 路径（可选）',
+      sshNikiPathDesc: '远程 niki 可执行文件的完整路径。留空 = 自动检测。',
+      sshNikiPathPlaceholder: '自动检测',
       sshTestConnection: '测试 SSH',
       sshConnect: '连接',
       sshButtonsHint: '“保存”将在下次启动时生效，“连接”则立即重新连接。',
@@ -1563,7 +1563,7 @@ export const zhOverrides = {
         'SSH 认证失败。请将密钥加载到 ssh-agent（ssh-add），或在 ~/.ssh/config 中设置 IdentityFile——Niki 以非交互方式运行 ssh。',
       sshErrHostKey: '自上次连接以来主机密钥已更改。请确认这是预期的，然后运行 ssh-keygen -R <host> 并重新连接。',
       sshErrNotInstalled:
-        '远程主机上未安装 Hermes。请在远程安装（curl -fsSL https://hermes-agent.nousresearch.com/install.sh | sh）或设置 Hermes 路径。',
+        '远程主机上未安装 Niki。请在远程安装（curl -fsSL https://raw.githubusercontent.com/NeGamer01/niki-agent/main/scripts/install.sh | sh）或设置 Niki 路径。',
       sshErrPlatform: '不支持的远程平台。Niki Desktop 的 SSH 模式支持 Linux、macOS 和 Windows 远程主机。',
       sshErrTimeout: 'SSH 连接超时。主机可能无法访问或处于休眠状态。',
       sshErrUpdateRequired: '使用 Desktop SSH 连接前，请更新远程主机上的 Niki。',
@@ -1690,11 +1690,11 @@ export const zhOverrides = {
       usageLabel: label => `${label}用量`,
       freeTier: {
         signIn: '登录',
-        title: '你正在使用 Nous 免费服务',
-        message: '登录 Nous 账户以解锁更多模型和工具。',
-        caption: '使用 nous/welcome，包含连接器。登录后会保留连接器，并增加需要账户的工具和其他所有模型。',
-        name: 'Nous · 免费服务',
-        footnote: '免费服务没有余额，无需支付。登录 Nous 账户后才会显示支付与用量。',
+        title: '你正在使用 Niki 免费服务',
+        message: '登录 Niki 账户以解锁更多模型和工具。',
+        caption: '使用 niki/welcome，包含连接器。登录后会保留连接器，并增加需要账户的工具和其他所有模型。',
+        name: 'Niki · 免费服务',
+        footnote: '免费服务没有余额，无需支付。登录 Niki 账户后才会显示支付与用量。',
         plan: '免费服务',
         model: '模型',
         connectors: '连接器',
@@ -1793,8 +1793,8 @@ export const zhOverrides = {
       state: {
         notice: {
           loggedOut: {
-            title: '连接你的 Nous 账户',
-            message: '登录你的 Nous 账户，即可在此查看余额、套餐和用量。',
+            title: '连接你的 Niki 账户',
+            message: '登录你的 Niki 账户，即可在此查看余额、套餐和用量。',
             action: '登录'
           },
           openPortal: '打开门户 ↗',
@@ -1990,13 +1990,13 @@ export const zhOverrides = {
       activeBackend: '当前后端',
       activeBackendHint: '这是你当前使用的后端',
       useBackend: '使用此后端',
-      nousIncluded: '包含在 Nous 订阅中；登录 Nous Portal 即可激活。',
-      nousAuthNeededTitle: '登录 Nous Portal',
-      nousAuthNeededMessage: provider => `已保存 ${provider}，但在登录 Nous Portal 之前不会激活。`,
+      nousIncluded: '包含在 Niki 订阅中；登录 Niki Portal 即可激活。',
+      nousAuthNeededTitle: '登录 Niki Portal',
+      nousAuthNeededMessage: provider => `已保存 ${provider}，但在登录 Niki Portal 之前不会激活。`,
       nousAuthSignIn: '登录',
-      nousAuthDoneTitle: '已连接 Nous Portal',
+      nousAuthDoneTitle: '已连接 Niki Portal',
       nousAuthDoneMessage: '订阅后端现已激活。',
-      nousAuthFailed: 'Nous Portal 登录未完成',
+      nousAuthFailed: 'Niki Portal 登录未完成',
       noApiKeyRequired: '不需要 API 密钥。',
       postSetupHint: step => `此后端需要一次性安装 (${step})。将在此机器上执行，可能需要几分钟。`,
       postSetupInstalledHint: '已安装。仅在出现问题时才需要重新运行安装。',
@@ -2134,7 +2134,7 @@ export const zhOverrides = {
     edit: '编辑',
     archive: '归档',
     skillArchivedTitle: '技能已归档',
-    skillArchivedMessage: '可通过 hermes curator restore 恢复。',
+    skillArchivedMessage: '可通过 niki curator restore 恢复。',
     tabPlugins: '插件',
     plugins: {
       agentTitle: 'Agent 插件',
@@ -2424,7 +2424,7 @@ export const zhOverrides = {
     noSessions: '暂无会话。',
     gatewayRunning: '消息网关运行中',
     gatewayStopped: '消息网关已停止',
-    hermesActiveSessions: (version, count) => `Niki ${version} · 活跃会话 ${count}`,
+    nikiActiveSessions: (version, count) => `Niki ${version} · 活跃会话 ${count}`,
     restartGateway: '重启网关',
     openBrowser: '切换浏览器',
     toggleBrowser: '切换浏览器',
@@ -2433,7 +2433,7 @@ export const zhOverrides = {
     sharedGatewayRestartDescription: bots => `此设备上的所有机器人都会重新连接：${bots}`,
     sharedGatewayRestartConfirm: '全部重启',
     sharedGatewayRestarted: count => `共享网关已重启（${count} 个机器人）`,
-    updateHermes: '更新 Niki',
+    updateNiki: '更新 Niki',
     reloadWindow: '重新载入窗口',
     actionRunning: '运行中',
     actionDone: '完成',
@@ -2661,7 +2661,7 @@ export const zhOverrides = {
       MATTERMOST_ALLOWED_USERS: { label: '允许的用户 ID', help: '推荐。Mattermost 用户 ID（每格一个）。' },
       MATRIX_HOMESERVER: { label: 'Homeserver URL', placeholder: 'https://matrix.org' },
       MATRIX_ACCESS_TOKEN: { label: '访问令牌' },
-      MATRIX_USER_ID: { label: 'Bot 用户 ID', placeholder: '@hermes:example.org' },
+      MATRIX_USER_ID: { label: 'Bot 用户 ID', placeholder: '@niki:example.org' },
       MATRIX_ALLOWED_USERS: { label: '允许的 Matrix 用户 ID', help: '推荐。@user:server 格式的用户 ID（每格一个）。' },
       SIGNAL_HTTP_URL: {
         label: 'Signal 桥接 URL',
@@ -2694,7 +2694,7 @@ export const zhOverrides = {
       wecom: '在企业微信中添加群机器人，复制其 webhook key 作为 WECOM_BOT_ID。仅可发送——双向请用企业微信 (应用) 选项。',
       wecom_callback: '设置一个企业微信自建应用，暴露其回调 URL，并提供 corp ID、secret、agent ID 和 AES key。',
       weixin:
-        '运行 `hermes gateway setup`，选择 Weixin，然后使用个人微信账号扫描并确认二维码。Niki 会通过腾讯 iLink Bot API 连接并保存凭据。',
+        '运行 `niki gateway setup`，选择 Weixin，然后使用个人微信账号扫描并确认二维码。Niki 会通过腾讯 iLink Bot API 连接并保存凭据。',
       qqbot: '在 QQ 开放平台 (q.qq.com) 注册一个应用，复制 App ID 和 Client Secret。',
       api_server:
         '把 Niki 暴露为兼容 OpenAI 的 API。设置一个鉴权密钥，然后把 Open WebUI / LobeChat 等指向 host:port。',
@@ -2811,7 +2811,7 @@ export const zhOverrides = {
       title: (profile: string) => `将 ${profile} 连接到远程主机`,
       description: '此配置档案中的会话将在你指定的远程 Niki 上运行，而不是这台电脑。',
       urlLabel: '远程地址',
-      urlPlaceholder: 'https://hermes.example.com',
+      urlPlaceholder: 'https://niki.example.com',
       urlInvalid: '请输入以 http:// 或 https:// 开头的完整地址',
       tokenLabel: '访问令牌',
       tokenPlaceholder: '粘贴远程会话令牌',
@@ -3329,7 +3329,7 @@ export const zhOverrides = {
       '/resume': '恢复已保存的会话',
       '/details': '控制对话记录的详细程度',
       '/copy': '复制所选内容或最后一条助手消息',
-      '/quit': '退出 hermes',
+      '/quit': '退出 niki',
       '/start': '确认平台启动请求，不发送回复',
       '/new': '开始新的桌面对话',
       '/topic': '启用或查看 Telegram 私聊话题会话',
@@ -3358,7 +3358,7 @@ export const zhOverrides = {
       '/refine': '立即检查此对话，并将心得保存到记忆或技能',
       '/review': '生成独立子代理，审查刚才讨论的工作（PR、代码、文档）',
       '/loop': '在此会话中以固定间隔重新运行提示词',
-      '/plan': '将 Markdown 实施计划写入 .hermes/plans/，不执行任何操作',
+      '/plan': '将 Markdown 实施计划写入 .niki/plans/，不执行任何操作',
       '/moa': '使用默认的 Mixture of Agents 组合运行提示词，完成后还原模型',
       '/subgoal': '添加或管理活跃目标的额外条件',
       '/status': '显示当前会话状态',
@@ -3389,8 +3389,8 @@ export const zhOverrides = {
       '/browser': '管理智能体浏览器 [connect|disconnect|status|use]',
       '/palette': '打开模糊搜索命令面板（也可使用 Ctrl+P）',
       '/usage': '显示 Token 用量与速率限制；`reset` 可兑换保留的 Codex 限额重置',
-      '/subscription': '查看你的 Nous 方案，并在浏览器中更改',
-      '/topup': '显示你的 Nous 余额，并在 Portal 管理账务',
+      '/subscription': '查看你的 Niki 方案，并在浏览器中更改',
+      '/topup': '显示你的 Niki 余额，并在 Portal 管理账务',
       '/platform': '暂停、恢复或列出故障的网关平台',
       '/version': '显示 Niki Agent 版本',
       '/debug': '上传调试报告（系统信息与日志），并获取可分享链接',
@@ -3809,9 +3809,9 @@ export const zhOverrides = {
     versionDetailsDistributionDesktopMsix: '桌面应用 (MSIX)',
     versionDetailsDistributionDesktopInstaller: '桌面应用（安装器）',
     versionDetailsDistributionSourceInstaller: '源码（安装脚本）',
-    versionDetailsDistributionSourceInstallerDesktop: '源码（安装脚本）+ hermes desktop',
+    versionDetailsDistributionSourceInstallerDesktop: '源码（安装脚本）+ niki desktop',
     versionDetailsDistributionSource: '源码',
-    versionDetailsDistributionSourceDesktop: '源码 + hermes desktop',
+    versionDetailsDistributionSourceDesktop: '源码 + niki desktop',
     versionDetailsDistributionStore: 'Microsoft Store',
     versionDetailsRuntime: '运行时',
     versionDetailsRuntimeEmbedded: '嵌入式（捆绑）',
@@ -3853,7 +3853,7 @@ export const zhOverrides = {
     remoteSetupDesc: '输入网关 URL。Niki Desktop 会检测需要令牌还是浏览器登录。',
     remoteUrlTitle: '网关 URL',
     remoteUrlDesc: '使用 Niki 网关的基础 URL；远程地址请包含 https://。',
-    remoteUrlPlaceholder: 'https://gateway.example.com/hermes',
+    remoteUrlPlaceholder: 'https://gateway.example.com/niki',
     probing: '正在检测网关认证方式...',
     probeError: '无法连接到该 Niki 网关。',
     identityProvider: '你的身份提供方',
@@ -3901,21 +3901,21 @@ export const zhOverrides = {
   // Not yet translated — English fallbacks so the free-tier surfaces stay
   // readable until a zh pass lands.
   freeTier: {
-    providerRowTitle: 'Nous · 免费层',
-    providerRowPitch: '登录 Nous 账户以解锁更多模型和工具。',
+    providerRowTitle: 'Niki · 免费层',
+    providerRowPitch: '登录 Niki 账户以解锁更多模型和工具。',
     readyTitle: 'Niki 已就绪。',
     readyCaption: '免费 · 含连接器',
     begin: '开始',
-    signInInstead: '改为登录 Nous 账户',
+    signInInstead: '改为登录 Niki 账户',
     otherProviders: '其他提供方',
-    stripTitle: '免费的 Nous 推理和连接器现已可用。',
-    stripBody: '打开模型选择器试用，或登录 Nous 账户。',
+    stripTitle: '免费的 Niki 推理和连接器现已可用。',
+    stripBody: '打开模型选择器试用，或登录 Niki 账户。',
     openModelPicker: '打开模型选择器',
     dismiss: '关闭',
-    providerName: 'Nous',
-    statusLabel: model => `Nous · ${model}`,
+    providerName: 'Niki',
+    statusLabel: model => `Niki · ${model}`,
     signIn: '登录',
-    signInHeading: '登录 Nous 账户以解锁更多模型和工具。',
+    signInHeading: '登录 Niki 账户以解锁更多模型和工具。',
     settingUp: '正在设置免费推理…',
     codeBody: '在浏览器中输入此代码以完成登录。',
     copyLink: '复制链接',
@@ -3940,10 +3940,10 @@ export const zhOverrides = {
     retiredBody: '此免费层身份已被使用或已过期；下次启动时会重新设置。',
     errorBody: '登录未完成；请重试。',
     alreadySignedInHeading: '已登录。',
-    alreadySignedInBody: '此 Niki 已登录 Nous 账户。',
+    alreadySignedInBody: '此 Niki 已登录 Niki 账户。',
     offer: {
       heading: '继续使用 Niki',
-      body: '你正在使用免费额度。继续使用 Niki 的话，你会开始遇到限制。登录免费的 Nous 账户，即可获得更多额度。',
+      body: '你正在使用免费额度。继续使用 Niki 的话，你会开始遇到限制。登录免费的 Niki 账户，即可获得更多额度。',
       signIn: '登录',
       notNow: '暂不'
     }
@@ -3962,7 +3962,7 @@ export const zhOverrides = {
     localDownloadsHeading: '本地',
     noAuthenticatedProviders: '没有已认证的提供方。',
     pro: 'Pro',
-    proNeedsSubscription: 'Pro 模型需要付费 Nous 订阅。',
+    proNeedsSubscription: 'Pro 模型需要付费 Niki 订阅。',
     free: '免费',
     freeTier: '免费层',
     priceTitle: '每百万 token 的输入/输出价格',
@@ -4526,7 +4526,7 @@ export const zhOverrides = {
       reject: '拒绝',
       alwaysTitle: '始终允许此命令？',
       alwaysDescription: pattern =>
-        `这会将“${pattern}”模式加入永久允许列表 (~/.hermes/config.yaml)。Niki 对类似命令将不再询问，包括当前会话和未来会话。`,
+        `这会将“${pattern}”模式加入永久允许列表 (~/.niki/config.yaml)。Niki 对类似命令将不再询问，包括当前会话和未来会话。`,
       alwaysAllow: '始终允许'
     },
     clarify: zhClarify,
@@ -4792,7 +4792,7 @@ export const zhOverrides = {
       success: platform => `已移交到 ${platform}。随时可在此处恢复。`,
       systemNote: platform => `↻ 已移交到 ${platform} — 随时可在此处恢复。`,
       failed: error => `移交失败：${error}`,
-      timedOut: '等待网关超时。`hermes gateway` 是否正在运行？'
+      timedOut: '等待网关超时。`niki gateway` 是否正在运行？'
     }
   },
 

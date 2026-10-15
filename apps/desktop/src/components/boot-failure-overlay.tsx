@@ -127,7 +127,7 @@ export function BootFailureOverlay() {
       return
     }
 
-    void window.hermesDesktop
+    void window.nikiDesktop
       ?.getRecentLogs()
       .then(res => setLogs(res.lines ?? []))
       .catch(() => undefined)
@@ -143,7 +143,7 @@ export function BootFailureOverlay() {
 
     let cancelled = false
 
-    void window.hermesDesktop
+    void window.nikiDesktop
       ?.getBootstrapState()
       .then(snapshot => {
         if (!cancelled && snapshot) {
@@ -173,7 +173,7 @@ export function BootFailureOverlay() {
     let cancelled = false
 
     void (async () => {
-      const desktop = window.hermesDesktop
+      const desktop = window.nikiDesktop
 
       if (!desktop?.getConnectionConfig) {
         return
@@ -226,7 +226,7 @@ export function BootFailureOverlay() {
 
   const retry = async () => {
     setBusy('retry')
-    await window.hermesDesktop?.resetBootstrap().catch(() => undefined)
+    await window.nikiDesktop?.resetBootstrap().catch(() => undefined)
     window.location.reload()
   }
 
@@ -234,11 +234,11 @@ export function BootFailureOverlay() {
     setBusy('repair')
 
     try {
-      if (!window.hermesDesktop?.repairBootstrap) {
+      if (!window.nikiDesktop?.repairBootstrap) {
         throw new Error(t.boot.errors.ipcBridgeUnavailable)
       }
 
-      const result = await window.hermesDesktop.repairBootstrap()
+      const result = await window.nikiDesktop.repairBootstrap()
 
       // Main refuses repair on a bundled install (its stamp is authoritative;
       // our snapshot may be stale) — say what to do instead of the raw code.
@@ -261,7 +261,7 @@ export function BootFailureOverlay() {
   const switchToLocalGateway = async () => {
     setBusy('local')
     // Soft apply: tears down the primary and re-dials in place (shell stays).
-    await window.hermesDesktop?.applyConnectionConfig({ mode: 'local' }).catch(() => undefined)
+    await window.nikiDesktop?.applyConnectionConfig({ mode: 'local' }).catch(() => undefined)
     setBusy(null)
   }
 
@@ -279,7 +279,7 @@ export function BootFailureOverlay() {
     setBusy('signin')
 
     try {
-      const desktop = window.hermesDesktop
+      const desktop = window.nikiDesktop
 
       let connected: boolean
       // Only the oauth arm reports a reason (DesktopOauthLoginResult.error);
@@ -334,7 +334,7 @@ export function BootFailureOverlay() {
     }
   }
 
-  const openLogs = () => void window.hermesDesktop?.revealLogs().catch(() => undefined)
+  const openLogs = () => void window.nikiDesktop?.revealLogs().catch(() => undefined)
 
   const dismiss = () => setDismissedError(boot.error)
 
@@ -393,7 +393,7 @@ export function BootFailureOverlay() {
 
   let actions: RecoveryAction[]
   let hint: string
-  // The electron boot path flags a Nous Cloud backend-down (502/503/504) with
+  // The electron boot path flags a Niki Cloud backend-down (502/503/504) with
   // the structured isCloudBackendDown/statusCode it carries through boot
   // progress. When set, the recovery screen leads with the cloud-specific
   // guidance instead of the generic remote-failure copy (#85335).
@@ -413,7 +413,7 @@ export function BootFailureOverlay() {
     ]
     hint = copy.remoteSignInHint(label)
   } else if (cloudDown) {
-    // A Nous Cloud agent is down — the user cannot restart the managed
+    // A Niki Cloud agent is down — the user cannot restart the managed
     // instance and Repair is local-only. Lead with the paths that actually
     // resolve it: check the portal (status/instance controls), switch to the
     // local gateway, retry, or get support on Discord. Portal/Discord are
@@ -431,7 +431,7 @@ export function BootFailureOverlay() {
       {
         key: 'discord',
         label: copy.cloudDownDiscord,
-        onClick: () => openExternalLink('https://discord.gg/NousResearch'),
+        onClick: () => openExternalLink('https://discord.gg/NeGamer01'),
         variant: 'ghost'
       },
       { ...settingsAction, variant: 'ghost' }
@@ -475,7 +475,7 @@ export function BootFailureOverlay() {
   if (view === 'connect') {
     return (
       <BootFailureModal onDismiss={dismiss} title={copy.gatewaySettings}>
-        <div className="relative flex max-h-[86vh] w-full max-w-[46rem] flex-col overflow-hidden rounded-xl border border-(--stroke-nous) bg-(--ui-chat-bubble-background) shadow-nous">
+        <div className="relative flex max-h-[86vh] w-full max-w-[46rem] flex-col overflow-hidden rounded-xl border border-(--stroke-niki) bg-(--ui-chat-bubble-background) shadow-niki">
           <DialogCloseButton />
           {/* Subtle back affordance (projects/overlay idiom): muted → foreground
               on hover, no divider. */}
@@ -499,7 +499,7 @@ export function BootFailureOverlay() {
 
   return (
     <BootFailureModal onDismiss={dismiss}>
-      <div className="relative w-full max-w-[40rem] overflow-hidden rounded-xl border border-(--stroke-nous) bg-(--ui-chat-bubble-background) shadow-nous">
+      <div className="relative w-full max-w-[40rem] overflow-hidden rounded-xl border border-(--stroke-niki) bg-(--ui-chat-bubble-background) shadow-niki">
         <DialogCloseButton />
         <div className="flex items-start gap-3 px-5 py-4 pr-12">
           <ErrorIcon className="mt-0.5" size="1.25rem" />

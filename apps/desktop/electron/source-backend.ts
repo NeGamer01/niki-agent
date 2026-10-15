@@ -26,14 +26,14 @@ interface SourceOptions {
 export async function resolveSourceInstallationBackend(
   root: string,
   args: string[],
-  options: SourceOptions & { hermesHome?: string } = {}
+  options: SourceOptions & { nikiHome?: string } = {}
 ): Promise<SourceBackend | null> {
-  if (!existsSync(path.join(root, 'hermes_cli', 'main.py'))) {
+  if (!existsSync(path.join(root, 'niki_cli', 'main.py'))) {
     return null
   }
 
   const isWindows: boolean = options.isWindows ?? process.platform === 'win32'
-  const launcher: string | null = resolveInstallationLauncher(root, isWindows, options.hermesHome)
+  const launcher: string | null = resolveInstallationLauncher(root, isWindows, options.nikiHome)
 
   if (!launcher) {
     return null
@@ -95,7 +95,7 @@ export function createSourcePythonBackend(
     kind: 'python',
     label: `Niki source at ${root}`,
     command,
-    args: ['-m', 'hermes_cli.main', ...args],
+    args: ['-m', 'niki_cli.main', ...args],
     // The backend runs in the user's workspace cwd, and the selected
     // interpreter need not have this checkout installed: name it explicitly.
     // (The scrubbed inherited value could point at another checkout.)

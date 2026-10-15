@@ -6,7 +6,7 @@ author: Ben Barclay (benbarclay), Niki Agent
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  niki:
     tags: [Email, Inbox, Triage, Replies, Productivity]
     related_skills: [himalaya, google-workspace]
 ---

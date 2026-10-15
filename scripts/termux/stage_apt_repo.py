@@ -6,7 +6,7 @@ and copies .debs into pool/<first-char>/.
 
 Usage:
   python stage_apt_repo.py --pool POOL_DIR --out OUT_DIR \
-      --suite hermes-stable|hermes-canary [--gpg-key-file PATH]
+      --suite niki-stable|niki-canary [--gpg-key-file PATH]
 
 Exit codes:
   0 - success
@@ -269,7 +269,7 @@ def stage(
                 "Package": fields["Package"],
                 "Version": fields["Version"],
                 "Architecture": arch,
-                "Maintainer": fields.get("Maintainer", "Hermes Agent <noreply@nousresearch.com>"),
+                "Maintainer": fields.get("Maintainer", "Niki Agent <noreply@nousresearch.com>"),
                 "Installed-Size": fields.get("Installed-Size", "0"),
                 "Description": fields.get("Description", "Niki Agent"),
                 "Filename": filename,
@@ -300,7 +300,7 @@ def stage(
     # security information"). One paragraph, no blank lines.
     release_fields = [
         "Origin: Niki Agent",
-        "Label: hermes-agent",
+        "Label: niki-agent",
         f"Suite: {suite}",
         f"Codename: {suite}",
         f"Architectures: {ARCH}",
@@ -518,13 +518,13 @@ def main(argv: list | None = None) -> int:
     ap = argparse.ArgumentParser(description="Stage a static APT repo layout.")
     ap.add_argument("--pool", required=True, type=Path)
     ap.add_argument("--out", required=True, type=Path)
-    # hermes-nightly is the suite actually published today
+    # niki-nightly is the suite actually published today
     # (https://hermes-assets.nousresearch.com/releases/termux/nightly/,
-    # verified 2026-09-06); hermes-stable/hermes-canary are what CI stages
+    # verified 2026-09-06); niki-stable/niki-canary are what CI stages
     # for the stable/canary channels.
     ap.add_argument(
         "--suite", required=True,
-        choices=["hermes-stable", "hermes-canary", "hermes-nightly"],
+        choices=["niki-stable", "niki-canary", "niki-nightly"],
     )
     ap.add_argument("--gpg-key-file", type=Path, default=None)
     ap.add_argument("--pool-subdir", default="")

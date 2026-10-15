@@ -33,8 +33,8 @@ def has_xai_credentials() -> bool:
     if (get_secret("XAI_API_KEY", "") or "").strip():
         return True
     try:
-        from hermes_constants import get_hermes_home
-        auth_path = get_hermes_home() / "auth.json"
+        from niki_constants import get_niki_home
+        auth_path = get_niki_home() / "auth.json"
         if not auth_path.exists():
             return False
         store = json.loads(auth_path.read_text(encoding="utf-8-sig"))
@@ -49,18 +49,18 @@ def has_xai_credentials() -> bool:
         return False
 
 
-def hermes_xai_user_agent() -> str:
+def niki_xai_user_agent() -> str:
     """Return a stable Niki-specific User-Agent for xAI HTTP calls."""
     try:
-        from hermes_cli.version_info import get_version_info
+        from niki_cli.version_info import get_version_info
         return f"Niki-Agent/{get_version_info().base_version}"
     except Exception:
         return "Niki-Agent/unknown"
 
 
-def hermes_xai_default_headers() -> dict[str, str]:
+def niki_xai_default_headers() -> dict[str, str]:
     """Default headers for OpenAI-SDK and raw HTTP clients talking to xAI (replaces the SDK User-Agent)."""
-    return {"User-Agent": hermes_xai_user_agent()}
+    return {"User-Agent": niki_xai_user_agent()}
 
 
 _TRUE_WORDS = {"1", "true", "yes", "on", "enabled"}
@@ -96,7 +96,7 @@ def read_xai_imagine_storage_config(section_name: str) -> dict[str, Any]:
     """Read ``<section_name>.xai.storage`` (``image_gen``/``video_gen``) -> {enabled, public_url, expires_after}.
     On by default so xAI returns permanent public URLs, not short-lived CDN ones; null TTL = permanent."""
     try:
-        from hermes_cli.config import load_config
+        from niki_cli.config import load_config
         storage = _dict_get(_dict_get(_dict_get(load_config(), section_name), "xai"), "storage")
     except Exception:
         storage = None
@@ -146,8 +146,8 @@ def maybe_mark_xai_storage_notice_seen(section_name: str) -> Optional[str]:
     if not notice:
         return None
     try:
-        from hermes_constants import get_hermes_home
-        marker_dir = get_hermes_home() / "state"
+        from niki_constants import get_niki_home
+        marker_dir = get_niki_home() / "state"
         marker_dir.mkdir(parents=True, exist_ok=True)
         marker = marker_dir / f"{section_name}_xai_storage_notice_seen"
         if marker.exists():
@@ -169,9 +169,9 @@ def _resolve_explicit_xai_api_key() -> str:
 
 
 def _xai_base_url_override() -> str:
-    """``HERMES_XAI_BASE_URL`` then ``XAI_BASE_URL``, stripped; '' when unset."""
-    from hermes_cli.config import get_env_value
-    return str(get_env_value("HERMES_XAI_BASE_URL") or get_env_value("XAI_BASE_URL") or "").strip().rstrip("/")
+    """``NIKI_XAI_BASE_URL`` then ``XAI_BASE_URL``, stripped; '' when unset."""
+    from niki_cli.config import get_env_value
+    return str(get_env_value("NIKI_XAI_BASE_URL") or get_env_value("XAI_BASE_URL") or "").strip().rstrip("/")
 
 
 def resolve_xai_http_credentials(
@@ -180,23 +180,23 @@ def resolve_xai_http_credentials(
     """Resolve bearer credentials for direct xAI HTTP endpoints.
 
     Default order: Niki-managed xAI OAuth, then ``XAI_API_KEY`` (via ``get_env_value`` so
-    ``~/.hermes/.env`` keys count). ``prefer_api_key=True`` inverts that for API-metered
+    ``~/.niki/.env`` keys count). ``prefer_api_key=True`` inverts that for API-metered
     endpoints where the subscription OAuth bearer authorizes but misbehaves (x_search answers
-    without citations, TTS 403s). Both branches honor ``HERMES_XAI_BASE_URL``/``XAI_BASE_URL``
+    without citations, TTS 403s). Both branches honor ``NIKI_XAI_BASE_URL``/``XAI_BASE_URL``
     behind the same origin-pinning validation. ``force_refresh=True`` forces an OAuth refresh;
     pass the rejected bearer as ``api_key_hint`` so a multi-account pool refreshes the issuing
     entry, not whichever its strategy selects first.
 
     Prefers Niki-managed xAI OAuth credentials when available, then falls back to ``XAI_API_KEY`` resolved
-    via ``hermes_cli.config.get_env_value`` so keys stored in ``~/.hermes/.env`` (the standard Niki
+    via ``niki_cli.config.get_env_value`` so keys stored in ``~/.niki/.env`` (the standard Niki
     location) are honored — not just ones already exported into ``os.environ``. This keeps direct xAI
     endpoints (images, TTS, STT, etc.) aligned with the main runtime auth model and preserves the regression
     contract from PR #17140 / #17163.
     The key is read through :func:`tools.tool_backend_helpers.resolve_provider_secret` so profile secret
-    scoping is identical to the fallback branch, and the base URL honors ``HERMES_XAI_BASE_URL`` /
+    scoping is identical to the fallback branch, and the base URL honors ``NIKI_XAI_BASE_URL`` /
     ``XAI_BASE_URL`` behind the same origin-pinning validation as the OAuth branch. See #87045, #88040.
     """
-    import hermes_cli.auth as auth_mod
+    import niki_cli.auth as auth_mod
     if prefer_api_key and (explicit_key := str(_resolve_explicit_xai_api_key() or "").strip()):
         # Origin-pinned so a tampered env override can't exfiltrate the bearer; rejection -> default URL.
         override = _xai_base_url_override()
@@ -223,7 +223,7 @@ def resolve_xai_http_credentials(
     except Exception:
         pass
 
-    from hermes_cli.config import get_env_value
+    from niki_cli.config import get_env_value
     api_key = _resolve_explicit_xai_api_key()
     base_url = str(get_env_value("XAI_BASE_URL") or DEFAULT_XAI_BASE_URL).strip().rstrip("/")
     return {"provider": "xai", "api_key": api_key, "base_url": base_url}

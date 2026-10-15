@@ -45,7 +45,7 @@ class EventContract:
 
 
 METHODS: dict[str, MethodContract] = {}
-# ``hermes-gateway-v1`` verbs only ``gateway/session_controls.py::AuthorityConnection`` serves
+# ``niki-gateway-v1`` verbs only ``gateway/session_controls.py::AuthorityConnection`` serves
 # (``contracts/canonical.py``), plus explicit overrides where a shared name has a different wire.
 CANONICAL_METHODS: dict[str, MethodContract] = {}
 SERVER_REQUESTS: dict[str, ServerRequestContract] = {}
@@ -90,7 +90,7 @@ def event(name: str, payload: type[Payload] | None = None, *, doc: str = "") -> 
 # JSON-RPC ``4000`` with the field path, never a silent ignore. Results and payloads are OUR bug when
 # raises, which is what makes the suite the gate.
 
-STRICT = bool(os.environ.get("HERMES_TEST_ISOLATION"))
+STRICT = bool(os.environ.get("NIKI_TEST_ISOLATION"))
 
 class ContractViolation(AssertionError):
     """A result or payload the gateway produced does not match its declared contract."""
@@ -115,7 +115,7 @@ def validate_params(contract: MethodContract | ServerRequestContract, params: di
             if err.get("type") == "extra_forbidden":
                 loc = ".".join(str(p) for p in err.get("loc", ())) or "params"
                 return None, (f"invalid params for {contract.name}: {loc}: {err.get('msg')} — the client and "
-                              "the Niki backend are out of sync (different versions); run `hermes update` "
+                              "the Niki backend are out of sync (different versions); run `niki update` "
                               "and restart both")
     return params, None
 

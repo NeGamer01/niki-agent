@@ -63,15 +63,15 @@ def _merge_extra_headers(kwargs: dict[str, Any], **headers: str) -> None:
 
 # Client-side ``web_search`` on xAI Responses collides with Grok's native tool
 # (incomplete hang / HTTP 400); it goes on the wire under this alias.
-_XAI_CLIENT_WEB_SEARCH_ALIAS = "hermes_web_search"
+_XAI_CLIENT_WEB_SEARCH_ALIAS = "niki_web_search"
 
 # Responses providers reject client functions whose names collide with native
 # tools (HTTP 400 "custom function name 'X' is reserved"). Alias them as
-# hermes_<name> and map them back before local dispatch.
+# niki_<name> and map them back before local dispatch.
 # OpenCode's /v1/responses endpoints (Zen and Go, including custom providers pointing at opencode.ai)
 # reserve certain function names server-side and reject client tools that use them with HTTP 400 ("custom
 # function name 'X' is reserved"). Same treatment as the xAI web_search collision: rename on the wire
-# (hermes_<name>), map back in normalize_response so Niki dispatch is unaffected. See #85589.
+# (niki_<name>), map back in normalize_response so Niki dispatch is unaffected. See #85589.
 _OPENCODE_RESERVED_TOOL_NAMES = ("web_search", "search_files")
 _PERPLEXITY_RESERVED_TOOL_NAMES = (
     "web_search",
@@ -85,7 +85,7 @@ _PERPLEXITY_RESERVED_TOOL_NAMES = (
 # namespace 'tool_search'", #83122 / #95003).
 _XAI_RESERVED_TOOL_NAMES = ("tool_search",)
 _OPENAI_RESPONSES_HOSTS = frozenset({"api.openai.com", "chatgpt.com"})
-_RESERVED_TOOL_ALIAS_PREFIX = "hermes_"
+_RESERVED_TOOL_ALIAS_PREFIX = "niki_"
 
 # Reverse map used ONLY when normalize_response runs on a transport that never
 # built a request; real requests carry request-local ``_last_wire_aliases``.
@@ -99,7 +99,7 @@ _LEGACY_ALIAS_FALLBACK[_XAI_CLIENT_WEB_SEARCH_ALIAS] = "web_search"
 def _is_opencode_responses_backend(params: dict[str, Any]) -> bool:
     """True for opencode-zen/go providers, ``opencode-*`` families, or opencode.ai hosts."""
     try:
-        from hermes_cli.models import opencode_provider_family
+        from niki_cli.models import opencode_provider_family
 
         if opencode_provider_family(params.get("provider")) is not None:
             return True
@@ -261,7 +261,7 @@ def _alias_wire_tools(
     # ``web_search`` function and declare xAI's built-in instead. 1:1 swap only when client ``web_search``
     # was already present — never an additive grant. 2. **Client** (Firecrawl / Tavily / Exa / … configured
     # or resolved): keep Niki dispatch so ``web.backend`` / ``web.search_backend`` is honored, but rename
-    # the wire tool to ``hermes_web_search`` so Grok cannot hijack the name. The alias is mapped back to
+    # the wire tool to ``niki_web_search`` so Grok cannot hijack the name. The alias is mapped back to
     # ``web_search`` in ``normalize_response``. Request-local alias provenance: every wire alias THIS
     # request emits is recorded here and stashed on the transport, so the reverse rewrite in
     # ``normalize_response`` applies only to aliases that were actually sent (never to a real tool that

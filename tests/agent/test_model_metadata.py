@@ -13,7 +13,7 @@ Coverage levels:
 import time
 
 import pytest
-import hermes_yaml as yaml
+import niki_yaml as yaml
 from unittest.mock import patch, MagicMock
 
 from agent.model_metadata import (
@@ -555,7 +555,7 @@ class TestCodexOAuthContextLength:
         base_url = "https://chatgpt.com/backend-api/codex"
         stale_key = f"gpt-5.5@{base_url}"
         other_key = "other-model@https://api.openai.com/v1/"
-        import hermes_yaml as _yaml
+        import niki_yaml as _yaml
         cache_file.write_text(_yaml.safe_dump({"context_lengths": {
             stale_key: stale_context,
             other_key: 128_000,
@@ -947,11 +947,11 @@ class TestFetchEndpointModelMetadata:
 
 
 # =========================================================================
-# Nous Portal context-window resolution (provider="nous")
+# Niki Portal context-window resolution (provider="niki")
 # =========================================================================
 
 class TestNousPortalContextResolution:
-    """Nous Portal /v1/models is authoritative for what Nous infra enforces
+    """Niki Portal /v1/models is authoritative for what Niki infra enforces
     and may diverge from the OpenRouter catalog.
 
     Invariants this class pins down:
@@ -977,7 +977,7 @@ class TestNousPortalContextResolution:
         """An empty model name must not substring-match arbitrary catalog
         entries — '' is a substring of every key, so pre-fix it "matched"
         whatever the endpoint listed first (e.g. a 32K embedding model on
-        the Nous portal) and poisoned the resolved context length."""
+        the Niki portal) and poisoned the resolved context length."""
         import agent.model_metadata as mm
         mock_fetch.return_value = {
             "voyageai/voyage-code-4": {"context_length": 32_000},
@@ -1020,7 +1020,7 @@ class TestNousPortalContextResolution:
             model="qwen3.6-plus",
             base_url=base_url,
             api_key="fake",
-            provider="nous",
+            provider="niki",
         )
         assert ctx == 1_000_000, "OR fallback should still serve the request"
         assert not cache_file.exists() or not yaml.safe_load(
@@ -1035,7 +1035,7 @@ class TestNousPortalContextResolution:
     def test_stale_cache_is_bypassed_and_overwritten_by_portal(
         self, mock_or, mock_portal, tmp_path, monkeypatch
     ):
-        """Users upgrading from pre-fix builds have ``qwen3.6-plus@…nous… =
+        """Users upgrading from pre-fix builds have ``qwen3.6-plus@…niki… =
         1000000`` (OR-derived) sitting in their cache file.  Step 1 must
         NOT short-circuit on that entry — step 5b reconciles against the
         portal and overwrites the persistent value with 262144."""
@@ -1060,7 +1060,7 @@ class TestNousPortalContextResolution:
             model="qwen3.6-plus",
             base_url=base_url,
             api_key="fake",
-            provider="nous",
+            provider="niki",
         )
         assert ctx == 262_144, (
             f"Stale OR-derived cache entry should not have leaked through; got {ctx}"
@@ -1231,7 +1231,7 @@ class TestGetModelContextLength:
         "provider, custom_providers",
         [
             ("custom:codex-proxy", [{"name": "codex-proxy", "base_url": "http://127.0.0.1:8317/v1", "api_mode": "codex_responses"}]),
-            ("openai-codex", None),  # HERMES_CODEX_BASE_URL / model.base_url proxy per #115902
+            ("openai-codex", None),  # NIKI_CODEX_BASE_URL / model.base_url proxy per #115902
         ],
     )
     def test_codex_route_behind_proxy_resolves_codex_oauth_window(self, provider, custom_providers):
@@ -1741,7 +1741,7 @@ class TestGrok43StaleCacheGuard:
 
 
     def test_stale_grok_4_3_dropped_and_reresolves_to_1m(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("NIKI_HOME", str(tmp_path))
         import importlib
         import agent.model_metadata as mm
         importlib.reload(mm)
@@ -1754,7 +1754,7 @@ class TestGrok43StaleCacheGuard:
 
 
     def test_grok_4_not_clobbered(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("NIKI_HOME", str(tmp_path))
         import importlib
         import agent.model_metadata as mm
         importlib.reload(mm)
@@ -1824,8 +1824,8 @@ class TestMoAContextLength:
             yaml.safe_dump(payload, f)
 
     def test_moa_resolves_from_aggregator(self, tmp_path, monkeypatch):
-        home = str(tmp_path / ".hermes")
-        monkeypatch.setenv("HERMES_HOME", home)
+        home = str(tmp_path / ".niki")
+        monkeypatch.setenv("NIKI_HOME", home)
         self._write_moa_config(home, {"provider": "openrouter", "model": "anthropic/claude-opus-4.8"})
 
         # The MoA preset name + virtual base_url would otherwise fall through to
@@ -1843,8 +1843,8 @@ class TestMoAContextLength:
         from agent.context_compressor import ContextCompressor
 
         configured_context = 600_000
-        home = str(tmp_path / ".hermes")
-        monkeypatch.setenv("HERMES_HOME", home)
+        home = str(tmp_path / ".niki")
+        monkeypatch.setenv("NIKI_HOME", home)
         self._write_moa_config(
             home,
             {"provider": "custom:example", "model": "example-model"},

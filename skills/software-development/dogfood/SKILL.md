@@ -6,7 +6,7 @@ author: Teknium (teknium1), Niki Agent
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  niki:
     tags: [qa, testing, browser, web, dogfood]
     related_skills: []
 ---

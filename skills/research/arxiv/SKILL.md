@@ -6,7 +6,7 @@ author: Niki Agent
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  niki:
     tags: [Research, Arxiv, Papers, Academic, Science, API]
     related_skills: [pdf]
 ---

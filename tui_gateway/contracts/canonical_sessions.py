@@ -96,7 +96,7 @@ class CanonicalPendingPrompt(Result):
 
 
 class CanonicalSnapshotInfo(SessionInventoryFields):
-    desktop_protocol: Literal['hermes-gateway-v1']
+    desktop_protocol: Literal['niki-gateway-v1']
     source: str | None = None
     model: str | None = None
     lazy: bool | None = None

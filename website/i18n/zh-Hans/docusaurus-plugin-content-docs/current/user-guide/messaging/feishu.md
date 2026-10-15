@@ -37,7 +37,7 @@ group_sessions_per_user: true
 ### 推荐：扫码创建（一条命令）
 
 ```bash
-hermes gateway setup
+niki gateway setup
 ```
 
 选择 **飞书 / Lark**，用飞书或 Lark 手机端扫描二维码。Niki 将自动创建具有正确权限的机器人应用并保存凭据。
@@ -52,7 +52,7 @@ hermes gateway setup
 2. 创建新应用。
 3. 在 **凭证与基础信息** 中，复制 **App ID** 和 **App Secret**。
 4. 为应用开启 **机器人** 能力。
-5. 运行 `hermes gateway setup`，选择 **飞书 / Lark**，并在提示时输入凭据。
+5. 运行 `niki gateway setup`，选择 **飞书 / Lark**，并在提示时输入凭据。
 
 :::warning
 请妥善保管 App Secret。任何持有它的人都可以冒充你的应用。
@@ -103,14 +103,14 @@ FEISHU_WEBHOOK_PATH=/feishu/webhook  # 默认：/feishu/webhook
 ### 方式 A：交互式配置
 
 ```bash
-hermes gateway setup
+niki gateway setup
 ```
 
 选择 **飞书 / Lark** 并填写提示信息。
 
 ### 方式 B：手动配置
 
-在 `~/.hermes/.env` 中添加以下内容：
+在 `~/.niki/.env` 中添加以下内容：
 
 ```bash
 FEISHU_APP_ID=cli_xxx
@@ -131,7 +131,7 @@ FEISHU_HOME_CHANNEL=oc_xxx
 ## 第四步：启动 Gateway
 
 ```bash
-hermes gateway
+niki gateway
 ```
 
 然后从飞书/Lark 向机器人发送消息，确认连接已建立。
@@ -252,7 +252,7 @@ FEISHU_ALLOW_BOTS=mentions   # 默认：none
 - 卡片定义中操作的 `value` payload 以 JSON 形式包含在内。
 - 卡片操作在 15 分钟窗口内去重，防止重复处理。
 
-Gateway 驱动的更新提示使用原生飞书 `Yes` / `No` 卡片，而非回退到纯文本回复。当 `hermes update --gateway` 需要确认时，适配器将所选答案记录到 Niki 的 `.update_response` 文件中，并将卡片内联替换为已解决状态。
+Gateway 驱动的更新提示使用原生飞书 `Yes` / `No` 卡片，而非回退到纯文本回复。当 `niki update --gateway` 需要确认时，适配器将所选答案记录到 Niki 的 `.update_response` 文件中，并将卡片内联替换为已解决状态。
 
 卡片操作事件以 `MessageType.COMMAND` 分发，因此流经标准命令处理管道。
 
@@ -304,7 +304,7 @@ Gateway 驱动的更新提示使用原生飞书 `Yes` / `No` 卡片，而非回�
 - **`allowlist`** — 静态用户/租户列表。
 - **`pairing`** — 静态列表 ∪ 运行时审批存储。适用于管理员可实时授权的灰度发布场景。
 
-规则存储在 `~/.hermes/feishu_comment_rules.json`（pairing 授权存储在 `~/.hermes/feishu_comment_pairing.json`），支持基于 mtime 缓存的热重载——编辑后无需重启 gateway，下一个评论事件即生效。
+规则存储在 `~/.niki/feishu_comment_rules.json`（pairing 授权存储在 `~/.niki/feishu_comment_pairing.json`），支持基于 mtime 缓存的热重载——编辑后无需重启 gateway，下一个评论事件即生效。
 
 CLI：
 
@@ -387,9 +387,9 @@ Agent 工作期间，机器人会在你的消息上显示 `Typing` 表情回应�
 
 | 设置 | 环境变量 | 默认值 |
 |---------|---------|---------|
-| 静默期 | `HERMES_FEISHU_TEXT_BATCH_DELAY_SECONDS` | 0.6s |
-| 每批最大消息数 | `HERMES_FEISHU_TEXT_BATCH_MAX_MESSAGES` | 8 |
-| 每批最大字符数 | `HERMES_FEISHU_TEXT_BATCH_MAX_CHARS` | 4000 |
+| 静默期 | `NIKI_FEISHU_TEXT_BATCH_DELAY_SECONDS` | 0.6s |
+| 每批最大消息数 | `NIKI_FEISHU_TEXT_BATCH_MAX_MESSAGES` | 8 |
+| 每批最大字符数 | `NIKI_FEISHU_TEXT_BATCH_MAX_CHARS` | 4000 |
 
 ### 媒体批处理
 
@@ -397,7 +397,7 @@ Agent 工作期间，机器人会在你的消息上显示 `Typing` 表情回应�
 
 | 设置 | 环境变量 | 默认值 |
 |---------|---------|---------|
-| 静默期 | `HERMES_FEISHU_MEDIA_BATCH_DELAY_SECONDS` | 0.8s |
+| 静默期 | `NIKI_FEISHU_MEDIA_BATCH_DELAY_SECONDS` | 0.8s |
 
 ### 按聊天串行化
 
@@ -481,11 +481,11 @@ platforms:
 
 ## 去重
 
-入站消息使用消息 ID 去重，TTL 为 24 小时。去重状态持久化到 `~/.hermes/feishu_seen_message_ids.json`，重启后仍有效。
+入站消息使用消息 ID 去重，TTL 为 24 小时。去重状态持久化到 `~/.niki/feishu_seen_message_ids.json`，重启后仍有效。
 
 | 设置 | 环境变量 | 默认值 |
 |---------|---------|---------|
-| 缓存大小 | `HERMES_FEISHU_DEDUP_CACHE_SIZE` | 2048 条 |
+| 缓存大小 | `NIKI_FEISHU_DEDUP_CACHE_SIZE` | 2048 条 |
 
 ## 所有环境变量
 
@@ -508,11 +508,11 @@ platforms:
 | `FEISHU_WEBHOOK_HOST` | — | `127.0.0.1` | Webhook 服务器绑定地址 |
 | `FEISHU_WEBHOOK_PORT` | — | `8765` | Webhook 服务器端口 |
 | `FEISHU_WEBHOOK_PATH` | — | `/feishu/webhook` | Webhook 端点路径 |
-| `HERMES_FEISHU_DEDUP_CACHE_SIZE` | — | `2048` | 最大去重消息 ID 追踪数量 |
-| `HERMES_FEISHU_TEXT_BATCH_DELAY_SECONDS` | — | `0.6` | 文本突发防抖静默期 |
-| `HERMES_FEISHU_TEXT_BATCH_MAX_MESSAGES` | — | `8` | 每批文本合并的最大消息数 |
-| `HERMES_FEISHU_TEXT_BATCH_MAX_CHARS` | — | `4000` | 每批文本合并的最大字符数 |
-| `HERMES_FEISHU_MEDIA_BATCH_DELAY_SECONDS` | — | `0.8` | 媒体突发防抖静默期 |
+| `NIKI_FEISHU_DEDUP_CACHE_SIZE` | — | `2048` | 最大去重消息 ID 追踪数量 |
+| `NIKI_FEISHU_TEXT_BATCH_DELAY_SECONDS` | — | `0.6` | 文本突发防抖静默期 |
+| `NIKI_FEISHU_TEXT_BATCH_MAX_MESSAGES` | — | `8` | 每批文本合并的最大消息数 |
+| `NIKI_FEISHU_TEXT_BATCH_MAX_CHARS` | — | `4000` | 每批文本合并的最大字符数 |
+| `NIKI_FEISHU_MEDIA_BATCH_DELAY_SECONDS` | — | `0.8` | 媒体突发防抖静默期 |
 
 WebSocket 和按群 ACL 设置通过 `config.yaml` 的 `platforms.feishu.extra` 配置（参见上方 [WebSocket 调优](#websocket-tuning) 和[按群访问控制](#per-group-access-control)）。
 
@@ -521,9 +521,9 @@ WebSocket 和按群 ACL 设置通过 `config.yaml` 的 `platforms.feishu.extra` 
 | 问题 | 解决方法 |
 |---------|-----|
 | `lark-oapi not installed` | 安装 SDK：`python -c "import pm; pm.sync_venv(['feishu'], explicit=True)"` |
-| `websockets not installed; websocket mode unavailable` | 安装 websockets：`hermes pm repair` |
+| `websockets not installed; websocket mode unavailable` | 安装 websockets：`niki pm repair` |
 | `aiohttp not installed; webhook mode unavailable` | 安装 aiohttp：`python -c "import pm; pm.sync_venv(['messaging'], explicit=True)"` |
-| `FEISHU_APP_ID or FEISHU_APP_SECRET not set` | 设置两个环境变量，或通过 `hermes gateway setup` 配置 |
+| `FEISHU_APP_ID or FEISHU_APP_SECRET not set` | 设置两个环境变量，或通过 `niki gateway setup` 配置 |
 | `Another local Niki gateway is already using this Feishu app_id` | 同一时间只能有一个 Niki 实例使用相同的 app_id。请先停止另一个 gateway。 |
 | 机器人在群聊中不响应 | 确保机器人被 @提及，检查 `FEISHU_GROUP_POLICY`，若策略为 `allowlist` 则验证发送者是否在 `FEISHU_ALLOWED_USERS` 中 |
 | `Webhook rejected: invalid verification token` | 确保 `FEISHU_VERIFICATION_TOKEN` 与飞书应用事件订阅配置中的 token 一致 |
@@ -538,4 +538,4 @@ WebSocket 和按群 ACL 设置通过 `config.yaml` 的 `platforms.feishu.extra` 
 
 ## 工具集
 
-飞书 / Lark 使用 `hermes-feishu` 平台预设，包含与 Telegram 及其他基于 gateway 的消息平台相同的核心工具。
+飞书 / Lark 使用 `niki-feishu` 平台预设，包含与 Telegram 及其他基于 gateway 的消息平台相同的核心工具。

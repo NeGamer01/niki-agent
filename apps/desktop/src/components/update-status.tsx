@@ -25,8 +25,8 @@ import {
   type UpdateTarget
 } from '@/store/updates'
 
-const RELEASE_NOTES_URL = 'https://github.com/NousResearch/hermes-agent/releases'
-const INSTALLER_URL = 'https://hermes-agent.nousresearch.com/'
+const RELEASE_NOTES_URL = 'https://github.com/NeGamer01/niki-agent/releases'
+const INSTALLER_URL = 'https://github.com/NeGamer01/niki-agent/'
 
 export type UpdateStatusTone = 'idle' | 'available' | 'error' | 'unsupported'
 
@@ -240,7 +240,7 @@ export function VersionHero({
               {version.bundleSwapPending ? (
                 <Button
                   className="mt-2"
-                  onClick={() => void window.hermesDesktop?.relaunchApp?.()}
+                  onClick={() => void window.nikiDesktop?.relaunchApp?.()}
                   size="sm"
                   variant="textStrong"
                 >
@@ -253,7 +253,7 @@ export function VersionHero({
                     href={INSTALLER_URL}
                     onClick={event => {
                       event.preventDefault()
-                      void window.hermesDesktop?.openExternal?.(INSTALLER_URL)
+                      void window.nikiDesktop?.openExternal?.(INSTALLER_URL)
                     }}
                     rel="noreferrer"
                     target="_blank"
@@ -383,7 +383,7 @@ export function UpdateStatusCard({
                 href={RELEASE_NOTES_URL}
                 onClick={event => {
                   event.preventDefault()
-                  void window.hermesDesktop?.openExternal?.(RELEASE_NOTES_URL)
+                  void window.nikiDesktop?.openExternal?.(RELEASE_NOTES_URL)
                 }}
                 rel="noreferrer"
                 target="_blank"

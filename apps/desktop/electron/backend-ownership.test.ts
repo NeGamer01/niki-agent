@@ -33,7 +33,7 @@ function identity(overrides: Partial<BackendIdentity> = {}): BackendIdentity {
 }
 
 function ownershipEntry(overrides: Partial<BackendIdentity> = {}) {
-  return { command: 'hermes serve --port 0', ...identity(overrides) }
+  return { command: 'niki serve --port 0', ...identity(overrides) }
 }
 
 function stored(entries: object[]): string {
@@ -301,11 +301,11 @@ test('release removes only the exact identity rather than every record for its P
 })
 
 test('backend identity check matches only serve and dashboard invocation shapes', () => {
-  assert.equal(backendCommandMatches('/venv/bin/hermes serve --port 0'), true)
-  assert.equal(backendCommandMatches('python -m hermes_cli.main dashboard --no-open'), true)
-  assert.equal(backendCommandMatches('/venv/bin/hermes --profile work serve --port 0'), true)
-  assert.equal(backendCommandMatches('"C:\\Niki Runtime\\hermes.exe" dashboard --no-open'), true)
-  assert.equal(backendCommandMatches('hermes chat --query serve'), false)
+  assert.equal(backendCommandMatches('/venv/bin/niki serve --port 0'), true)
+  assert.equal(backendCommandMatches('python -m niki_cli.main dashboard --no-open'), true)
+  assert.equal(backendCommandMatches('/venv/bin/niki --profile work serve --port 0'), true)
+  assert.equal(backendCommandMatches('"C:\\Niki Runtime\\niki.exe" dashboard --no-open'), true)
+  assert.equal(backendCommandMatches('niki chat --query serve'), false)
   assert.equal(backendCommandMatches('unrelated dashboard'), false)
 })
 

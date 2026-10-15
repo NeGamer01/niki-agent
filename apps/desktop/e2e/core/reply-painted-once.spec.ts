@@ -16,7 +16,7 @@
  * it again. A silent tool (todo_list) draws no row between the copies, which
  * is the reported "twice, back to back".
  *
- * Every step runs the real Electron app against a real `hermes serve`; only
+ * Every step runs the real Electron app against a real `niki serve`; only
  * the LLM is scripted (provider.ts). The transcript oracle checks each
  * marker is rendered exactly once, live and after a reload. An in-page
  * sampler fails on any transient double paint. A bubble-scoped check also
@@ -166,7 +166,7 @@ async function withApp(
 ) {
   const provider = await startScriptedProvider()
   const sandbox = createCoreSandbox(label)
-  writeProviderHome(sandbox.hermesHome, provider.url, config(interim))
+  writeProviderHome(sandbox.nikiHome, provider.url, config(interim))
   const { app, page } = await launchCoreApp(coreAppEnv(sandbox))
   const ws = recordWebSockets(page)
 

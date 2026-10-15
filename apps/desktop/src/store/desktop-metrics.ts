@@ -17,11 +17,11 @@
  * app session; a known "no" drops them.
  *
  * Every value is a code-defined id from the closed sets below (mirrored by
- * hermes_cli/observability/shared_metrics_contract.py, which collapses any
+ * niki_cli/observability/shared_metrics_contract.py, which collapses any
  * stranger to `other`). Never a session id, path, message, bot name or setting
  * value.
  *
- * Local state (localStorage `hermes.desktop.metrics.v1:<hash of connection|profile>`,
+ * Local state (localStorage `niki.desktop.metrics.v1:<hash of connection|profile>`,
  * written only while on): the UTC day, areas already reported today, per-day
  * caps, today's aggregated action counts and per-mode activity, finished days
  * awaiting the backend's ack, and the onboarding latch (steps sent / still open).
@@ -314,7 +314,7 @@ export type DesktopMode = 'bots' | 'sessions'
 
 // ── limits ────────────────────────────────────────────────────────────────────
 
-const STATE_KEY = 'hermes.desktop.metrics.v1'
+const STATE_KEY = 'niki.desktop.metrics.v1'
 /** Friction per (kind, detail) per day; slow frames per bucket per day. */
 const FRICTION_DAILY_CAP = 20
 const SLOW_FRAME_DAILY_CAP = 5
@@ -863,7 +863,7 @@ async function flushPendingDays(): Promise<void> {
 
 /** Renderer crashes main persisted while this renderer (or its predecessor) was gone. */
 async function drainRendererCrashes(): Promise<void> {
-  const bridge = window.hermesDesktop?.desktopMetrics
+  const bridge = window.nikiDesktop?.desktopMetrics
 
   try {
     const pending = await bridge?.takeRendererCrashes?.()
@@ -910,7 +910,7 @@ export function flushDesktopMetrics(): void {
 /** Main records this window's renderer crashes only while its profile is on; off drops that profile's. */
 function tellMain(on: boolean): void {
   try {
-    Promise.resolve(window.hermesDesktop?.desktopMetrics?.setEnabled?.(on, scope)).catch(() => undefined)
+    Promise.resolve(window.nikiDesktop?.desktopMetrics?.setEnabled?.(on, scope)).catch(() => undefined)
   } catch {
     // An older shell without the bridge.
   }

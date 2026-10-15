@@ -17,9 +17,9 @@ from typing import Awaitable, Callable
 
 from agent.file_safety import HOME_CREDENTIAL_DIRS
 from agent.model_metadata import CHARS_PER_TOKEN, estimate_tokens_rough
-from hermes_cli._subprocess_compat import IS_WINDOWS, harden_git_argv, noninteractive_git_env, windows_hide_flags
-from hermes_cli.sqlite_safe_read import LiveConnectionError, offline_file_access
-from hermes_cli.sizefmt import format_bytes
+from niki_cli._subprocess_compat import IS_WINDOWS, harden_git_argv, noninteractive_git_env, windows_hide_flags
+from niki_cli.sqlite_safe_read import LiveConnectionError, offline_file_access
+from niki_cli.sizefmt import format_bytes
 
 # ── Plugin context-reference provider API ────────────────────────────────────
 
@@ -91,7 +91,7 @@ _FILE_VALUE_PATTERN = re.compile(
 TRAILING_PUNCTUATION = ",.;!?"
 _OPENERS = {")": "(", "]": "[", "}": "{"}
 _NEEDS_QUOTING = re.compile(r"""[\s()\[\]{}<>"'`]""")
-_SENSITIVE_HERMES_DIRS = (Path("skills") / ".hub",)
+_SENSITIVE_NIKI_DIRS = (Path("skills") / ".hub",)
 _SENSITIVE_HOME_FILES = tuple(Path(p) for p in (
     ".ssh/authorized_keys", ".ssh/id_rsa", ".ssh/id_ed25519", ".ssh/config", ".bashrc", ".zshrc",
     ".profile", ".bash_profile", ".zprofile", ".netrc", ".pgpass", ".npmrc", ".pypirc",
@@ -192,7 +192,7 @@ def preprocess_context_references(
     import concurrent.futures
     import contextvars
     # The side thread starts with an empty Context: without the caller's copy the served profile's
-    # HERMES_HOME override is lost and the credential-path guard checks the launch profile's .env.
+    # NIKI_HOME override is lost and the credential-path guard checks the launch profile's .env.
     with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
         return pool.submit(contextvars.copy_context().run, asyncio.run, coro).result()
 
@@ -481,8 +481,8 @@ COMPOSER_PASTES_DIRNAME = "composer-pastes"
 
 
 def _composer_paste_roots() -> list[Path]:
-    from agent.file_safety import _hermes_dirs
-    return [hermes_dir / COMPOSER_PASTES_DIRNAME for hermes_dir in _hermes_dirs()]
+    from agent.file_safety import _niki_dirs
+    return [niki_dir / COMPOSER_PASTES_DIRNAME for niki_dir in _niki_dirs()]
 
 
 def _agent_staged_path(path: Path) -> bool:
@@ -523,10 +523,10 @@ def _resolve_path(cwd: Path, target: str, *, allowed_root: Path | None = None) -
 
 def _ensure_reference_path_allowed(path: Path) -> None:
     """Refuse credential/internal paths. Fails CLOSED: the gateway feeds untrusted remote text here."""
-    from hermes_constants import get_hermes_home
-    home, hermes_home = Path(os.path.expanduser("~")).resolve(), get_hermes_home().resolve()
-    blocked_exact = {home / rel for rel in _SENSITIVE_HOME_FILES} | {hermes_home / ".env"}
-    blocked_dirs = [home / rel for rel in HOME_CREDENTIAL_DIRS] + [hermes_home / rel for rel in _SENSITIVE_HERMES_DIRS]
+    from niki_constants import get_niki_home
+    home, niki_home = Path(os.path.expanduser("~")).resolve(), get_niki_home().resolve()
+    blocked_exact = {home / rel for rel in _SENSITIVE_HOME_FILES} | {niki_home / ".env"}
+    blocked_dirs = [home / rel for rel in HOME_CREDENTIAL_DIRS] + [niki_home / rel for rel in _SENSITIVE_NIKI_DIRS]
     if path in blocked_exact:
         raise ValueError("path is a sensitive credential file and cannot be attached")
     if any(_is_under(path, blocked_dir) for blocked_dir in blocked_dirs):

@@ -21,7 +21,7 @@ description: "通过 WebSocket gateway 将 Niki Agent 连接到元宝企业消�
 安装所需依赖：
 
 ```bash
-hermes pm repair
+niki pm repair
 ```
 
 ## 配置
@@ -37,7 +37,7 @@ hermes pm repair
 配置元宝最简便的方式是通过交互式向导：
 
 ```bash
-hermes gateway setup
+niki gateway setup
 ```
 
 在提示时选择 **Yuanbao**。向导将：
@@ -52,7 +52,7 @@ WebSocket URL 和 API Domain 均内置了合理的默认值。只需提供 APP_I
 
 ### 3. 配置环境变量
 
-初始配置完成后，在 `~/.hermes/.env` 中验证以下变量：
+初始配置完成后，在 `~/.niki/.env` 中验证以下变量：
 
 ```bash
 # 必填
@@ -78,7 +78,7 @@ YUANBAO_ALLOWED_USERS=user_account_1,user_account_2
 ### 4. 启动 Gateway
 
 ```bash
-hermes gateway
+niki gateway
 ```
 
 适配器将连接到元宝 WebSocket gateway，使用 HMAC 签名进行认证，并开始处理消息。
@@ -129,7 +129,7 @@ hermes gateway
 如果未配置主频道，第一个向机器人发消息的用户将自动成为主频道所有者。如果当前主频道是群聊，第一条单聊消息将把主频道升级为直接频道。
 :::
 
-也可以在 `~/.hermes/.env` 中手动设置：
+也可以在 `~/.niki/.env` 中手动设置：
 
 ```bash
 YUANBAO_HOME_CHANNEL=direct:user_account_id
@@ -203,7 +203,7 @@ Please analyze this document
 1. 验证 APP_ID 和 APP_SECRET 是否正确
 2. 检查 WebSocket URL 是否可访问
 3. 确保机器人账号拥有适当权限
-4. 查看 gateway 日志：`tail -f ~/.hermes/logs/gateway.log`
+4. 查看 gateway 日志：`tail -f ~/.niki/logs/gateway.log`
 
 ### "Connection refused" 错误
 
@@ -243,7 +243,7 @@ Please analyze this document
 1. 检查 gateway 日志中的错误模式
 2. 在连接设置中增加心跳超时时间
 3. 确保到元宝 API 的网络连接稳定
-4. 考虑启用详细日志：`HERMES_LOG_LEVEL=debug`
+4. 考虑启用详细日志：`NIKI_LOG_LEVEL=debug`
 
 ## 访问控制
 
@@ -301,7 +301,7 @@ platforms:
 启用 debug 日志以排查连接问题：
 
 ```bash
-HERMES_LOG_LEVEL=debug hermes gateway
+NIKI_LOG_LEVEL=debug niki gateway
 ```
 
 ## 与其他功能集成
@@ -329,7 +329,7 @@ HERMES_LOG_LEVEL=debug hermes gateway
 从 CLI 向元宝发送消息：
 
 ```bash
-hermes chat -q "Send 'Hello from CLI' to yuanbao:group:group_code"
+niki chat -q "Send 'Hello from CLI' to yuanbao:group:group_code"
 ```
 
 ## 相关文档

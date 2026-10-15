@@ -45,9 +45,9 @@ Teams 无法向 `localhost` 投递消息。本地开发时，使用任意隧道�
 
 ```bash
 # devtunnel（Microsoft 官方）
-devtunnel create hermes-bot --allow-anonymous
-devtunnel port create hermes-bot -p 3978 --protocol http  # 如已修改 TEAMS_PORT，请替换 3978
-devtunnel host hermes-bot
+devtunnel create niki-bot --allow-anonymous
+devtunnel port create niki-bot -p 3978 --protocol http  # 如已修改 TEAMS_PORT，请替换 3978
+devtunnel host niki-bot
 
 # ngrok
 ngrok http 3978  # 如已修改 TEAMS_PORT，请替换 3978
@@ -78,7 +78,7 @@ CLI 会输出你的 `CLIENT_ID`、`CLIENT_SECRET` 和 `TENANT_ID`，以及第六
 
 ## 第四步：配置环境变量
 
-添加到 `~/.hermes/.env`：
+添加到 `~/.niki/.env`：
 
 ```bash
 # 必填
@@ -96,14 +96,14 @@ TEAMS_ALLOWED_USERS=<your-aad-object-id>
 ## 第五步：启动 Gateway
 
 ```bash
-HERMES_UID=$(id -u) HERMES_GID=$(id -g) docker compose up -d gateway
+NIKI_UID=$(id -u) NIKI_GID=$(id -g) docker compose up -d gateway
 ```
 
 此命令启动 gateway。默认 webhook 端口为 `3978`（可通过 `TEAMS_PORT` 覆盖）。检查运行状态：
 
 ```bash
 curl http://localhost:3978/health   # 应返回：ok
-docker logs -f hermes
+docker logs -f niki
 ```
 
 查找以下日志：
@@ -140,7 +140,7 @@ teams app get <teamsAppId> --install-link
 
 ### config.yaml
 
-也可通过 `~/.hermes/config.yaml` 进行配置：
+也可通过 `~/.niki/config.yaml` 进行配置：
 
 ```yaml
 platforms:
@@ -229,10 +229,10 @@ teams app update --id <teamsAppId> --endpoint "https://your-domain.com/api/messa
 | Teams 发送消息时日志显示 `"UNKNOWN / HTTP/1.0" 400` | 隧道或反向代理正在将 HTTPS 转发到 Niki 的纯 HTTP 监听器。请在代理处终止 TLS，并将 HTTP 转发到 `3978` 端口 |
 | 日志中出现 `KeyError: 'teams'` | 重启容器——此问题已在当前版本中修复 |
 | 机器人响应时出现认证错误 | 验证 `TEAMS_CLIENT_ID`、`TEAMS_CLIENT_SECRET` 和 `TEAMS_TENANT_ID` 是否均已正确设置 |
-| `No inference provider configured` | 检查 `~/.hermes/.env` 中是否设置了 `ANTHROPIC_API_KEY`（或其他提供商密钥） |
+| `No inference provider configured` | 检查 `~/.niki/.env` 中是否设置了 `ANTHROPIC_API_KEY`（或其他提供商密钥） |
 | 机器人收到消息但忽略它们 | 你的 AAD 对象 ID 可能不在 `TEAMS_ALLOWED_USERS` 中。运行 `teams status --verbose` 查找 |
-| 隧道 URL 在重启后变更 | 使用命名隧道（`devtunnel create hermes-bot`）时，devtunnel URL 是持久的。ngrok 和 cloudflared 每次运行都会生成新 URL（除非你有付费计划）——URL 变更时请用 `teams app update` 更新机器人端点 |
-| Teams 显示"此机器人未响应" | Webhook 返回了错误。检查 `docker logs hermes` 中的错误堆栈 |
+| 隧道 URL 在重启后变更 | 使用命名隧道（`devtunnel create niki-bot`）时，devtunnel URL 是持久的。ngrok 和 cloudflared 每次运行都会生成新 URL（除非你有付费计划）——URL 变更时请用 `teams app update` 更新机器人端点 |
+| Teams 显示"此机器人未响应" | Webhook 返回了错误。检查 `docker logs niki` 中的错误堆栈 |
 | 日志中出现 `[teams] Failed to connect` | SDK 认证失败。仔细检查凭据，并确认租户 ID 与 `teams login` 时使用的账户匹配 |
 
 ---
@@ -245,7 +245,7 @@ teams app update --id <teamsAppId> --endpoint "https://your-domain.com/api/messa
 将 `TEAMS_CLIENT_SECRET` 视同密码对待——定期通过 Azure 门户或 Teams CLI 进行轮换。
 :::
 
-- 将凭据存储在权限为 `600` 的 `~/.hermes/.env` 中（`chmod 600 ~/.hermes/.env`）
+- 将凭据存储在权限为 `600` 的 `~/.niki/.env` 中（`chmod 600 ~/.niki/.env`）
 - 机器人仅接受 `TEAMS_ALLOWED_USERS` 中用户的消息；未授权的消息会被静默丢弃
 - 你的公开端点（`/api/messages`）由 Teams Bot Framework 进行认证——不含有效 JWT 的请求会被拒绝
 

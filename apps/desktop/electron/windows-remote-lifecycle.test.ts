@@ -30,13 +30,13 @@ const ownershipId = '0123456789abcdef0123456789abcdef'
 
 test('Windows spawn holds the update mutex across marker check and helper spawn', () => {
   const command = atomicWindowsSpawnCommand({
-    hermesHome: 'C:\\Users\\andre\\.hermes',
-    python: 'C:\\Users\\andre\\.hermes\\python.exe'
+    nikiHome: 'C:\\Users\\andre\\.niki',
+    python: 'C:\\Users\\andre\\.niki\\python.exe'
   })
 
   const encoded = command.match(/-EncodedCommand\s+([^\s]+)$/)?.[1]
   const script = encoded ? Buffer.from(encoded, 'base64').toString('utf16le') : ''
-  assert.match(script, /\.hermes-update-in-progress/)
+  assert.match(script, /\.niki-update-in-progress/)
   assert.match(
     script,
     /\$marker\+"\.lock",\[IO\.FileMode\]::OpenOrCreate,\[IO\.FileAccess\]::ReadWrite,\[IO\.FileShare\]::None/
@@ -47,15 +47,15 @@ test('Windows spawn holds the update mutex across marker check and helper spawn'
 test('Windows spawn publishes the initial ownership record before releasing the mutex', () => {
   const command = atomicWindowsSpawnCommand(
     {
-      hermesHome: 'C:\\Users\\andre\\.hermes',
-      python: 'C:\\Users\\andre\\.hermes\\python.exe'
+      nikiHome: 'C:\\Users\\andre\\.niki',
+      python: 'C:\\Users\\andre\\.niki\\python.exe'
     },
     {
       ownershipId,
       spawnNonce: '0123456789abcdef',
       profile: 'default',
-      hermesPath: 'C:\\Niki\\hermes.exe',
-      hermesHome: 'C:\\Users\\andre\\.hermes',
+      nikiPath: 'C:\\Niki\\niki.exe',
+      nikiHome: 'C:\\Users\\andre\\.niki',
       tokenFingerprint: 'a'.repeat(32),
       startedAt: '2026-07-14T00:00:00.000Z'
     }
@@ -74,10 +74,10 @@ test('Windows spawn publishes the initial ownership record before releasing the 
 test.runIf(process.platform === 'win32')(
   'Windows spawn waits on <marker>.lock and judges v2 claims: live refuses, dead is deleted under the lock',
   async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), 'hermes-win-marker-'))
-    const marker = path.join(root, '.hermes-update-in-progress')
+    const root = await mkdtemp(path.join(os.tmpdir(), 'niki-win-marker-'))
+    const marker = path.join(root, '.niki-update-in-progress')
     const run = (command: string) => promisify(execCallback)(command, { timeout: 30_000 })
-    const command = atomicWindowsSpawnCommand({ hermesHome: root, python: path.join(root, 'missing-python.exe') })
+    const command = atomicWindowsSpawnCommand({ nikiHome: root, python: path.join(root, 'missing-python.exe') })
 
     // An updater: hold <marker>.lock sharing nothing (marker.ps1 Open-MarkerLock),
     // write its v2 claim, release, and stay alive as the live owner.
@@ -171,10 +171,10 @@ test('every emitted PowerShell script keeps try blocks attached to their catch/f
 
       return 'CLEAR'
     }),
-    'C:\\Users\\alice\\.hermes'
+    'C:\\Users\\alice\\.niki'
   )
   scripts.push(
-    decode(atomicWindowsSpawnCommand({ hermesHome: 'C:\\Users\\alice\\.hermes', python: 'C:\\py\\python.exe' })),
+    decode(atomicWindowsSpawnCommand({ nikiHome: 'C:\\Users\\alice\\.niki', python: 'C:\\py\\python.exe' })),
     decode(buildWindowsInteractiveCommand('C:\\work'))
   )
 
@@ -201,17 +201,17 @@ test('Windows relaunch gate refuses live and uncertain markers before executing 
       const script = scriptFromInvocation(command, options)
       scripts.push(script)
 
-      if (script.includes('Get-Command hermes.exe')) {
+      if (script.includes('Get-Command niki.exe')) {
         return JSON.stringify({
           os: 'Windows',
           arch: 'AMD64',
-          hermesHome: 'C:\\Users\\alice\\.hermes',
-          hermesPath: 'C:\\Niki\\hermes.exe',
+          nikiHome: 'C:\\Users\\alice\\.niki',
+          nikiPath: 'C:\\Niki\\niki.exe',
           python: 'C:\\Niki\\python.exe'
         })
       }
 
-      if (script.includes('.hermes-update-in-progress')) {
+      if (script.includes('.niki-update-in-progress')) {
         return observation
       }
 
@@ -226,13 +226,13 @@ test('Windows relaunch gate refuses live and uncertain markers before executing 
           pickLocalPort: async () => 50000,
           forward: async () => {},
           cancelForward: async () => {},
-          waitForHermes: async () => {},
+          waitForNiki: async () => {},
           probeReuseProof: async () => 'authenticated-ok'
         }),
       (error: any) => error.kind === 'update-in-progress'
     )
     assert.equal(
-      scripts.some(script => script.includes('hermes_cli.windows_ssh_runtime')),
+      scripts.some(script => script.includes('niki_cli.windows_ssh_runtime')),
       false
     )
   }
@@ -243,7 +243,7 @@ test('Windows gates keep a dead marker while the checkout lock or a lease byte i
   // after the update_lock byte range -- owner byte + 16 R5b lease bytes at
   // 1048576 -- of the installer checkout and the runtime python's checkout is free.
   const decode = (command: string, options: SshExecOptions = {}) => scriptFromInvocation(command, options)
-  const runtime = { hermesHome: 'C:\\Users\\alice\\.hermes', python: 'C:\\src\\hermes\\venv\\Scripts\\python.exe' }
+  const runtime = { nikiHome: 'C:\\Users\\alice\\.niki', python: 'C:\\src\\niki\\venv\\Scripts\\python.exe' }
   const spawnScript = decode(atomicWindowsSpawnCommand(runtime))
   let probeScript = ''
 
@@ -253,7 +253,7 @@ test('Windows gates keep a dead marker while the checkout lock or a lease byte i
 
       return 'HELD'
     }),
-    runtime.hermesHome,
+    runtime.nikiHome,
     runtime.python
   ).catch(error => error)
 
@@ -262,9 +262,9 @@ test('Windows gates keep a dead marker while the checkout lock or a lease byte i
 
   for (const script of [spawnScript, probeScript]) {
     assert.match(script, /\$lockFile\.Lock\(1048576,17\)/)
-    assert.match(script, /Combine\(\$gitdir,"hermes-update\.lock"\)/)
-    assert.match(script, /\$checkoutRoots=@\(\[IO\.Path\]::Combine\(\$installRoot,"hermes-agent"\),/)
-    assert.ok(script.includes("GetDirectoryName('C:\\src\\hermes\\venv\\Scripts\\python.exe')"))
+    assert.match(script, /Combine\(\$gitdir,"niki-update\.lock"\)/)
+    assert.match(script, /\$checkoutRoots=@\(\[IO\.Path\]::Combine\(\$installRoot,"niki-agent"\),/)
+    assert.ok(script.includes("GetDirectoryName('C:\\src\\niki\\venv\\Scripts\\python.exe')"))
   }
 
   const deleteAt = spawnScript.indexOf('[IO.File]::Delete($marker)')
@@ -289,8 +289,8 @@ test('Windows relaunch gate uses strict install-wide marker parsing and fail-clo
     return 'CLEAR'
   })
 
-  await assertWindowsRemoteInstallUpdateClear(ssh, 'C:\\Users\\alice\\.hermes\\profiles\\research')
-  assert.match(script, /\.hermes-update-in-progress/)
+  await assertWindowsRemoteInstallUpdateClear(ssh, 'C:\\Users\\alice\\.niki\\profiles\\research')
+  assert.match(script, /\.niki-update-in-progress/)
   assert.match(script, /Split-Path -Leaf \$parent.*profiles/)
   assert.match(script, /UTF8Encoding.*true/)
   assert.match(script, /\$result=Get-MarkerVerdict \$text/)
@@ -307,21 +307,21 @@ test('Windows probe validates Niki and Python topology before selection', async 
       return JSON.stringify({
         os: 'Windows',
         arch: 'AMD64',
-        hermesHome: 'C:\\\\h',
-        hermesPath: 'C:\\\\h\\\\hermes.exe',
+        nikiHome: 'C:\\\\h',
+        nikiPath: 'C:\\\\h\\\\niki.exe',
         python: 'C:\\\\h\\\\python.exe'
       })
     }),
-    'C:\\\\h\\\\hermes.exe'
+    'C:\\\\h\\\\niki.exe'
   )
 
   const explicitCheck = script.indexOf('if($explicit){Assert-NoReparse $explicit $false;')
   const explicitPythonCheck = script.indexOf('Assert-NoReparse $explicitPython $false')
-  const envHome = script.indexOf('$hermesHome=$env:HERMES_HOME')
-  // #118988: HERMES_HOME is trusted only when it is a directory on the remote; anything else
+  const envHome = script.indexOf('$nikiHome=$env:NIKI_HOME')
+  // #118988: NIKI_HOME is trusted only when it is a directory on the remote; anything else
   // (stale User-scope value, client path leaked over SSH) falls back to the remote default.
-  const envHomeGuard = script.indexOf('Test-Path -LiteralPath $hermesHome -PathType Container')
-  const fallbackJoin = script.indexOf('Join-Path $hermesHome')
+  const envHomeGuard = script.indexOf('Test-Path -LiteralPath $nikiHome -PathType Container')
+  const fallbackJoin = script.indexOf('Join-Path $nikiHome')
   const candidatePythonCheck = script.indexOf('Assert-NoReparse $candidatePython $true')
   const candidateSelection = script.indexOf('Get-Item -LiteralPath $candidate')
   const pythonJoin = script.indexOf('$python=[IO.Path]::Combine')
@@ -343,8 +343,8 @@ test('Windows probe validates Niki and Python topology before selection', async 
 const CLEAN_PROBE_RESULT = JSON.stringify({
   os: 'Windows',
   arch: 'AMD64',
-  hermesHome: 'C:\\h',
-  hermesPath: 'C:\\h\\hermes.exe',
+  nikiHome: 'C:\\h',
+  nikiPath: 'C:\\h\\niki.exe',
   python: 'C:\\h\\python.exe'
 })
 
@@ -377,13 +377,13 @@ test('Windows probe tolerates CLIXML progress-stream pollution around the probe 
 
     assert.equal(parsed.os, 'Windows')
     assert.equal(parsed.arch, 'AMD64')
-    assert.equal(parsed.hermesPath, 'C:\\h\\hermes.exe')
+    assert.equal(parsed.nikiPath, 'C:\\h\\niki.exe')
     assert.equal(parsed.python, 'C:\\h\\python.exe')
   }
 })
 
 test('Windows probe still rejects output that is not platform JSON', async () => {
-  await assert.rejects(probeWindowsRemote(sshWith(async () => 'hermes is not installed on this host')))
+  await assert.rejects(probeWindowsRemote(sshWith(async () => 'niki is not installed on this host')))
   await assert.rejects(
     probeWindowsRemote(
       sshWith(async () => JSON.stringify({ os: 'Windows' }) + '\n' + JSON.stringify({ unrelated: true }))
@@ -419,7 +419,7 @@ test('the update marker gate stays CLEAR when CLIXML lands after the final Write
 
 test('every parsed Windows PowerShell script silences the progress stream', async () => {
   // The marker gate runs Add-Type (C# compilation) and the spawn/helper scripts
-  // import the remote hermes_cli module — both emit progress records the
+  // import the remote niki_cli module — both emit progress records the
   // probe's Get-Item/Get-Command suppression knows nothing about, on the same
   // stdout the parsers read.
   const decode = (command: string, options: SshExecOptions = {}) => scriptFromInvocation(command, options)
@@ -434,7 +434,7 @@ test('every parsed Windows PowerShell script silences the progress stream', asyn
     'C:\\h'
   )
   scripts.push(
-    decode(atomicWindowsSpawnCommand({ hermesHome: 'C:\\h', python: 'C:\\py\\python.exe' })),
+    decode(atomicWindowsSpawnCommand({ nikiHome: 'C:\\h', python: 'C:\\py\\python.exe' })),
     decode(helperCommand({ python: 'C:\\py\\python.exe' }, 'inspect', []))
   )
 
@@ -454,7 +454,7 @@ test('helper parsing ignores CLIXML progress blocks around its JSON line', async
       sshWith(async () => output),
       { python: 'C:\\py\\python.exe' },
       'inspect',
-      ['C:\\h\\hermes.exe']
+      ['C:\\h\\niki.exe']
     )
 
     assert.equal(parsed.supported, true)
@@ -474,8 +474,8 @@ test('Windows platform probe streams long PowerShell scripts over stdin', async 
       return JSON.stringify({
         os: 'Windows',
         arch: 'AMD64',
-        hermesHome: 'C:\\\\h',
-        hermesPath: 'C:\\\\h\\\\hermes.exe',
+        nikiHome: 'C:\\\\h',
+        nikiPath: 'C:\\\\h\\\\niki.exe',
         python: 'C:\\\\h\\\\python.exe'
       })
     }
@@ -501,17 +501,17 @@ test('Windows platform probe preserves Unicode paths in its UTF-16LE stdin paylo
         return JSON.stringify({
           os: 'Windows',
           arch: 'AMD64',
-          hermesHome: 'C:\\\\h',
-          hermesPath: 'C:\\\\h\\\\hermes.exe',
+          nikiHome: 'C:\\\\h',
+          nikiPath: 'C:\\\\h\\\\niki.exe',
           python: 'C:\\\\h\\\\python.exe'
         })
       }
     },
-    'C:\\Users\\한글\\hermes.exe'
+    'C:\\Users\\한글\\niki.exe'
   )
 
   const decodedScript = Buffer.from(stdinData.trim(), 'base64').toString('utf16le')
-  assert.ok(decodedScript.includes('C:\\Users\\한글\\hermes.exe'))
+  assert.ok(decodedScript.includes('C:\\Users\\한글\\niki.exe'))
 })
 
 test('every Windows probe command fits the cmd.exe 8191-char limit (#106716)', async () => {
@@ -527,23 +527,23 @@ test('every Windows probe command fits the cmd.exe 8191-char limit (#106716)', a
 
     const script = scriptFromInvocation(command, options)
 
-    if (script.includes('.hermes-update-in-progress')) {
+    if (script.includes('.niki-update-in-progress')) {
       return 'CLEAR'
     }
 
     return JSON.stringify({
       os: 'Windows',
       arch: 'AMD64',
-      hermesHome: 'C:\\h',
-      hermesPath: 'C:\\h\\hermes.exe',
+      nikiHome: 'C:\\h',
+      nikiPath: 'C:\\h\\niki.exe',
       python: 'C:\\h\\python.exe'
     })
   })
 
   // Worst-case path lengths: an explicit path and home near the deeper end of
   // what the connection settings allow.
-  const longHome = `C:\\Users\\${'u'.repeat(100)}\\.hermes\\profiles\\${'p'.repeat(100)}`
-  const longExplicit = `C:\\${'h'.repeat(200)}\\hermes.exe`
+  const longHome = `C:\\Users\\${'u'.repeat(100)}\\.niki\\profiles\\${'p'.repeat(100)}`
+  const longExplicit = `C:\\${'h'.repeat(200)}\\niki.exe`
 
   await probeWindowsRemote(ssh, longExplicit)
   await assertWindowsRemoteInstallUpdateClear(ssh, longHome)
@@ -588,22 +588,22 @@ function runLocalWindowsCommand(command, stdinData) {
 }
 
 test.skipIf(process.platform !== 'win32')('Windows platform probe executes in real PowerShell', async () => {
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hermes-probe-'))
-  const hermesPath = path.join(tempDir, 'hermes.exe')
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'niki-probe-'))
+  const nikiPath = path.join(tempDir, 'niki.exe')
 
   try {
-    fs.writeFileSync(hermesPath, '')
+    fs.writeFileSync(nikiPath, '')
     fs.writeFileSync(path.join(tempDir, 'python.exe'), '')
 
     const result = await probeWindowsRemote(
       {
         exec: (command: string, options: SshExecOptions = {}) => runLocalWindowsCommand(command, options.stdinData)
       },
-      hermesPath
+      nikiPath
     )
 
     assert.equal(result.os, 'Windows')
-    assert.equal(result.hermesPath, hermesPath)
+    assert.equal(result.nikiPath, nikiPath)
     assert.equal(result.python, path.join(tempDir, 'python.exe'))
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true })
@@ -625,8 +625,8 @@ test('platform detection preserves POSIX and falls back to Windows PowerShell', 
       return JSON.stringify({
         os: 'Windows',
         arch: 'ARM64',
-        hermesHome: 'C:\\h',
-        hermesPath: 'C:\\h\\hermes.exe',
+        nikiHome: 'C:\\h',
+        nikiPath: 'C:\\h\\niki.exe',
         python: 'C:\\h\\python.exe'
       })
     })
@@ -700,14 +700,14 @@ test('platform detection preserves typed Windows probe failures', async () => {
 
 test('helper command uses the fixed remote Python entry point and quotes path data', () => {
   const command = helperCommand({ python: "C:\\Program Files\\Niki's\\python.exe" }, 'inspect', [
-    'C:\\x y\\hermes.exe'
+    'C:\\x y\\niki.exe'
   ])
 
   const encoded = command.split(' ').pop()!
   const script = Buffer.from(encoded, 'base64').toString('utf16le')
-  assert.match(script, /-m' 'hermes_cli\.windows_ssh_runtime' 'inspect'/)
+  assert.match(script, /-m' 'niki_cli\.windows_ssh_runtime' 'inspect'/)
   assert.match(script, /Niki''s/)
-  assert.match(script, /C:\\x y\\hermes\.exe/)
+  assert.match(script, /C:\\x y\\niki\.exe/)
 })
 
 test('Windows lock validation is scoped and exact', () => {
@@ -720,8 +720,8 @@ test('Windows lock validation is scoped and exact', () => {
     creationTimeNs: '1784219690452757504',
     port: 1234,
     tokenFingerprint: 'a'.repeat(32),
-    hermesPath: 'C:\\h\\hermes.exe',
-    hermesHome: 'C:\\h'
+    nikiPath: 'C:\\h\\niki.exe',
+    nikiHome: 'C:\\h'
   }
 
   assert.equal(validLock(lock, ownershipId), true)
@@ -746,12 +746,12 @@ test('Windows SSH reuse requires the requested remote profile to match the lock'
     port: 1234,
     profile: 'default',
     tokenFingerprint: crypto.createHash('sha256').update(token).digest('hex').slice(0, 32),
-    hermesPath: 'C:\\h\\hermes.exe',
-    hermesHome: 'C:\\h'
+    nikiPath: 'C:\\h\\niki.exe',
+    nikiHome: 'C:\\h'
   }
 
   const state = { alive: true, owned: true }
-  const runtime = { hermesPath: lock.hermesPath, hermesHome: lock.hermesHome }
+  const runtime = { nikiPath: lock.nikiPath, nikiHome: lock.nikiHome }
 
   assert.equal(reusableWindowsLock(lock, state, 'default', token, runtime), true)
   assert.equal(reusableWindowsLock(lock, state, 'desktop-work', token, runtime), false)
@@ -776,8 +776,8 @@ test('managed update drain preserves a Windows owner when creation time does not
     port: 1234,
     profile: 'default',
     tokenFingerprint: 'a'.repeat(32),
-    hermesPath: 'C:\\h\\hermes.exe',
-    hermesHome: 'C:\\h'
+    nikiPath: 'C:\\h\\niki.exe',
+    nikiHome: 'C:\\h'
   }
 
   const operations: string[] = []
@@ -818,8 +818,8 @@ test('managed update drain rechecks Windows PID/create-time ownership before exa
     port: 1234,
     profile: 'default',
     tokenFingerprint: 'a'.repeat(32),
-    hermesPath: 'C:\\h\\hermes.exe',
-    hermesHome: 'C:\\h'
+    nikiPath: 'C:\\h\\niki.exe',
+    nikiHome: 'C:\\h'
   }
 
   const operations: string[] = []

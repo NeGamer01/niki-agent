@@ -392,7 +392,7 @@ function WakeWordButton({ disabled, pausedForVoice = false }: { disabled: boolea
   const c = t.composer
   const wake = useStore($wakeWord)
 
-  const phrase = wake.phrase || 'hey hermes'
+  const phrase = wake.phrase || 'hey niki'
 
   const label = pausedForVoice
     ? c.wakeWordPausedVoice(phrase)

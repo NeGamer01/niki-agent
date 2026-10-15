@@ -19,8 +19,8 @@ import pytest
 @pytest.fixture(autouse=True)
 def _isolated_home(monkeypatch, tmp_path):
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path / ".hermes"))
-    monkeypatch.setenv("HERMES_RUNTIME_DIR", str(tmp_path / "tools"))
+    monkeypatch.setenv("NIKI_HOME", str(tmp_path / ".niki"))
+    monkeypatch.setenv("NIKI_RUNTIME_DIR", str(tmp_path / "tools"))
     monkeypatch.delenv("AGENT_BROWSER_HEADED", raising=False)
     yield
 

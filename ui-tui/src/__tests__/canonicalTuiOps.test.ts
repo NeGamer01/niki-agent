@@ -47,13 +47,13 @@ beforeEach(() => {
 })
 
 it('/save calls session.save on the shared gateway and reports the saved file', async () => {
-  const { request, slash, sys } = harness({ 'session.save': { file: '/home/u/.hermes/sessions/saved/x.json' } })
+  const { request, slash, sys } = harness({ 'session.save': { file: '/home/u/.niki/sessions/saved/x.json' } })
 
   slash('/save')
   await flush()
 
   expect(request).toHaveBeenCalledWith('session.save', { session_id: 'owner' })
-  expect(notices(sys)).toContain('conversation saved to: /home/u/.hermes/sessions/saved/x.json')
+  expect(notices(sys)).toContain('conversation saved to: /home/u/.niki/sessions/saved/x.json')
 })
 
 it('/reload calls reload.env for this session on the shared gateway and reports the count', async () => {

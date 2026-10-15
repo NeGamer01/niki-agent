@@ -43,7 +43,7 @@ delegate_task(tasks=[
 子智能体以**全新对话**启动。它们对父智能体的对话历史、之前的工具调用或委派前讨论的任何内容一无所知。子智能体的唯一上下文来自父智能体调用 `delegate_task` 时填写的 `goal` 和 `context` 字段。
 :::
 
-唯一例外：当父智能体有已解析的工作区目录时，每个子智能体的系统提示都会嵌入该工作区的**项目上下文文件**（`.hermes.md` > AGENTS.md 链 > CLAUDE.md > `.cursorrules`——与主智能体系统提示相同的发现逻辑、优先级和大小上限；SOUL.md 除外）。在仓库中工作的子智能体无需重新发现即可遵循仓库自身的约定。
+唯一例外：当父智能体有已解析的工作区目录时，每个子智能体的系统提示都会嵌入该工作区的**项目上下文文件**（`.niki.md` > AGENTS.md 链 > CLAUDE.md > `.cursorrules`——与主智能体系统提示相同的发现逻辑、优先级和大小上限；SOUL.md 除外）。在仓库中工作的子智能体无需重新发现即可遵循仓库自身的约定。
 
 这意味着父智能体必须在调用中传递子智能体所需的**一切**信息：
 
@@ -144,7 +144,7 @@ delegate_task(
 你可以通过 `config.yaml` 为子智能体配置不同的模型——适用于将简单任务委派给更便宜/更快的模型：
 
 ```yaml
-# In ~/.hermes/config.yaml
+# In ~/.niki/config.yaml
 delegation:
   model: "google/gemini-flash-2.0"    # Cheaper model for subagents
   provider: "openrouter"              # Optional: route subagents to a different provider
@@ -157,7 +157,7 @@ delegation:
 将问题分解为规格清晰的子任务需要前沿模型级别的判断力；而执行一个已经带有明确目标、完整上下文和输出约定的子任务通常不需要。与此同时，token 消耗主要发生在子智能体身上——并行批量子智能体通常消耗一次运行中绝大多数的 token，因此成本真正落在 worker 模型上。将 `delegation.model` 固定为低价模型、同时主会话保持前沿模型，可以把规划质量留在最需要的地方，并在消耗量最大的地方削减开支：
 
 ```yaml
-# ~/.hermes/config.yaml
+# ~/.niki/config.yaml
 model:
   default: "your-frontier-model"     # 父智能体（规划者）保持前沿模型
 delegation:
@@ -194,7 +194,7 @@ delegation:
 ```yaml
 auxiliary:
   review:
-    provider: openrouter               # 或 nous、anthropic、直连 base_url 等
+    provider: openrouter               # 或 niki、anthropic、直连 base_url 等
     model: anthropic/claude-opus-4.6   # 一个强力的评审模型
 ```
 
@@ -242,7 +242,7 @@ delegation:
 正值限制的是**无进展时间，而不是总运行时长**：它是子智能体在完全没有进展（没有完成的 API 调用、没有工具切换、活动时钟没有跳动）的情况下可以持续的最长时间，超过后才被放弃。任何进展迹象都会重新开始计时，因此正在等待耗时数分钟的补全任务的子智能体不会因为「耗时长」被终止（过去正是这种情况丢掉了已完成的工作）；而真正停止推进的子智能体仍会被捕获（且进行中的请求本身还受单次调用 stale 看门狗约束）。`0` 或负值表示禁用；无论是否配置，下述心跳陈旧度监控始终生效。
 
 :::tip 零调用超时时的诊断转储
-在配置了硬性上限的情况下，如果子智能体在**零次** API 调用的情况下超时（通常原因：provider 不可达、认证失败或工具 schema 被拒绝），`delegate_task` 会将结构化诊断信息写入 `~/.hermes/logs/subagent-timeout-<session>-<timestamp>.log`，其中包含子智能体的配置快照、凭据解析追踪以及早期错误消息。比之前的静默超时行为更易于定位根因。
+在配置了硬性上限的情况下，如果子智能体在**零次** API 调用的情况下超时（通常原因：provider 不可达、认证失败或工具 schema 被拒绝），`delegate_task` 会将结构化诊断信息写入 `~/.niki/logs/subagent-timeout-<session>-<timestamp>.log`，其中包含子智能体的配置快照、凭据解析追踪以及早期错误消息。比之前的静默超时行为更易于定位根因。
 :::
 
 ## 监控运行中的子智能体（`/agents`）
@@ -330,7 +330,7 @@ delegate_task(
 ## 配置
 
 ```yaml
-# In ~/.hermes/config.yaml
+# In ~/.niki/config.yaml
 delegation:
   max_iterations: 50                        # Max turns per child (default: 50)
   # max_concurrent_children: 3              # Parallel children per batch (default: 3)

@@ -40,10 +40,10 @@ describe('pickWindowBelow', () => {
   })
 
   it('skips our own other windows (same pid) while walking down', () => {
-    const secondHermesWindow = win(SELF_PID, 150, 150)
+    const secondNikiWindow = win(SELF_PID, 150, 150)
     const target = win(7, 160, 160)
 
-    const { below } = pickWindowBelow([win(SELF_PID, 100, 100), secondHermesWindow, target], SELF_PID, SELF_BOUNDS)
+    const { below } = pickWindowBelow([win(SELF_PID, 100, 100), secondNikiWindow, target], SELF_PID, SELF_BOUNDS)
 
     expect(below).toBe(target)
   })
@@ -209,7 +209,7 @@ describe('resolveOutsideAsar', () => {
   it('requires app.asar to be a complete path segment', () => {
     for (const untouched of [
       'file:///opt/app.asar-tools/node_modules/get-windows/index.js',
-      'file:///Users/dev/hermes-agent/node_modules/get-windows/index.js'
+      'file:///Users/dev/niki-agent/node_modules/get-windows/index.js'
     ]) {
       expect(resolveOutsideAsar(untouched)).toBe(untouched)
     }

@@ -5,7 +5,7 @@ so ``/v1/responses`` and ``/v1/runs`` used to mint a throwaway physical
 session id per request even when the request declared its conversation with
 ``X-Niki-Session-Key``.  Every conversation-affinity hint Niki sends is
 derived from that physical id — ``prompt_cache_key`` on both OpenAI-wire
-transports, the OpenRouter/Nous sticky ``session_id``, and xAI's
+transports, the OpenRouter/Niki sticky ``session_id``, and xAI's
 ``x-grok-conv-id`` — so all four re-keyed on every single reply.
 
 These tests pin the identity contract itself rather than the four consumers:
@@ -28,7 +28,7 @@ from gateway.platforms.api_server import (
     cors_middleware,
     security_headers_middleware,
 )
-from hermes_state import SessionDB
+from niki_state import SessionDB
 
 KEY = "agent:main:api_server:room-42:member-7"
 OTHER_KEY = "agent:main:api_server:room-42:member-8"
@@ -324,7 +324,7 @@ class TestResponsesHandlerPrecedence:
             for _ in range(2):
                 resp = await cli.post(
                     "/v1/responses",
-                    json={"model": "hermes-agent", "input": "hi"},
+                    json={"model": "niki-agent", "input": "hi"},
                     headers=_headers(),
                 )
                 assert resp.status == 200
@@ -369,7 +369,7 @@ class TestRunsHandlerPrecedence:
         async with TestClient(TestServer(app)) as cli:
             resp = await cli.post(
                 "/v1/runs",
-                json={"model": "hermes-agent", "input": "hi"},
+                json={"model": "niki-agent", "input": "hi"},
                 headers=_headers(KEY),
             )
             assert resp.status in (200, 202)
@@ -386,7 +386,7 @@ class TestRunsHandlerPrecedence:
         async with TestClient(TestServer(app)) as cli:
             resp = await cli.post(
                 "/v1/runs",
-                json={"model": "hermes-agent", "input": "hi",
+                json={"model": "niki-agent", "input": "hi",
                       "session_id": "explicit-session"},
                 headers=_headers(KEY),
             )
@@ -453,7 +453,7 @@ class TestRealRunAgentSettlement:
         async with TestClient(TestServer(app)) as cli:
             resp = await cli.post(
                 "/v1/responses",
-                json={"model": "hermes-agent", "input": "hi"},
+                json={"model": "niki-agent", "input": "hi"},
                 headers=_headers(KEY),
             )
             assert resp.status == 200
@@ -481,7 +481,7 @@ class TestRealRunAgentSettlement:
             for _ in range(2):
                 resp = await cli.post(
                     "/v1/responses",
-                    json={"model": "hermes-agent", "input": "hi"},
+                    json={"model": "niki-agent", "input": "hi"},
                     headers=_headers(KEY),
                 )
                 assert resp.status == 200
@@ -507,7 +507,7 @@ class TestRealRunAgentSettlement:
         async with TestClient(TestServer(app)) as cli:
             resp = await cli.post(
                 "/v1/responses",
-                json={"model": "hermes-agent", "input": "hi",
+                json={"model": "niki-agent", "input": "hi",
                       "previous_response_id": "resp_A"},
                 headers=_headers(OTHER_KEY),
             )
@@ -539,7 +539,7 @@ class TestRealRunAgentSettlement:
         async with TestClient(TestServer(app)) as cli:
             resp = await cli.post(
                 "/v1/runs",
-                json={"model": "hermes-agent", "input": "hi",
+                json={"model": "niki-agent", "input": "hi",
                       "session_id": "explicit-session"},
                 headers=_headers(KEY),
             )

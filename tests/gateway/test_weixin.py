@@ -398,7 +398,7 @@ class TestWeixinOutboundMedia:
              patch("gateway.platforms.weixin.secrets.token_bytes", return_value=aes_key):
             message_id = asyncio.run(adapter._send_file("wxid_test123", str(image_path), ""))
 
-        assert message_id.startswith("hermes-weixin-")
+        assert message_id.startswith("niki-weixin-")
         assert len(session.post_calls) == 1
         upload_url, upload_kwargs = session.post_calls[0]
         assert upload_url == "https://upload.example.com/media"
@@ -709,7 +709,7 @@ class TestWeixinPollLoopSyncBuf:
                 adapter._running = False
                 return {"ret": 0, "msgs": []}
 
-        def _save(hermes_home, account_id, sync_buf):
+        def _save(niki_home, account_id, sync_buf):
             saves.append((sync_buf, threading.get_ident()))
 
         monkeypatch.setattr(weixin, "_get_updates", _get_updates)

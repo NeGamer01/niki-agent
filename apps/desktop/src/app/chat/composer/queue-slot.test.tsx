@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 
-import type { HermesGateway } from '@/hermes'
+import type { NikiGateway } from '@/niki'
 import { I18nProvider } from '@/i18n/context'
 import { en } from '@/i18n/en'
 import { $queuedPromptsBySession, getQueuedPrompts } from '@/store/composer-queue'
@@ -23,7 +23,7 @@ it('Delete on a server-queued card cancels its admission at the authority', asyn
         busy: true,
         drainNextQueued: vi.fn(async () => undefined),
         exitQueuedEdit: vi.fn(),
-        gateway: { request } as unknown as HermesGateway,
+        gateway: { request } as unknown as NikiGateway,
         queueEdit: null,
         queueParked: false,
         queuedPrompts: getQueuedPrompts('stored'),

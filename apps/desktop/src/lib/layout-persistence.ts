@@ -11,21 +11,21 @@ interface LayoutEntry {
 }
 
 export const LAYOUT_KEYS = {
-  floating: 'hermes.desktop.floatingPanes.v1',
-  tree: 'hermes.desktop.layoutTree.v2',
-  preset: 'hermes.desktop.layoutPreset.active',
-  panes: 'hermes.desktop.paneStates.v1',
-  dismissed: 'hermes.desktop.dismissedPanes.v1',
-  shares: 'hermes.desktop.paneShare.v1',
-  sharePartners: 'hermes.desktop.paneSharePartners.v1',
-  hiddenTabs: 'hermes.desktop.hiddenStripTabs.v1',
-  placed: 'hermes.desktop.userPlacedPanes.v1',
-  flipped: 'hermes.desktop.panesFlipped',
-  collapsed: 'hermes.desktop.collapsedTreeSides.v1'
+  floating: 'niki.desktop.floatingPanes.v1',
+  tree: 'niki.desktop.layoutTree.v2',
+  preset: 'niki.desktop.layoutPreset.active',
+  panes: 'niki.desktop.paneStates.v1',
+  dismissed: 'niki.desktop.dismissedPanes.v1',
+  shares: 'niki.desktop.paneShare.v1',
+  sharePartners: 'niki.desktop.paneSharePartners.v1',
+  hiddenTabs: 'niki.desktop.hiddenStripTabs.v1',
+  placed: 'niki.desktop.userPlacedPanes.v1',
+  flipped: 'niki.desktop.panesFlipped',
+  collapsed: 'niki.desktop.collapsedTreeSides.v1'
 } as const
 
 function migrateLayoutScopes(initialMode: InterfaceMode) {
-  const marker = 'hermes.desktop.layoutModeScopes.v1'
+  const marker = 'niki.desktop.layoutModeScopes.v1'
   const legacy = new Map<string, string>()
 
   if (readKey(marker) !== null) {

@@ -1,5 +1,5 @@
-import { Box, Text, useInput, useStdout } from '@hermes/ink'
-import type { SessionListResult, SessionListRow } from '@hermes/shared/gateway-events'
+import { Box, Text, useInput, useStdout } from '@niki/ink'
+import type { SessionListResult, SessionListRow } from '@niki/shared/gateway-events'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { mutateCanonical } from '../app/slash/canonicalSessionControls.js'

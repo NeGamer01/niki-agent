@@ -10,7 +10,7 @@ from gateway.config import Platform, PlatformConfig
 from gateway.platforms.base import BasePlatformAdapter, SendResult
 from gateway.session import SessionSource
 from gateway.session_contract import CANONICAL_GATEWAY_PROTOCOL
-from hermes_state_runtime import RuntimeStoreError
+from niki_state_runtime import RuntimeStoreError
 
 
 class LocalSessionAdapter(BasePlatformAdapter):
@@ -101,7 +101,7 @@ class LocalSessionAdapter(BasePlatformAdapter):
         with live.event_stream.lock:
             if any('session:respond' in member.capabilities for member in live.subscribers.values()):
                 return None
-        from hermes_state_runtime import list_session_admissions
+        from niki_state_runtime import list_session_admissions
         started = next((row for row in list_session_admissions(self.authority.db, session_id=chat_id)
                         if row['status'] == 'started'), None)
         if started is not None and 'local_automation_v1' in started['payload']:
@@ -135,7 +135,7 @@ def _bypass_policy(params, *, private_secrets):
     block or shape the session; there is no default model to inherit, so one must be explicit."""
     import copy
     from gateway.session_policy import build_policy
-    from hermes_cli.config_defaults import DEFAULT_CONFIG
+    from niki_cli.config_defaults import DEFAULT_CONFIG
     if not params.get('model'):
         raise RuntimeStoreError('invalid_params')
     defaults = copy.deepcopy(DEFAULT_CONFIG)
@@ -147,7 +147,7 @@ def _bypass_policy(params, *, private_secrets):
 def create_local_session(authority, actor, params, *, trusted_policy=None, trusted_secrets=None, skills_prompt=None):
     """Stage, commit and publish a local session inline (synchronous callers)."""
     from gateway.session_local_recovery import restore_local_session
-    from hermes_state_local import commit_local_session
+    from niki_state_local import commit_local_session
     staged = stage_local_session(authority, actor, params, trusted_policy=trusted_policy,
                                  trusted_secrets=trusted_secrets, skills_prompt=skills_prompt)
     if isinstance(staged, dict):
@@ -197,7 +197,7 @@ def stage_local_session(authority, actor, params, *, trusted_policy=None, truste
     sid = local_identity(authority.profile_id, actor.subject, request_id)
     from gateway.session_policy import bind_launch_key, restore_policy, launch_key
     if authority.db.get_session(sid) is not None:
-        from hermes_state_local import local_receipt
+        from niki_state_local import local_receipt
         saved = local_receipt(authority.db, sid)
         original = restore_policy(saved['policy'])
         if original.request_json != policy.request_json:
@@ -227,7 +227,7 @@ def stage_local_session(authority, actor, params, *, trusted_policy=None, truste
 
 
 def publish_local_policy(authority, session_id):
-    from hermes_state_local import local_receipt
+    from niki_state_local import local_receipt
     from gateway.session_policy import restore_policy
     live = authority.sessions[session_id]
     from gateway.session_local_recovery import local_adapter_map
@@ -238,14 +238,14 @@ def publish_local_policy(authority, session_id):
 
 def _lazy_model(authority, policy):
     """The model a not-yet-built session will run: with no provider pinned, the free tier's agent
-    build pins ``nous/welcome`` (``pin_model_for_route``), so the configured default is not it."""
+    build pins ``niki/welcome`` (``pin_model_for_route``), so the configured default is not it."""
     import json
     model = policy.current_model(authority) if policy else None
     if (policy is None or json.loads(policy.request_json).get('model')
             or str(policy.provider or '').strip().lower() not in {'', 'auto'}):
         return model
     from gateway.session_authorities import owner_scope
-    from hermes_cli.anon_auth import GUEST_MODEL, free_tier_route
+    from niki_cli.anon_auth import GUEST_MODEL, free_tier_route
     with owner_scope(authority):
         return GUEST_MODEL if free_tier_route() else model
 
@@ -257,12 +257,12 @@ def _reasoning_fields(agent, policy, model, authority=None, override=None):
     from agent.fast_mode import STATIC_TIERS, parse_service_tier
     from agent.reasoning_effort import clamp_effort, route_supported_efforts
     from agent.voice_turn_route import session_runtime_view
-    from hermes_cli.models import resolve_fast_mode_overrides
+    from niki_cli.models import resolve_fast_mode_overrides
     if agent is None and policy is None:
         return {}
     view = session_runtime_view(agent) if agent is not None else None
     if view is None:
-        from hermes_constants import resolve_reasoning_config
+        from niki_constants import resolve_reasoning_config
         effective, next_model = policy.effective(authority, secrets=False)
         route = effective.get('model') or {}
     config = (getattr(view, 'reasoning_config', None) if view is not None
@@ -314,13 +314,13 @@ def local_session_info(authority, ref):
 
 
 def _classic_cli_fields(authority, ref, live, agent, policy):
-    """What main's HermesCLI read off itself for /status, the status bar and the exit summary: the
+    """What main's NikiCLI read off itself for /status, the status bar and the exit summary: the
     stored title and times, the session's yolo, api_mode, the loaded tool count and a masked
     credential hint (never the key). Lazy sessions report what is known without building an agent."""
     import contextlib
     stored_id = ref.session_id
     with contextlib.suppress(Exception):
-        from hermes_state_local import local_receipt
+        from niki_state_local import local_receipt
         stored_id = local_receipt(authority.db, ref.session_id)['entry']['session_id'] or stored_id
     row = {}
     with contextlib.suppress(Exception):

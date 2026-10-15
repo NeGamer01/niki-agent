@@ -26,7 +26,7 @@ The setup wizard probes your endpoint and auto-detects which transport it uses, 
 ## Quick Start
 
 ```bash
-hermes model
+niki model
 # → Select "Azure Foundry"
 # → Enter your endpoint URL
 # → Choose Authentication:
@@ -90,7 +90,7 @@ az role assignment create \
 ### One-time setup (Niki side)
 
 ```bash
-hermes model
+niki model
 # → Select "Azure Foundry"
 # → Enter your endpoint URL
 # → Authentication: 2 (Microsoft Entra ID)
@@ -126,9 +126,9 @@ Niki only manages one Entra-specific knob in `config.yaml`:
 
 - **`scope`** — the OAuth resource scope. Defaults to Microsoft's documented inference scope (`https://ai.azure.com/.default`). Override only if your resource was provisioned against a non-standard audience.
 
-Everything else (tenant, service principal secret, federated token file, sovereign cloud authority, broker preferences) is read by `azure-identity` directly from the standard `AZURE_*` environment variables — see the [credential resolution order](#credential-resolution-order) below. Set those in `~/.hermes/.env` or your deployment environment, exactly as Microsoft's SDK reference describes.
+Everything else (tenant, service principal secret, federated token file, sovereign cloud authority, broker preferences) is read by `azure-identity` directly from the standard `AZURE_*` environment variables — see the [credential resolution order](#credential-resolution-order) below. Set those in `~/.niki/.env` or your deployment environment, exactly as Microsoft's SDK reference describes.
 
-No secrets land in `~/.hermes/.env` for Entra mode — `azure-identity` caches tokens in-process (and where available, in your OS keychain / `~/.IdentityService`).
+No secrets land in `~/.niki/.env` for Entra mode — `azure-identity` caches tokens in-process (and where available, in your OS keychain / `~/.IdentityService`).
 
 ### Credential resolution order
 
@@ -145,15 +145,15 @@ No secrets land in `~/.hermes/.env` for Entra mode — `azure-identity` caches t
 
 Interactive browser credential is excluded by default for unattended Niki runs; use Azure CLI, Azure Developer CLI, managed identity, workload identity, or service principal credentials instead.
 
-**Multiplexed profiles (`gateway.multiplex_profiles: true`):** every source in that chain resolves from the *process* — the launch profile's `AZURE_*`, its `az login` session, the host's managed identity. A served profile that sets no `AZURE_*` of its own is therefore refused instead of borrowing the launch identity (the same rule the Vertex adapter applies to Application Default Credentials). Give each profile its own `AZURE_TENANT_ID` + `AZURE_CLIENT_ID` + `AZURE_CLIENT_SECRET` (or `AZURE_FEDERATED_TOKEN_FILE`) in its `.env`; `AZURE_CLIENT_ID` alone opts that profile into the host's user-assigned managed identity. Single-profile runs (`hermes`, `hermes -p beta`) keep the full chain.
+**Multiplexed profiles (`gateway.multiplex_profiles: true`):** every source in that chain resolves from the *process* — the launch profile's `AZURE_*`, its `az login` session, the host's managed identity. A served profile that sets no `AZURE_*` of its own is therefore refused instead of borrowing the launch identity (the same rule the Vertex adapter applies to Application Default Credentials). Give each profile its own `AZURE_TENANT_ID` + `AZURE_CLIENT_ID` + `AZURE_CLIENT_SECRET` (or `AZURE_FEDERATED_TOKEN_FILE`) in its `.env`; `AZURE_CLIENT_ID` alone opts that profile into the host's user-assigned managed identity. Single-profile runs (`niki`, `niki -p beta`) keep the full chain.
 
 ### Deployment patterns
 
 **Local development:**
 ```bash
 az login
-hermes model   # pick Azure Foundry → Entra ID
-hermes         # uses your az login token
+niki model   # pick Azure Foundry → Entra ID
+niki         # uses your az login token
 ```
 
 **Azure VM / Functions / App Service / Container Apps (system-assigned managed identity):**
@@ -181,9 +181,9 @@ Export `AZURE_AUTHORITY_HOST` (e.g. `https://login.microsoftonline.us` for Azure
 
 ### Health checks
 
-`hermes doctor` runs a 10 s probe against `DefaultAzureCredential` when `model.auth_mode: entra_id`, reporting which inner credential won (env vars present, managed identity endpoint reachable, etc.).
+`niki doctor` runs a 10 s probe against `DefaultAzureCredential` when `model.auth_mode: entra_id`, reporting which inner credential won (env vars present, managed identity endpoint reachable, etc.).
 
-`hermes auth` shows a structured status block:
+`niki auth` shows a structured status block:
 
 ```
 azure-foundry (Microsoft Entra ID):
@@ -213,7 +213,7 @@ model:
   context_length: 400000             # auto-detected
 ```
 
-And in `~/.hermes/.env`:
+And in `~/.niki/.env`:
 
 ```
 AZURE_FOUNDRY_API_KEY=<your-azure-key>
@@ -257,7 +257,7 @@ Important behaviour:
 - **Bearer auth is used instead of `x-api-key`.** Azure's Anthropic-compatible route requires `Authorization: Bearer <key>` rather than Anthropic's native `x-api-key` header. Niki detects `azure.com` in the base URL and routes the API key through the SDK's `auth_token` field so the right header reaches the upstream.
 - **1M context window beta header is kept.** Azure still gates the 1M-token Claude context (Opus 4.6/4.7, Sonnet 4.6) behind the `anthropic-beta: context-1m-2025-08-07` header. Niki keeps that beta header on Azure paths (it's stripped from native Anthropic OAuth requests because some subscriptions reject it, but Azure requires it).
 - **OAuth token refresh is disabled.** Azure deployments use static API keys. The `~/.claude/.credentials.json` OAuth token refresh loop that applies to Anthropic Console is explicitly skipped for Azure endpoints to prevent the Claude Code OAuth token from overwriting your Azure key mid-session.
-- **`hermes doctor` probes the same route.** The `/anthropic` route has no `GET /models`, so the connectivity check sends a one-token `POST /v1/messages` with the same Bearer auth and `api-version` query the runtime uses; a 200 (or a 400 from the Messages API) reports the endpoint as healthy, 401/403 as an auth problem.
+- **`niki doctor` probes the same route.** The `/anthropic` route has no `GET /models`, so the connectivity check sends a one-token `POST /v1/messages` with the same Bearer auth and `api-version` query the runtime uses; a 200 (or a 400 from the Messages API) reports the endpoint as healthy, 401/403 as an auth problem.
 
 ## Alternative: `provider: anthropic` + Azure base URL
 
@@ -271,7 +271,7 @@ model:
   default: claude-sonnet-4-6
 ```
 
-With `AZURE_ANTHROPIC_KEY` set in `~/.hermes/.env`. Niki detects `azure.com` in the base URL and short-circuits around the Claude Code OAuth token chain so the Azure key is used directly with `x-api-key` auth.
+With `AZURE_ANTHROPIC_KEY` set in `~/.niki/.env`. Niki detects `azure.com` in the base URL and short-circuits around the Claude Code OAuth token chain so the Azure key is used directly with `x-api-key` auth.
 
 `key_env` is the canonical snake_case field name; `api_key_env` (and the camelCase `keyEnv` / `apiKeyEnv`) are accepted as aliases. If both `key_env` and `AZURE_ANTHROPIC_KEY`/`ANTHROPIC_API_KEY` are set, the `key_env`-named env var wins.
 
@@ -281,7 +281,7 @@ Azure does **not** expose a pure-API-key endpoint to list your *deployed* model 
 
 What Niki can do:
 
-- Azure OpenAI v1 endpoints (`<resource>.openai.azure.com/openai/v1`) expose `GET /models` with the resource's **available** model catalog. Niki uses this list to prefill the setup wizard's model picker **and** the in-session `/model azure-foundry` picker (CLI, TUI, Desktop, gateway), so you can switch deployments without re-running `hermes setup`.
+- Azure OpenAI v1 endpoints (`<resource>.openai.azure.com/openai/v1`) expose `GET /models` with the resource's **available** model catalog. Niki uses this list to prefill the setup wizard's model picker **and** the in-session `/model azure-foundry` picker (CLI, TUI, Desktop, gateway), so you can switch deployments without re-running `niki setup`.
 - Microsoft Foundry `/anthropic` routes: detected via URL path, model name entered manually (no `/models` there — the `/model` picker shows only the current selection and any `providers.azure-foundry.models` you declare).
 - Private / firewalled endpoints: manual entry with a friendly "couldn't probe" message.
 - Entra ID (`model.auth_mode: entra_id`, no `AZURE_FOUNDRY_API_KEY`): the `/model` picker lists the provider as soon as `model.base_url` (or `AZURE_FOUNDRY_BASE_URL`) is set — no token is minted just to show the row.
@@ -305,7 +305,7 @@ The runtime picker resolves the endpoint from `model.base_url` while Azure Found
 | Variable | Purpose |
 |----------|---------|
 | `AZURE_FOUNDRY_API_KEY` | Primary API key for Microsoft Foundry / Azure OpenAI (api_key mode) |
-| `AZURE_FOUNDRY_BASE_URL` | Endpoint URL (set via `hermes model`; env var is used as a fallback) |
+| `AZURE_FOUNDRY_BASE_URL` | Endpoint URL (set via `niki model`; env var is used as a fallback) |
 | `AZURE_ANTHROPIC_KEY` | Used by `provider: anthropic` + Azure base URL (alternative to `ANTHROPIC_API_KEY`) |
 | `AZURE_TENANT_ID` | Entra ID tenant for service-principal flows |
 | `AZURE_CLIENT_ID` | Entra ID client ID (service principal, workload identity, or user-assigned managed identity) |
@@ -315,7 +315,7 @@ The runtime picker resolves the endpoint from `model.base_url` while Azure Found
 | `AZURE_AUTHORITY_HOST` | Sovereign cloud authority host override |
 | `IDENTITY_ENDPOINT` / `MSI_ENDPOINT` | Managed Identity endpoint for App Service, Functions, and Container Apps; VMs usually use IMDS instead |
 
-The Azure SDK reads the `AZURE_*` env vars directly. Niki never inspects them other than to report which sources are present in `hermes doctor` output.
+The Azure SDK reads the `AZURE_*` env vars directly. Niki never inspects them other than to report which sources are present in `niki doctor` output.
 
 ## Troubleshooting
 
@@ -329,7 +329,7 @@ This is the malformed-URL bug from pre-fix Azure Anthropic setups. Upgrade Niki 
 The endpoint rejected both the `/models` probe and the Anthropic Messages probe. This is normal for private endpoints behind a firewall or with an IP allow-list. Fall back to manual API mode selection and type your deployment name — everything still works, Niki just can't prefill the picker.
 
 **Wrong transport picked.**
-Run `hermes model` again and the wizard will re-probe. If the probe still picks the wrong mode, you can edit `config.yaml` directly:
+Run `niki model` again and the wizard will re-probe. If the probe still picks the wrong mode, you can edit `config.yaml` directly:
 
 ```yaml
 model:
@@ -341,10 +341,10 @@ model:
 - Run `az login` to refresh your developer session (the cached token may have expired).
 - Verify the `Azure AI User` (or `Foundry User`) role assignment took effect: `az role assignment list --assignee <user-or-identity-id>` should list it on your Foundry resource. Role propagation can take up to 5 minutes.
 - For user-assigned managed identities, double-check `AZURE_CLIENT_ID` matches the identity attached to the compute resource.
-- Run `hermes doctor` — the Azure Entra probe reports whether token acquisition succeeded and includes a remediation hint.
+- Run `niki doctor` — the Azure Entra probe reports whether token acquisition succeeded and includes a remediation hint.
 
 **Entra ID: wizard preflight hangs or times out.**
-The 10 s preflight is a soft check. Choose "Save anyway and validate later" and run `hermes doctor` after deploying to the target environment. Common causes include an unreachable token service or stale local login state — prefer workload identity in CI, set `AZURE_TENANT_ID`+`AZURE_CLIENT_ID`+`AZURE_CLIENT_SECRET` when using a service principal, or run `az login` for local development.
+The 10 s preflight is a soft check. Choose "Save anyway and validate later" and run `niki doctor` after deploying to the target environment. Common causes include an unreachable token service or stale local login state — prefer workload identity in CI, set `AZURE_TENANT_ID`+`AZURE_CLIENT_ID`+`AZURE_CLIENT_SECRET` when using a service principal, or run `az login` for local development.
 
 **401 on Anthropic-style endpoint with Entra ID.**
 Verify the same `Azure AI User` (or `Foundry User`) role is assigned on the Foundry resource (it covers both `/openai/v1` and `/anthropic` paths). If the OpenAI-style probe works during the wizard but `claude-*` requests fail at runtime, the most common cause is a stale `model.entra.scope` left over from an earlier wizard run — delete the `entra.scope` line from `config.yaml` so the runtime falls back to the default `https://ai.azure.com/.default` scope.

@@ -3191,7 +3191,7 @@
    ]
   }
  },
- "base-url:nous": {
+ "base-url:niki": {
   "api_mode": "chat_completions",
   "base_url": "https://inference-api.nousresearch.com/v1",
   "high": {
@@ -8216,7 +8216,7 @@
    ]
   }
  },
- "nous": {
+ "niki": {
   "api_mode": "chat_completions",
   "base_url": "https://inference-api.nousresearch.com/v1",
   "high": {
@@ -8227,8 +8227,8 @@
     },
     "session_id": "wire-snapshot",
     "tags": [
-     "product=hermes-agent",
-     "client=hermes-client-v<VERSION>",
+     "product=niki-agent",
+     "client=niki-client-v<VERSION>",
      "conversation=wire-snapshot"
     ]
    },
@@ -8325,8 +8325,8 @@
    "extra_body": {
     "session_id": "wire-snapshot",
     "tags": [
-     "product=hermes-agent",
-     "client=hermes-client-v<VERSION>",
+     "product=niki-agent",
+     "client=niki-client-v<VERSION>",
      "conversation=wire-snapshot"
     ]
    },
@@ -8426,8 +8426,8 @@
     },
     "session_id": "wire-snapshot",
     "tags": [
-     "product=hermes-agent",
-     "client=hermes-client-v<VERSION>",
+     "product=niki-agent",
+     "client=niki-client-v<VERSION>",
      "conversation=wire-snapshot"
     ]
    },

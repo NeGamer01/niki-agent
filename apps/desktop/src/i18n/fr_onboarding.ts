@@ -77,7 +77,7 @@ export const frOnboarding: TranslationOverrides['onboarding'] = {
   errorDetails: 'Détails',
   pickDifferentProvider: 'Choisissez un autre fournisseur',
   signInWith: provider => `Se connecter avec ${provider}`,
-  openedBrowser: provider => `Nous avons ouvert ${provider} dans votre navigateur.`,
+  openedBrowser: provider => `Niki avons ouvert ${provider} dans votre navigateur.`,
   authorizeThere: 'Autorisez Niki là-bas.',
   copyAuthCode: "Copiez le code d'autorisation et collez-le ci-dessous.",
   pasteAuthCode: "Coller le code d'autorisation",
@@ -86,7 +86,7 @@ export const frOnboarding: TranslationOverrides['onboarding'] = {
   externalPending: provider =>
     `${provider} se connecte via sa propre CLI. Exécutez cette commande dans un terminal, puis revenez et choisissez « Je me suis connecté » :`,
   signedIn: 'Je me suis connecté',
-  deviceCodeOpened: provider => `Nous avons ouvert ${provider} dans votre navigateur. Entrez ce code là-bas :`,
+  deviceCodeOpened: provider => `Niki avons ouvert ${provider} dans votre navigateur. Entrez ce code là-bas :`,
   reopenVerification: 'Rouvrir la page de vérification',
   copy: 'Copier',
   defaultModel: 'Modèle par défaut',

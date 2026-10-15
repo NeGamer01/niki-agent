@@ -14,7 +14,7 @@ Read-only EVM client: wallets, tokens, gas across 8 chains.
 
 | | |
 |---|---|
-| Source | Optional — install with `hermes skills install official/blockchain/evm` |
+| Source | Optional — install with `niki skills install official/blockchain/evm` |
 | Path | `optional-skills/blockchain/evm` |
 | Version | `1.0.0` |
 | Author | Mibayy (@Mibayy), youssefea (@youssefea), ethernet8023 (@ethernet8023), Niki Agent |
@@ -72,14 +72,14 @@ Tx decoding: 4byte.directory public API.
 
 Override RPC endpoint: `export EVM_RPC_URL=https://your-rpc.com`
 
-Helper script path: `~/.hermes/skills/blockchain/evm/scripts/evm_client.py`
+Helper script path: `~/.niki/skills/blockchain/evm/scripts/evm_client.py`
 
 ---
 
 ## Quick Reference
 
 ```
-SCRIPT=~/.hermes/skills/blockchain/evm/scripts/evm_client.py
+SCRIPT=~/.niki/skills/blockchain/evm/scripts/evm_client.py
 
 # Network & prices
 python $SCRIPT stats                            # Ethereum stats
@@ -125,7 +125,7 @@ python $SCRIPT whale --blocks 50 --min-usd 100000 --chain arbitrum
 ### 0. Setup Check
 ```bash
 python --version   # 3.8+ required
-python ~/.hermes/skills/blockchain/evm/scripts/evm_client.py stats
+python ~/.niki/skills/blockchain/evm/scripts/evm_client.py stats
 ```
 
 ### 1. Wallet Portfolio
@@ -220,8 +220,8 @@ Shows gwei price + USD cost for: transfer, ERC-20 transfer, approve, swap, NFT m
 ## Verification
 ```bash
 # Should print current block, gas price, ETH price
-python ~/.hermes/skills/blockchain/evm/scripts/evm_client.py stats
+python ~/.niki/skills/blockchain/evm/scripts/evm_client.py stats
 
 # Should resolve vitalik.eth to 0xd8dA...
-python ~/.hermes/skills/blockchain/evm/scripts/evm_client.py ens vitalik.eth
+python ~/.niki/skills/blockchain/evm/scripts/evm_client.py ens vitalik.eth
 ```

@@ -3,12 +3,12 @@ from contextlib import closing
 from dataclasses import asdict
 
 from acp_adapter.catalog import catalog_sessions, logical_session_id
-from hermes_state import SessionDB
-import hermes_state_runtime as rt
+from niki_state import SessionDB
+import niki_state_runtime as rt
 
 
 def _acp_local_session(db, epoch, cwd):
-    from hermes_state_local import commit_local_session
+    from niki_state_local import commit_local_session
     from gateway.config import Platform
     from gateway.session import SessionEntry, SessionSource
     from gateway.session_lifecycle import _now

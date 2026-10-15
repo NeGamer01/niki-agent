@@ -59,7 +59,7 @@ Selection is config-driven via `context.engine` in `config.yaml`. The resolution
 
 Plugin engines are **never auto-activated** — the user must explicitly set `context.engine` to the plugin's name. The default `"compressor"` always uses the built-in.
 
-Configure via `hermes plugins` → Provider Plugins → Context Engine, or edit `config.yaml` directly.
+Configure via `niki plugins` → Provider Plugins → Context Engine, or edit `config.yaml` directly.
 
 For building a context engine plugin, see [Context Engine Plugins](./context-engine-plugin.md).
 
@@ -164,7 +164,7 @@ Images are priced at the per-image cost **learned from the provider's usage**
 (`agent/image_token_cost.py`), not a vendor formula: on a response whose delta
 since the previous anchor introduced N images, the residual between the real
 `prompt_tokens` and the text-only projection is N × the provider's price. The
-value is kept per `model@host` in `~/.hermes/cache/image_token_costs.json` and
+value is kept per `model@host` in `~/.niki/cache/image_token_costs.json` and
 bound per turn so the trigger estimator, the tail-budget walk and gateway
 hygiene all use the same figure. Before the first vision turn a flat 1,500
 default applies.
@@ -238,7 +238,7 @@ text, the focus topic or error messages.
   `gateway_hygiene` or `overflow`. An automatic caller that passes no label
   reads `auto`; a refusal before any attempt began (pool saturation) reads
   `unknown`.
-- `route` is `hermes` for the local compressor and `codex_app_server` when the
+- `route` is `niki` for the local compressor and `codex_app_server` when the
   Codex thread owns compaction.
 - `commit_status` is `committed`, `aborted`, `failed`, `skipped` or `blocked`.
   A `blocked` attempt was refused by an automatic guard; its `failure_class`
@@ -268,11 +268,11 @@ text, the focus topic or error messages.
   for like. `tool_results_pruned` and `reasoning_items_pruned` count the
   deterministic passes that ran before and after the summary.
 
-The opt-in `hermes.compression.count` shared metric keeps coarse triggers
+The opt-in `niki.compression.count` shared metric keeps coarse triggers
 (`auto`, `manual`, `overflow`) and counts only attempts the local compressor
 ran; blocked and Codex-routed attempts appear in the log line only. When the
 NeMo Relay runtime is live, the same record, plus micro-compaction passes and
-committed proactive prunes, is also emitted as a `hermes.compaction` mark (see
+committed proactive prunes, is also emitted as a `niki.compaction` mark (see
 [NeMo Relay Shared Metrics](./relay-shared-metrics.md#compaction-marks)).
 
 
@@ -293,7 +293,7 @@ compression:
   min_tail_user_messages: 1  # Real user messages guaranteed in the tail (default: 1)
   codex_gpt55_autoraise: true  # gpt-5.5 on Codex OAuth: raise trigger to 85% (default: true)
   codex_gpt55_autoraise_notice: true  # Show the one-time autoraise notice (default: true)
-  codex_app_server_auto: native  # native|hermes|off for Codex app-server thread compaction
+  codex_app_server_auto: native  # native|niki|off for Codex app-server thread compaction
   codex_responses_native: false  # Opt-in server compaction: gpt-5.6 on OpenAI/Codex; Astra on Codex OAuth
   codex_responses_compact_threshold: null  # Server compaction trigger; only used when codex_responses_native: true
   in_place: true             # Compact on the same session id, no rotation (default: true)
@@ -302,7 +302,7 @@ compression:
 auxiliary:
   compression:
     model: null              # Override model for summaries (default: auto-detect)
-    provider: auto           # Provider: "auto", "openrouter", "nous", "main", etc.
+    provider: auto           # Provider: "auto", "openrouter", "niki", "main", etc.
     base_url: null           # Custom OpenAI-compatible endpoint
 ```
 
@@ -321,7 +321,7 @@ auxiliary:
 | `idle_compact_after_seconds` | `0` | ≥0 seconds | Opt-in: compact up front when a session resumes after this many seconds idle (0 = disabled). Skips when context ≤ threshold × target_ratio; honors cooldown/anti-thrash/lock guards |
 | `codex_gpt55_autoraise` | `true` | bool | Raise the trigger to 85% for gpt-5.4/5.5/5.6 and gpt-6 Astra on the ChatGPT Codex OAuth route (see below). Set `false` to keep the global `threshold` |
 | `codex_gpt55_autoraise_notice` | `true` | bool | Show the one-time Codex gpt-5.5 autoraise notice. Set `false` to keep the 85% autoraise but suppress the banner |
-| `codex_app_server_auto` | `native` | `native`, `hermes`, `off` | Thread-compaction mode for Codex app-server sessions (see below) |
+| `codex_app_server_auto` | `native` | `native`, `niki`, `off` | Thread-compaction mode for Codex app-server sessions (see below) |
 | `codex_responses_native` | `false` | bool | Opt in to OpenAI's server-side compaction on the Responses API. Engages for gpt-5.6-family models on the direct OpenAI API or a ChatGPT Codex subscription, and `gpt-6-astra` (including its `-900k` picker alias) on official Codex OAuth (see below) |
 | `codex_responses_compact_threshold` | `null` | `null` or positive integer | Server-side compaction trigger, read **only when `codex_responses_native: true`** — it never changes when local compression fires; the local trigger is `threshold` (ratio) capped by `threshold_tokens`. `null` follows the resolved local compression trigger with an 8,192 token safety margin. A positive integer remains absolute and only clamps downward when required. Invalid values use automatic behavior. Automatic mode falls back to `200000` when no usable local trigger exists |
 | `in_place` | `true` | bool | Compact on the same session id instead of rotating to a new one (see below) |
@@ -388,7 +388,7 @@ Resolution rules:
 - Keys may be **provider-scoped** as `"<provider>:<substring>"` (e.g.
   `"openai-codex:astra": 0.85`). A scoped key only matches when the session's
   provider is that route, so the same slug served with a different window
-  elsewhere (OpenRouter, Nous, direct OpenAI) keeps the global `threshold`.
+  elsewhere (OpenRouter, Niki, direct OpenAI) keeps the global `threshold`.
   Ranking uses the model substring only, so `"astra-900k"` still beats
   `"openai-codex:astra"` for the 900K picker; a scoped key beats a bare key
   with the identical substring.
@@ -415,7 +415,7 @@ OAuth (`provider: openai-codex`) and the model is one of those families (Astra
 matches any slug containing `astra`; the opt-in `-900k` picker variants are
 excluded because they already unlock the wider window), Niki raises the
 trigger to **85%** (~231K) and shows a notice with the opt-out command. The
-notice is shown once per profile — a marker under `$HERMES_HOME`
+notice is shown once per profile — a marker under `$NIKI_HOME`
 (`.codex_gpt55_autoraise_notice`) records that it ran, so repeated agent/session
 inits (e.g. every inbound gateway message) don't re-emit it; if the raised
 threshold later changes it re-notifies once. Only this exact route is affected;
@@ -423,13 +423,13 @@ the same models on any other provider keep your global `threshold`. To opt back 
 the global value:
 
 ```bash
-hermes config set compression.codex_gpt55_autoraise false
+niki config set compression.codex_gpt55_autoraise false
 ```
 
 To keep the 85% autoraise but hide only the one-time notice:
 
 ```bash
-hermes config set compression.codex_gpt55_autoraise_notice false
+niki config set compression.codex_gpt55_autoraise_notice false
 ```
 
 ### Codex large-context `-900k` picker variants (opt-in)
@@ -470,7 +470,7 @@ mechanism instead:
 - Automatic compaction is controlled by `compression.codex_app_server_auto`:
   the default `native` lets the app-server decide when to compact and Niki
   records the resulting compaction events (compression counters, session
-  events). Set `hermes` to let Niki' compression threshold initiate
+  events). Set `niki` to let Niki' compression threshold initiate
   app-server compaction, or `off` to disable Niki-initiated automatic
   compaction entirely (codex may still compact natively).
 

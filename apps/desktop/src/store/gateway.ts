@@ -7,12 +7,12 @@ import {
   registryBackendScopeKey,
   resolveGatewayWsUrl,
   type ServerRequest
-} from '@hermes/shared'
+} from '@niki/shared'
 import { atom } from 'nanostores'
 
 import { canonicalOwnerProfile } from '@/api/canonical-protocol'
-import type { HermesConnection } from '@/global'
-import { HermesGateway, setApiRequestConnection } from '@/hermes'
+import type { NikiConnection } from '@/global'
+import { NikiGateway, setApiRequestConnection } from '@/niki'
 import { translateNow } from '@/i18n'
 import {
   decideLivenessForceClose,
@@ -46,7 +46,7 @@ import { stampSecondaryProfileOwner } from '@/store/session-event-provenance'
 const normKey = (profile: string | null | undefined): string => (profile ?? '').trim() || 'default'
 
 // Dial intent callers attach to a user-initiated open. The canonical
-// `hermes gateway ensure` path has no local slot pool, so the hint changes
+// `niki gateway ensure` path has no local slot pool, so the hint changes
 // nothing about the dial itself; it survives as the option shape the SDK,
 // Settings scopes and session creation pass so an explicit user gesture stays
 // distinguishable from ambient hydration at the call site.
@@ -54,7 +54,7 @@ export type SpawnPriority = 'foreground' | 'background'
 
 // Read connection state through a call so TS control-flow analysis doesn't
 // narrow the getter to a constant across guards (it genuinely changes).
-const isOpen = (gateway: HermesGateway | null): boolean => gateway?.connectionState === 'open'
+const isOpen = (gateway: NikiGateway | null): boolean => gateway?.connectionState === 'open'
 
 interface RegistryConfig {
   /** Electron's published descriptor is authoritative for a primary gateway's
@@ -67,7 +67,7 @@ interface RegistryConfig {
    *  `connectionId` tag the source the same way events are tagged. */
   onServerRequest?: (request: ScopedServerRequest) => void
   onActiveConnectionInvalidated?: (fallbackProfile: string, activationEpoch: number) => void
-  onActiveConnectionChanged?: (connection: HermesConnection) => void
+  onActiveConnectionChanged?: (connection: NikiConnection) => void
   /**
    * Fires whenever applyActive() moves the active route to a (possibly
    * different) profile — including registry-internal eviction fallbacks
@@ -111,8 +111,8 @@ interface Secondary {
   profile: string
   /** Registry connection serving this socket; null = the local/legacy path. */
   connectionId: null | string
-  connection: HermesConnection | null
-  gateway: HermesGateway
+  connection: NikiConnection | null
+  gateway: NikiGateway
   /**
    * Date.now() of the most recent socket 'open'. The live-work pruner's
    * min-lifetime grace reads this: an idle prune can race an on-demand dial
@@ -210,11 +210,11 @@ const ACTIVATION_LEASE_MS = SOURCE_SWITCH_DIAL_TIMEOUT_MS + 15_000
 // runtime behavior is identical to plain module state.
 interface GatewayRegistryState {
   config: RegistryConfig | null
-  primaryGateway: HermesGateway | null
+  primaryGateway: NikiGateway | null
   /** Registry source currently served by primaryGateway, when known. */
   primaryConnectionId: null | string
   /** Resolved mode of the primary's descriptor: a `local` primary is ONE
-   *  `hermes serve --profile <primary>` child and can never stand in for a
+   *  `niki serve --profile <primary>` child and can never stand in for a
    *  pooled profile's own backend. */
   primaryConnectionMode: 'local' | 'remote' | null
   primaryProfile: string
@@ -234,11 +234,11 @@ interface GatewayRegistryState {
   turnLeases: Map<string, () => void>
   /** Debounced releases so an immediate chained turn can reuse its lease. */
   turnLeaseReleaseTimers: Map<string, ReturnType<typeof setTimeout>>
-  $gateway: ReturnType<typeof atom<HermesGateway | null>>
+  $gateway: ReturnType<typeof atom<NikiGateway | null>>
   $activeProfile: ReturnType<typeof atom<string>>
 }
 
-const STATE_KEY = Symbol.for('hermes.desktop.gatewayRegistryState')
+const STATE_KEY = Symbol.for('niki.desktop.gatewayRegistryState')
 
 function createRegistryState(): GatewayRegistryState {
   return {
@@ -259,7 +259,7 @@ function createRegistryState(): GatewayRegistryState {
     // The active gateway instance, exposed for inline message-stream
     // components (inline ClarifyTool, model overlays) that call gateway
     // methods without the instance threaded down through props.
-    $gateway: atom<HermesGateway | null>(null),
+    $gateway: atom<NikiGateway | null>(null),
     // The PROFILE the active gateway is routed to (bare profile name, never a
     // composite registry scope). Owned exclusively by applyActive() so the
     // published profile can never diverge from the socket actually selected —
@@ -363,7 +363,7 @@ export function dispatchPrimaryServerRequest(request: ServerRequest, profile: st
   return dispatchServerRequest(request, profile, g.config?.activeConnectionId?.() ?? null)
 }
 
-export function setPrimaryGateway(gateway: HermesGateway | null, profile = 'default'): void {
+export function setPrimaryGateway(gateway: NikiGateway | null, profile = 'default'): void {
   const next = normKey(profile)
 
   if (g.primaryGateway !== gateway) {
@@ -427,7 +427,7 @@ export function dialedGatewayModeFor(connectionId: null | string, profile: strin
 }
 
 /** Publish the registry source owned by the window primary socket. */
-export function setPrimaryGatewayConnection(connection: Pick<HermesConnection, 'connectionId' | 'mode'> | null): void {
+export function setPrimaryGatewayConnection(connection: Pick<NikiConnection, 'connectionId' | 'mode'> | null): void {
   setPrimaryGatewayConnectionId(connection?.connectionId, connection?.mode)
 }
 
@@ -468,7 +468,7 @@ async function ridesPrimaryBackend(connectionId: null | string, profile: string)
     return false
   }
 
-  const desktop = window.hermesDesktop
+  const desktop = window.nikiDesktop
 
   if (!desktop?.getConnectionFor) {
     return false
@@ -476,7 +476,7 @@ async function ridesPrimaryBackend(connectionId: null | string, profile: string)
 
   // Resolved per call, never cached: main answers the route per request
   // (`resolveProfileBackendRoute` case 6 keeps a pooled backend for
-  // `HERMES_DESKTOP_ISOLATED_BACKEND=1`), and for a pooled profile this is the
+  // `NIKI_DESKTOP_ISOLATED_BACKEND=1`), and for a pooled profile this is the
   // same dial `openSecondary` makes next, coalesced by main's claim key.
   try {
     const conn = await withTimeout(
@@ -530,7 +530,7 @@ export function gatewayActivationEpoch(): number {
   return Number.isFinite(g.activationEpoch) ? g.activationEpoch : 0
 }
 
-export function activeGateway(): HermesGateway | null {
+export function activeGateway(): NikiGateway | null {
   if (g.activeKey === g.primaryProfile) {
     return g.primaryGateway
   }
@@ -647,7 +647,7 @@ function applyActive(profile: string, activationEpoch: number): boolean {
   const gateway = activeGateway()
   g.$gateway.set(gateway)
   setGatewayState(gateway?.connectionState ?? 'closed')
-  // Push the active scope's registry connection into the hermes module (null
+  // Push the active scope's registry connection into the niki module (null
   // for the local pool) so connection-building WS calls (pluginSocket) resolve
   // through the same source of truth every activation path maintains here —
   // registry-agent activations included, not just profile switches.
@@ -674,7 +674,7 @@ function applyActive(profile: string, activationEpoch: number): boolean {
   return true
 }
 
-function publishActiveConnection(connection: HermesConnection): void {
+function publishActiveConnection(connection: NikiConnection): void {
   if (g.config?.onActiveConnectionChanged) {
     g.config.onActiveConnectionChanged(connection)
   } else {
@@ -690,7 +690,7 @@ function clearTimer(entry: Secondary): void {
 }
 
 async function openSecondary(entry: Secondary): Promise<void> {
-  const desktop = window.hermesDesktop
+  const desktop = window.nikiDesktop
 
   const reauthError = g.reauthFailures.get(entry.scope)?.error
 
@@ -993,7 +993,7 @@ async function reconnectSecondary(entry: Secondary): Promise<void> {
 
     // An ensure refusal no redial can fix (incompatible runtime, no ensure protocol, an invalid
     // endpoint, an unsafe control path): each automatic redial would spawn another
-    // `hermes gateway ensure` against the same install forever. Park at once, keeping the entry:
+    // `niki gateway ensure` against the same install forever. Park at once, keeping the entry:
     // an explicit open, focus/wake nudge or Reconnect re-arms it after the user's repair.
     if (isPermanentLocalGatewayEnsureError(error)) {
       console.warn(`[gateway] parking scope="${entry.scope}": local gateway ensure refused permanently`, error)
@@ -1043,7 +1043,7 @@ function isMissingProfileError(error: unknown): boolean {
 }
 
 function createSecondary(profile: string, connectionId: null | string = null): Secondary {
-  const gateway = new HermesGateway()
+  const gateway = new NikiGateway()
   const scope = registryBackendScopeKey(connectionId, profile)
 
   const entry: Secondary = {
@@ -1125,7 +1125,7 @@ function createSecondary(profile: string, connectionId: null | string = null): S
 // poisons the active gateway with "not connected" even though the primary is
 // open right next to it.
 async function sharedPrimaryRoute(profile: string): Promise<boolean> {
-  const desktop = window.hermesDesktop
+  const desktop = window.nikiDesktop
 
   if (!desktop) {
     return false
@@ -1155,7 +1155,7 @@ async function gatewayForProfile(
   profile: string,
   leaseRequest = false,
   spawnPriority: SpawnPriority = 'background'
-): Promise<{ gateway: HermesGateway | null; key: string; release: () => void; scopeProfile: boolean }> {
+): Promise<{ gateway: NikiGateway | null; key: string; release: () => void; scopeProfile: boolean }> {
   const key = normKey(profile)
   const noRelease = () => undefined
 
@@ -1317,7 +1317,7 @@ export async function requestGatewayForAgent<T>(
 
   traceAgentRoute(scope, 'secondary')
 
-  if (!window.hermesDesktop?.getConnectionFor) {
+  if (!window.nikiDesktop?.getConnectionFor) {
     throw new Error('This Desktop build cannot dial registry connections. Update Niki Desktop.')
   }
 
@@ -1536,7 +1536,7 @@ export async function retainGatewayForAgent(
     return () => undefined
   }
 
-  if (!window.hermesDesktop?.getConnectionFor) {
+  if (!window.nikiDesktop?.getConnectionFor) {
     // No registry dialing in this build — nothing to hold; the request path
     // will throw its own actionable error.
     return () => undefined
@@ -1801,7 +1801,7 @@ export async function openGatewayForAgent(
     return
   }
 
-  if (!window.hermesDesktop?.getConnectionFor) {
+  if (!window.nikiDesktop?.getConnectionFor) {
     throw new Error('This Desktop build cannot dial registry connections. Update Niki Desktop.')
   }
 
@@ -1855,7 +1855,7 @@ export async function ensureGatewayForAgent(
     return Boolean(isOpen(g.primaryGateway) && !signal?.aborted && applyActive(g.primaryProfile, activationEpoch))
   }
 
-  if (!window.hermesDesktop?.getConnectionFor) {
+  if (!window.nikiDesktop?.getConnectionFor) {
     throw new Error('This Desktop build cannot dial registry connections. Update Niki Desktop.')
   }
 
@@ -1993,7 +1993,7 @@ export async function ensureGatewayForProfile(profile: string): Promise<void> {
 // retries; only a user gesture (`explicit`: the Reconnect action) may redial it.
 export async function ensureActiveGatewayOpen({
   explicit = false
-}: { explicit?: boolean } = {}): Promise<HermesGateway | null> {
+}: { explicit?: boolean } = {}): Promise<NikiGateway | null> {
   if (g.activeKey === g.primaryProfile) {
     return g.primaryGateway
   }

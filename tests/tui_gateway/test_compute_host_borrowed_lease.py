@@ -65,7 +65,7 @@ def _make_frame(sid: str, **overrides) -> dict:
 
 def _seed_parent_lease(key: str, live_session_id: str = "parent-sid"):
     """Claim the lease exactly as the parent dashboard would (same pid, its own live id)."""
-    from hermes_cli.active_sessions import try_acquire_active_session
+    from niki_cli.active_sessions import try_acquire_active_session
 
     lease, message = try_acquire_active_session(
         session_id=key, surface="desktop", config={},
@@ -76,14 +76,14 @@ def _seed_parent_lease(key: str, live_session_id: str = "parent-sid"):
 
 def _foreign_acquire(key: str):
     """A DISTINCT writer (same pid, another live id — the exact _is_same_writer fence)."""
-    from hermes_cli.active_sessions import try_acquire_active_session
+    from niki_cli.active_sessions import try_acquire_active_session
 
     return try_acquire_active_session(
         session_id=key, surface="cli", config={}, metadata={"live_session_id": "other-writer"})
 
 
 def _registry() -> list[dict]:
-    path = os.path.join(os.environ["HERMES_HOME"], "runtime", "active_sessions.json")
+    path = os.path.join(os.environ["NIKI_HOME"], "runtime", "active_sessions.json")
     with open(path, "r", encoding="utf-8") as fh:
         return json.load(fh).get("entries", [])
 
@@ -100,7 +100,7 @@ def isolated_env(monkeypatch, tmp_path):
     """Real _build_server_session → _init_session → _run_prompt_submit → _admit_prompt_turn pipeline,
     with the environment-heavy side paths neutralized. The turn BODY is cut right after admission
     (``_prepare_turn_input`` → None), so the lease path under test runs REAL against the
-    conftest-sandboxed HERMES_HOME registry while nothing calls a provider."""
+    conftest-sandboxed NIKI_HOME registry while nothing calls a provider."""
     agent = _stub_agent(["a ", "b "])
     monkeypatch.setattr(server, "_make_agent", lambda *a, **kw: agent)
     monkeypatch.setattr(server, "_wire_callbacks", lambda sid: None)

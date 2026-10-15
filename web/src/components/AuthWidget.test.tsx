@@ -68,8 +68,8 @@ describe("AuthWidget integration (real getAuthMe)", () => {
 
   function setupWindow(overrides: Partial<Window> = {}) {
     vi.stubGlobal("window", {
-      __HERMES_SESSION_TOKEN__: undefined,
-      __HERMES_BASE_PATH__: "",
+      __NIKI_SESSION_TOKEN__: undefined,
+      __NIKI_BASE_PATH__: "",
       location: { assign: vi.fn(), pathname: "/", search: "" },
       ...overrides,
     });
@@ -85,7 +85,7 @@ describe("AuthWidget integration (real getAuthMe)", () => {
   }
 
   it("hides itself when /api/auth/me returns a loopback identity", async () => {
-    setupWindow({ __HERMES_SESSION_TOKEN__: "loopback-token" });
+    setupWindow({ __NIKI_SESSION_TOKEN__: "loopback-token" });
     const identity = {
       display_name: "Local",
       email: "",
@@ -117,7 +117,7 @@ describe("AuthWidget integration (real getAuthMe)", () => {
   });
 
   it("renders user info when /api/auth/me returns a non-loopback identity", async () => {
-    setupWindow({ __HERMES_SESSION_TOKEN__: "portal-token" });
+    setupWindow({ __NIKI_SESSION_TOKEN__: "portal-token" });
     const identity = {
       display_name: "Ada",
       email: "ada@example.com",
@@ -140,7 +140,7 @@ describe("AuthWidget integration (real getAuthMe)", () => {
   });
 
   it("hides on 401 (missing/invalid token in loopback mode)", async () => {
-    setupWindow({ __HERMES_SESSION_TOKEN__: "bad-token" });
+    setupWindow({ __NIKI_SESSION_TOKEN__: "bad-token" });
     // fetchJSON throws "401: Unauthorized" for non-OK without envelope.
     const fetchMock = vi.fn<typeof fetch>(
       async () =>

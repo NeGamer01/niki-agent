@@ -212,11 +212,11 @@ def _toolchain_bin(root, *names):
 
 
 def _pm_ships(monkeypatch, *, node_dirs=(), uv=None):
-    import hermes_constants
+    import niki_constants
     import pm
 
     monkeypatch.setattr(pm, "ensure", lambda name, **kw: None)
-    monkeypatch.setattr(hermes_constants, "with_hermes_node_path",
+    monkeypatch.setattr(niki_constants, "with_niki_node_path",
                         lambda env: {**env, "PATH": os.pathsep.join(map(str, node_dirs))})
     monkeypatch.setattr(pm, "uv_launcher", lambda name: uv.with_name(name) if uv else None)
 
@@ -311,9 +311,9 @@ def test_packaged_npx_install_failure_degrades_to_plain_npx(tmp_path, monkeypatc
     assert _packaged_npx_entry(str(npm_bin / "npx.cmd"), ["-y", "@scope/srv"]) is None
 
     # A refresh that fails (offline) keeps the package an earlier start installed.
-    from hermes_constants import get_hermes_home
+    from niki_constants import get_niki_home
     import hashlib
-    pkg = (Path(get_hermes_home()) / "cache" / "mcp-npx" / hashlib.sha256(b"@scope/srv").hexdigest()[:16]
+    pkg = (Path(get_niki_home()) / "cache" / "mcp-npx" / hashlib.sha256(b"@scope/srv").hexdigest()[:16]
            / "node_modules" / "@scope" / "srv")
     pkg.mkdir(parents=True)
     (pkg / "package.json").write_text('{"bin": "cli.js"}', encoding="utf-8")
@@ -374,21 +374,21 @@ def test_bare_python3_steps_past_the_managed_runtime_to_the_user_hit(tmp_path, m
     """Two PATH hits for a bare non-launcher command: the managed runtime's and the
     user's. The user's wins; the resolved env prepends the user's dir (helpers the
     server spawns resolve against the same interpreter). The user dir must sit OUTSIDE
-    the hermes home — everything under it counts as managed."""
-    from hermes_constants import reset_hermes_home_override, set_hermes_home_override
+    the niki home — everything under it counts as managed."""
+    from niki_constants import reset_niki_home_override, set_niki_home_override
     home = tmp_path / "home"
-    managed_bin = home / "bin"  # <HERMES_HOME>/bin — a managed dir by definition
+    managed_bin = home / "bin"  # <NIKI_HOME>/bin — a managed dir by definition
     managed_bin.mkdir(parents=True)
     user_bin = tmp_path / "user-bin"
     user_bin.mkdir()
     _bare_exe(managed_bin, "python3")
     user_exe = _bare_exe(user_bin, "python3")
-    token = set_hermes_home_override(home)
+    token = set_niki_home_override(home)
     try:
         command, env = _resolve_stdio_command("python3", {
             "PATH": os.pathsep.join([str(managed_bin), str(user_bin)])})
     finally:
-        reset_hermes_home_override(token)
+        reset_niki_home_override(token)
 
     assert command == str(user_exe)
     # The user's dir is already on the child PATH, so it keeps its place: main's
@@ -401,19 +401,19 @@ def test_bare_python3_keeps_the_managed_hit_when_the_user_has_none(tmp_path, mon
     """A managed-only PATH keeps the managed hit: no user hit exists to prefer, and a
     resolved absolute path still beats an ENOENT at execvp. The trailing user dir is a
     real directory with no executables — not /usr/bin, which may genuinely carry one."""
-    from hermes_constants import reset_hermes_home_override, set_hermes_home_override
+    from niki_constants import reset_niki_home_override, set_niki_home_override
     home = tmp_path / "home"
     managed_bin = home / "bin"
     managed_bin.mkdir(parents=True)
     managed_exe = _bare_exe(managed_bin, "python3")
     empty_bin = tmp_path / "user-bin"
     empty_bin.mkdir()
-    token = set_hermes_home_override(home)
+    token = set_niki_home_override(home)
     try:
         command, _env = _resolve_stdio_command("python3", {
             "PATH": os.pathsep.join([str(managed_bin), str(empty_bin)])})
     finally:
-        reset_hermes_home_override(token)
+        reset_niki_home_override(token)
 
     assert command == str(managed_exe)
 
@@ -460,10 +460,10 @@ def test_bare_launcher_commands_keep_the_managed_first_resolution(tmp_path, monk
 def test_tail_server_stderr_scopes_to_the_named_server(tmp_path, monkeypatch):
     """The connect-failure log line quotes the child's last stderr lines; a server that
     never started has no segment and gets nothing (not another server's output)."""
-    from hermes_constants import reset_hermes_home_override, set_hermes_home_override
+    from niki_constants import reset_niki_home_override, set_niki_home_override
     from tools import mcp_tool_config as cfg
 
-    token = set_hermes_home_override(tmp_path)
+    token = set_niki_home_override(tmp_path)
     try:
         cfg._close_mcp_stderr_logs()
         cfg._write_stderr_log_header("beta")
@@ -479,4 +479,4 @@ def test_tail_server_stderr_scopes_to_the_named_server(tmp_path, monkeypatch):
         assert cfg._tail_server_stderr("never-started") == ""
     finally:
         cfg._close_mcp_stderr_logs()
-        reset_hermes_home_override(token)
+        reset_niki_home_override(token)

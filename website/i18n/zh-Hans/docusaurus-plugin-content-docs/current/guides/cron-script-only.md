@@ -28,7 +28,7 @@ Niki 将此称为**无 agent 模式**。这是去掉 LLM 的 cron 系统。
 
 - **无 LLM 调用。** 零 token，零 agent 循环，零模型费用。
 - **脚本即任务。** 由脚本决定是否告警。有输出 → 发送消息；无输出 → 静默执行。
-- **Bash 或 Python。** `.sh` / `.bash` 文件在 `/bin/bash` 下运行；其他扩展名在当前 Python 解释器下运行。`~/.hermes/scripts/` 中的任何文件均可接受。
+- **Bash 或 Python。** `.sh` / `.bash` 文件在 `/bin/bash` 下运行；其他扩展名在当前 Python 解释器下运行。`~/.niki/scripts/` 中的任何文件均可接受。
 - **同一调度器。** 与 LLM 任务共存于 `cronjob` 中——暂停、恢复、列出、日志和投递目标的操作方式完全相同。
 
 ## 适用场景
@@ -51,7 +51,7 @@ Niki 将此称为**无 agent 模式**。这是去掉 LLM 的 cron 系统。
 
 > **你：** 每 5 分钟检查一次，如果内存超过 85% 就在 telegram 通知我
 >
-> **Niki：** *（写入 `~/.hermes/scripts/memory-watchdog.sh`，然后以 `no_agent=true` 调用 `cronjob(...)`）*
+> **Niki：** *（写入 `~/.niki/scripts/memory-watchdog.sh`，然后以 `no_agent=true` 调用 `cronjob(...)`）*
 >
 > 已设置。每 5 分钟运行一次，仅在内存超过 85% 时告警 Telegram。脚本：`memory-watchdog.sh`。任务 ID：`abc123`。
 
@@ -60,7 +60,7 @@ Niki 将此称为**无 agent 模式**。这是去掉 LLM 的 cron 系统。
 ```python
 # 1. 写入检查脚本
 write_file(
-    path="~/.hermes/scripts/memory-watchdog.sh",
+    path="~/.niki/scripts/memory-watchdog.sh",
     content='''#!/usr/bin/env bash
 ram_pct=$(free | awk '/^Mem:/ {printf "%d", $3 * 100 / $2}')
 if [ "$ram_pct" -ge 85 ]; then
@@ -97,7 +97,7 @@ agent 可以用与创建任务相同的方式暂停、恢复、编辑和删除�
 >
 > **Niki：** *（调用 `cronjob(action='pause', job_id='abc123')`）*
 >
-> 已暂停。说"重新开启"或执行 `hermes cron resume abc123` 可恢复。
+> 已暂停。说"重新开启"或执行 `niki cron resume abc123` 可恢复。
 
 > **你：** 改成每 15 分钟一次
 >
@@ -111,7 +111,7 @@ agent 可以用与创建任务相同的方式暂停、恢复、编辑和删除�
 
 ```bash
 # 1. 编写脚本
-cat > ~/.hermes/scripts/memory-watchdog.sh <<'EOF'
+cat > ~/.niki/scripts/memory-watchdog.sh <<'EOF'
 #!/usr/bin/env bash
 # Alert when RAM usage is over 85%. Silent otherwise.
 RAM_PCT=$(free | awk '/^Mem:/ {printf "%d", $3 * 100 / $2}')
@@ -120,18 +120,18 @@ if [ "$RAM_PCT" -ge 85 ]; then
 fi
 # Empty stdout = silent run; no message sent.
 EOF
-chmod +x ~/.hermes/scripts/memory-watchdog.sh
+chmod +x ~/.niki/scripts/memory-watchdog.sh
 
 # 2. 调度任务
-hermes cron create "every 5m" \
+niki cron create "every 5m" \
   --no-agent \
   --script memory-watchdog.sh \
   --deliver telegram \
   --name "memory-watchdog"
 
 # 3. 验证
-hermes cron list
-hermes cron run <job_id>    # 触发一次以测试
+niki cron list
+niki cron run <job_id>    # 触发一次以测试
 ```
 
 就这些。无 prompt（提示词），无技能，无模型。
@@ -151,7 +151,7 @@ hermes cron run <job_id>    # 触发一次以测试
 
 ## 脚本规则
 
-脚本必须位于 `~/.hermes/scripts/`。这在任务创建时和运行时均会强制检查——绝对路径、`~/` 展开以及路径穿越模式（`../`）均会被拒绝。该目录与 LLM 任务使用的预检脚本门控共享。
+脚本必须位于 `~/.niki/scripts/`。这在任务创建时和运行时均会强制检查——绝对路径、`~/` 展开以及路径穿越模式（`../`）均会被拒绝。该目录与 LLM 任务使用的预检脚本门控共享。
 
 解释器由文件扩展名决定：
 
@@ -170,18 +170,18 @@ hermes cron run <job_id>    # 触发一次以测试
 
 ```bash
 # 1. 创建一个属于你自己的 venv——它在 Niki 重装/重建后依然保留。
-uv venv ~/venvs/hermes-reporting --python 3.11
-uv pip install --python ~/venvs/hermes-reporting/bin/python openpyxl
+uv venv ~/venvs/niki-reporting --python 3.11
+uv pip install --python ~/venvs/niki-reporting/bin/python openpyxl
 
 # 2. 用该解释器调度任务。
-hermes cron create "0 8 * * *" \
+niki cron create "0 8 * * *" \
   --no-agent \
   --script daily-report.py \
-  --interpreter ~/venvs/hermes-reporting/bin/python \
+  --interpreter ~/venvs/niki-reporting/bin/python \
   --deliver telegram
 ```
 
-与 `--model` 一样，这是用户自有的设置：通过 `hermes cron create/edit` 设置；agent 的 `cronjob` 工具无法设置它。
+与 `--model` 一样，这是用户自有的设置：通过 `niki cron create/edit` 设置；agent 的 `cronjob` 工具无法设置它。
 
 规则：
 
@@ -191,17 +191,17 @@ hermes cron create "0 8 * * *" \
 - 仅对 **Python 脚本**生效。`.sh` / `.bash` 始终用 bash 运行，不受影响。
 - 这是任务级设置；当 `script` 或 `monitor_script` 是 Python 文件时都会使用它。
 - 解释器在**运行时**校验，而非创建时——cron 任务是长期存在的，venv 可能在你创建任务和它真正触发之间被重建或移动。缺失或不可执行的解释器会产生一个清晰的脚本失败，像其他错误一样被投递。
-- 之后想清除它：`hermes cron edit <job_id> --interpreter ""`。
+- 之后想清除它：`niki cron edit <job_id> --interpreter ""`。
 
 ## 计划语法
 
 与所有其他 cron 任务相同：
 
 ```bash
-hermes cron create "every 5m"        # 间隔
-hermes cron create "every 2h"
-hermes cron create "0 9 * * *"       # 标准 cron：每天上午 9 点
-hermes cron create "30m"             # 单次：30 分钟后运行一次
+niki cron create "every 5m"        # 间隔
+niki cron create "every 2h"
+niki cron create "0 9 * * *"       # 标准 cron：每天上午 9 点
+niki cron create "30m"             # 单次：30 分钟后运行一次
 ```
 
 完整语法请参阅 [cron 功能参考](../user-guide/features/cron.md)。
@@ -217,21 +217,21 @@ hermes cron create "30m"             # 单次：30 分钟后运行一次
 --deliver discord:#ops
 --deliver slack:#engineering
 --deliver signal:+15551234567
---deliver local                          # 仅保存到 ~/.hermes/cron/output/
+--deliver local                          # 仅保存到 ~/.niki/cron/output/
 ```
 
-对于使用 bot token 的平台（Telegram、Discord、Slack、Signal、SMS、WhatsApp），脚本运行时无需运行中的 gateway——工具直接使用 `~/.hermes/.env` / `~/.hermes/config.yaml` 中已有的凭据调用各平台的 REST 端点。
+对于使用 bot token 的平台（Telegram、Discord、Slack、Signal、SMS、WhatsApp），脚本运行时无需运行中的 gateway——工具直接使用 `~/.niki/.env` / `~/.niki/config.yaml` 中已有的凭据调用各平台的 REST 端点。
 
 ## 编辑与生命周期
 
 ```bash
-hermes cron list                                    # 查看所有任务
-hermes cron pause <job_id>                          # 停止触发，保留定义
-hermes cron resume <job_id>
-hermes cron edit <job_id> --schedule "every 10m"    # 调整频率
-hermes cron edit <job_id> --agent                   # 切换为 LLM 模式
-hermes cron edit <job_id> --no-agent --script …     # 切换回无 agent 模式
-hermes cron remove <job_id>                         # 删除任务
+niki cron list                                    # 查看所有任务
+niki cron pause <job_id>                          # 停止触发，保留定义
+niki cron resume <job_id>
+niki cron edit <job_id> --schedule "every 10m"    # 调整频率
+niki cron edit <job_id> --agent                   # 切换为 LLM 模式
+niki cron edit <job_id> --no-agent --script …     # 切换回无 agent 模式
+niki cron remove <job_id>                         # 删除任务
 ```
 
 所有适用于 LLM 任务的操作（暂停、恢复、手动触发、投递目标变更）同样适用于无 agent 任务。
@@ -239,7 +239,7 @@ hermes cron remove <job_id>                         # 删除任务
 ## 实战示例：磁盘空间告警
 
 ```bash
-cat > ~/.hermes/scripts/disk-alert.sh <<'EOF'
+cat > ~/.niki/scripts/disk-alert.sh <<'EOF'
 #!/usr/bin/env bash
 # Alert when / or /home is over 90% full.
 THRESHOLD=90
@@ -249,9 +249,9 @@ df -h / /home 2>/dev/null | awk -v t="$THRESHOLD" '
   }
 '
 EOF
-chmod +x ~/.hermes/scripts/disk-alert.sh
+chmod +x ~/.niki/scripts/disk-alert.sh
 
-hermes cron create "*/15 * * * *" \
+niki cron create "*/15 * * * *" \
   --no-agent \
   --script disk-alert.sh \
   --deliver telegram \

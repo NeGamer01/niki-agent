@@ -21,13 +21,13 @@ import pytest
 
 from tests.e2e.core.providers import _native_helpers as nh
 from tests.fakes.providers.gemini_native import (
-    HERMES_ENV,
+    NIKI_ENV,
     Call,
     Calls,
     GeminiFake,
     Recorded,
     Text,
-    hermes_model,
+    niki_model,
 )
 
 SUMMARY_MARK = "GEMINI-SUMMARY-CHECKPOINT"
@@ -68,7 +68,7 @@ class Run:
 @pytest.fixture(scope="module")
 def run(tmp_path_factory: pytest.TempPathFactory) -> Run:
     root = tmp_path_factory.mktemp("gemini_compaction")
-    home = nh.make_home(root, hermes_model(context_length=64_000), env_file=HERMES_ENV,
+    home = nh.make_home(root, niki_model(context_length=64_000), env_file=NIKI_ENV,
                         extra_config={"compression": {"threshold_tokens": 12_000, "protect_last_n": 4}})
     rng = random.Random(7)
     words = "alpha bravo charlie delta echo foxtrot golf hotel india juliet kilo lima mike oscar".split()

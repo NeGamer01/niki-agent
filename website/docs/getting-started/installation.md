@@ -17,7 +17,7 @@ platform-gated features are supported), see **[Platform Support](./platform-supp
 ### Desktop packages on macOS or Windows
 
 Download the package for your platform from the
-[Hermes website](https://hermes-agent.nousresearch.com/).
+[Niki website](https://github.com/NeGamer01/niki-agent/).
 
 - **Windows:** open the `.appinstaller` download with Windows App Installer.
   It installs the signed MSIX bundle and records its update source.
@@ -46,25 +46,25 @@ For a command-line only install without Niki Desktop, run:
 
 #### Linux / macOS / WSL2
 ```bash
-curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/NeGamer01/niki-agent/main/scripts/install.sh | bash
 ```
 
 #### Windows (native)
 
 Run in powershell:
 ```powershell
-iex (irm https://hermes-agent.nousresearch.com/install.ps1) 
+iex (irm https://github.com/NeGamer01/niki-agent/install.ps1) 
 ```
 
 If you want to install & run Niki Desktop after a command-line only install, simply run
 ```bash
-hermes desktop
+niki desktop
 ```
 
 ### Android / Termux
 
 Use the [Termux APT package](./termux.md) on aarch64 Android devices.
-Configure its signed repository before running `pkg install hermes-agent`.
+Configure its signed repository before running `pkg install niki-agent`.
 The desktop/server scripts are not the Termux installation path.
 
 ### What the source installer does
@@ -83,8 +83,8 @@ Other optional tools use their feature-specific installation paths.
 To leave the browser tools out, pass `--skip-browser` on POSIX or `-SkipBrowser`
 on Windows; for the computer-use driver, `--skip-computer-use` /
 `-SkipComputerUse`. Niki remembers these choices: later installs and
-`hermes update` do not add them back. Run `hermes pm install agent-browser` or
-`hermes pm install cua-driver` to install them and undo the choice.
+`niki update` do not add them back. Run `niki pm install agent-browser` or
+`niki pm install cua-driver` to install them and undo the choice.
 
 The scripts create a launcher and prepare the data directory. Interactive runs
 also invoke setup and gateway configuration. `--non-interactive` on POSIX, or
@@ -95,20 +95,20 @@ On a terminal the scripts show one status line per step and write the output
 of git, uv and the builds to `logs/install.log` under the Niki data
 directory; a failed step prints its last lines and the log path. CI (`CI` or
 `GITHUB_ACTIONS` set), redirected output, `--verbose` / `-Verbose` or
-`HERMES_INSTALL_VERBOSE=1` stream everything instead.
+`NIKI_INSTALL_VERBOSE=1` stream everything instead.
 
 #### Install layout
 
 | Method | Code | CLI entry point | Default user data |
 |---|---|---|---|
-| POSIX source script | `~/.hermes/hermes-agent/` | `~/.local/bin/hermes` wrapper | `~/.hermes/` |
-| Windows source script | `%LOCALAPPDATA%\hermes\hermes-agent\` | `%LOCALAPPDATA%\hermes\bin\` | `%LOCALAPPDATA%\hermes\` |
+| POSIX source script | `~/.niki/niki-agent/` | `~/.local/bin/niki` wrapper | `~/.niki/` |
+| Windows source script | `%LOCALAPPDATA%\niki\niki-agent\` | `%LOCALAPPDATA%\niki\bin\` | `%LOCALAPPDATA%\niki\` |
 | Desktop bundle | Inside the installed app package | Packaged launchers; Windows execution aliases | Platform default Niki data directory |
-| Docker | `/opt/hermes/` | Image entrypoint and `hermes` shim | Mounted `/opt/data/` |
-| Termux APT | `$PREFIX/lib/hermes-agent/` | Symlinks in `$PREFIX/bin/` | `~/.hermes/` |
+| Docker | `/opt/niki/` | Image entrypoint and `niki` shim | Mounted `/opt/data/` |
+| Termux APT | `$PREFIX/lib/niki-agent/` | Symlinks in `$PREFIX/bin/` | `~/.niki/` |
 
-`HERMES_HOME` selects user data. The POSIX script's `--dir` selects its source
-checkout independently. Windows provides `-HermesHome` and `-InstallDir`.
+`NIKI_HOME` selects user data. The POSIX script's `--dir` selects its source
+checkout independently. Windows provides `-NikiHome` and `-InstallDir`.
 Running the POSIX script as root does not select an automatic FHS layout:
 it uses root's home unless you provide an explicit source path.
 
@@ -122,32 +122,32 @@ Reload your shell and start chatting:
 
 ```bash
 source ~/.bashrc   # or: source ~/.zshrc
-hermes             # Start chatting!
+niki             # Start chatting!
 ```
 
 To reconfigure individual settings later, use the dedicated commands:
 
 ```bash
-hermes model          # Choose your LLM provider and model
-hermes tools          # Configure which tools are enabled
-hermes gateway setup  # Set up messaging platforms
-hermes config set     # Set individual config values
-hermes config get     # Inspect individual config values
-hermes setup          # Or run the full setup wizard to configure everything at once
+niki model          # Choose your LLM provider and model
+niki tools          # Configure which tools are enabled
+niki gateway setup  # Set up messaging platforms
+niki config set     # Set individual config values
+niki config get     # Inspect individual config values
+niki setup          # Or run the full setup wizard to configure everything at once
 ```
 
-:::tip Fastest path: Nous Portal
+:::tip Fastest path: Niki Portal
 One subscription covers 300+ models plus the [Tool Gateway](../user-guide/features/tool-gateway.md) (web search, image generation, TTS, cloud browser). Skip the per-tool key juggling:
 
 ```bash
-hermes setup --portal
+niki setup --portal
 ```
 
-That logs you in, sets Nous as your provider, and turns on the Tool Gateway in one command.
+That logs you in, sets Niki as your provider, and turns on the Tool Gateway in one command.
 :::
 
 :::tip Already running Niki on another machine?
-You don't need to rebuild your setup from scratch. Restore a full backup with `hermes import` (see [Exporting Niki to another machine](../reference/faq.md#exporting-hermes-to-another-machine)), or bring over a single agent with `hermes profile import` (see [Moving a single profile to another machine](../reference/faq.md#moving-a-single-profile-to-another-machine)). Note that a profile export excludes credentials by design, so an export alone is not a full backup — [`hermes backup` vs `hermes profile export`](../reference/faq.md#hermes-backup-vs-hermes-profile-export) explains which to use.
+You don't need to rebuild your setup from scratch. Restore a full backup with `niki import` (see [Exporting Niki to another machine](../reference/faq.md#exporting-niki-to-another-machine)), or bring over a single agent with `niki profile import` (see [Moving a single profile to another machine](../reference/faq.md#moving-a-single-profile-to-another-machine)). Note that a profile export excludes credentials by design, so an export alone is not a full backup — [`niki backup` vs `niki profile export`](../reference/faq.md#niki-backup-vs-niki-profile-export) explains which to use.
 :::
 
 ---
@@ -172,7 +172,7 @@ Linux Chromium also requires system libraries supplied by the distribution.
 
 On glibc Linux, the managed Node.js links `libatomic.so.1`, which minimal
 Debian, Ubuntu and RHEL-family images do not ship. When the library is
-missing, the installer and `hermes update` install the distro package
+missing, the installer and `niki update` install the distro package
 (`libatomic1` on apt and zypper, `libatomic` on dnf/yum and apk, `gcc-libs`
 on pacman). They run the package manager directly as root, or as
 `sudo -n` otherwise. An interactive run asks for your sudo password once,
@@ -205,7 +205,7 @@ configuration, and launcher must belong to that user.
 2. As the service user, run the regular installer:
 
    ```bash
-   curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
+   curl -fsSL https://raw.githubusercontent.com/NeGamer01/niki-agent/main/scripts/install.sh | bash
    ```
 
 3. Add the actual launcher directory to the service user's shell environment:
@@ -214,8 +214,8 @@ configuration, and launcher must belong to that user.
    export PATH="$HOME/.local/bin:$PATH"
    ```
 
-4. Run `hermes doctor` from that account. Use the installed wrapper, not a
-   hardcoded `venv/bin/hermes` path.
+4. Run `niki doctor` from that account. Use the installed wrapper, not a
+   hardcoded `venv/bin/niki` path.
 5. For a Linux user service that must survive logout, enable lingering as an administrator:
 
    ```bash
@@ -236,15 +236,15 @@ ask an administrator to run. See
 
 | Problem | Solution |
 |---------|----------|
-| `hermes: command not found` | Reload your shell (`source ~/.bashrc`) or check PATH |
-| `API key not set` | Run `hermes model` to configure your provider, or `hermes config set OPENROUTER_API_KEY your_key` |
-| Missing config after update | Run `hermes config check` then `hermes config migrate` |
+| `niki: command not found` | Reload your shell (`source ~/.bashrc`) or check PATH |
+| `API key not set` | Run `niki model` to configure your provider, or `niki config set OPENROUTER_API_KEY your_key` |
+| Missing config after update | Run `niki config check` then `niki config migrate` |
 
-For more diagnostics, run `hermes doctor` — it will tell you exactly what's missing and how to fix it.
+For more diagnostics, run `niki doctor` — it will tell you exactly what's missing and how to fix it.
 
 ### Symlinked home directories and external storage
 
-Niki supports a symlinked `HERMES_HOME` and symlinked home subdirectories,
+Niki supports a symlinked `NIKI_HOME` and symlinked home subdirectories,
 including `hooks`, `skills`, `sessions`, and `logs`. During home initialization,
 existing directory links are preserved, and permissions on linked directories
 (and descendants such as `logs/curator`) are left to their owner.
@@ -257,8 +257,8 @@ link, restore the mount or correct its target, and verify access permissions
 before retrying. For a deliberately new dotfiles target, create it yourself only
 after confirming the intended storage is available.
 
-`hermes doctor` reports these failures as storage problems, not invalid YAML.
-Keep your existing `config.yaml`; running `hermes setup` is not the repair for an
+`niki doctor` reports these failures as storage problems, not invalid YAML.
+Keep your existing `config.yaml`; running `niki setup` is not the repair for an
 unavailable directory. This is a directory-availability check, not a mount monitor:
 an existing directory cannot establish that the intended volume is mounted.
 
@@ -267,5 +267,5 @@ an existing directory cannot establish that the intended volume is mounted.
 The update owner depends on the running installation, not only its data home.
 Source checkouts use the managed Git update path. Desktop bundles, Docker,
 Nix, and Termux packages retain their package owner's update mechanism.
-`hermes doctor` reports installation provenance. See
+`niki doctor` reports installation provenance. See
 [Updating & Uninstalling](./updating.md) before changing package-owned files.

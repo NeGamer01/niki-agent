@@ -5,7 +5,7 @@ answered -32601. Each action is the typed slash command the button stands for, r
 ``execute_command`` (the gateway's own /goal /loop /heartbeat /subgoal handlers, with their
 capability, local-source, admission and busy rules), answered with the owner's control snapshot.
 """
-from hermes_state_runtime import RuntimeStoreError
+from niki_state_runtime import RuntimeStoreError
 
 _ACTION_COMMANDS = {
     'goal.pause': ('goal', 'pause'), 'goal.resume': ('goal', 'resume'),

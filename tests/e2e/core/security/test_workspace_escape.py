@@ -2,7 +2,7 @@
 
 Niki documents three file-tool boundaries (website/docs/user-guide/security.md, "File write safety"):
 
-* ``HERMES_WRITE_SAFE_ROOT``: ``write_file`` / ``patch`` may only land inside the listed roots.
+* ``NIKI_WRITE_SAFE_ROOT``: ``write_file`` / ``patch`` may only land inside the listed roots.
 * Protected paths: the Niki-home ``.env`` / OAuth stores, ``~/.ssh`` keys and ``authorized_keys`` are
   never written; ``~/.ssh/config`` is approval-gated (a ``-q`` run has no approver, so it is blocked).
 * Read denylist: ``auth.json`` / ``.env`` under the Niki home and project-local ``.env`` files are never
@@ -11,7 +11,7 @@ Niki documents three file-tool boundaries (website/docs/user-guide/security.md, 
 There is no read confinement to a workspace (reads outside the cwd are allowed), so none is asserted.
 Each boundary is judged on the RESOLVED target, so spelling the same file through ``../``, an absolute
 path, a symlink inside the workspace, or a symlinked parent directory must get the same verdict as the
-direct spelling. Everything runs through the real agent tool path: ``hermes chat -q`` with the loopback
+direct spelling. Everything runs through the real agent tool path: ``niki chat -q`` with the loopback
 model issuing the tool calls; outcomes are read on disk and in the tool results Niki sent back.
 """
 
@@ -69,7 +69,7 @@ class Layout:
 
     def __post_init__(self) -> None:
         self.home, self.out = self.root / "home", self.root / "outside"
-        self.ws, self.hh = self.home / "work", self.home / ".hermes"
+        self.ws, self.hh = self.home / "work", self.home / ".niki"
         for d in (self.ws, self.out, self.hh, self.home / ".ssh"):
             d.mkdir(parents=True, exist_ok=True)
 
@@ -110,7 +110,7 @@ def _replace(path: str, old: str) -> dict[str, Any]:
 
 
 def _confined_steps(lay: Layout) -> list[Step]:
-    """HERMES_WRITE_SAFE_ROOT=<workspace>: every write whose resolved target is outside is refused.
+    """NIKI_WRITE_SAFE_ROOT=<workspace>: every write whose resolved target is outside is refused.
     Every spelling has its own outside target, so a red names exactly the spelling that escaped."""
     t_write, t_patch, t_dotdot = (lay.out / f"target-{n}.txt" for n in ("symlink-write", "symlink-patch", "dotdot-patch"))
     lay.plant(t_write, "outside-symlink-write")
@@ -123,7 +123,7 @@ def _confined_steps(lay: Layout) -> list[Step]:
     lay.link("linkdir", lay.out)
     lay.link("innerlink.txt", lay.ws / "inner.txt")
     lay.marks["token"] = token = H.canary("oauth-token")
-    (lay.hh / "auth.json").write_text(f'{{"providers": {{"nous": {{"access_token": "{token}"', encoding="utf-8")
+    (lay.hh / "auth.json").write_text(f'{{"providers": {{"niki": {{"access_token": "{token}"', encoding="utf-8")
     quarantined = (lay.hh / "auth.json.corrupt", token)
     return [
         Step("write_dotdot", "write_file", {"path": "../../outside/new-dotdot.txt", "content": "x"},
@@ -145,8 +145,8 @@ def _confined_steps(lay: Layout) -> list[Step]:
              "absent", lay.out / "new-v4a-abs.txt"),
         Step("v4a_delete_symlink_parent", "patch", _v4a("Delete", "linkdir/doomed.txt"),
              "unchanged", lay.out / "doomed.txt"),
-        Step("read_quarantined_auth_copy", "read_file", {"path": "../.hermes/auth.json.corrupt"}, "hidden", quarantined),
-        Step("search_quarantined_auth_copy", "search_files", {"pattern": token, "path": "../.hermes"}, "hidden",
+        Step("read_quarantined_auth_copy", "read_file", {"path": "../.niki/auth.json.corrupt"}, "hidden", quarantined),
+        Step("search_quarantined_auth_copy", "search_files", {"pattern": token, "path": "../.niki"}, "hidden",
              quarantined),
         Step("control_write_inside", "write_file", {"path": "sub/inside.txt", "content": "inside-ok"}, "setup"),
         Step("setup_read_innerlink", "read_file", {"path": "innerlink.txt"}, "setup"),
@@ -174,7 +174,7 @@ def _protected_steps(lay: Layout) -> list[Step]:
     return [
         Step("env_direct_patch", "patch", _replace(str(env), env_mark), "unchanged", env),
         Step("env_symlink_patch", "patch", _replace("envlink", env_mark), "unchanged", env),
-        Step("env_dotdot_patch", "patch", _replace("../.hermes/.env", env_mark), "unchanged", env),
+        Step("env_dotdot_patch", "patch", _replace("../.niki/.env", env_mark), "unchanged", env),
         Step("oauth_dangling_symlink_write", "write_file", {"path": "oauthlink", "content": "{}"},
              "absent", lay.hh / ".anthropic_oauth.json"),
         Step("setup_read_keys", "read_file", {"path": "sshdir/authorized_keys"}, "setup"),
@@ -188,7 +188,7 @@ def _protected_steps(lay: Layout) -> list[Step]:
         Step("ssh_config_symlink_parent_gated", "write_file", {"path": "sshdir/config", "content": "Host evil\n"},
              "unchanged", ssh_config),
         Step("read_auth_symlink", "read_file", {"path": "authlink.txt"}, "hidden", (lay.hh / "auth.json", auth)),
-        Step("read_webhooks_dotdot", "read_file", {"path": "../.hermes/webhook_subscriptions.json"}, "hidden",
+        Step("read_webhooks_dotdot", "read_file", {"path": "../.niki/webhook_subscriptions.json"}, "hidden",
              (lay.hh / "webhook_subscriptions.json", hooks)),
         Step("read_google_oauth_symlink_dir", "read_file", {"path": "hhdir/auth/google_oauth.json"}, "hidden",
              (lay.hh / "auth" / "google_oauth.json", google)),
@@ -227,7 +227,7 @@ def _run(root: Path, build: Callable[[Layout], list[Step]], expected: tuple[str,
 @pytest.fixture(scope="module")
 def confined(tmp_path_factory: pytest.TempPathFactory) -> Run:
     return _run(tmp_path_factory.mktemp("confined"), _confined_steps, CONFINED_SCENARIOS + QUARANTINE_SCENARIOS,
-                lambda lay: {"HERMES_WRITE_SAFE_ROOT": str(lay.ws)})
+                lambda lay: {"NIKI_WRITE_SAFE_ROOT": str(lay.ws)})
 
 
 @pytest.fixture(scope="module")

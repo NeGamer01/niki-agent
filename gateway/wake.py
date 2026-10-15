@@ -60,7 +60,7 @@ def session_owned_by_profile(config: Any, profile: Optional[str], session_id: An
         home = dict(_multiplex_profile_homes(config)).get(profile)
         if home is None:
             return False
-        from hermes_state import SessionDB
+        from niki_state import SessionDB
         db = SessionDB(Path(home) / "state.db", read_only=True)
     except Exception as exc:
         logger.debug("wake: session ownership check unavailable for %s/%s: %s", profile, session_id, exc)
@@ -103,7 +103,7 @@ async def deliver_wake(adapter: Any, *, text: str, session_id: str = "", source:
         runner = getattr(adapter, "gateway_runner", None)
         if runner is not None:
             from gateway.session_automation import admit_route_wake
-            from hermes_state_runtime import RuntimeStoreError
+            from niki_state_runtime import RuntimeStoreError
             category = {"notification_category": notification_category} if notification_category != "result" else {}
             try:
                 if await admit_route_wake(runner, adapter, source, text, "kanban-wake", category):
@@ -230,10 +230,10 @@ async def _self_post_chat_completion(adapter: Any, *, text: str, session_id: str
         host = f"[{host}]"  # bare IPv6 literal
     url = f"http://{host}:{port}/v1/chat/completions"
     headers = {"Authorization": f"Bearer {api_key}", "X-Niki-Session-Id": session_id}
-    payload = {"model": str(getattr(adapter, "_model_name", "") or "hermes-agent"),
+    payload = {"model": str(getattr(adapter, "_model_name", "") or "niki-agent"),
                "messages": [{"role": "user", "content": text}], "stream": False}
     if notification_category == "diagnostic":
-        payload["hermes_notification_category"] = "diagnostic"
+        payload["niki_notification_category"] = "diagnostic"
     last_err: Optional[BaseException] = None
     attempts = 1 + len(_RETRY_DELAYS_SECONDS)
     for attempt in range(attempts):

@@ -14,7 +14,7 @@ import time
 from pathlib import Path
 
 import pytest
-import hermes_yaml as yaml
+import niki_yaml as yaml
 
 _MODEL = {"default": "x", "provider": "custom", "base_url": "http://127.0.0.1:9/v1"}
 
@@ -56,7 +56,7 @@ def recording(app):
             except Exception:
                 method = None
             with open(log_path, "a", encoding="utf-8") as fh:
-                fh.write(json.dumps([method, headers.get("x-hermes-profile")]) + "\\n")
+                fh.write(json.dumps([method, headers.get("x-niki-profile")]) + "\\n")
             replayed = False
 
             async def replay():
@@ -89,10 +89,10 @@ def two_profile_homes(tmp_path, monkeypatch):
     """default + worker profile homes under a temp HOME; MCP connections shut down afterwards."""
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     monkeypatch.setenv("HOME", str(tmp_path))
-    default_home = tmp_path / ".hermes"
+    default_home = tmp_path / ".niki"
     worker_home = default_home / "profiles" / "worker"
     worker_home.mkdir(parents=True)
-    monkeypatch.setenv("HERMES_HOME", str(default_home))
+    monkeypatch.setenv("NIKI_HOME", str(default_home))
     monkeypatch.setenv("NO_PROXY", "*")
     yield {"default": default_home, "worker": worker_home}
     from tools.mcp_tool_lifecycle import shutdown_mcp_servers

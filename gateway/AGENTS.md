@@ -11,11 +11,11 @@ goals, notifications, shutdown, ...), sessions in `session*.py`, slash handlers 
 over `platforms/base.py`. `builtin_hooks/` is the extension point for always-registered gateway
 hooks (none shipped). The gateway reads user YAML **raw** (`run.py` + `config.py`), not through
 `DEFAULT_CONFIG` — a key the CLI sees but the gateway doesn't means you're on the wrong loader
-(`hermes_cli/AGENTS.md`). Each adapter picks a base toolset (Telegram → `"messaging"`).
+(`niki_cli/AGENTS.md`). Each adapter picks a base toolset (Telegram → `"messaging"`).
 
 Slash commands: handlers are looked up by name through `_command_handler_table`; a command is
 listed in `_IDLE_COMMANDS` or `_PLAIN_COMMANDS` (works mid-run) in `run_busy.py`. No
-`if canonical == ...` chains. Registry + adding a command: `hermes_cli/AGENTS.md`.
+`if canonical == ...` chains. Registry + adding a command: `niki_cli/AGENTS.md`.
 
 ## The gateway has TWO message guards — both must bypass approval/control commands
 
@@ -31,7 +31,7 @@ lifecycle.
 
 Adapters with `draft_stream_is_message = True` (relay Slack native streaming) keep ONE cumulative
 native stream per turn; the stream IS the final message. Four invariants, each from a live
-duplicate-final incident (NS-658 canary ledger, hermes#85796 / gateway-gateway#210); violating any
+duplicate-final incident (NS-658 canary ledger, niki#85796 / gateway-gateway#210); violating any
 re-creates a duplicate or frozen stream:
 
 1. **Draft frames are prefix-stable.** Frame N must be a string prefix of frame N+1. Never mutate
@@ -72,16 +72,16 @@ own or consume those turns, and an interrupted started turn stays unknown and pa
 ## `/login` (off-turn, paired DM only)
 
 `GatewayLoginCommandsMixin` refuses outside a real paired DM (ntfy, raft and a2a report `dm` for
-broadcast surfaces) and binds the WHOLE install's `providers.nous`, so shared gateways must set
+broadcast surfaces) and binds the WHOLE install's `providers.niki`, so shared gateways must set
 `allow_admin_from`. It drains `anon_auth.run_sign_in` on its private single-worker `_login_executor`
 (never the shared pool), allows one attempt per process, and on completion evicts agents still on
-`nous/welcome` instead of writing a model override. Long form: `gateway-internals.md` § `/login`.
+`niki/welcome` instead of writing a model override. Long form: `gateway-internals.md` § `/login`.
 
 ## Gateway lifecycle vs. the Desktop app
 
-`hermes serve` (control plane, desktop-spawned child) dies with the app — by design. The messaging
+`niki serve` (control plane, desktop-spawned child) dies with the app — by design. The messaging
 gateway (`gateway run`) SURVIVES the app: the serve backend's `/api/gateway/*` endpoints spawn it
-detached (`_spawn_hermes_action` — `start_new_session` / `DETACHED_PROCESS`), so `before-quit`'s
+detached (`_spawn_niki_action` — `start_new_session` / `DETACHED_PROCESS`), so `before-quit`'s
 SIGTERM never reaches it and bots keep running. The known breach is the Windows shim-unlock
 teardown (`taskkill /T /F` on venv-shim holders, #85265), which exists to let updates proceed and is
 replaced by #92091's `pause-for-update`. Do NOT "fix" gateway-dies-with-app by re-parenting the
@@ -199,13 +199,13 @@ gateway under the backend, and do NOT "fix" update locks by widening the tree-ki
   bridge its own pidfile (pid + start time + port) does not identify. `needs_attention` is
   set and cleared at the single writer (`_update_platform_runtime_status`) on the connect path.
 - **One launch-home identity.** "Does this task serve a routed profile?" compares the override
-  with `hermes_constants.get_routing_process_hermes_home()` (`agent/secret_scope.py::
+  with `niki_constants.get_routing_process_niki_home()` (`agent/secret_scope.py::
   serves_routed_profile` and `_is_process_home`, `tools/environments/local.py::_is_routed_home`,
-  `hermes_cli/env_loader.py::_process_hermes_home`), never with `os.environ["HERMES_HOME"]` read
+  `niki_cli/env_loader.py::_process_niki_home`), never with `os.environ["NIKI_HOME"]` read
   live: an embedding host that mirrors the served profile into the env var per turn (Niki
-  WebUI) pins its own home with `pin_process_hermes_home()`, and without a pin the resolver is
-  `get_process_hermes_home()` unchanged. Do not add another routing decision that compares
-  against `get_process_hermes_home()` directly; that resolver is for process-level assets.
+  WebUI) pins its own home with `pin_process_niki_home()`, and without a pin the resolver is
+  `get_process_niki_home()` unchanged. Do not add another routing decision that compares
+  against `get_process_niki_home()` directly; that resolver is for process-level assets.
 
 ## Tests
 

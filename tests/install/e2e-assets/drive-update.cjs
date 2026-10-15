@@ -32,8 +32,8 @@ const oldSha = process.argv[4]
 const nativeHandoff = process.argv[5] === '--native-handoff'
 const targetSha = nativeHandoff ? undefined : process.argv[5]
 
-if (!exePath || !proofDir || !oldSha || !(nativeHandoff || targetSha) || !process.env.HERMES_E2E_MOCK_URL) {
-  console.error('usage: node drive-update.cjs <Niki.exe> <proof-dir> <old-sha> (<target-sha> | --native-handoff); HERMES_E2E_MOCK_URL required')
+if (!exePath || !proofDir || !oldSha || !(nativeHandoff || targetSha) || !process.env.NIKI_E2E_MOCK_URL) {
+  console.error('usage: node drive-update.cjs <Niki.exe> <proof-dir> <old-sha> (<target-sha> | --native-handoff); NIKI_E2E_MOCK_URL required')
   process.exit(1)
 }
 
@@ -67,23 +67,23 @@ async function main() {
   const { runUpdateWindowChat } = await import('./update-window-chat.mjs')
   const { isolateUpdateWindowEnvironment, isolatedElectronArgs, updateWindowEnvironment } = await import('./smoke-env.mjs')
   const origin = nativeHandoff ? 'bundled' : 'source'
-  const root = nativeHandoff ? path.join(path.dirname(exePath), 'resources', 'agent-payload') : path.join(process.env.HERMES_HOME, 'hermes-agent')
+  const root = nativeHandoff ? path.join(path.dirname(exePath), 'resources', 'agent-payload') : path.join(process.env.NIKI_HOME, 'niki-agent')
   const capturedEnv = updateWindowEnvironment(process.env, root, origin)
   const launchEnv = isolateUpdateWindowEnvironment(capturedEnv)
   if (!nativeHandoff) {
     // The app's update check asks api.github.com for main's tip first, so it would compare against the
     // real GitHub main and never the staged serve.git. Point the check at the staged repo, the same
     // way launch-from-spec.mjs does for the macOS and Linux source legs.
-    prepareSourceBranchEnvironment(root, targetSha, process.env.HERMES_E2E_REAL_GIT, capturedEnv, launchEnv)
+    prepareSourceBranchEnvironment(root, targetSha, process.env.NIKI_E2E_REAL_GIT, capturedEnv, launchEnv)
   }
-  const userData = launchEnv.HERMES_DESKTOP_USER_DATA_DIR
+  const userData = launchEnv.NIKI_DESKTOP_USER_DATA_DIR
   log(`launching ${exePath}`)
 
   const app = await _electron.launch({
     executablePath: exePath,
     args: isolatedElectronArgs(['--disable-gpu', '--no-sandbox', '--force-renderer-accessibility'], userData),
     cwd: path.dirname(exePath),
-    // Inherit the driver's env: HERMES_HOME (isolated install) and
+    // Inherit the driver's env: NIKI_HOME (isolated install) and
     // GIT_CONFIG_GLOBAL (URL redirect to the staged serve repo) MUST reach
     // the main process so its update check fetches from the staged repo.
     env: launchEnv,
@@ -103,7 +103,7 @@ async function main() {
   log('[zoom] app window prepared at 100%')
 
   await runUpdateWindowChat(app, page, {
-    mockUrl: process.env.HERMES_E2E_MOCK_URL, outDir: proofDir,
+    mockUrl: process.env.NIKI_E2E_MOCK_URL, outDir: proofDir,
     expectCommit: oldSha,
     origin, root, executable: exePath, userData,
   })
@@ -149,20 +149,20 @@ async function main() {
 
   // ── Wait for the hand-off to take over ────────────────────────────────
   // Clicking Update now spawns the detached updater (desktop-update.ps1 or
-  // the staged binary), which claims HERMES_HOME/.hermes-update-in-progress
+  // the staged binary), which claims NIKI_HOME/.niki-update-in-progress
   // and then the desktop quits. We do NOT rely on Playwright's app 'close'
   // event: when the app self-quits for the hand-off that event is
   // unreliable (attempt 8 timed out on it even though the hand-off log
-  // proved the desktop had exited and `hermes update` was already running).
+  // proved the desktop had exited and `niki update` was already running).
   //
   // The authoritative "hand-off started" signal is the marker file (or the
   // result JSON, if the whole update finished fast). Poll for either, and
   // also accept a genuine app close. Any one is success — the PowerShell
   // driver owns asserting the update's OUTCOME (sha, marker cleanup,
   // relaunch) after we return.
-  const hermesHome = process.env.HERMES_HOME
-  const markerPath = hermesHome ? path.join(hermesHome, '.hermes-update-in-progress') : null
-  const resultPath = hermesHome ? path.join(hermesHome, '.hermes-update-result.json') : null
+  const nikiHome = process.env.NIKI_HOME
+  const markerPath = nikiHome ? path.join(nikiHome, '.niki-update-in-progress') : null
+  const resultPath = nikiHome ? path.join(nikiHome, '.niki-update-result.json') : null
 
   const handoffDeadline = Date.now() + 150_000
   let handoffStarted = false

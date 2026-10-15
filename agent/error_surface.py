@@ -107,7 +107,7 @@ def _surface(layer: str, code: str, retryable: bool, provider: str = "", model: 
 def _api_key_env(provider: str) -> str:
     """The env var holding ``provider``'s API key, so the client can open that row."""
     try:
-        from hermes_cli.provider_catalog import provider_catalog_by_slug
+        from niki_cli.provider_catalog import provider_catalog_by_slug
 
         descriptor = provider_catalog_by_slug().get(provider.strip().lower())
         return descriptor.api_key_env_vars[0] if descriptor and descriptor.api_key_env_vars else ""
@@ -117,7 +117,7 @@ def _api_key_env(provider: str) -> str:
 
 def _provider_label(provider: str) -> str:
     try:
-        from hermes_cli.models import provider_label
+        from niki_cli.models import provider_label
 
         return provider_label(provider)
     except Exception:  # pragma: no cover — advisory only
@@ -128,7 +128,7 @@ def auth_kind(provider: Optional[str]) -> str:
     """``"oauth"`` for providers whose credential is an OAuth/subscription grant
     (desktop Accounts tab), ``"api_key"`` for everything else."""
     try:
-        from hermes_cli.provider_catalog import provider_catalog_by_slug
+        from niki_cli.provider_catalog import provider_catalog_by_slug
 
         descriptor = provider_catalog_by_slug().get((provider or "").strip().lower())
         return "oauth" if descriptor is not None and descriptor.tab == "accounts" else "api_key"
@@ -138,7 +138,7 @@ def auth_kind(provider: Optional[str]) -> str:
 
 def _disk_full(candidate: Any) -> bool:
     try:
-        from hermes_state_errors import is_disk_full_error
+        from niki_state_errors import is_disk_full_error
 
         return bool(is_disk_full_error(candidate))
     except Exception:  # pragma: no cover - defensive import guard
@@ -167,12 +167,12 @@ def build_error_surface_from_result(result: Any, provider: str = "", model: str 
         if not error_text and not reason:
             return None
         # Disk-full wins outright: the fix (free space) is unrelated to the
-        # provider stack; hermes_state owns the pattern list.
+        # provider stack; niki_state owns the pattern list.
         if error_text and _disk_full(error_text):
             return _surface(LAYER_DISK, "disk_full", False, provider, model)
         if result.get("billing_block") or reason in ("billing", "billing_unverified"):
             return _surface(LAYER_BILLING, reason or "billing", False, provider, model)
-        # The Nous free tier refused or could not serve the turn (``agent/turn_recovery.py``
+        # The Niki free tier refused or could not serve the turn (``agent/turn_recovery.py``
         # stamps ``free_tier``): its own code, so a client offers the free sign-in rather than an
         # OAuth re-login, and the chat sentence rides along as the card body.
         if isinstance(free_tier := result.get("free_tier"), dict) and free_tier.get("kind"):

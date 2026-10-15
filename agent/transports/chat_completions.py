@@ -32,7 +32,7 @@ from agent.transports.types import NormalizedResponse, ToolCall, Usage
 # (_rename_client_web_search_for_xai): alias the wire declaration and map the alias back in
 # normalize_response. The alias value matches _CODEX_TOOL_SEARCH_ALIAS from the Codex-side fix for the same
 # reserved-name class (#83122) so the two transports stay consistent.
-_XAI_TOOL_SEARCH_ALIAS = "hermes_tool_search"
+_XAI_TOOL_SEARCH_ALIAS = "niki_tool_search"
 
 # Persistence-only / cross-transport message keys that strict OpenAI-compatible
 # providers reject with HTTP 400 ("Extra inputs are not permitted").
@@ -50,7 +50,7 @@ _HIGH_EFFORTS = {"high", "xhigh", "max", "ultra"}
 def _rename_tool_search_bridge_for_xai(tools: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, str]]:
     """Alias the client ``tool_search`` declaration for xAI; returns ``(tools, {alias: "tool_search"})``.
 
-    If a real tool already holds ``hermes_tool_search``, the bridge takes a ``_2``/``_3`` suffix.
+    If a real tool already holds ``niki_tool_search``, the bridge takes a ``_2``/``_3`` suffix.
     """
     from agent.transports.codex import _alias_reserved_tools
 
@@ -290,7 +290,7 @@ def _wire_reasoning_carriers(provider: Any, base_url: Any) -> frozenset:
     ``message_sanitization.route_reasoning_carriers`` owns the table; keys the route rejected
     this session were already removed upstream by ``reapply_reasoning_echo``. The table replays
     ``reasoning_details`` to OpenRouter-format gateways (OpenRouter, Kilo, Vercel AI Gateway,
-    Nous Portal) and to vendors documenting it (Novita, MiniMax /v1, TokenHub), never to strict
+    Niki Portal) and to vendors documenting it (Novita, MiniMax /v1, TokenHub), never to strict
     schemas (Groq, Mistral, Cerebras, opencode relays: ``property 'reasoning_details' is
     unsupported`` / ``Extra inputs are not permitted`` / ``no such field``, #70233).
     The Portal is back on the list: the "cumulative replayed-reasoning budget" blamed for #118182
@@ -742,7 +742,7 @@ class ChatCompletionsTransport(ProviderTransport):
         name = getattr(tc_function, "name", None)
         if tc_function is None or name is None:
             return None
-        # Reverse only aliases THIS request emitted; a real ``hermes_tool_search`` tool stays itself.
+        # Reverse only aliases THIS request emitted; a real ``niki_tool_search`` tool stays itself.
         alias_map = self._last_wire_aliases
         if alias_map is None:
             name = "tool_search" if name == _XAI_TOOL_SEARCH_ALIAS else name

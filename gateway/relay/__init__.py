@@ -82,10 +82,10 @@ def relay_explicitly_disabled() -> bool:
     """
     from gateway.config import Platform, PlatformConfig
     from gateway.config_loader import bridge_platform_shared_keys, merge_platform_sections, read_yaml_layers
-    from hermes_constants import get_hermes_home
+    from niki_constants import get_niki_home
 
     try:
-        cfg = read_yaml_layers(get_hermes_home())
+        cfg = read_yaml_layers(get_niki_home())
     except Exception:
         return False
     if not isinstance(cfg, dict):
@@ -215,7 +215,7 @@ def relay_display_name() -> Optional[str]:
     value = os.environ.get("GATEWAY_RELAY_DISPLAY_NAME", "").strip()
     if not value:
         try:
-            from hermes_cli.skin_engine import get_active_skin  # late import: boot-safe
+            from niki_cli.skin_engine import get_active_skin  # late import: boot-safe
 
             value = str(get_active_skin().get_branding("agent_name", "") or "").strip()
         except Exception:
@@ -399,7 +399,7 @@ def _post_provision(
 def _resolve_relay_identity_token() -> str:
     """Resolve the caller-identity bearer token the connector introspects to a tenant.
 
-    Canonical resolver shared by runtime self-provision and ``hermes gateway enroll``.
+    Canonical resolver shared by runtime self-provision and ``niki gateway enroll``.
     Modes, in precedence order:
       1.  Generic OIDC client-credentials (self-hosted IdP): ``gateway.idp.token_url``
           (``GATEWAY_RELAY_IDP_TOKEN_URL``) set together with client id + secret ->
@@ -409,7 +409,7 @@ def _resolve_relay_identity_token() -> str:
           ``$DOMINO_API_PROXY/access-token``): a plain GET whose body IS the token,
           raw JWT or a JSON envelope with ``access_token``. Possession of the
           (typically loopback) endpoint is the credential.
-      2.  Nous Portal (default): ``resolve_nous_access_token()``.
+      2.  Niki Portal (default): ``resolve_nous_access_token()``.
 
     Raises on failure; callers decide whether that's fatal (enroll CLI) or a graceful
     boot no-op (self-provision).
@@ -425,7 +425,7 @@ def _resolve_relay_identity_token() -> str:
     token_url, client_id, client_secret, scope = (env[k] for k in _IDP_KEYS)
 
     if not token_url:
-        from hermes_cli.auth import resolve_nous_access_token
+        from niki_cli.auth import resolve_nous_access_token
 
         return resolve_nous_access_token()
 
@@ -491,7 +491,7 @@ def self_provision_relay() -> bool:
     identity token, POSTs ``/relay/provision`` for EACH fronted platform and sets
     ``GATEWAY_RELAY_ID`` / ``_SECRET`` / ``_DELIVERY_KEY`` in ``os.environ`` for
     ``register_relay_adapter()``. Creds live ONLY in process memory (never
-    ``~/.hermes/.env``), so a hosted container re-provisions every boot; the
+    ``~/.niki/.env``), so a hosted container re-provisions every boot; the
     connector's rotation window covers a still-connected prior instance. The trigger
     is deliberately NOT ``is_managed()`` (False on a NAS-hosted Fly agent): "pointed
     at a connector without a pinned secret" is the real signal and self-guards (an
@@ -520,7 +520,7 @@ def self_provision_relay() -> bool:
         host = socket.gethostname().strip()
     except Exception:
         host = ""
-    gateway_id = os.environ.get("GATEWAY_RELAY_ID", "").strip() or f"gw-{host or 'hermes'}"
+    gateway_id = os.environ.get("GATEWAY_RELAY_ID", "").strip() or f"gw-{host or 'niki'}"
     endpoint = relay_endpoint()
     route_keys = relay_route_keys()
     instance_id = relay_instance_id()

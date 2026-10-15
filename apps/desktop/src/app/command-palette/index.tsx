@@ -19,7 +19,7 @@ import { codiconIcon } from '@/components/ui/codicon'
 import { Command, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { HighlightMatches } from '@/components/ui/highlight-matches'
 import { KbdCombo } from '@/components/ui/kbd'
-import { getHermesConfigRecord, listAllProfileSessions } from '@/hermes'
+import { getNikiConfigRecord, listAllProfileSessions } from '@/niki'
 import { useMediaQuery } from '@/hooks/use-media-query'
 import { useI18n } from '@/i18n'
 import { sessionTitle } from '@/lib/chat-runtime'
@@ -663,7 +663,7 @@ function CommandPaletteBody({ onExited }: { onExited: () => void }) {
   // reopen paints from cache and revalidates in the background.
   const configQuery = useQuery({
     queryKey: ['command-palette', 'config'],
-    queryFn: () => getHermesConfigRecord()
+    queryFn: () => getNikiConfigRecord()
   })
 
   // staleTime 0 (not the 60s client default): renames, pins, and archives
@@ -989,9 +989,9 @@ function CommandPaletteBody({ onExited }: { onExited: () => void }) {
           {
             detail: updateVersionLabel,
             icon: Download,
-            id: 'cc-update-hermes',
-            keywords: ['update', 'upgrade', 'hermes', 'version', 'system', 'restart'],
-            label: cc.updateHermes,
+            id: 'cc-update-niki',
+            keywords: ['update', 'upgrade', 'niki', 'version', 'system', 'restart'],
+            label: cc.updateNiki,
             run: () => requestActiveUpdate()
           },
           {
@@ -1186,7 +1186,7 @@ function CommandPaletteBody({ onExited }: { onExited: () => void }) {
       ]
     })
 
-    // Apply a theme directly from the root search (e.g. "nous" → Nous). Live
+    // Apply a theme directly from the root search (e.g. "niki" → Niki). Live
     // preview via keepOpen, mirroring the nested theme picker. If the theme
     // can't render the current light/dark mode, flip to the one it supports.
     result.push({

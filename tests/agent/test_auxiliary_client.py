@@ -69,7 +69,7 @@ def _clean_env(monkeypatch):
     """Strip provider env vars so each test starts clean."""
     for key in (
         "OPENROUTER_API_KEY", "OPENAI_BASE_URL", "OPENAI_API_KEY",
-        "OPENAI_MODEL", "LLM_MODEL", "NOUS_INFERENCE_BASE_URL",
+        "OPENAI_MODEL", "LLM_MODEL", "NIKI_INFERENCE_BASE_URL",
         "ANTHROPIC_API_KEY", "ANTHROPIC_TOKEN", "CLAUDE_CODE_OAUTH_TOKEN",
         "NVIDIA_API_KEY", "NVIDIA_BASE_URL",
     ):
@@ -92,7 +92,7 @@ class TestResolveTaskProviderModel:
         [
             "anthropic",
             "minimax-oauth",
-            "nous",
+            "niki",
             "openai-codex",
             "qwen-oauth",
             "xai-oauth",
@@ -153,11 +153,11 @@ class TestResolveTaskProviderModel:
         }
         monkeypatch.setattr("agent.auxiliary_client._get_auxiliary_task_config", lambda task: {})
         monkeypatch.setattr(
-            "hermes_cli.moa_config.resolve_moa_preset",
+            "niki_cli.moa_config.resolve_moa_preset",
             lambda cfg, name: preset,
         )
-        monkeypatch.setattr("hermes_cli.config.load_config", lambda: {"moa": {}})
-        monkeypatch.setattr("hermes_cli.config.load_config_readonly", lambda: {"moa": {}})
+        monkeypatch.setattr("niki_cli.config.load_config", lambda: {"moa": {}})
+        monkeypatch.setattr("niki_cli.config.load_config_readonly", lambda: {"moa": {}})
 
         resolved_provider, model, base_url, api_key, _api_mode = _resolve_task_provider_model(
             task="title_generation",
@@ -189,11 +189,11 @@ class TestResolveTaskProviderModel:
             lambda task: {"provider": "moa", "model": "opus-gpt"} if task == "title_generation" else {},
         )
         monkeypatch.setattr(
-            "hermes_cli.moa_config.resolve_moa_preset",
+            "niki_cli.moa_config.resolve_moa_preset",
             lambda cfg, name: preset,
         )
-        monkeypatch.setattr("hermes_cli.config.load_config", lambda: {"moa": {}})
-        monkeypatch.setattr("hermes_cli.config.load_config_readonly", lambda: {"moa": {}})
+        monkeypatch.setattr("niki_cli.config.load_config", lambda: {"moa": {}})
+        monkeypatch.setattr("niki_cli.config.load_config_readonly", lambda: {"moa": {}})
 
         resolved_provider, model, base_url, api_key, _api_mode = _resolve_task_provider_model(
             task="title_generation",
@@ -211,11 +211,11 @@ class TestResolveTaskProviderModel:
         (literal "moa") rather than crash resolve_provider_client() harder."""
         monkeypatch.setattr("agent.auxiliary_client._get_auxiliary_task_config", lambda task: {})
         monkeypatch.setattr(
-            "hermes_cli.moa_config.resolve_moa_preset",
+            "niki_cli.moa_config.resolve_moa_preset",
             lambda cfg, name: (_ for _ in ()).throw(KeyError("gone-preset")),
         )
-        monkeypatch.setattr("hermes_cli.config.load_config", lambda: {"moa": {}})
-        monkeypatch.setattr("hermes_cli.config.load_config_readonly", lambda: {"moa": {}})
+        monkeypatch.setattr("niki_cli.config.load_config", lambda: {"moa": {}})
+        monkeypatch.setattr("niki_cli.config.load_config_readonly", lambda: {"moa": {}})
 
         resolved_provider, model, _base_url, _api_key, _api_mode = _resolve_task_provider_model(
             task="title_generation",
@@ -245,16 +245,16 @@ class TestResolveTaskProviderModel:
 class TestMoaAggregatorSharedResolution:
     """The shared MoA→aggregator helper and the layers that consume it.
 
-    Real-config tests: write an actual config.yaml under a temp HERMES_HOME
+    Real-config tests: write an actual config.yaml under a temp NIKI_HOME
     and exercise the genuine load_config() → resolve_moa_preset() boundary —
     no mocking of the configuration-resolution chain.
     """
 
     @staticmethod
     def _write_moa_config(tmp_path, monkeypatch, default_preset="opus-gpt"):
-        import hermes_yaml as yaml
+        import niki_yaml as yaml
 
-        home = tmp_path / ".hermes"
+        home = tmp_path / ".niki"
         home.mkdir(exist_ok=True)
         (home / "config.yaml").write_text(
             yaml.safe_dump(
@@ -272,13 +272,13 @@ class TestMoaAggregatorSharedResolution:
                                     "model": "anthropic/claude-opus-4.8",
                                 },
                             },
-                            "nous-mix": {
+                            "niki-mix": {
                                 "enabled": True,
                                 "reference_models": [
-                                    {"provider": "nous", "model": "hermes-4-70b"}
+                                    {"provider": "niki", "model": "hermes-4-70b"}
                                 ],
                                 "aggregator": {
-                                    "provider": "nous",
+                                    "provider": "niki",
                                     "model": "hermes-4-405b",
                                 },
                             },
@@ -287,13 +287,13 @@ class TestMoaAggregatorSharedResolution:
                 }
             )
         )
-        monkeypatch.setenv("HERMES_HOME", str(home))
+        monkeypatch.setenv("NIKI_HOME", str(home))
         return home
 
     def test_real_config_explicit_task_provider_moa(self, tmp_path, monkeypatch):
         """auxiliary.<task>.provider: moa in a REAL config.yaml resolves to the
         aggregator through the genuine load_config()/resolve_moa_preset() path."""
-        import hermes_yaml as yaml
+        import niki_yaml as yaml
 
         home = self._write_moa_config(tmp_path, monkeypatch)
         cfg = yaml.safe_load((home / "config.yaml").read_text())
@@ -376,7 +376,7 @@ class TestBuildCallKwargsMaxTokens:
             ("zai", "glm-5.2", "https://api.z.ai/api/coding/paas/v4", "max_tokens"),
             ("openrouter", "deepseek/deepseek-v4-flash:nitro", "https://openrouter.ai/api/v1", "max_tokens"),
             ("copilot", "gpt-5.5", "https://api.githubcopilot.com", "max_completion_tokens"),
-            ("nous", "hermes-4", "https://inference-api.nousresearch.com/v1", "max_tokens"),
+            ("niki", "hermes-4", "https://inference-api.nousresearch.com/v1", "max_tokens"),
         ],
     )
     def test_moa_task_sends_max_tokens_on_openai_compatible(self, provider, model, base_url, expected_key):
@@ -443,23 +443,23 @@ class TestBuildCallKwargsMaxTokens:
 
 
 class TestNousTagsScoping:
-    def test_tags_injected_when_provider_is_nous(self, monkeypatch):
+    def test_tags_injected_when_provider_is_niki(self, monkeypatch):
         import agent.auxiliary_client as aux
 
-        monkeypatch.setattr(aux, "auxiliary_is_nous", False)
+        monkeypatch.setattr(aux, "auxiliary_is_niki", False)
 
         kwargs = aux._build_call_kwargs(
-            provider="nous",
+            provider="niki",
             model="hermes-4",
             messages=[{"role": "user", "content": "hi"}],
         )
 
         assert kwargs["extra_body"]["tags"] == aux._nous_portal_tags()
 
-    def test_tags_not_injected_for_gemini_when_main_is_nous(self, monkeypatch):
+    def test_tags_not_injected_for_gemini_when_main_is_niki(self, monkeypatch):
         import agent.auxiliary_client as aux
 
-        monkeypatch.setattr(aux, "auxiliary_is_nous", True)
+        monkeypatch.setattr(aux, "auxiliary_is_niki", True)
 
         kwargs = aux._build_call_kwargs(
             provider="gemini",
@@ -483,8 +483,8 @@ class TestNormalizeAuxProvider:
         assert alias_model == canon_model
 
     def test_covers_every_alias_the_main_path_resolves(self):
-        """Every alias hermes_cli.auth resolves also resolves in aux — drift becomes a red test (#115006)."""
-        from hermes_cli.auth import _PROVIDER_ALIASES as auth_table
+        """Every alias niki_cli.auth resolves also resolves in aux — drift becomes a red test (#115006)."""
+        from niki_cli.auth import _PROVIDER_ALIASES as auth_table
         for alias, canonical in auth_table.items():
             assert _normalize_aux_provider(alias) == canonical, alias
 
@@ -493,9 +493,9 @@ class TestResolveCodexCredentialToken:
     """Token half of ``_resolve_codex_credential_and_base`` with no pool (auth.json only)."""
 
     def test_valid_auth_store(self, tmp_path, monkeypatch):
-        hermes_home = tmp_path / "hermes"
-        hermes_home.mkdir(parents=True, exist_ok=True)
-        (hermes_home / "auth.json").write_text(json.dumps({
+        niki_home = tmp_path / "niki"
+        niki_home.mkdir(parents=True, exist_ok=True)
+        (niki_home / "auth.json").write_text(json.dumps({
             "version": 1,
             "providers": {
                 "openai-codex": {
@@ -503,7 +503,7 @@ class TestResolveCodexCredentialToken:
                 },
             },
         }))
-        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+        monkeypatch.setenv("NIKI_HOME", str(niki_home))
         with patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)):
             result = _resolve_codex_credential_and_base()[0]
         assert result == "tok-123"
@@ -519,9 +519,9 @@ class TestResolveCodexCredentialToken:
         payload = base64.urlsafe_b64encode(payload_data).rstrip(b"=").decode()
         expired_jwt = f"{header}.{payload}.fakesig"
 
-        hermes_home = tmp_path / "hermes"
-        hermes_home.mkdir(parents=True, exist_ok=True)
-        (hermes_home / "auth.json").write_text(json.dumps({
+        niki_home = tmp_path / "niki"
+        niki_home.mkdir(parents=True, exist_ok=True)
+        (niki_home / "auth.json").write_text(json.dumps({
             "version": 1,
             "providers": {
                 "openai-codex": {
@@ -529,7 +529,7 @@ class TestResolveCodexCredentialToken:
                 },
             },
         }))
-        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+        monkeypatch.setenv("NIKI_HOME", str(niki_home))
         with patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)):
             result = _resolve_codex_credential_and_base()[0]
         assert result is None, "Expired JWT should return None"
@@ -544,9 +544,9 @@ class TestResolveCodexCredentialToken:
         payload = base64.urlsafe_b64encode(payload_data).rstrip(b"=").decode()
         valid_jwt = f"{header}.{payload}.fakesig"
 
-        hermes_home = tmp_path / "hermes"
-        hermes_home.mkdir(parents=True, exist_ok=True)
-        (hermes_home / "auth.json").write_text(json.dumps({
+        niki_home = tmp_path / "niki"
+        niki_home.mkdir(parents=True, exist_ok=True)
+        (niki_home / "auth.json").write_text(json.dumps({
             "version": 1,
             "providers": {
                 "openai-codex": {
@@ -554,7 +554,7 @@ class TestResolveCodexCredentialToken:
                 },
             },
         }))
-        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+        monkeypatch.setenv("NIKI_HOME", str(niki_home))
         with patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)):
             result = _resolve_codex_credential_and_base()[0]
         assert result == valid_jwt
@@ -564,21 +564,21 @@ class TestResolveXaiOAuthForAux:
     def test_uses_pool_backed_credentials_without_singleton(self, tmp_path, monkeypatch):
         """Auxiliary xAI OAuth must see pool-only credentials.
 
-        ``hermes auth status`` already reports these as logged in; compression
+        ``niki auth status`` already reports these as logged in; compression
         should not fall through to "no auxiliary provider configured" just
         because the singleton auth-store entry is absent.
         """
         from agent.credential_pool import AUTH_TYPE_OAUTH, PooledCredential, load_pool
-        from hermes_cli.auth import DEFAULT_XAI_OAUTH_BASE_URL
+        from niki_cli.auth import DEFAULT_XAI_OAUTH_BASE_URL
 
-        hermes_home = tmp_path / "hermes"
-        hermes_home.mkdir(parents=True, exist_ok=True)
-        (hermes_home / "auth.json").write_text(json.dumps({
+        niki_home = tmp_path / "niki"
+        niki_home.mkdir(parents=True, exist_ok=True)
+        (niki_home / "auth.json").write_text(json.dumps({
             "version": 1,
             "providers": {},
         }))
-        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
-        monkeypatch.delenv("HERMES_XAI_BASE_URL", raising=False)
+        monkeypatch.setenv("NIKI_HOME", str(niki_home))
+        monkeypatch.delenv("NIKI_XAI_BASE_URL", raising=False)
         monkeypatch.delenv("XAI_BASE_URL", raising=False)
 
         pool = load_pool("xai-oauth")
@@ -601,16 +601,16 @@ class TestResolveXaiOAuthForAux:
 
     def test_pool_backed_credentials_honor_base_url_env_override(self, tmp_path, monkeypatch):
         from agent.credential_pool import AUTH_TYPE_OAUTH, PooledCredential, load_pool
-        from hermes_cli.auth import DEFAULT_XAI_OAUTH_BASE_URL
+        from niki_cli.auth import DEFAULT_XAI_OAUTH_BASE_URL
 
-        hermes_home = tmp_path / "hermes"
-        hermes_home.mkdir(parents=True, exist_ok=True)
-        (hermes_home / "auth.json").write_text(json.dumps({
+        niki_home = tmp_path / "niki"
+        niki_home.mkdir(parents=True, exist_ok=True)
+        (niki_home / "auth.json").write_text(json.dumps({
             "version": 1,
             "providers": {},
         }))
-        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
-        monkeypatch.setenv("HERMES_XAI_BASE_URL", "https://example.x.ai/v1/")
+        monkeypatch.setenv("NIKI_HOME", str(niki_home))
+        monkeypatch.setenv("NIKI_XAI_BASE_URL", "https://example.x.ai/v1/")
 
         pool = load_pool("xai-oauth")
         pool.add_entry(PooledCredential(
@@ -714,7 +714,7 @@ class TestBuildCodexClient:
             patch("agent.auxiliary_client._select_pool_entry", return_value=(True, entry)),
             patch("agent.auxiliary_client.OpenAI") as mock_openai,
         ):
-            monkeypatch.setenv("HERMES_CODEX_BASE_URL", "http://127.0.0.1:8787/v1")
+            monkeypatch.setenv("NIKI_CODEX_BASE_URL", "http://127.0.0.1:8787/v1")
             mock_openai.return_value = MagicMock()
             from agent.auxiliary_client import _build_codex_client
 
@@ -731,7 +731,7 @@ class TestBuildCodexClient:
             patch("agent.auxiliary_client._read_codex_singleton_token", return_value="codex-auth-token"),
             patch("agent.auxiliary_client.OpenAI") as mock_openai,
         ):
-            monkeypatch.setenv("HERMES_CODEX_BASE_URL", "http://127.0.0.1:8787/v1")
+            monkeypatch.setenv("NIKI_CODEX_BASE_URL", "http://127.0.0.1:8787/v1")
             mock_openai.return_value = MagicMock()
             from agent.auxiliary_client import resolve_provider_client
 
@@ -801,7 +801,7 @@ class TestResolveProviderClientUniversalModelFallback:
 
     Aux tasks (title generation, vision, session search, etc.) routinely
     reach this function without an explicit model — the user's main
-    provider was picked via ``hermes model``, no per-task override is
+    provider was picked via ``niki model``, no per-task override is
     set, and the expectation is "just use my main model for side tasks
     too."  The resolver fills in ``model`` from a 3-step universal
     fallback before any provider branch runs:
@@ -814,7 +814,7 @@ class TestResolveProviderClientUniversalModelFallback:
     ``(None, None)`` on an empty model — both lack a catalog default
     because their accepted-model lists drift on the backend.  That
     silent failure caused ``_resolve_auto_route`` to drop to its Step-2
-    fallback chain (OpenRouter / Nous / etc.), so aux tasks billed
+    fallback chain (OpenRouter / Niki / etc.), so aux tasks billed
     against the wrong subscription.
     """
 
@@ -903,9 +903,9 @@ class TestExpiredCodexFallback:
         payload = base64.urlsafe_b64encode(payload_data).rstrip(b"=").decode()
         expired_jwt = f"{header}.{payload}.fakesig"
 
-        hermes_home = tmp_path / "hermes"
-        hermes_home.mkdir(parents=True, exist_ok=True)
-        (hermes_home / "auth.json").write_text(json.dumps({
+        niki_home = tmp_path / "niki"
+        niki_home.mkdir(parents=True, exist_ok=True)
+        (niki_home / "auth.json").write_text(json.dumps({
             "version": 1,
             "providers": {
                 "openai-codex": {
@@ -913,7 +913,7 @@ class TestExpiredCodexFallback:
                 },
             },
         }))
-        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+        monkeypatch.setenv("NIKI_HOME", str(niki_home))
         monkeypatch.setenv("OPENROUTER_API_KEY", "or-test-key")
 
         with patch("agent.auxiliary_client.OpenAI") as mock_openai:
@@ -989,7 +989,7 @@ class TestOpenRouterPaidLaneGuard:
         """
         monkeypatch.setenv("OPENROUTER_API_KEY", "or-key")
         with patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)), \
-             patch("hermes_cli.config.load_config_readonly", return_value={"auxiliary": {"free_only": True}}), \
+             patch("niki_cli.config.load_config_readonly", return_value={"auxiliary": {"free_only": True}}), \
              patch("agent.auxiliary_client.OpenAI") as mock_openai:
             mock_client = MagicMock(name="openrouter_client")
             mock_openai.return_value = mock_client
@@ -1001,7 +1001,7 @@ class TestOpenRouterPaidLaneGuard:
         """free_only=true + user-configured PAID model → OpenRouter skipped."""
         monkeypatch.setenv("OPENROUTER_API_KEY", "or-key")
         with patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)), \
-             patch("hermes_cli.config.load_config_readonly",
+             patch("niki_cli.config.load_config_readonly",
                    return_value={"auxiliary": {"free_only": True,
                                                "openrouter_model": "google/gemini-3.6-flash"}}), \
              patch("agent.auxiliary_client.OpenAI") as mock_openai:
@@ -1014,7 +1014,7 @@ class TestOpenRouterPaidLaneGuard:
         """free_only=true + :free model → OpenRouter used with that model."""
         monkeypatch.setenv("OPENROUTER_API_KEY", "or-key")
         with patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)), \
-             patch("hermes_cli.config.load_config_readonly",
+             patch("niki_cli.config.load_config_readonly",
                    return_value={"auxiliary": {"free_only": True,
                                               "openrouter_model": "nvidia/nemotron-3-ultra-550b-a55b:free"}}), \
              patch("agent.auxiliary_client.OpenAI") as mock_openai:
@@ -1028,7 +1028,7 @@ class TestOpenRouterPaidLaneGuard:
         """auxiliary.openrouter_model replaces _OPENROUTER_MODEL."""
         monkeypatch.setenv("OPENROUTER_API_KEY", "or-key")
         with patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)), \
-             patch("hermes_cli.config.load_config_readonly",
+             patch("niki_cli.config.load_config_readonly",
                    return_value={"auxiliary": {"openrouter_model": "some/vendor-model"}}), \
              patch("agent.auxiliary_client.OpenAI") as mock_openai:
             mock_client = MagicMock(name="openrouter_client")
@@ -1041,7 +1041,7 @@ class TestOpenRouterPaidLaneGuard:
         """Auxiliary.<task>.model (explicit) is also gated by free_only."""
         monkeypatch.setenv("OPENROUTER_API_KEY", "or-key")
         with patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)), \
-             patch("hermes_cli.config.load_config_readonly", return_value={"auxiliary": {"free_only": True}}), \
+             patch("niki_cli.config.load_config_readonly", return_value={"auxiliary": {"free_only": True}}), \
              patch("agent.auxiliary_client.OpenAI") as mock_openai:
             client, model = _try_openrouter(model="google/gemini-3.6-flash")
         assert client is None
@@ -1052,7 +1052,7 @@ class TestOpenRouterPaidLaneGuard:
         """The concrete OpenRouter route gates the caller's model, not its default."""
         monkeypatch.setenv("OPENROUTER_API_KEY", "or-key")
         with patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)), \
-             patch("hermes_cli.config.load_config_readonly",
+             patch("niki_cli.config.load_config_readonly",
                    return_value={"auxiliary": {"free_only": True}}), \
              patch("agent.auxiliary_client.OpenAI") as mock_openai:
             mock_client = MagicMock(name="openrouter_client")
@@ -1067,7 +1067,7 @@ class TestOpenRouterPaidLaneGuard:
     def test_free_only_gate_does_not_mark_openrouter_unhealthy(self, monkeypatch):
         monkeypatch.setenv("OPENROUTER_API_KEY", "or-key")
         with patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)), \
-             patch("hermes_cli.config.load_config_readonly",
+             patch("niki_cli.config.load_config_readonly",
                    return_value={"auxiliary": {"free_only": True}}), \
              patch("agent.auxiliary_client._mark_provider_unhealthy") as mark_unhealthy:
             client, model = resolve_provider_client(
@@ -1092,7 +1092,7 @@ class TestOpenRouterPaidLaneGuard:
         _paid_lane_warned.discard(_paid_model)
         monkeypatch.setenv("OPENROUTER_API_KEY", "or-key")
         with patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)), \
-             patch("hermes_cli.config.load_config_readonly", return_value=_paid_cfg), \
+             patch("niki_cli.config.load_config_readonly", return_value=_paid_cfg), \
              patch("agent.auxiliary_client.OpenAI") as mock_openai:
             mock_client = MagicMock(name="openrouter_client")
             mock_openai.return_value = mock_client
@@ -1103,7 +1103,7 @@ class TestOpenRouterPaidLaneGuard:
         assert any("PAID lane engaged" in r.getMessage() for r in caplog.records)
         # Second call logs nothing new.
         with patch("agent.auxiliary_client._select_pool_entry", return_value=(False, None)), \
-             patch("hermes_cli.config.load_config_readonly", return_value=_paid_cfg), \
+             patch("niki_cli.config.load_config_readonly", return_value=_paid_cfg), \
              patch("agent.auxiliary_client.OpenAI") as mock_openai:
             caplog.clear()
             with caplog.at_level(logging.WARNING, logger="agent.auxiliary_client"):
@@ -1140,7 +1140,7 @@ class TestGetTextAuxiliaryClient:
         with (
             patch("agent.auxiliary_client.load_pool", return_value=_Pool()),
             patch("agent.auxiliary_client.OpenAI"),
-            patch("hermes_cli.auth._read_codex_tokens", side_effect=AssertionError("legacy codex store should not run")),
+            patch("niki_cli.auth._read_codex_tokens", side_effect=AssertionError("legacy codex store should not run")),
         ):
             from agent.auxiliary_client import _build_codex_client
 
@@ -1266,11 +1266,11 @@ class TestAuxiliaryPoolAwareness:
         with (
             patch("agent.auxiliary_client.load_pool", return_value=pool),
             patch("agent.auxiliary_client.OpenAI") as mock_openai,
-            patch("hermes_cli.models.get_nous_recommended_aux_model", return_value=None),
+            patch("niki_cli.models.get_nous_recommended_aux_model", return_value=None),
         ):
-            from agent.auxiliary_client import _try_nous
+            from agent.auxiliary_client import _try_niki
 
-            client, model = _try_nous()
+            client, model = _try_niki()
 
         assert pool.refreshed is True
         assert client is not None
@@ -1288,15 +1288,15 @@ class TestAuxiliaryPoolAwareness:
 
         stale_client = MagicMock()
         stale_client.base_url = "https://inference-api.nousresearch.com/v1"
-        stale_client.chat.completions.create.side_effect = _Auth401("stale nous key")
+        stale_client.chat.completions.create.side_effect = _Auth401("stale niki key")
 
         fresh_client = MagicMock()
         fresh_client.base_url = "https://inference-api.nousresearch.com/v1"
         fresh_client.chat.completions.create.return_value = {"ok": True}
 
         with (
-            patch("agent.auxiliary_client._resolve_task_provider_model", return_value=("nous", "nous-model", None, None, None)),
-            patch("agent.auxiliary_client._get_cached_client", return_value=(stale_client, "nous-model")),
+            patch("agent.auxiliary_client._resolve_task_provider_model", return_value=("niki", "niki-model", None, None, None)),
+            patch("agent.auxiliary_client._get_cached_client", return_value=(stale_client, "niki-model")),
             patch("agent.auxiliary_client.OpenAI", return_value=fresh_client),
             patch("agent.auxiliary_client._validate_llm_response", side_effect=lambda resp, _task, **_kw: resp),
             patch("agent.auxiliary_client._resolve_nous_runtime_api", return_value=("fresh-agent-key", "https://inference-api.nousresearch.com/v1")),
@@ -1404,7 +1404,7 @@ class TestIsModelNotFoundError:
 
     def test_nous_openrouter_catalog_404(self):
         """The exact incident error: a Portal-recommended model dropped from
-        the Nous → OpenRouter catalog."""
+        the Niki → OpenRouter catalog."""
         exc = Exception(
             "Model 'gpt-5.4-mini' not found. The requested model does not "
             "exist in our configuration or OpenRouter catalog."
@@ -1477,7 +1477,7 @@ class TestRefreshNousRecommendedModel:
         def _boom(**kw):
             raise RuntimeError("portal down")
         monkeypatch.setattr(
-            "hermes_cli.models.get_nous_recommended_aux_model", _boom)
+            "niki_cli.models.get_nous_recommended_aux_model", _boom)
         out = _refresh_nous_recommended_model(
             vision=False, stale_model="some/dead-model")
         assert out == _NOUS_MODEL
@@ -1486,7 +1486,7 @@ class TestRefreshNousRecommendedModel:
         """When the failed model IS the default and the Portal has nothing
         else, there's no usable alternative."""
         monkeypatch.setattr(
-            "hermes_cli.models.get_nous_recommended_aux_model",
+            "niki_cli.models.get_nous_recommended_aux_model",
             lambda **kw: _NOUS_MODEL,
         )
         out = _refresh_nous_recommended_model(
@@ -1540,23 +1540,23 @@ class TestTryPaymentFallback:
         fails never hops to another logged-in account (test_auxiliary_auto_never_guesses_provider)."""
         mock_client = MagicMock()
         with patch("agent.auxiliary_client._try_openrouter", return_value=(None, None)), \
-             patch("agent.auxiliary_client._try_nous", return_value=(mock_client, "nous-model")), \
+             patch("agent.auxiliary_client._try_niki", return_value=(mock_client, "niki-model")), \
              patch("agent.auxiliary_client._read_main_provider", return_value="auto"):
             client, model, label = _try_payment_fallback("openrouter", task="compression")
         assert client is mock_client
-        assert model == "nous-model"
-        assert label == "nous"
+        assert model == "niki-model"
+        assert label == "niki"
 
 
 
     def test_codex_not_in_fallback_chain(self):
         """Codex is deliberately NOT a fallback rung (shifting model allow-list).
 
-        When OR/Nous/custom/api-key all fail, payment-fallback returns None —
+        When OR/Niki/custom/api-key all fail, payment-fallback returns None —
         Codex is never tried with a guessed model.
         """
         with patch("agent.auxiliary_client._try_openrouter", return_value=(None, None)), \
-             patch("agent.auxiliary_client._try_nous", return_value=(None, None)), \
+             patch("agent.auxiliary_client._try_niki", return_value=(None, None)), \
              patch("agent.auxiliary_client._try_custom_endpoint", return_value=(None, None)), \
              patch("agent.auxiliary_client._resolve_api_key_provider", return_value=(None, None)), \
              patch("agent.auxiliary_client._read_main_provider", return_value="auto"):
@@ -2098,7 +2098,7 @@ class TestTryMainAgentModelFallback:
 def test_resolve_api_key_provider_skips_unconfigured_anthropic(monkeypatch):
     """_resolve_api_key_provider must not try anthropic when user never configured it."""
     from collections import OrderedDict
-    from hermes_cli.auth import ProviderConfig
+    from niki_cli.auth import ProviderConfig
 
     # Build a minimal registry with only "anthropic" so the loop is guaranteed
     # to reach it without being short-circuited by earlier providers.
@@ -2119,9 +2119,9 @@ def test_resolve_api_key_provider_skips_unconfigured_anthropic(monkeypatch):
         return None, None
 
     monkeypatch.setattr("agent.auxiliary_client._try_anthropic", mock_try_anthropic)
-    monkeypatch.setattr("hermes_cli.auth.PROVIDER_REGISTRY", fake_registry)
+    monkeypatch.setattr("niki_cli.auth.PROVIDER_REGISTRY", fake_registry)
     monkeypatch.setattr(
-        "hermes_cli.auth.is_provider_explicitly_configured",
+        "niki_cli.auth.is_provider_explicitly_configured",
         lambda pid: False,
     )
 
@@ -2135,7 +2135,7 @@ def test_resolve_api_key_provider_skips_unconfigured_anthropic(monkeypatch):
 def test_resolve_api_key_provider_skips_unconfigured_copilot(monkeypatch):
     """_resolve_api_key_provider must skip copilot when user never configured it (#114740)."""
     from collections import OrderedDict
-    from hermes_cli.auth import ProviderConfig
+    from niki_cli.auth import ProviderConfig
 
     fake_registry = OrderedDict({
         "copilot": ProviderConfig(
@@ -2154,9 +2154,9 @@ def test_resolve_api_key_provider_skips_unconfigured_copilot(monkeypatch):
         return False, None
 
     monkeypatch.setattr("agent.auxiliary_client._select_pool_entry", mock_select_pool_entry)
-    monkeypatch.setattr("hermes_cli.auth.PROVIDER_REGISTRY", fake_registry)
+    monkeypatch.setattr("niki_cli.auth.PROVIDER_REGISTRY", fake_registry)
     monkeypatch.setattr(
-        "hermes_cli.auth.is_provider_explicitly_configured",
+        "niki_cli.auth.is_provider_explicitly_configured",
         lambda pid: False,
     )
 
@@ -2672,7 +2672,7 @@ class TestAuxiliaryTaskExtraBody:
     def test_profile_projection_receives_wire_clamped_effort(self, monkeypatch):
         """Profiles clamp only against their own narrower sets (or a catalog that may be cold), so
         ``ultra`` must already be a wire level when the projection sees it — the MoA aggregator on
-        an OpenRouter/Nous slot 400'd otherwise (#112010)."""
+        an OpenRouter/Niki slot 400'd otherwise (#112010)."""
         import agent.auxiliary_client as aux
 
         seen = {}
@@ -2711,7 +2711,7 @@ class TestAuxiliaryTaskExtraBody:
             }
         }
 
-        with patch("hermes_cli.config.load_config", return_value=config), patch("hermes_cli.config.load_config_readonly", return_value=config), patch(
+        with patch("niki_cli.config.load_config", return_value=config), patch("niki_cli.config.load_config_readonly", return_value=config), patch(
             "agent.auxiliary_client._get_cached_client",
             return_value=(client, "glm-4.5-air"),
         ):
@@ -2742,7 +2742,7 @@ class TestAuxiliaryTaskExtraBody:
             }
         }
 
-        with patch("hermes_cli.config.load_config", return_value=config), patch("hermes_cli.config.load_config_readonly", return_value=config), patch(
+        with patch("niki_cli.config.load_config", return_value=config), patch("niki_cli.config.load_config_readonly", return_value=config), patch(
             "agent.auxiliary_client._get_cached_client",
             return_value=(client, "glm-4.5-air"),
         ):
@@ -2768,7 +2768,7 @@ class TestAuxiliaryTaskExtraBody:
         from agent.auxiliary_client import _get_task_extra_body
 
         config = {"auxiliary": {moa_task: {"reasoning_effort": "xhigh"}}}
-        with patch("hermes_cli.config.load_config", return_value=config), patch("hermes_cli.config.load_config_readonly", return_value=config), \
+        with patch("niki_cli.config.load_config", return_value=config), patch("niki_cli.config.load_config_readonly", return_value=config), \
              caplog.at_level(logging.WARNING, logger="agent.auxiliary_client"):
             result = _get_task_extra_body(moa_task)
 
@@ -2847,11 +2847,11 @@ class TestAuxiliaryTaskExtraBody:
     def test_bare_custom_auth_error_does_not_fall_back_to_env_base_url(self, monkeypatch):
         """Bare 'custom' with nothing configured: the main resolver raises AuthError; aux must
         return no endpoint rather than route to a stale env OPENAI_BASE_URL with a placeholder key."""
-        from hermes_cli.auth import AuthError
+        from niki_cli.auth import AuthError
         from agent.auxiliary_client import _resolve_custom_runtime
         monkeypatch.setenv("OPENAI_BASE_URL", "https://old-proxy.example/v1")
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
-        with patch("hermes_cli.runtime_provider.resolve_runtime_provider",
+        with patch("niki_cli.runtime_provider.resolve_runtime_provider",
                    side_effect=AuthError("no creds", provider="custom", code="missing_api_key")):
             assert _resolve_custom_runtime() == (None, None, None)
 
@@ -3646,7 +3646,7 @@ class TestVisionAutoSkipsKimiCoding:
         def fake_strict(provider, model=None):
             if provider == "openrouter":
                 return fake_or_client, "google/gemini-3-flash-preview"
-            if provider == "nous":
+            if provider == "niki":
                 return None, None
             raise AssertionError(
                 f"strict vision backend should not be called for {provider!r} "
@@ -4080,7 +4080,7 @@ class TestCodexAuxiliaryAdapterReservedToolAliases:
         from agent.codex_responses_adapter import classify_responses_route
         from agent.transports.codex import ResponsesApiTransport
 
-        # Deterministic xAI branch: a non-xAI web backend keeps client dispatch under ``hermes_web_search``.
+        # Deterministic xAI branch: a non-xAI web backend keeps client dispatch under ``niki_web_search``.
         monkeypatch.setattr("agent.transports.codex._xai_prefers_native_web_search", lambda: False)
         adapter = _CodexCompletionsAdapter(SimpleNamespace(base_url=base_url), "m")
         resp_kwargs, _, _ = adapter._build_responses_kwargs(
@@ -4094,13 +4094,13 @@ class TestCodexAuxiliaryAdapterReservedToolAliases:
         assert resp_kwargs["tools"] == main_kwargs["tools"]
         assert all(t["strict"] is False for t in resp_kwargs["tools"])
         assert {t["name"] for t in resp_kwargs["tools"]} == {
-            f"hermes_{n}" if n in aliased else n
+            f"niki_{n}" if n in aliased else n
             for n in ("web_search", "search_files", "people_search", "read_file", "tool_search")
         }
         # Replayed history names the tool the way this request declares it; the alias map rides on the payload.
         history_names = [i["name"] for i in resp_kwargs["input"] if i.get("type") == "function_call"]
-        assert history_names == ["hermes_search_files" if "search_files" in aliased else "search_files"]
-        assert resp_kwargs.get("_wire_aliases", {}) == {f"hermes_{n}": n for n in aliased}
+        assert history_names == ["niki_search_files" if "search_files" in aliased else "search_files"]
+        assert resp_kwargs.get("_wire_aliases", {}) == {f"niki_{n}": n for n in aliased}
 
     def test_create_maps_aliases_back_and_never_sends_alias_map(self):
         sent = {}
@@ -4111,7 +4111,7 @@ class TestCodexAuxiliaryAdapterReservedToolAliases:
                 return SimpleNamespace(
                     status="completed", id="resp_1", usage=None,
                     output=[SimpleNamespace(type="function_call", call_id="c9", id="fc_9",
-                                            name="hermes_search_files", arguments='{"pattern": "x"}')],
+                                            name="niki_search_files", arguments='{"pattern": "x"}')],
                 )
 
         adapter = _CodexCompletionsAdapter(
@@ -4121,7 +4121,7 @@ class TestCodexAuxiliaryAdapterReservedToolAliases:
 
         wire_tools = sent.get("tools") or sent.get("extra_body", {}).get("tools")  # SDK transform bypass moves bulk fields
         assert "_wire_aliases" not in sent and "_wire_aliases" not in sent.get("extra_body", {})
-        assert "hermes_search_files" in {t["name"] for t in wire_tools}
+        assert "niki_search_files" in {t["name"] for t in wire_tools}
         assert [tc.function.name for tc in response.choices[0].message.tool_calls] == ["search_files"]
 
 
@@ -4135,7 +4135,7 @@ class TestAuxiliaryClientPoisonedCacheEviction:
     Otherwise the next auxiliary call (compression retry, memory flush,
     background review) reuses the closed httpx transport and fails with
     ``Connection error`` even though the main provider route is healthy.
-    See https://github.com/NousResearch/hermes-agent/issues/23432.
+    See https://github.com/NeGamer01/niki-agent/issues/23432.
     """
 
 
@@ -4236,7 +4236,7 @@ class TestBuildCallKwargsToolDedup:
     Providers like Google Vertex, Azure, and Bedrock reject requests with
     duplicate tool names (HTTP 400).  This guard converts a hard failure into
     a warning log so agent turns succeed even if an upstream injection path
-    regresses.  See: https://github.com/NousResearch/hermes-agent/issues/18478
+    regresses.  See: https://github.com/NeGamer01/niki-agent/issues/18478
     """
 
     def _make_tool(self, name: str) -> dict:
@@ -4290,7 +4290,7 @@ class TestNvidiaBillingHeaders:
         assert model == "nvidia/test-model"
         call_kwargs = mock_openai.call_args[1]
         headers = call_kwargs["default_headers"]
-        assert headers["X-BILLING-INVOKE-ORIGIN"] == "HermesAgent"
+        assert headers["X-BILLING-INVOKE-ORIGIN"] == "NikiAgent"
 
     def test_resolve_provider_client_local_nim_skips_billing_origin_header(self, monkeypatch):
         monkeypatch.setenv("NVIDIA_API_KEY", "nvidia-key")
@@ -4350,12 +4350,12 @@ class TestOpenRouterExplicitApiKey:
 
 def test_pool_runtime_base_url_uses_nous_env_override(monkeypatch):
     entry = SimpleNamespace(
-        provider="nous",
+        provider="niki",
         runtime_base_url="https://inference-api.nousresearch.com/v1",
         inference_base_url="https://inference-api.nousresearch.com/v1",
         base_url="https://inference-api.nousresearch.com/v1",
     )
-    monkeypatch.setenv("NOUS_INFERENCE_BASE_URL", "https://ai.wildebeest-newton.ts.net/v1")
+    monkeypatch.setenv("NIKI_INFERENCE_BASE_URL", "https://ai.wildebeest-newton.ts.net/v1")
 
     assert _pool_runtime_base_url(entry) == "https://ai.wildebeest-newton.ts.net/v1"
 
@@ -4433,18 +4433,18 @@ class TestAuxUnhealthyCache:
             _try_payment_fallback,
             _mark_provider_unhealthy,
         )
-        nous_client = MagicMock()
+        niki_client = MagicMock()
         # Mark BOTH the failed provider (openrouter) and a sibling (custom)
-        # unhealthy. The chain should still find nous.
+        # unhealthy. The chain should still find niki.
         _mark_provider_unhealthy("local/custom")
         with patch("agent.auxiliary_client._read_main_provider", return_value="auto"), \
              patch("agent.auxiliary_client._try_openrouter") as or_try, \
-             patch("agent.auxiliary_client._try_nous", return_value=(nous_client, "n-model")), \
+             patch("agent.auxiliary_client._try_niki", return_value=(niki_client, "n-model")), \
              patch("agent.auxiliary_client._try_custom_endpoint") as custom_try, \
              patch("agent.auxiliary_client._resolve_api_key_provider", return_value=(None, None)):
             client, _model, label = _try_payment_fallback("openrouter", task="compression")
-        assert client is nous_client
-        assert label == "nous"
+        assert client is niki_client
+        assert label == "niki"
         # OR is skipped via skip_chain_labels (failed provider), custom via unhealthy cache.
         or_try.assert_not_called()
         custom_try.assert_not_called()
@@ -4480,17 +4480,17 @@ class TestAuxUnhealthyCache:
         err.status_code = 402
         primary_client.chat.completions.create.side_effect = err
 
-        nous_client = MagicMock()
-        nous_resp = MagicMock()
-        nous_resp.choices = [MagicMock(message=MagicMock(content="ok"))]
-        nous_client.chat.completions.create.return_value = nous_resp
+        niki_client = MagicMock()
+        niki_resp = MagicMock()
+        niki_resp.choices = [MagicMock(message=MagicMock(content="ok"))]
+        niki_client.chat.completions.create.return_value = niki_resp
 
         with patch("agent.auxiliary_client._get_cached_client",
                     return_value=(primary_client, "google/gemini-3-flash-preview")), \
              patch("agent.auxiliary_client._resolve_task_provider_model",
                     return_value=("auto", "google/gemini-3-flash-preview", None, None, None)), \
              patch("agent.auxiliary_client._try_payment_fallback",
-                    return_value=(nous_client, "n-model", "nous")), \
+                    return_value=(niki_client, "n-model", "niki")), \
              patch("agent.auxiliary_client._build_call_kwargs",
                     return_value={"model": "n-model", "messages": [{"role": "user", "content": "hi"}]}):
             assert _is_provider_unhealthy("openrouter") is False
@@ -4792,7 +4792,7 @@ class TestCustomEndpointApiKeyInheritance:
             captured.update(kwargs)
             return MagicMock()
 
-        with patch("hermes_cli.config.load_config", return_value=fake_config), patch("hermes_cli.config.load_config_readonly", return_value=fake_config), \
+        with patch("niki_cli.config.load_config", return_value=fake_config), patch("niki_cli.config.load_config_readonly", return_value=fake_config), \
              patch.object(ac, "_create_openai_client", side_effect=_capture_create):
             _client, _model = resolve_provider_client(
                 "custom",
@@ -4820,7 +4820,7 @@ class TestCustomEndpointApiKeyInheritance:
             captured.update(kwargs)
             return MagicMock()
 
-        with patch("hermes_cli.config.load_config", return_value=fake_config), patch("hermes_cli.config.load_config_readonly", return_value=fake_config), \
+        with patch("niki_cli.config.load_config", return_value=fake_config), patch("niki_cli.config.load_config_readonly", return_value=fake_config), \
              patch.object(ac, "_create_openai_client", side_effect=_capture_create):
             _client, _model = resolve_provider_client(
                 "custom",
@@ -4847,7 +4847,7 @@ class TestCustomEndpointApiKeyInheritance:
 
         with patch.object(ac, "_RUNTIME_MAIN_API_KEY", "sk-runtime-key"), \
              patch.object(ac, "_RUNTIME_MAIN_BASE_URL", "https://gw.example.com/v1"), \
-             patch("hermes_cli.config.load_config", return_value={"model": {}}), patch("hermes_cli.config.load_config_readonly", return_value={"model": {}}), \
+             patch("niki_cli.config.load_config", return_value={"model": {}}), patch("niki_cli.config.load_config_readonly", return_value={"model": {}}), \
              patch.object(ac, "_create_openai_client", side_effect=_capture_create):
             _client, _model = resolve_provider_client(
                 "custom",
@@ -4879,7 +4879,7 @@ class TestCustomEndpointApiKeyInheritance:
             captured.update(kwargs)
             return MagicMock()
 
-        with patch("hermes_cli.config.load_config", return_value=fake_config), patch("hermes_cli.config.load_config_readonly", return_value=fake_config), \
+        with patch("niki_cli.config.load_config", return_value=fake_config), patch("niki_cli.config.load_config_readonly", return_value=fake_config), \
              patch.object(ac, "_create_openai_client", side_effect=_capture_create):
             _client, _model = resolve_provider_client(
                 "custom",
@@ -4902,20 +4902,20 @@ class TestCustomEndpointApiKeyInheritance:
         the main key; the identical origin (default port spelled out) still does. A live main
         runtime (a /model switch to a keyless local server, a key_cmd) is the anchor, and
         config.yaml's key belongs to config.yaml's base_url, never to the live endpoint.
-        Real config.yaml under a temp HERMES_HOME, resolved through the task route."""
-        import hermes_yaml as yaml
+        Real config.yaml under a temp NIKI_HOME, resolved through the task route."""
+        import niki_yaml as yaml
         from agent.auxiliary_client import reset_runtime_main, set_runtime_main
 
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         monkeypatch.delenv("OPENAI_BASE_URL", raising=False)
-        home = tmp_path / ".hermes"
+        home = tmp_path / ".niki"
         home.mkdir()
         (home / "config.yaml").write_text(yaml.safe_dump({
             "model": {"provider": "custom", "base_url": "https://gw.example.com/v1",
                       "api_key": "sk-main-config-key", "default": "main-model"},
             "auxiliary": {"compression": {"provider": "custom", "base_url": aux_base_url, "model": "aux-model"}},
         }))
-        monkeypatch.setenv("HERMES_HOME", str(home))
+        monkeypatch.setenv("NIKI_HOME", str(home))
         token = (None if live_key is None else
                  set_runtime_main("custom", "local-model", base_url="http://127.0.0.1:8080/v1", api_key=live_key))
         try:
@@ -4992,12 +4992,12 @@ class TestNoProgressTimeoutTaskConfigGating:
         CodexAuxiliaryClient path (both the first-output and between-output deadlines derive from
         ``guard.no_progress_timeout``); other tasks keep the 60s default; a non-positive value
         is rejected with a warning and falls back to the default."""
-        import hermes_yaml as yaml
+        import niki_yaml as yaml
         from agent import auxiliary_client as aux
 
-        home = tmp_path / ".hermes"
+        home = tmp_path / ".niki"
         home.mkdir()
-        monkeypatch.setenv("HERMES_HOME", str(home))
+        monkeypatch.setenv("NIKI_HOME", str(home))
 
         def _run(task):
             captured = {}
@@ -5328,8 +5328,8 @@ class TestFastModelTier:
             "~openai/gpt-mini-latest": {},
             "stepfun/step-3.7-flash:free": {},
         }
-        with patch("hermes_cli.models_pricing.fetch_models_with_pricing", return_value=catalog):
-            assert ac._fast_model_from_catalog("nous") == "~openai/gpt-mini-latest"
+        with patch("niki_cli.models_pricing.fetch_models_with_pricing", return_value=catalog):
+            assert ac._fast_model_from_catalog("niki") == "~openai/gpt-mini-latest"
 
     def test_catalog_match_skips_reasoning_batch_and_embedding_lookalikes(self):
         """Substring matching must not pick a thinker, a queue, or an encoder."""
@@ -5341,8 +5341,8 @@ class TestFastModelTier:
             "sentence-transformers/all-minilm-l6-v2": {},
             "google/gemini-3.6-flash": {},
         }
-        with patch("hermes_cli.models_pricing.fetch_models_with_pricing", return_value=catalog):
-            assert ac._fast_model_from_catalog("nous") == "google/gemini-3.6-flash"
+        with patch("niki_cli.models_pricing.fetch_models_with_pricing", return_value=catalog):
+            assert ac._fast_model_from_catalog("niki") == "google/gemini-3.6-flash"
 
     def test_catalog_match_skips_the_non_chat_siblings_of_a_chat_model(self):
         """A provider names its speech and image endpoints after the chat model
@@ -5355,8 +5355,8 @@ class TestFastModelTier:
             "openai/gpt-4o-mini-search-preview": {},
             "openai/gpt-4o-mini": {},
         }
-        with patch("hermes_cli.models_pricing.fetch_models_with_pricing", return_value=catalog):
-            assert ac._fast_model_from_catalog("nous") == "openai/gpt-4o-mini"
+        with patch("niki_cli.models_pricing.fetch_models_with_pricing", return_value=catalog):
+            assert ac._fast_model_from_catalog("niki") == "openai/gpt-4o-mini"
 
     def test_catalog_match_takes_the_newest_of_a_family(self):
         """The bare family rungs must land on the current generation.
@@ -5372,8 +5372,8 @@ class TestFastModelTier:
             "openai/gpt-9-mini": {},
             "openai/gpt-10-mini": {},
         }
-        with patch("hermes_cli.models_pricing.fetch_models_with_pricing", return_value=catalog):
-            assert ac._fast_model_from_catalog("nous") == "openai/gpt-10-mini"
+        with patch("niki_cli.models_pricing.fetch_models_with_pricing", return_value=catalog):
+            assert ac._fast_model_from_catalog("niki") == "openai/gpt-10-mini"
 
     def test_catalog_fetch_is_authenticated(self):
         """Most /v1/models endpoints need a key; anonymously they 401.
@@ -5384,10 +5384,10 @@ class TestFastModelTier:
         from agent import auxiliary_client as ac
 
         with patch(
-            "hermes_cli.auth.resolve_api_key_provider_credentials",
+            "niki_cli.auth.resolve_api_key_provider_credentials",
             return_value={"api_key": "sk-test", "base_url": "https://api.example.com/v1"},
         ), patch(
-            "hermes_cli.models_pricing.fetch_models_with_pricing", return_value={}
+            "niki_cli.models_pricing.fetch_models_with_pricing", return_value={}
         ) as fetch:
             ac._fast_model_from_catalog("openai")
 
@@ -5409,7 +5409,7 @@ class TestFastModelTier:
         from agent import auxiliary_client as ac
 
         with patch.object(ac, "_fast_model_from_catalog") as spy:
-            ac._get_aux_model_for_provider("nous")
+            ac._get_aux_model_for_provider("niki")
         spy.assert_not_called()
 
     def test_only_titling_is_in_the_fast_tier(self):
@@ -5447,10 +5447,10 @@ class TestFastModelTier:
             "model": "agnes-2.5-flash",
         }
         with patch(
-            "hermes_cli.runtime_provider._get_named_custom_provider",
+            "niki_cli.runtime_provider._get_named_custom_provider",
             return_value=fake_entry,
         ), patch(
-            "hermes_cli.providers.get_provider", side_effect=_catalog_raises,
+            "niki_cli.providers.get_provider", side_effect=_catalog_raises,
         ):
             resolved_provider, _model, base_url, _api_key, _api_mode = (
                 ac._resolve_task_provider_model(
@@ -5472,7 +5472,7 @@ class TestFastModelTier:
     def test_resolve_vision_provider_client_preserves_named_provider_via_config(self, tmp_path):
         """#76602 (review feedback) — integration test through the real
         ``resolve_vision_provider_client`` entry point with a real
-        ``HERMES_HOME`` config.yaml, mirroring the pattern from
+        ``NIKI_HOME`` config.yaml, mirroring the pattern from
         ``tests/agent/test_auxiliary_named_custom_providers.py``.
 
         Before the fix the repro in the issue body returned
@@ -5480,11 +5480,11 @@ class TestFastModelTier:
         after the fix the named provider is preserved and the inline
         ``api_key`` from the providers: entry reaches the client.
         """
-        import hermes_yaml as yaml
+        import niki_yaml as yaml
 
-        hermes_home = tmp_path / ".hermes"
-        hermes_home.mkdir()
-        (hermes_home / "config.yaml").write_text(yaml.safe_dump({
+        niki_home = tmp_path / ".niki"
+        niki_home.mkdir()
+        (niki_home / "config.yaml").write_text(yaml.safe_dump({
             "model": {"default": "test-model"},
             "providers": {
                 "agnes-ai.cn": {
@@ -5496,8 +5496,8 @@ class TestFastModelTier:
             },
         }))
         import os
-        old_home = os.environ.get("HERMES_HOME")
-        os.environ["HERMES_HOME"] = str(hermes_home)
+        old_home = os.environ.get("NIKI_HOME")
+        os.environ["NIKI_HOME"] = str(niki_home)
         try:
             from agent.auxiliary_client import resolve_vision_provider_client
 
@@ -5509,9 +5509,9 @@ class TestFastModelTier:
             )
         finally:
             if old_home is None:
-                os.environ.pop("HERMES_HOME", None)
+                os.environ.pop("NIKI_HOME", None)
             else:
-                os.environ["HERMES_HOME"] = old_home
+                os.environ["NIKI_HOME"] = old_home
 
         assert resolved_provider == "agnes-ai.cn", (
             "resolve_vision_provider_client must preserve a named "
@@ -5528,7 +5528,7 @@ class TestFastModelTier:
 # defined in the ``providers:`` section of config.yaml plus an explicit
 # ``base_url`` was being silently downgraded to ``"custom"`` because
 # ``_preserve_provider_with_base_url`` only consulted the built-in
-# provider registry (``hermes_cli.providers.get_provider``). The
+# provider registry (``niki_cli.providers.get_provider``). The
 # downgrade routed the call through the bare-custom branch in
 # ``resolve_provider_client`` with no key, producing 401s from
 # auth-required providers (e.g. agnes-ai.cn, nvidia-nim with key_env).
@@ -5564,10 +5564,10 @@ class TestPreserveNamedCustomProviderWithBaseUrl:
             "model": "agnes-2.5-flash",
         }
         with patch(
-            "hermes_cli.runtime_provider._get_named_custom_provider",
+            "niki_cli.runtime_provider._get_named_custom_provider",
             return_value=fake_entry,
         ), patch(
-            "hermes_cli.providers.get_provider", return_value=None,
+            "niki_cli.providers.get_provider", return_value=None,
         ):
             resolved_provider, _model, base_url, _api_key, _api_mode = (
                 ac._resolve_task_provider_model(
@@ -5593,7 +5593,7 @@ class TestPreserveNamedCustomProviderWithBaseUrl:
         import agent.auxiliary_client as ac
 
         with patch(
-            "hermes_cli.providers.get_provider",
+            "niki_cli.providers.get_provider",
             return_value={"name": "Anthropic", "api_key": "sk-anthropic"},
         ):
             resolved_provider, _model, base_url, _api_key, _api_mode = (
@@ -5618,10 +5618,10 @@ class TestPreserveNamedCustomProviderWithBaseUrl:
         import agent.auxiliary_client as ac
 
         with patch(
-            "hermes_cli.runtime_provider._get_named_custom_provider",
+            "niki_cli.runtime_provider._get_named_custom_provider",
             return_value=None,
         ), patch(
-            "hermes_cli.providers.get_provider", return_value=None,
+            "niki_cli.providers.get_provider", return_value=None,
         ):
             resolved_provider, _model, base_url, _api_key, _api_mode = (
                 ac._resolve_task_provider_model(
@@ -5651,10 +5651,10 @@ class TestPreserveNamedCustomProviderWithBaseUrl:
             raise RuntimeError("catalog unavailable")
 
         with patch(
-            "hermes_cli.runtime_provider._get_named_custom_provider",
+            "niki_cli.runtime_provider._get_named_custom_provider",
             side_effect=_boom,
         ), patch(
-            "hermes_cli.providers.get_provider", side_effect=_boom,
+            "niki_cli.providers.get_provider", side_effect=_boom,
         ):
             resolved_provider, _model, _base_url, _api_key, _api_mode = (
                 ac._resolve_task_provider_model(

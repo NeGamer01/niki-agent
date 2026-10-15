@@ -20,7 +20,7 @@ from typing import Any, Dict, Iterator, Optional
 logger = logging.getLogger(__name__)
 
 # None = no scope bound (process-env behavior); dict = complete policy; Refusal = resolution failed.
-_terminal_scope_var: ContextVar = ContextVar("hermes_terminal_scope", default=None)
+_terminal_scope_var: ContextVar = ContextVar("niki_terminal_scope", default=None)
 
 # Keys whose default lives in terminal_tool.py, not DEFAULT_CONFIG (which wins on overlap);
 # without them the projection is not total.
@@ -87,7 +87,7 @@ def terminal_env(name: str, default: str = "") -> str:
 
 
 def _apply_terminal_mapping(scope: dict[str, str], mapping: dict[str, Any]) -> None:
-    from hermes_cli.config import TERMINAL_CONFIG_ENV_MAP, _terminal_env_value
+    from niki_cli.config import TERMINAL_CONFIG_ENV_MAP, _terminal_env_value
 
     for cfg_key, value in mapping.items():
         # cwd placeholders are resolved per-surface later; not a policy value.
@@ -104,7 +104,7 @@ def _apply_terminal_mapping(scope: dict[str, str], mapping: dict[str, Any]) -> N
 def default_terminal_scope() -> dict[str, str]:
     """Code-default ``TERMINAL_*`` policy: what a profile-bypassing session freezes instead of
     reading ``.env``/``config.yaml``. Total like the profile projection, minus the profile."""
-    from hermes_cli.config_defaults import DEFAULT_CONFIG
+    from niki_cli.config_defaults import DEFAULT_CONFIG
 
     scope: dict[str, str] = {}
     _apply_terminal_mapping(scope, {**_TOOL_LEVEL_DEFAULTS, **(DEFAULT_CONFIG.get("terminal") or {})})
@@ -112,7 +112,7 @@ def default_terminal_scope() -> dict[str, str]:
 
 
 def build_profile_terminal_scope(
-    hermes_home: Any, *, env_overlay: Optional[dict[str, str]] = None) -> dict[str, str]:
+    niki_home: Any, *, env_overlay: Optional[dict[str, str]] = None) -> dict[str, str]:
     """Build the COMPLETE effective ``TERMINAL_*`` policy for a profile home.
 
     Projection: ``DEFAULT_CONFIG['terminal']`` <- profile ``.env`` TERMINAL_* <- *env_overlay*
@@ -127,7 +127,7 @@ def build_profile_terminal_scope(
     closes. It sits where the process env sits in the standalone bridge — explicit YAML keys
     still win (``apply_terminal_config_to_env``).
     """
-    home = Path(hermes_home)
+    home = Path(niki_home)
     scope = default_terminal_scope()
     default_image = scope.get("TERMINAL_DOCKER_IMAGE")
     env_path = home / ".env"
@@ -183,7 +183,7 @@ def _resolve_scope_cwd_placeholder(scope: dict[str, str]) -> None:
     """Give a scope with no explicit ``terminal.cwd`` the same resolved ``TERMINAL_CWD`` a standalone
     gateway computes at import (``gateway/run.py``: local backend → ``$HOME``; docker with the
     workspace mount → the host cwd signal; other backends → unset). Without it a routed turn's
-    ``resolve_agent_cwd()`` falls back to the multiplexer PROCESS cwd (wherever ``hermes gateway``
+    ``resolve_agent_cwd()`` falls back to the multiplexer PROCESS cwd (wherever ``niki gateway``
     was launched), so the system prompt, context-file discovery and the local terminal all run in
     a directory the profile's standalone gateway would never have used."""
     if scope.get("TERMINAL_CWD"):
@@ -202,19 +202,19 @@ def _resolve_scope_cwd_placeholder(scope: dict[str, str]) -> None:
 
 
 def install_profile_terminal_scope(
-    hermes_home: Any, *, env_overlay: Optional[dict[str, str]] = None) -> Token:
+    niki_home: Any, *, env_overlay: Optional[dict[str, str]] = None) -> Token:
     """Build AND install a profile's policy; on failure install the refusal scope. Never raises."""
     try:
-        return set_terminal_scope(build_profile_terminal_scope(hermes_home, env_overlay=env_overlay))
+        return set_terminal_scope(build_profile_terminal_scope(niki_home, env_overlay=env_overlay))
     except TerminalPolicyUnavailable as exc:
         logger.warning("terminal policy unavailable: %s", exc)
         return _terminal_scope_var.set(TerminalPolicyRefusal(str(exc)))
 
 
 @contextmanager
-def install_and_reset_profile_terminal_scope(hermes_home: Any) -> Iterator[None]:
+def install_and_reset_profile_terminal_scope(niki_home: Any) -> Iterator[None]:
     """Install the profile's terminal policy for a bounded turn/fire. Never raises."""
-    token = install_profile_terminal_scope(hermes_home)
+    token = install_profile_terminal_scope(niki_home)
     try:
         yield
     finally:

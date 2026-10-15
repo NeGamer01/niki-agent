@@ -7,8 +7,8 @@ import pytest
 
 from gateway.session_bot import _migrate, recover_bot_deliveries
 from gateway.session_results import retain_result
-from hermes_state import SessionDB
-from hermes_state_runtime import (
+from niki_state import SessionDB
+from niki_state_runtime import (
     RuntimeStoreError,
     admit_session_input,
     begin_runtime_epoch,
@@ -154,7 +154,7 @@ async def test_legacy_migration_skips_structurally_corrupt_neighbor(monkeypatch,
             yield False
 
         monkeypatch.setattr(
-            "hermes_cli.active_sessions.active_session_liveness_guard",
+            "niki_cli.active_sessions.active_session_liveness_guard",
             inactive_session,
         )
 

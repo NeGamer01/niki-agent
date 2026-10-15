@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { updateDebt, type UpdateDebtReceipt } from "@hermes/shared";
+import { updateDebt, type UpdateDebtReceipt } from "@niki/shared";
 import { api } from "@/lib/api";
 import type { ActionStatusResponse } from "@/lib/api";
-import { Toast } from "@nous-research/ui/ui/components/toast";
+import { Toast } from "@niki-research/ui/ui/components/toast";
 import { sharedGatewayProfiles, sharedGatewayRestartedMessage } from "@/lib/shared-gateway";
 import { useI18n } from "@/i18n";
 import {
@@ -12,7 +12,7 @@ import {
 
 const ACTION_NAMES: Record<SystemAction, string> = {
   restart: "gateway-restart",
-  update: "hermes-update",
+  update: "niki-update",
 };
 
 export function SystemActionsProvider({
@@ -109,7 +109,7 @@ export function SystemActionsProvider({
           await api.restartGateway();
           setActiveAction(action);
         } else {
-          const resp = await api.updateHermes();
+          const resp = await api.updateNiki();
           // Some installs cannot apply updates from inside the dashboard. The
           // endpoint returns a structured {ok:false, message, update_command}
           // envelope instead of spawning the action; surface that guidance

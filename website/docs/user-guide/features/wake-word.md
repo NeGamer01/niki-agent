@@ -76,7 +76,7 @@ backend process.
 
 | Engine | Cost | API key | Notes |
 |--------|------|---------|-------|
-| **openWakeWord** | Free | None | TFLite through `pyopen-wakeword`. Includes the **"hey hermes"** model. Custom models require a `.tflite` file. Not available on Intel macOS or native Windows ARM64. |
+| **openWakeWord** | Free | None | TFLite through `pyopen-wakeword`. Includes the **"hey niki"** model. Custom models require a `.tflite` file. Not available on Intel macOS or native Windows ARM64. |
 | **sherpa** | Free | None | Open-vocabulary detection for typed phrases. Downloads an English model on first use. Supports native Windows ARM64. |
 | **Porcupine** | Free tier / paid | `PORCUPINE_ACCESS_KEY` | Picovoice engine; built-in keywords + custom `.ppn` files |
 
@@ -91,10 +91,10 @@ that of the Python backend, not a remote desktop client:
 An explicit provider stays selected, even if this platform does not support it.
 Niki reports the requirement error instead of silently switching engines.
 Existing explicit settings are not migrated. To opt into automatic selection,
-run `hermes config set wake_word.provider auto`. Wake detection stays **off**
+run `niki config set wake_word.provider auto`. Wake detection stays **off**
 until you enable it.
 
-The default phrase label is **"hey hermes"**. For openWakeWord, Niki includes
+The default phrase label is **"hey niki"**. For openWakeWord, Niki includes
 its trained TFLite model.
 The `pyopen-wakeword` package includes the shared feature-extraction models, so
 this engine does not download models when it starts.
@@ -109,7 +109,7 @@ wheel contains an ARM64-only library despite its `universal2` label. Niki
 excludes that engine on Intel Macs and native Windows ARM64. Sherpa provides
 keyless detection on both targets.
 
-Porcupine's default keyword is **"jarvis"**, not "hey hermes". Its `phrase`
+Porcupine's default keyword is **"jarvis"**, not "hey niki". Its `phrase`
 setting is only a display label; choose a built-in keyword or supply a custom
 `.ppn` model to change what it detects. Get an access key at
 [console.picovoice.ai](https://console.picovoice.ai) and store
@@ -123,7 +123,7 @@ include this wake stack.
 ## Quick start
 
 ```bash
-# In an interactive `hermes` session:
+# In an interactive `niki` session:
 /wake on        # start listening (installs the engine on first use)
 /wake status    # show phrase, provider, and state
 /wake off       # stop listening
@@ -133,7 +133,7 @@ In the desktop app, hover the microphone in the composer and click the ear
 that fans out of it. The ear is solid when the wake word is listening.
 
 The toggle IS the setting: turning the wake word on or off — via `/wake` or the
-desktop ear button — also writes `wake_word.enabled` to `~/.hermes/config.yaml`,
+desktop ear button — also writes `wake_word.enabled` to `~/.niki/config.yaml`,
 so your choice persists across sessions. You can also flip it by hand:
 
 ```yaml
@@ -150,12 +150,12 @@ wake_word:
   input_device: null           # PortAudio input index or device-name substring; null = process default
   capture: auto               # auto | local | client — where PCM is captured (see Remote desktop)
   provider: auto              # auto | openwakeword | sherpa | porcupine (requires an access key)
-  phrase: "hey hermes"        # cosmetic label only — detection is keyed by the model/keyword below
+  phrase: "hey niki"        # cosmetic label only — detection is keyed by the model/keyword below
   sensitivity: 0.6            # 0.0-1.0 — higher = stricter (fewer false triggers), consistent across all engines
   confirmation_frames: 3      # openWakeWord only — consecutive over-threshold frames required to fire
   start_new_session: true     # start a fresh session on wake vs. continue the current one
   openwakeword:
-    model: hey_hermes         # bundled default, or an absolute path to a custom .tflite
+    model: hey_niki         # bundled default, or an absolute path to a custom .tflite
   porcupine:
     keyword: jarvis           # built-in keyword OR path to a custom .ppn
 ```
@@ -177,7 +177,7 @@ threshold and fire the wake word unintentionally. Two knobs control this:
 
 - **`confirmation_frames`** (default `3`, openWakeWord only) — how many
   *consecutive* over-threshold frames are required before the wake fires. A real
-  "hey hermes" holds a high score across several frames; an ambient blip spikes
+  "hey niki" holds a high score across several frames; an ambient blip spikes
   just one. Raise it (e.g. `4`–`5`) if you still get false triggers in a noisy
   room; the cost is a few tens of milliseconds of extra latency. `1` restores
   the old fire-on-first-frame behavior.
@@ -188,7 +188,7 @@ threshold and fire the wake word unintentionally. Two knobs control this:
   internally so "higher = stricter" holds there too. The `0.6` default sits
   above openWakeWord's permissive `0.5` baseline, which let near-misses like
   "hey hor" through; raise toward `0.8` if you still get false fires, lower it
-  if real "hey hermes" utterances are missed.
+  if real "hey niki" utterances are missed.
 
 The `sherpa` and `porcupine` engines decode the whole phrase internally, so they
 don't have the single-frame-spike problem and ignore `confirmation_frames`
@@ -197,7 +197,7 @@ don't have the single-frame-spike problem and ignore `confirmation_frames`
 The `openwakeword` provider name now selects
 [pyopen-wakeword](https://github.com/rhasspy/pyopen-wakeword). Its wheel includes
 the TFLite library and shared feature models. Niki uses the bundled
-`hey_hermes.tflite` model by default. ONNX wake models and the
+`hey_niki.tflite` model by default. ONNX wake models and the
 `inference_framework` setting are no longer supported.
 
 ### Surfaces (CLI, TUI, GUI)
@@ -208,8 +208,8 @@ owns the listener and opens the new session when it fires:
 | `surface` | Behavior |
 |-----------|----------|
 | `auto` (default) | All local surfaces are eligible; the first one to arm owns the listener. |
-| `cli` | Only the classic `hermes` CLI. |
-| `tui` | Only `hermes --tui`. |
+| `cli` | Only the classic `niki` CLI. |
+| `tui` | Only `niki --tui`. |
 | `gui` | Only the desktop app. |
 
 The detector is on-device and single-mic, so only one surface listens at a time,
@@ -251,14 +251,14 @@ phrase defaults to `hey <profile name>` when unset. Say a profile's phrase
 and the desktop app live-switches to that profile, opens a fresh session
 there, and starts hands-free voice:
 
-- "hey hermes" → default profile
+- "hey niki" → default profile
 - "hey coder" → the `coder` profile
 - "hey trader" → the `trader` profile
 
 Set `wake_word.profile_routing: false` on the listener's profile to opt out
 and listen only for its own phrase. The CLI and TUI are single-profile
 processes: a wake phrase belonging to another profile prints the switch
-command (`hermes -p <profile>`) instead of routing.
+command (`niki -p <profile>`) instead of routing.
 
 Names are matched acoustically by their English subword sounds: two-word
 phrases with distinct, 2+ syllable names work best. Very short names, heavy
@@ -287,7 +287,7 @@ Training references:
 
 :::tip Pick a distinctive phrase
 Wake phrases that don't collide with everyday speech generalize best. Two
-syllables with an uncommon word ("hermes" qualifies) beat common words like
+syllables with an uncommon word ("niki" qualifies) beat common words like
 "hello" or "stop".
 :::
 
@@ -300,12 +300,12 @@ download the `.ppn`, and:
 wake_word:
   enabled: true
   provider: porcupine
-  phrase: "hey hermes"
+  phrase: "hey niki"
   porcupine:
-    keyword: ~/.hermes/wakewords/hey_hermes.ppn
+    keyword: ~/.niki/wakewords/hey_niki.ppn
 ```
 
-Set your access key in `~/.hermes/.env`:
+Set your access key in `~/.niki/.env`:
 
 ```bash
 PORCUPINE_ACCESS_KEY=your-key-here
@@ -320,8 +320,8 @@ PORCUPINE_ACCESS_KEY=your-key-here
   full provider list.
 - A TTS provider for speaking the reply (the default `edge-tts` works with no
   key). The wake flow is fully hands-free, so the toggle refuses to arm until
-  both STT and TTS are ready — `hermes tools` (Voice section) sets them up.
-- The wake engine deps (auto-installed, or `hermes-agent[wake]`).
+  both STT and TTS are ready — `niki tools` (Voice section) sets them up.
+- The wake engine deps (auto-installed, or `niki-agent[wake]`).
 
 `/wake status` reports exactly what's missing if the listener won't start.
 
@@ -350,13 +350,13 @@ When it reports silence, set `wake_word.input_device` to the numeric index or an
 unambiguous name of the working PortAudio input, then toggle the wake word:
 
 ```bash
-hermes config set wake_word.input_device "Microphone Array"
+niki config set wake_word.input_device "Microphone Array"
 ```
 
 Use `null` to return to the process default:
 
 ```bash
-hermes config set wake_word.input_device null
+niki config set wake_word.input_device null
 ```
 
 ## Notes & limits

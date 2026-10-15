@@ -6,7 +6,7 @@ import acp
 import pytest
 
 from acp_adapter.gateway_server import GatewayACPAgent
-from hermes_cli.gateway_client import GatewayClientError
+from niki_cli.gateway_client import GatewayClientError
 
 
 def _agent(rpc):
@@ -74,7 +74,7 @@ async def test_steer_while_this_editors_prompt_waits_behind_another_clients_turn
 
 @pytest.mark.asyncio
 async def test_a_refused_steer_is_reported_and_never_resent_as_a_prompt():
-    from hermes_cli.gateway_client import GatewayRPCError
+    from niki_cli.gateway_client import GatewayRPCError
     calls = []
 
     async def rpc(method, **params):
@@ -92,7 +92,7 @@ async def test_a_refused_steer_is_reported_and_never_resent_as_a_prompt():
 
 @pytest.mark.asyncio
 async def test_a_steer_for_a_turn_that_just_ended_becomes_the_next_prompt():
-    from hermes_cli.gateway_client import GatewayRPCError
+    from niki_cli.gateway_client import GatewayRPCError
     calls = []
 
     async def rpc(method, **params):

@@ -471,7 +471,7 @@ class SessionSaveResult(Result):
 
 
 method("session.save", params=SessionSaveParams, result=SessionSaveResult,
-       doc="Export the transcript to ~/.hermes/sessions/saved (classic /save).")
+       doc="Export the transcript to ~/.niki/sessions/saved (classic /save).")
 
 
 class SessionStatusParams(SessionParams):
@@ -508,7 +508,7 @@ class SessionUsageResult(Usage):
 
 
 method("session.usage", params=SessionUsageParams, result=SessionUsageResult,
-       doc="Token / context / cost counters for the session (+ Nous credit lines when available).")
+       doc="Token / context / cost counters for the session (+ Niki credit lines when available).")
 
 
 class SessionContextBreakdownParams(SessionParams):

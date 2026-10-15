@@ -11,13 +11,13 @@ export const deBoot = {
       loadingSessions: 'Letzte Sessions werden geladen',
       retryingRemoteBackend: 'Wird mit dem Remote-Niki-Backend neu verbunden…',
       startingDesktopConnection: 'Desktop-Verbindung wird gestartet',
-      startingHermesDesktop: 'Niki Desktop wird gestartet…'
+      startingNikiDesktop: 'Niki Desktop wird gestartet…'
     },
     errors: {
       backgroundExited: 'Der Niki-Hintergrundprozess wurde beendet.',
       backgroundExitedDuringStartup: 'Der Niki-Hintergrundprozess wurde während des Starts beendet.',
       backendStopped: 'Backend gestoppt',
-      restartHermes: 'Niki neu starten',
+      restartNiki: 'Niki neu starten',
       openLogs: 'Logs öffnen',
       desktopBootFailed: 'Desktop-Start fehlgeschlagen',
       gatewayConnectionLost: 'Verbindung zum Gateway verloren',
@@ -61,11 +61,11 @@ export const deBoot = {
       signOutAndSignIn: 'Abmelden & anmelden',
       remoteFailureHint:
         'Überprüfen Sie die Gateway-URL und die Anmeldung in den Gateway-Einstellungen, oder wechseln Sie zum lokalen Gateway.',
-      cloudDownTitle: 'Nous Cloud Agent ist down',
+      cloudDownTitle: 'Niki Cloud Agent ist down',
       cloudDownDescription:
-        'Der von Nous verwaltete Cloud-Agent, mit dem sich dieses Gateway verbindet, meldet einen Serverfehler. Er kann von hier aus nicht neu gestartet werden – prüfen Sie seinen Status, wechseln Sie zum lokalen Gateway oder wenden Sie sich an den Support.',
+        'Der von Niki verwaltete Cloud-Agent, mit dem sich dieses Gateway verbindet, meldet einen Serverfehler. Er kann von hier aus nicht neu gestartet werden – prüfen Sie seinen Status, wechseln Sie zum lokalen Gateway oder wenden Sie sich an den Support.',
       cloudDownHint:
-        'Die Schaltflächen unten öffnen das Nous Portal (Instanzstatus und Steuerung) und unseren Discord für Support.',
+        'Die Schaltflächen unten öffnen das Niki Portal (Instanzstatus und Steuerung) und unseren Discord für Support.',
       cloudDownCheckPortal: 'Portal-Status prüfen',
       cloudDownDiscord: 'Hilfe auf Discord holen',
       hideRecentLogs: 'Neueste Logs ausblenden',
@@ -93,7 +93,7 @@ export const deBoot = {
       since: time => `Wartet seit ${time}`,
       lastChecked: time => `Zuletzt geprüft ${time}`,
       recoveryHint:
-        'Das löst sich meist in wenigen Minuten. Falls nicht: Niki beenden, übrig gebliebene git- oder hermes-Prozesse beenden (oder den Computer neu starten) und Niki erneut öffnen.',
+        'Das löst sich meist in wenigen Minuten. Falls nicht: Niki beenden, übrig gebliebene git- oder niki-Prozesse beenden (oder den Computer neu starten) und Niki erneut öffnen.',
       checkAgain: 'Erneut prüfen',
       quit: 'Niki beenden',
       openLogs: 'Logs öffnen',

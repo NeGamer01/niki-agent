@@ -1,5 +1,5 @@
-import { JsonRpcGatewayClient } from '@hermes/shared'
-import type { GatewayEvent } from '@hermes/shared'
+import { JsonRpcGatewayClient } from '@niki/shared'
+import type { GatewayEvent } from '@niki/shared'
 import { describe, expect, it } from 'vitest'
 
 import { acceptExecutionEvent } from './execution-authority'

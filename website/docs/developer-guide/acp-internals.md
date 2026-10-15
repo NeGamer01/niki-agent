@@ -21,12 +21,12 @@ Key implementation files:
 ## Boot flow
 
 ```text
-hermes acp / hermes-acp / python -m acp_adapter
+niki acp / niki-acp / python -m acp_adapter
   -> acp_adapter.entry.main()
   -> parse --version / --check / --setup before server startup
-  -> load ~/.hermes/.env
+  -> load ~/.niki/.env
   -> configure stderr logging
-  -> construct HermesACPAgent
+  -> construct NikiACPAgent
   -> acp.run_agent(agent, use_unstable_protocol=True)
 ```
 
@@ -45,7 +45,7 @@ session-wide cancellation flag.
 
 ## Major components
 
-### `HermesACPAgent`
+### `NikiACPAgent`
 
 `acp_adapter/server.py` implements the ACP agent protocol.
 
@@ -131,7 +131,7 @@ Examples:
 new_session(cwd)
   -> create SessionState
   -> create AIAgent(platform="acp", enabled_toolsets=<_get_platform_tools(config, "acp"), as on the
-                   gateway: platform_toolsets.acp (default hermes-acp) plus the resolver's extras
+                   gateway: platform_toolsets.acp (default niki-acp) plus the resolver's extras
                    such as plugin toolsets, with its admitted MCP servers keyed mcp-<server>>,
                    disabled_toolsets=<agent.disabled_toolsets>)
   -> bind task_id/session_id to cwd override
@@ -171,9 +171,9 @@ ACP does not implement its own auth store.
 Instead it reuses Niki' runtime resolver:
 
 - `acp_adapter/auth.py`
-- `hermes_cli/runtime_provider.py`
+- `niki_cli/runtime_provider.py`
 
-So ACP advertises and uses the currently configured Niki provider/credentials. It also always advertises a terminal setup auth method (`hermes-setup`, args `--setup`) so first-run ACP clients can open Niki' interactive model/provider configuration before starting a normal ACP session.
+So ACP advertises and uses the currently configured Niki provider/credentials. It also always advertises a terminal setup auth method (`niki-setup`, args `--setup`) so first-run ACP clients can open Niki' interactive model/provider configuration before starting a normal ACP session.
 
 ## Working directory binding
 
@@ -196,13 +196,13 @@ ACP temporarily installs an approval callback on the terminal tool during prompt
 
 ## Current limitations
 
-- ACP sessions are persisted to the shared `~/.hermes/state.db` (SessionDB) and transparently restored across process restarts; they appear in `session_search`
+- ACP sessions are persisted to the shared `~/.niki/state.db` (SessionDB) and transparently restored across process restarts; they appear in `session_search`
 - non-text prompt blocks are currently ignored for request text extraction
 - editor-specific UX varies by ACP client implementation
 
 ## Related files
 
 - `tests/acp_adapter/` — ACP test suite
-- `toolsets.py` — `hermes-acp` toolset definition
-- `hermes_cli/main.py` — `hermes acp` CLI subcommand
-- `pyproject.toml` — `[acp]` optional dependency + `hermes-acp` script
+- `toolsets.py` — `niki-acp` toolset definition
+- `niki_cli/main.py` — `niki acp` CLI subcommand
+- `pyproject.toml` — `[acp]` optional dependency + `niki-acp` script

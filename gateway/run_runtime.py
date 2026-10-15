@@ -21,8 +21,8 @@ logger = logging.getLogger(__name__)
 
 def reserved_profile_homes(runner):
     """``(name, home)`` pairs this process reserved: launch home first, then served secondaries."""
-    from hermes_constants import get_hermes_home
-    launch = get_hermes_home().resolve()
+    from niki_constants import get_niki_home
+    launch = get_niki_home().resolve()
     homes = [(getattr(runner, '_primary_profile_name', None) or 'default', launch)]
     if getattr(runner.config, 'multiplex_profiles', False):
         reserved = getattr(runner.config, '_runtime_profile_homes', None) or ()
@@ -209,7 +209,7 @@ def stop_authority_turns(authority, *, in_process=False):
     managed worker (acknowledged, or terminated within STOP_ACK_SECONDS, and the admission settles
     through its own fenced path). ``in_process`` also hard-interrupts the running agent of each
     executing in-process turn, or latches the generation ``adopt_agent`` consumes before it exists."""
-    from hermes_state_runtime import RuntimeStoreError
+    from niki_state_runtime import RuntimeStoreError
     signalled = 0
     workers = getattr(authority, '_managed_workers', {})
     for worker in list(workers.values()):
@@ -289,7 +289,7 @@ async def _retire_profile_authority(authority, timeout=None):
     authority.retired = True
     # No drain is left to answer an observer (a session_busy pause keeps API/webhook/Bot ones
     # waiting): release them all. Their rows stay queued for the next owner, so nothing is resent.
-    from hermes_state_runtime import RuntimeStoreError
+    from niki_state_runtime import RuntimeStoreError
     authority.native_waiters.clear()
     for waiter in authority.waiters.values():
         if not waiter.done():

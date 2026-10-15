@@ -27,33 +27,33 @@ def _start_deferred_state_db_integrity_check(evidence: dict) -> None:
 logger = logging.getLogger("gateway.run")
 
 async def _start_gateway_replace_existing_instance(existing_pid: int, replace: bool) -> bool:
-    """Handle a live gateway PID under this HERMES_HOME: replace it (``--replace``) or refuse.
+    """Handle a live gateway PID under this NIKI_HOME: replace it (``--replace``) or refuse.
     Returns False when startup must abort (refused, permission denied, target still alive)."""
-    from gateway.run import (_clear_takeover_marker_quiet, _replace_target_belongs_to_other_profile, _wait_for_pid_exit, get_hermes_home, suppress)
+    from gateway.run import (_clear_takeover_marker_quiet, _replace_target_belongs_to_other_profile, _wait_for_pid_exit, get_niki_home, suppress)
     from gateway.status import get_process_start_time, remove_pid_file, terminate_pid
     if not replace:
-        hermes_home = str(get_hermes_home())
+        niki_home = str(get_niki_home())
         logger.error(
-            "Another gateway instance is already running (PID %d, HERMES_HOME=%s) and did not "
+            "Another gateway instance is already running (PID %d, NIKI_HOME=%s) and did not "
             "publish a host record this process could attach to.",
-            existing_pid, hermes_home)
+            existing_pid, niki_home)
         print(
             f"\n❌ A gateway already owns this host (PID {existing_pid}).\n"
             f"   One gateway per host serves every profile, so there is nothing to start here.\n"
             f"   Attach is impossible: PID {existing_pid} published no usable host record\n"
             f"   (an older build, or an unwritable lock directory).\n"
-            f"   Take the host over:  hermes gateway run --replace\n"
-            f"   Or stop it first:    hermes gateway stop\n")
+            f"   Take the host over:  niki gateway run --replace\n"
+            f"   Or stop it first:    niki gateway stop\n")
         return False
 
     # Never signal a process not provably ours (a poisoned PID record → cross-profile restart loop).
     if _replace_target_belongs_to_other_profile(existing_pid):
-        from gateway.status import _get_process_hermes_home
+        from gateway.status import _get_process_niki_home
         logger.error(
             "Refusing --replace: PID %d cannot be proven to belong "
-            "to this profile's gateway (HERMES_HOME %s). Remove the "
+            "to this profile's gateway (NIKI_HOME %s). Remove the "
             "stale PID record or stop the owning profile explicitly.",
-            existing_pid, _get_process_hermes_home())
+            existing_pid, _get_process_niki_home())
         return False
     existing_start_time = get_process_start_time(existing_pid)
     logger.info("Replacing existing gateway instance (PID %d) with --replace.", existing_pid)
@@ -103,7 +103,7 @@ async def _start_gateway_replace_existing_instance(existing_pid: int, replace: b
     remove_pid_file()
     # remove_pid_file() is a no-op when the PID doesn't match; force-unlink covers a crashed old process.
     with suppress(Exception):
-        (get_hermes_home() / "gateway.pid").unlink(missing_ok=True)
+        (get_niki_home() / "gateway.pid").unlink(missing_ok=True)
     # The old process may not have consumed the marker (SIGKILL'd before its handler read it).
     _clear_takeover_marker_quiet()
     # Stopped (Ctrl+Z) processes don't release scoped locks on exit; stale lock files block the new gateway.
@@ -119,7 +119,7 @@ async def _start_gateway_replace_existing_instance(existing_pid: int, replace: b
 
 def _start_gateway_configure_logging(verbosity: Optional[int]) -> None:
     """Sync bundled skills, set up file logging + startup security audit, and the -v/-q stderr handler."""
-    from gateway.run import (_best_effort, _gateway_stderr_formatter, _hermes_home, logging)
+    from gateway.run import (_best_effort, _gateway_stderr_formatter, _niki_home, logging)
     def _sync_skills() -> None:
         from tools.skills_sync import sync_skills
         sync_skills(quiet=True)
@@ -127,18 +127,18 @@ def _start_gateway_configure_logging(verbosity: Optional[int]) -> None:
     _best_effort(_sync_skills)
 
     # Centralized logging (agent.log INFO+, errors.log WARNING+, gateway.log gateway-only); idempotent.
-    from hermes_logging import setup_logging, _safe_stderr
-    setup_logging(hermes_home=_hermes_home, mode="gateway")
+    from niki_logging import setup_logging, _safe_stderr
+    setup_logging(niki_home=_niki_home, mode="gateway")
 
     def _security_audit() -> None:
         # Warn-on-load, never blocks: surfaces root / weak-SSH / unauthenticated-listener exposure.
-        from hermes_cli.security_audit_startup import log_startup_security_warnings
+        from niki_cli.security_audit_startup import log_startup_security_warnings
 
         def _raw_cfg():
-            from hermes_cli.config import read_raw_config
+            from niki_cli.config import read_raw_config
             return read_raw_config()
 
-        log_startup_security_warnings(hermes_home=_hermes_home, config=_best_effort(_raw_cfg))
+        log_startup_security_warnings(niki_home=_niki_home, config=_best_effort(_raw_cfg))
 
     _best_effort(_security_audit, "Startup security audit failed (non-fatal): %s")
 
@@ -156,7 +156,7 @@ def _start_gateway_configure_logging(verbosity: Optional[int]) -> None:
 
 def _start_gateway_make_shutdown_signal_handler(runner, _signal_initiated_shutdown: list):
     """Build the SIGINT/SIGTERM handler; ``_signal_initiated_shutdown[0]`` records an unplanned signal."""
-    from gateway.run import (_best_effort, _hermes_home, asyncio, logger, signal)
+    from gateway.run import (_best_effort, _niki_home, asyncio, logger, signal)
     planned_stop_seen = [False]
 
     def shutdown_signal_handler(received_signal=None):
@@ -178,7 +178,7 @@ def _start_gateway_make_shutdown_signal_handler(runner, _signal_initiated_shutdo
         planned_takeover = bool(_best_effort(_takeover, "Takeover marker check failed: %s"))
         planned_stop = received_signal == signal.SIGINT or (
             not planned_takeover and bool(_best_effort(_planned_stop, "Planned stop marker check failed: %s")))
-        # `hermes gateway stop` writes the marker, THEN signals: the planned-stop watcher can consume
+        # `niki gateway stop` writes the marker, THEN signals: the planned-stop watcher can consume
         # the marker in between, and the CLI's own SIGTERM must not then read as an external kill.
         if planned_stop:
             planned_stop_seen[0] = True
@@ -208,7 +208,7 @@ def _start_gateway_make_shutdown_signal_handler(runner, _signal_initiated_shutdo
                 # down; bounded by an internal timeout, never blocks.
                 from gateway.shutdown_forensics import spawn_async_diagnostic
                 spawn_async_diagnostic(
-                    _hermes_home / "logs" / "gateway-shutdown-diag.log", _shutdown_ctx["signal"], timeout_seconds=5.0)
+                    _niki_home / "logs" / "gateway-shutdown-diag.log", _shutdown_ctx["signal"], timeout_seconds=5.0)
 
             _best_effort(_log_context, "format_context_for_log failed: %s")
             _best_effort(_diagnostic, "spawn_async_diagnostic failed: %s")
@@ -245,7 +245,7 @@ def _start_gateway_claim_pid_file(force: bool = False) -> bool:
         return False
     atexit.register(remove_pid_file)
     atexit.register(release_gateway_runtime_lock)
-    from hermes_cli.gateway_multiplex_mode import publish_pending_multiplex_decision
+    from niki_cli.gateway_multiplex_mode import publish_pending_multiplex_decision
     publish_pending_multiplex_decision()
     _claim_host_gateway_role(force=force)
     return True
@@ -259,7 +259,7 @@ async def _start_gateway_start_control_socket(runner):
     _control_server = None
     try:
         # Started immediately after the PID-file claim: winning that O_EXCL race is the moment this process
-        # becomes the authoritative gateway for its HERMES_HOME, so from here on "does a socket answer?" is
+        # becomes the authoritative gateway for its NIKI_HOME, so from here on "does a socket answer?" is
         # a truthful liveness/identity query for updater and fleet consumers. Returns None on failure and
         # start_gateway aborts startup: the listener mints every local client's attach ticket, so a
         # gateway without it can serve no local session. See #92091.
@@ -293,7 +293,7 @@ async def _start_gateway_start_control_socket(runner):
 
         def _pause_for_update_handler() -> dict:
             try:
-                from hermes_cli.gateway import _get_restart_drain_timeout
+                from niki_cli.gateway import _get_restart_drain_timeout
                 _drain = float(_get_restart_drain_timeout())
             except Exception:
                 _drain = 30.0
@@ -314,7 +314,7 @@ async def _start_gateway_start_control_socket(runner):
                 "pid": os.getpid(), "drain_timeout": _drain}
 
         def _rescan_profiles_handler() -> dict:
-            """``hermes profile create/delete`` asks the multiplexer to reconcile ``profiles/`` now
+            """``niki profile create/delete`` asks the multiplexer to reconcile ``profiles/`` now
             (the watcher also rescans periodically). Runs on the socket executor: marshal onto the loop
             and wait briefly so the caller learns whether the profile is served."""
             if not getattr(runner.config, "multiplex_profiles", False):
@@ -417,7 +417,7 @@ def _start_gateway_start_cron_and_housekeeping(runner):
                 "loopback HTTP and will all fail (jobs only run when "
                 "triggered manually). Most common cause: API_SERVER_KEY is "
                 "missing from this gateway process's environment. Restart "
-                "the gateway through its supervisor (`hermes gateway "
+                "the gateway through its supervisor (`niki gateway "
                 "restart`) so the profile env loads.",
                 getattr(cron_provider, "name", "external"))
 
@@ -447,7 +447,7 @@ async def _start_gateway_shutdown_tail(
             logger.debug("Control socket stop failed (non-fatal)", exc_info=True)
 
     def _stop_keepalive() -> None:
-        from hermes_cli.nous_auth_keepalive import stop_nous_auth_keepalive
+        from niki_cli.niki_auth_keepalive import stop_nous_auth_keepalive
         stop_nous_auth_keepalive()
 
     _best_effort(_stop_keepalive)
@@ -494,18 +494,18 @@ def _launch_home_may_multiplex(config=None) -> bool:
     the operator's choice, so it is downgraded the way every other implicit-multiplex blocker is:
     this process comes up standalone, says why, and *config* is flipped in place so the boot below
     reserves and serves only the launch profile."""
-    from hermes_constants import profile_name_for_home
-    from gateway.run import get_hermes_home, logger
-    name = profile_name_for_home(get_hermes_home())
+    from niki_constants import profile_name_for_home
+    from gateway.run import get_niki_home, logger
+    name = profile_name_for_home(get_niki_home())
     if name in (None, "default"):
         return True
-    from hermes_cli.gateway_multiplex_mode import explicit_multiplex_flag
-    if config is not None and not explicit_multiplex_flag(get_hermes_home()):
-        from hermes_cli.gateway_multiplex_mode import MultiplexDecision, log_multiplex_decision
+    from niki_cli.gateway_multiplex_mode import explicit_multiplex_flag
+    if config is not None and not explicit_multiplex_flag(get_niki_home()):
+        from niki_cli.gateway_multiplex_mode import MultiplexDecision, log_multiplex_decision
         decision = MultiplexDecision(
             False, "guard",
             f"profile {name!r} launched the gateway, and only the default profile runs the multiplexer "
-            "(start it with `hermes gateway run` from the default profile to serve every profile)")
+            "(start it with `niki gateway run` from the default profile to serve every profile)")
         config.multiplex_profiles = False
         log_multiplex_decision(decision)
         return True
@@ -514,7 +514,7 @@ def _launch_home_may_multiplex(config=None) -> bool:
     logger.error(
         "gateway.multiplex_profiles is set on profile %r, but only the default profile can run the "
         "multiplexer. Unset the flag in this profile's config.yaml, or start the gateway from the "
-        "default profile (`hermes gateway run`), which serves this profile too.", name)
+        "default profile (`niki gateway run`), which serves this profile too.", name)
     _write_runtime_status_quiet(gateway_state="startup_failed", exit_reason="multiplex_requires_default_profile")
     raise SystemExit(GATEWAY_FATAL_CONFIG_EXIT_CODE)
 
@@ -541,23 +541,23 @@ def _start_gateway_resolve_terminal_cwd() -> None:
 
 def _start_gateway_reserve_profiles(profile_homes) -> bool:
     """Reserve the launch home plus every served profile home; False when startup must abort."""
-    from gateway.run import get_hermes_home
+    from gateway.run import get_niki_home
     from gateway.runtime_ownership import process_ownership, OwnershipConflict
     try:
-        process_ownership.reserve([get_hermes_home(), *(home for _, home in profile_homes)])
+        process_ownership.reserve([get_niki_home(), *(home for _, home in profile_homes)])
     except OwnershipConflict as exc:
         logger.error("Cannot reserve gateway profiles: %s", exc)
         # A named profile that the LIVE default multiplexer already serves is a configuration
         # verdict (gateway.multiplex_profiles), not a transient fault: exit EX_CONFIG so systemd's
         # RestartPreventExitStatus=78 parks the unit instead of restart-looping (#51228, #97120).
         # Any other same-user contender keeps the ordinary "already running" exit 1.
-        from hermes_cli.gateway import named_profile_served_by_running_multiplexer
+        from niki_cli.gateway import named_profile_served_by_running_multiplexer
         if named_profile_served_by_running_multiplexer():
             from gateway.restart import GATEWAY_FATAL_CONFIG_EXIT_CODE
             from gateway.run import _write_runtime_status_quiet
             logger.error(
                 "The default gateway is running as a profile multiplexer and already serves this profile. "
-                "Manage it with `hermes gateway restart` from the default profile instead of starting a "
+                "Manage it with `niki gateway restart` from the default profile instead of starting a "
                 "second gateway for the profile.")
             _write_runtime_status_quiet(gateway_state="startup_failed", exit_reason=str(exc))
             raise SystemExit(GATEWAY_FATAL_CONFIG_EXIT_CODE)
@@ -634,7 +634,7 @@ def _start_gateway_early_environment_probe() -> None:
     """Background-start the host toolchain probe the warm-up and first prompt read (idempotent;
     honours ``agent.environment_probe: false``). Never raises: the warm-up still runs it lazily."""
     try:
-        from hermes_cli.config import load_config_readonly
+        from niki_cli.config import load_config_readonly
         agent_cfg = load_config_readonly().get("agent")
         if isinstance(agent_cfg, dict) and not agent_cfg.get("environment_probe", True):
             return
@@ -668,10 +668,10 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
         threading,
     )
     # Set here (not at import) so incidental gateway.run imports from CLI code don't poison it.
-    os.environ["HERMES_EXEC_ASK"] = "1"
+    os.environ["NIKI_EXEC_ASK"] = "1"
     _start_gateway_resolve_terminal_cwd()
 
-    from hermes_cli.resource_limits import apply_nofile_soft_limit
+    from niki_cli.resource_limits import apply_nofile_soft_limit
     apply_nofile_soft_limit()
 
     # Snapshot the revision while sys.modules matches disk so a later `git pull` is detected safely.
@@ -697,7 +697,7 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
     if _host_decision is not None:
         return _host_decision
 
-    # Duplicate-instance guard scoped to HERMES_HOME (the host record is absent or unusable here).
+    # Duplicate-instance guard scoped to NIKI_HOME (the host record is absent or unusable here).
     from gateway.status import get_running_pid
     existing_pid = get_running_pid()
     if (existing_pid is not None and existing_pid != os.getpid()
@@ -759,12 +759,12 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
 
         _start_gateway_install_signal_handlers(loop, shutdown_signal_handler, restart_signal_handler)
 
-        # Windows has no add_signal_handler, so `hermes gateway stop`'s SIGTERM would never drain; poll the
+        # Windows has no add_signal_handler, so `niki gateway stop`'s SIGTERM would never drain; poll the
         # planned-stop marker (written BEFORE the kill) instead. Runs everywhere so masked-SIGTERM drains.
-        # Windows fallback: asyncio.add_signal_handler raises NotImplementedError on Windows, so `hermes gateway
+        # Windows fallback: asyncio.add_signal_handler raises NotImplementedError on Windows, so `niki gateway
         # stop`'s SIGTERM (which Python maps to TerminateProcess on Windows) never invokes
         # shutdown_signal_handler. That means the drain loop never runs, mark_resume_pending never fires, and
-        # sessions are silently lost across restarts (issue #33778). The fix is a marker-polling thread: `hermes
+        # sessions are silently lost across restarts (issue #33778). The fix is a marker-polling thread: `niki
         # gateway stop` writes the planned-stop marker BEFORE killing, and this thread notices it and drives the
         # same shutdown path the signal handler would have. Runs on every platform (cheap, defensive) so
         # non-signal-bearing environments (Windows native, sandboxed CI runners that mask SIGTERM) still get a
@@ -795,11 +795,11 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
             return record_startup()
 
         def _start_keepalive() -> None:
-            from hermes_cli.nous_auth_keepalive import start_nous_auth_keepalive
+            from niki_cli.niki_auth_keepalive import start_nous_auth_keepalive
             start_nous_auth_keepalive()
 
         _unclean_exit = _best_effort(_lifecycle_record_startup, "Lifecycle ledger startup record failed: %s")
-        _best_effort(_start_keepalive, "Nous auth keepalive did not start: %s")
+        _best_effort(_start_keepalive, "Niki auth keepalive did not start: %s")
         _ensure_windows_gateway_venv_imports()
 
         _early_verdict = await _start_gateway_run_runner(runner, _signal_initiated_shutdown)

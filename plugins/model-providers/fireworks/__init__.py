@@ -3,7 +3,7 @@
 
 from typing import Any
 
-from hermes_cli.version_info import get_version_info
+from niki_cli.version_info import get_version_info
 from providers import register_provider
 from providers.base import ProviderProfile
 
@@ -34,9 +34,9 @@ fireworks = FireworksProfile(
     # Attribution headers (canonical Niki set); via default_headers so they
     # survive switch_model and credential rotation.
     default_headers={
-        "HTTP-Referer": "https://hermes-agent.nousresearch.com",
+        "HTTP-Referer": "https://github.com/NeGamer01/niki-agent",
         "X-Title": "Niki Agent",
-        "User-Agent": f"HermesAgent/{get_version_info().base_version}",
+        "User-Agent": f"NikiAgent/{get_version_info().base_version}",
     },
     default_aux_model="accounts/fireworks/models/glm-5p2",
     # Picker safety net when the live catalog fetch fails.

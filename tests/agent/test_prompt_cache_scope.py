@@ -16,7 +16,7 @@ import pytest
 
 from agent.prompt_cache_scope import resolve_prompt_cache_scope
 from agent.transports.codex import _cache_scope_from_session_id, _content_cache_key
-from hermes_state import SessionDB
+from niki_state import SessionDB
 
 
 @pytest.fixture()
@@ -506,9 +506,9 @@ class TestPerResponseRunNonceIsolation:
 
         assert chat_key(self.RESPONSE_1) != chat_key(self.RESPONSE_2)
 
-    @pytest.mark.parametrize("profile_name", ["openrouter", "nous"])
+    @pytest.mark.parametrize("profile_name", ["openrouter", "niki"])
     def test_distinct_ids_keep_distinct_provider_sticky_keys(self, profile_name):
-        """OpenRouter/Nous route by this key, and it isolates distinct ids.
+        """OpenRouter/Niki route by this key, and it isolates distinct ids.
 
         Same invariant as above on the sticky-routing surface: two ids of one
         Studio conversation re-key it on every reply, and a declared logical

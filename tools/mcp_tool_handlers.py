@@ -12,7 +12,7 @@ from functools import partial
 from types import SimpleNamespace
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from hermes_platform import declaration
+from niki_platform import declaration
 from tools.registry import invalidate_check_fn_cache, tool_error
 from tools.ansi_strip import strip_unicode_tags
 from tools.mcp_tool_common import _exc_str, _sanitize_error, mcp_field, _core
@@ -30,8 +30,8 @@ _MISSING = object()
 declaration.on_change = invalidate_check_fn_cache
 
 _NEEDS_REAUTH_MSG = (
-    "MCP server '{s}' requires re-authentication.{detail} Run `hermes mcp login {s}` (or delete the tokens file under "
-    "~/.hermes/mcp-tokens/ and restart). Do NOT retry this tool — ask the user to re-authenticate.")
+    "MCP server '{s}' requires re-authentication.{detail} Run `niki mcp login {s}` (or delete the tokens file under "
+    "~/.niki/mcp-tokens/ and restart). Do NOT retry this tool — ask the user to re-authenticate.")
 _STDIO_NO_RESPAWN_MSG = (
     "MCP server '{s}' stdio subprocess had exited (this is not a timeout — the call never reached the server). A "
     "respawn was requested but no fresh session came back within {t:.0f}s. Wait a few seconds before retrying; if it "
@@ -731,8 +731,8 @@ def _make_check_fn(server_name: str):
 def _declared_app_offerable(server_name: str) -> bool:
     """True unless the registered declaration is unavailable on this host. Called only for a
     connected server, so a reachable loopback port outranks the interactive-session rule."""
-    from hermes_platform import declaration
-    from hermes_platform.resolver.availability import availability
+    from niki_platform import declaration
+    from niki_platform.resolver.availability import availability
 
     decl = declaration.lookup(server_name)
     if decl is None:

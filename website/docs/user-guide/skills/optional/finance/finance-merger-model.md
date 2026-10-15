@@ -14,10 +14,10 @@ Build M&A accretion/dilution workbooks in Excel.
 
 | | |
 |---|---|
-| Source | Optional — install with `hermes skills install official/finance/merger-model` |
+| Source | Optional — install with `niki skills install official/finance/merger-model` |
 | Path | `optional-skills/finance/merger-model` |
 | Version | `1.0.0` |
-| Author | Anthropic (adapted by Nous Research) |
+| Author | Anthropic (adapted by NeGamer01) |
 | License | Apache-2.0 |
 | Platforms | linux, macos, windows |
 | Tags | `finance`, `m-and-a`, `merger`, `accretion-dilution`, `excel`, `openpyxl`, `modeling`, `investment-banking` |

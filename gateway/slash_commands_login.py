@@ -15,7 +15,7 @@ from uuid import uuid4
 from agent.i18n import t
 from gateway.run_agent_cache import _first_agent
 from gateway.slash_access import policy_for_runner_source
-from hermes_cli import anon_auth
+from niki_cli import anon_auth
 
 logger = logging.getLogger("gateway.run")
 
@@ -71,7 +71,7 @@ class GatewayLoginCommandsMixin:
         executor = getattr(self, "_login_exec", None)
         if executor is None or getattr(executor, "_shutdown", False):
             executor = self._login_exec = concurrent.futures.ThreadPoolExecutor(
-                max_workers=1, thread_name_prefix="hermes-login")
+                max_workers=1, thread_name_prefix="niki-login")
         return executor
 
     async def _run_login_blocking(self, func):
@@ -203,7 +203,7 @@ class GatewayLoginCommandsMixin:
         keys = [
             key for key, entry in entries
             if (agent := _first_agent(entry)) is not None
-            and str(getattr(agent, "provider", "")) == "nous"
+            and str(getattr(agent, "provider", "")) == "niki"
             and str(getattr(agent, "model", "")) == anon_auth.GUEST_MODEL
         ]
         failed = 0

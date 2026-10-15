@@ -1,4 +1,4 @@
-# Nous-approved MCP catalog entry.
+# Niki-approved MCP catalog entry.
 # Presence in this directory = approval. Merged via PR review.
 manifest_version: 1
 
@@ -47,5 +47,5 @@ suggest:
 
 post_install: |
   On first connection Niki opens a browser to authorize with
-  Neon (or run `hermes mcp login neon`). Approve access,
+  Neon (or run `niki mcp login neon`). Approve access,
   then restart the session so tools load.

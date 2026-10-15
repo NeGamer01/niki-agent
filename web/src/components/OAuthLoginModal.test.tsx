@@ -35,12 +35,12 @@ let container: HTMLDivElement;
 let root: Root;
 
 const provider = {
-  cli_command: "hermes login nous",
+  cli_command: "niki login niki",
   disconnectable: true,
-  docs_url: "https://example.com/nous",
+  docs_url: "https://example.com/niki",
   flow: "device_code" as const,
-  id: "nous",
-  name: "Nous Portal",
+  id: "niki",
+  name: "Niki Portal",
   status: { logged_in: false },
 };
 

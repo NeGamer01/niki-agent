@@ -21,7 +21,7 @@ Yuanbao is an enterprise messaging platform primarily used within Tencent and en
 If these core dependencies are damaged, repair the selected environment:
 
 ```bash
-hermes pm repair
+niki pm repair
 ```
 
 ## Setup
@@ -37,7 +37,7 @@ hermes pm repair
 The easiest way to configure Yuanbao is through the interactive setup:
 
 ```bash
-hermes gateway setup
+niki gateway setup
 ```
 
 Select **Yuanbao** when prompted. The wizard will:
@@ -52,7 +52,7 @@ The WebSocket URL and API Domain have sensible defaults built in. You only need 
 
 ### 3. Configure Environment Variables
 
-After initial setup, verify these variables in `~/.hermes/.env`:
+After initial setup, verify these variables in `~/.niki/.env`:
 
 ```bash
 # Required
@@ -78,7 +78,7 @@ YUANBAO_ALLOWED_USERS=user_account_1,user_account_2
 ### 4. Start the Gateway
 
 ```bash
-hermes gateway
+niki gateway
 ```
 
 The adapter will connect to the Yuanbao WebSocket gateway, authenticate using HMAC signatures, and begin processing messages.
@@ -130,7 +130,7 @@ Use the `/sethome` command in any Yuanbao chat (DM or group) to designate it as 
 If no home channel is configured, the first user to message the bot will be automatically set as the home channel owner. If the current home channel is a group chat, the first DM will upgrade it to a direct channel.
 :::
 
-You can also set it manually in `~/.hermes/.env`:
+You can also set it manually in `~/.niki/.env`:
 
 ```bash
 YUANBAO_HOME_CHANNEL=direct:user_account_id
@@ -204,7 +204,7 @@ When you ask the bot to create or export a file, it sends the file directly to y
 1. Verify APP_ID and APP_SECRET are correct
 2. Check that the WebSocket URL is accessible
 3. Ensure the bot account has proper permissions
-4. Review gateway logs: `tail -f ~/.hermes/logs/gateway.log`
+4. Review gateway logs: `tail -f ~/.niki/logs/gateway.log`
 
 ### "Connection refused" error
 
@@ -244,7 +244,7 @@ When you ask the bot to create or export a file, it sends the file directly to y
 1. Check gateway logs for error patterns
 2. Increase heartbeat timeout in connection settings
 3. Ensure stable network connection to Yuanbao API
-4. Consider enabling verbose logging: `hermes gateway run -vv`
+4. Consider enabling verbose logging: `niki gateway run -vv`
 
 ## Access Control
 
@@ -302,7 +302,7 @@ These values are currently not configurable via environment variables. They are 
 Enable debug logging to troubleshoot connection issues:
 
 ```bash
-hermes gateway run -vv
+niki gateway run -vv
 ```
 
 ## Integration with Other Features
@@ -330,7 +330,7 @@ Run long operations without blocking the conversation:
 Send a message from CLI to Yuanbao:
 
 ```bash
-hermes chat -q "Send 'Hello from CLI' to yuanbao:group:group_code"
+niki chat -q "Send 'Hello from CLI' to yuanbao:group:group_code"
 ```
 
 ## Related Documentation

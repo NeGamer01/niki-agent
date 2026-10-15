@@ -3,7 +3,7 @@
 # Owner-submitted: the PR author (`OMOX563`) owns and maintains the repo below.
 # Exact-SHA pin (40-hex). No self-updating code: the desktop half ships as static
 # files under `desktop/plugin.js` and never fetches, downloads, or replaces itself.
-# English edition of hermes-balance-widget (see disclosure in the PR body).
+# English edition of niki-balance-widget (see disclosure in the PR body).
 name: nine-balance-widget
 repo: https://github.com/OMOX563/nine-balance-widget
 sha: "b8652884a4f9c6d07c7e637991c09be6a645a87e"
@@ -17,4 +17,4 @@ screenshots:
   - "https://raw.githubusercontent.com/OMOX563/nine-balance-widget/b8652884a4f9c6d07c7e637991c09be6a645a87e/assets/preview.png"
   - "https://raw.githubusercontent.com/OMOX563/nine-balance-widget/b8652884a4f9c6d07c7e637991c09be6a645a87e/assets/grid-light.jpg"
 readme: true
-requires_hermes: ">=0.21.5"
+requires_niki: ">=0.21.5"

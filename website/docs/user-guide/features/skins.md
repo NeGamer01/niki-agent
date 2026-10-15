@@ -18,10 +18,10 @@ Conversational style and visual style are separate concepts:
 ```bash
 /skin                # show the current skin and list available skins
 /skin ares           # switch to a built-in skin
-/skin mytheme        # switch to a custom skin from ~/.hermes/skins/mytheme.yaml
+/skin mytheme        # switch to a custom skin from ~/.niki/skins/mytheme.yaml
 ```
 
-Or set the default skin in `~/.hermes/config.yaml`:
+Or set the default skin in `~/.niki/config.yaml`:
 
 ```yaml
 display:
@@ -46,8 +46,8 @@ display:
 
 The Desktop app lists your CLI skins next to its own themes in **Settings → Appearance**, with a few differences:
 
-- `default` (and `/skin default`) means the Desktop default theme, **Nous**. A stock `display.skin: default` therefore never repaints Desktop, and a runtime switch to `default` from the CLI/TUI or `config.yaml` moves a Desktop pick back to Nous.
-- The classic gold look is a separate Desktop theme named `classic` (**Classic Niki**). Pick it in Appearance, or run `/skin classic`, `/skin gold` or `/skin hermes` in a Desktop chat. It follows the light/dark toggle: gold on navy in dark mode, the CLI's light-terminal goldenrod palette in light mode.
+- `default` (and `/skin default`) means the Desktop default theme, **Niki**. A stock `display.skin: default` therefore never repaints Desktop, and a runtime switch to `default` from the CLI/TUI or `config.yaml` moves a Desktop pick back to Niki.
+- The classic gold look is a separate Desktop theme named `classic` (**Classic Niki**). Pick it in Appearance, or run `/skin classic`, `/skin gold` or `/skin niki` in a Desktop chat. It follows the light/dark toggle: gold on navy in dark mode, the CLI's light-terminal goldenrod palette in light mode.
 - `classic` is a reserved Desktop theme name, like the other Desktop built-ins (`mono`, `slate`, …). A user skin file with one of those names keeps the Desktop palette there; its `customCSS` still applies.
 
 ## Complete list of configurable keys
@@ -113,18 +113,18 @@ Text strings used throughout the CLI interface.
 |-----|------|-------------|---------|
 | `tool_prefix` | string | Character prefixed to tool output lines in the CLI | `┊` |
 | `tool_emojis` | dict | Per-tool emoji overrides for spinners and progress (`{tool_name: emoji}`) | `{}` |
-| `banner_logo` | string | Rich-markup ASCII art logo (replaces the default HERMES_AGENT banner) | `""` |
+| `banner_logo` | string | Rich-markup ASCII art logo (replaces the default NIKI_AGENT banner) | `""` |
 | `banner_hero` | string | Rich-markup hero art (replaces the default caduceus art) | `""` |
 | `customCSS` | string | Raw CSS injected into the desktop app and web dashboard while the skin is active (GUI surfaces only; ignored by the CLI/TUI). Capped at 32 KiB. | `""` |
 
 ## Custom skins
 
-Create YAML files under `~/.hermes/skins/`. User skins inherit missing values from the built-in `default` skin, so you only need to specify the keys you want to change.
+Create YAML files under `~/.niki/skins/`. User skins inherit missing values from the built-in `default` skin, so you only need to specify the keys you want to change.
 
 ### Full custom skin YAML template
 
 ```yaml
-# ~/.hermes/skins/mytheme.yaml
+# ~/.niki/skins/mytheme.yaml
 # Complete skin template — all keys shown. Delete any you don't need;
 # missing values automatically inherit from the 'default' skin.
 
@@ -237,13 +237,13 @@ customCSS: |
   .status-bar { background: rgba(0, 0, 0, 0.5); }
 ```
 
-The field is capped at 32 KiB and applies to GUI surfaces only — the CLI and TUI ignore it. Because it lives in your skin YAML under `~/.hermes/skins/`, it survives app updates (no more hacking `app.asar`).
+The field is capped at 32 KiB and applies to GUI surfaces only — the CLI and TUI ignore it. Because it lives in your skin YAML under `~/.niki/skins/`, it survives app updates (no more hacking `app.asar`).
 
 ## Niki Mod — Visual Skin Editor
 
-[Niki Mod](https://github.com/cocktailpeanut/hermes-mod) is a community-built web UI for creating and managing skins visually. Instead of writing YAML by hand, you get a point-and-click editor with live preview.
+[Niki Mod](https://github.com/cocktailpeanut/niki-mod) is a community-built web UI for creating and managing skins visually. Instead of writing YAML by hand, you get a point-and-click editor with live preview.
 
-![Niki Mod skin editor](https://raw.githubusercontent.com/cocktailpeanut/hermes-mod/master/nous.png)
+![Niki Mod skin editor](https://raw.githubusercontent.com/cocktailpeanut/niki-mod/master/niki.png)
 
 **What it does:**
 
@@ -251,8 +251,8 @@ The field is capped at 32 KiB and applies to GUI surfaces only — the CLI and T
 - Opens any skin into a visual editor with all Niki skin fields (colors, spinner, branding, tool prefix, tool emojis)
 - Generates `banner_logo` text art from a text prompt
 - Converts uploaded images (PNG, JPG, GIF, WEBP) into `banner_hero` ASCII art with multiple render styles (braille, ASCII ramp, blocks, dots)
-- Saves directly to `~/.hermes/skins/`
-- Activates a skin by updating `~/.hermes/config.yaml`
+- Saves directly to `~/.niki/skins/`
+- Activates a skin by updating `~/.niki/config.yaml`
 - Shows the generated YAML and a live preview
 
 ### Install
@@ -264,14 +264,14 @@ Find it on [pinokio.computer](https://pinokio.computer) and install with one cli
 **Option 2 — npx (quickest from terminal):**
 
 ```bash
-npx -y hermes-mod
+npx -y niki-mod
 ```
 
 **Option 3 — Manual:**
 
 ```bash
-git clone https://github.com/cocktailpeanut/hermes-mod.git
-cd hermes-mod/app
+git clone https://github.com/cocktailpeanut/niki-mod.git
+cd niki-mod/app
 npm install
 npm start
 ```
@@ -283,16 +283,16 @@ npm start
 3. Choose a built-in or custom skin to edit.
 4. Generate a logo from text and/or upload an image for hero art. Pick a render style and width.
 5. Edit colors, spinner, branding, and other fields.
-6. Click **Save** to write the skin YAML to `~/.hermes/skins/`.
+6. Click **Save** to write the skin YAML to `~/.niki/skins/`.
 7. Click **Activate** to set it as the current skin (updates `display.skin` in `config.yaml`).
 
-Niki Mod respects the `HERMES_HOME` environment variable, so it works with [profiles](../profiles.md) too.
+Niki Mod respects the `NIKI_HOME` environment variable, so it works with [profiles](../profiles.md) too.
 
 ## Operational notes
 
-- Built-in skins load from `hermes_cli/skin_engine.py`.
+- Built-in skins load from `niki_cli/skin_engine.py`.
 - Unknown skins automatically fall back to `default`.
 - `/skin` updates the active CLI theme immediately for the current session.
-- User skins in `~/.hermes/skins/` take precedence over built-in skins with the same name.
+- User skins in `~/.niki/skins/` take precedence over built-in skins with the same name.
 - Skin changes via `/skin` are session-only. To make a skin your permanent default, set it in `config.yaml`.
 - The `banner_logo` and `banner_hero` fields support Rich console markup (e.g., `[bold #FF0000]text[/]`) for colored ASCII art.

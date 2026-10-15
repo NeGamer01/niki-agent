@@ -2,7 +2,7 @@
 
 copilot-acp does not speak OpenAI-over-HTTP: it drives an external ACP subprocess over
 stdio, so the profile supplies its own client via :meth:`ProviderProfile.create_client`.
-An out-of-tree ACP provider (``~/.hermes/plugins/model-providers/`` or a pip entry point)
+An out-of-tree ACP provider (``~/.niki/plugins/model-providers/`` or a pip entry point)
 uses the same three lines without touching core.
 """
 
@@ -31,7 +31,7 @@ class CopilotACPProfile(ProviderProfile):
         ``base_url`` are ignored: the subprocess owns auth. None when the CLI is missing, refuses
         ``--acp``, or the probe fails/times out — callers fall back to their next source.
         """
-        from hermes_cli.auth import resolve_external_process_provider_credentials
+        from niki_cli.auth import resolve_external_process_provider_credentials
 
         try:
             creds = resolve_external_process_provider_credentials(self.name)
@@ -54,11 +54,11 @@ copilot_acp = CopilotACPProfile(
     base_url="acp://copilot",  # ACP internal scheme
     auth_type="external_process",
     # How to launch the CLI; env var names predate this profile (formerly hardcoded in
-    # hermes_cli/auth.py), so existing setups keep working.
+    # niki_cli/auth.py), so existing setups keep working.
     process_command="copilot",
     process_args=("--acp", "--stdio"),
-    process_command_env_vars=("HERMES_COPILOT_ACP_COMMAND", "COPILOT_CLI_PATH"),
-    process_args_env_var="HERMES_COPILOT_ACP_ARGS",
+    process_command_env_vars=("NIKI_COPILOT_ACP_COMMAND", "COPILOT_CLI_PATH"),
+    process_args_env_var="NIKI_COPILOT_ACP_ARGS",
 )
 
 register_provider(copilot_acp)

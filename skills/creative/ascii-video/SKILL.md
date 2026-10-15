@@ -6,7 +6,7 @@ author: SHL0MS, Niki Agent
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  niki:
     tags: [ASCII, Video, FFmpeg, Terminal-Art]
     related_skills: []
 ---

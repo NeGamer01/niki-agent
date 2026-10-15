@@ -114,7 +114,7 @@ def _response_status(result):
     return 'completed'
 
 
-def _hermes_extras(completed, is_partial, is_failed, err_msg, finish_reason: str) -> dict[str, Any]:
+def _niki_extras(completed, is_partial, is_failed, err_msg, finish_reason: str) -> dict[str, Any]:
     return {
         "completed": completed, "partial": is_partial, "failed": is_failed, "error": err_msg,
         "error_code": "output_truncated" if finish_reason == "length" else "agent_error"}
@@ -496,8 +496,8 @@ class _ResponsesStream:
 
     async def emit_status(self, payload: dict[str, Any]) -> None:
         """Lifecycle/warning status (provider wait, auto-recovery countdown, fallback switch) as a
-        ``hermes.status`` custom event; not a Responses output item."""
-        await self.response.write(self._api._sse_frame(payload, event="hermes.status"))
+        ``niki.status`` custom event; not a Responses output item."""
+        await self.response.write(self._api._sse_frame(payload, event="niki.status"))
 
     # queue tag -> (method name, payload adapter)
     _TAG_HANDLERS = {
@@ -790,7 +790,7 @@ class OpenAICompatRoutesMixin:
                 stream_q.put_threadsafe(("__reasoning__", text))
         def _on_status(kind, message=None):
             # Lifecycle/warning status (provider wait, auto-recovery countdown, fallback switch) as a
-            # ``hermes.status`` event, so a client sees why the stream is silent instead of a dead socket.
+            # ``niki.status`` event, so a client sees why the stream is silent instead of a dead socket.
             from gateway.platforms.api_server import _redact_api_error_text
             text = _redact_api_error_text(message if message is not None else kind or "").strip()
             if text:
@@ -910,7 +910,7 @@ class OpenAICompatRoutesMixin:
                 history_from_session=bool(provided_session_id), run_owner_scope=self._run_idempotency_scope(request))
         # This is presentation only. The ordinary API-key/session authorization
         # above still applies; it grants no internal ingress or control authority.
-        if provided_session_id and body.get("hermes_notification_category") == "diagnostic":
+        if provided_session_id and body.get("niki_notification_category") == "diagnostic":
             run_kwargs["notification_category"] = "diagnostic"
         if stream:
             _stream_q = ThreadSafeAsyncQueue()
@@ -919,7 +919,7 @@ class OpenAICompatRoutesMixin:
             _started_tool_call_ids: set[str] = set()
 
             def _on_tool_start(tool_call_id, function_name, function_args):
-                """``hermes.tool.progress`` status=running; ``_``-prefixed tools stay off the wire."""
+                """``niki.tool.progress`` status=running; ``_``-prefixed tools stay off the wire."""
                 if not tool_call_id or function_name.startswith("_"):
                     return
                 _started_tool_call_ids.add(tool_call_id)
@@ -961,7 +961,7 @@ class OpenAICompatRoutesMixin:
         outcome, err = await self._run_idempotent(
             request, body, _compute_completion, log_label="chat completions",
             fingerprint_keys=["model", "provider", "model_options", "messages", "tools", "tool_choice", "stream",
-                              "hermes_notification_category"],
+                              "niki_notification_category"],
             route="chat_completions",
         )
         if err is not None:
@@ -985,7 +985,7 @@ class OpenAICompatRoutesMixin:
             err_body = _openai_error(
                 "" if presentation_muted else (err_msg or "Agent run did not produce a response."), err_type="server_error",
                 code="agent_incomplete")
-            err_body["error"]["hermes"] = {
+            err_body["error"]["niki"] = {
                 "completed": completed, "partial": is_partial, "failed": is_failed}
             response_headers["X-Niki-Completed"] = "false"
             response_headers["X-Niki-Partial"] = "true" if is_partial else "false"
@@ -1002,7 +1002,7 @@ class OpenAICompatRoutesMixin:
         if reasoning_text and not presentation_muted:
             response_data["choices"][0]["message"]["reasoning_content"] = reasoning_text
         if is_partial or is_failed or not completed:
-            response_data["hermes"] = _hermes_extras(
+            response_data["niki"] = _niki_extras(
                 completed, is_partial, is_failed, "" if presentation_muted else err_msg, finish_reason)
             response_headers["X-Niki-Completed"] = "false"
             response_headers["X-Niki-Partial"] = "true" if is_partial else "false"
@@ -1024,7 +1024,7 @@ class OpenAICompatRoutesMixin:
         route), folded into the key because the store keeps the fingerprint only as the slot's value.
         """
         from gateway.platforms.api_server import _error_response, _idem_cache, _make_request_fingerprint
-        from hermes_state_runtime import RuntimeStoreError
+        from niki_state_runtime import RuntimeStoreError
         idempotency_key = request.headers.get("Idempotency-Key")
         try:
             # Durable /v1/runs admissions own idempotency under session authority; the in-memory
@@ -1084,13 +1084,13 @@ class OpenAICompatRoutesMixin:
                     # Custom event: tool lifecycle for frontends without markers in history.
                     if not self._tool_progress_events:
                         continue  # opted out for strict OpenAI clients (#12020)
-                    await response.write(_sse_frame(delta[1], event="hermes.tool.progress"))
+                    await response.write(_sse_frame(delta[1], event="niki.tool.progress"))
                 elif isinstance(delta, tuple) and len(delta) == 2 and delta[0] == "__reasoning__":
                     # DeepSeek-style ``delta.reasoning_content`` (#99552), the field Open WebUI,
                     # opencode and the Vercel AI SDK render as a thinking block.
                     await response.write(_sse_frame(_chunk({"reasoning_content": delta[1]})))
                 elif isinstance(delta, tuple) and len(delta) == 2 and delta[0] == "__status__":
-                    await response.write(_sse_frame(delta[1], event="hermes.status"))
+                    await response.write(_sse_frame(delta[1], event="niki.status"))
                 elif isinstance(delta, tuple) and len(delta) == 2 and delta[0] == "__approval__":
                     await response.write(_sse_frame(delta[1], event="approval.request"))
                 else:
@@ -1135,7 +1135,7 @@ class OpenAICompatRoutesMixin:
                     finish_chunk["error"] = {
                         "message": err_msg,
                         "type": type(agent_error).__name__ if agent_error else "agent_error"}
-                finish_chunk["hermes"] = _hermes_extras(
+                finish_chunk["niki"] = _niki_extras(
                     completed, is_partial, is_failed, "" if presentation_muted else err_msg, finish_reason)
             await response.write(_sse_frame(finish_chunk))
             await response.write(b"data: [DONE]\n\n")
@@ -1300,7 +1300,7 @@ class OpenAICompatRoutesMixin:
         if replayed is not None:
             return replayed
         from gateway.platforms.api_server_response_admissions import prepare_context
-        from hermes_state_runtime import RuntimeStoreError
+        from niki_state_runtime import RuntimeStoreError
         try:
             context, error = await prepare_context(
                 self, request, body, gateway_session_key, durable_key, idempotency_scope, idempotency_key)

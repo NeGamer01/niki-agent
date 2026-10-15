@@ -13,7 +13,7 @@ from agent.turn_author import parse_turn_author
 from gateway.session_contract import Principal, SessionRef
 from gateway.config import Platform
 from gateway.platforms.event import MessageEvent
-from hermes_state_runtime import RuntimeStoreError, get_session_admission
+from niki_state_runtime import RuntimeStoreError, get_session_admission
 from tools.bot_live_delivery import _delivery_id, _read
 from gateway.session_bot_mailbox import (mailbox_lock, read_receipt, write_receipt,
     scan_receipts, remember_receipt, track_receipt_task, withdraw_pin)
@@ -78,7 +78,7 @@ def _home(authority, actor, profile):
     from gateway.session_authorities import served_profile_name
     home = Path(authority.db.db_path).parent.resolve()
     name = served_profile_name(home)
-    if actor.profile_id != authority.profile_id or profile not in (name, 'hermes' if name == 'default' else name):
+    if actor.profile_id != authority.profile_id or profile not in (name, 'niki' if name == 'default' else name):
         raise RuntimeStoreError('profile_mismatch')
     if 'session:submit' not in actor.capabilities:
         raise RuntimeStoreError('permission_denied')
@@ -106,7 +106,7 @@ async def _target(authority, actor):
 
 
 async def _create_bot_chat(authority, actor):
-    """No Bot Chat yet: mint it the way ``hermes chat --in ~ -c "Bot Chat" --create-if-missing``
+    """No Bot Chat yet: mint it the way ``niki chat --in ~ -c "Bot Chat" --create-if-missing``
     did on the CLI lane this door replaced, so a fresh profile's first delivery has somewhere
     to land instead of being recorded as failed. Same owner step as ``session.create`` with a
     title: lookup, creation and title run under the authority's titled-create lock, with the
@@ -118,7 +118,7 @@ async def _create_bot_chat(authority, actor):
     from gateway.session_local_recovery import restore_local_session
     from gateway.session_local_title import title_new_session
     from gateway.session_runtime_workers import tracked_write
-    from hermes_state_local import commit_local_session
+    from niki_state_local import commit_local_session
     lock = getattr(authority, '_titled_create_lock', None)
     if lock is None:
         lock = authority._titled_create_lock = asyncio.Lock()
@@ -142,7 +142,7 @@ def _bot_chat_creation_id(authority, actor):
     concurrent deliveries (serialized by the titled-create lock) pick the same identity. An
     existing UNtitled session is the same creation interrupted before its title: it is reused."""
     from gateway.session_local_recovery import local_identity
-    from hermes_state_mutation_retirement import retired_session
+    from niki_state_mutation_retirement import retired_session
     base, generation = 'bot-chat:' + authority.profile_id, 0
     while True:
         request_id = base if generation == 0 else f'{base}:{generation}'
@@ -402,7 +402,7 @@ async def _migrate(authority, actor, home, root):
             continue
         if authority.db.get_compression_tip(owner['session_id']) != entry.session_id:
             continue
-        from hermes_cli.active_sessions import active_session_liveness_guard
+        from niki_cli.active_sessions import active_session_liveness_guard
         with active_session_liveness_guard(owner['session_id'], registry_home=home) as active:
             if active:
                 raise RuntimeStoreError('runtime_coordination_required')
@@ -437,7 +437,7 @@ async def recover_bot_deliveries(authority):
         target = authority.db.get_session(authority.db.get_compression_tip(row['id']))
         if target is None:
             return
-        from hermes_state_local import POLICY_PREFIX
+        from niki_state_local import POLICY_PREFIX
         with authority.db._read_ctx() as conn:
             bound = conn.execute('SELECT 1 FROM state_meta WHERE key=?',
                 (POLICY_PREFIX + (target.get('chat_id') or target['id']),)).fetchone()

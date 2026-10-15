@@ -6,9 +6,9 @@ author: Tim Koepsel (xzessmedia), Niki Agent
 license: MIT
 platforms: [linux, macos]
 metadata:
-  hermes:
+  niki:
     tags: [Coding-Agent, OpenHands, Model-Agnostic, LiteLLM]
-    related_skills: [claude-code, codex, opencode, hermes-agent]
+    related_skills: [claude-code, codex, opencode, niki-agent]
 ---
 
 # OpenHands CLI
@@ -20,7 +20,7 @@ This skill is the headless-mode wrapper for batch / one-shot delegation. The int
 ## When to Use
 
 - User wants a coding task delegated to OpenHands specifically.
-- User wants a coding agent that can run on a non-Anthropic / non-OpenAI provider (DeepSeek, Qwen, Ollama, vLLM, Nous, etc.) — sibling skills `claude-code` and `codex` are tied to one vendor.
+- User wants a coding agent that can run on a non-Anthropic / non-OpenAI provider (DeepSeek, Qwen, Ollama, vLLM, Niki, etc.) — sibling skills `claude-code` and `codex` are tied to one vendor.
 - Multi-step file edits + shell commands inside a workspace.
 
 For Claude-native, prefer `claude-code`. For OpenAI-native, prefer `codex`. For Niki-native subagents, use `delegate_task`.
@@ -135,7 +135,7 @@ The cli prints all stderr from LiteLLM/Authlib first — see Pitfalls. Parse onl
 ```
 terminal(
   command="OPENHANDS_SUPPRESS_BANNER=1 LLM_MODEL=openrouter/openai/gpt-4o-mini LLM_API_KEY=$OPENROUTER_API_KEY LLM_BASE_URL=https://openrouter.ai/api/v1 openhands --headless --json --override-with-envs --exit-without-confirmation -t 'Print the string OPENHANDS_OK to stdout via the terminal tool.'",
-  workdir="~/.hermes/cache/scratch",
+  workdir="~/.niki/cache/scratch",
   timeout=120
 )
 ```
@@ -146,4 +146,4 @@ If the JSONL stream ends with a `FinishAction` whose `action.message` mentions `
 
 - [OpenHands GitHub](https://github.com/All-Hands-AI/OpenHands)
 - [OpenHands CLI command reference](https://docs.openhands.dev/openhands/usage/cli/command-reference)
-- Sibling skills: `claude-code` (Anthropic-only), `codex` (OpenAI-only), `opencode` (multi-provider via OpenCode), `hermes-agent` (Niki subagents via `delegate_task`).
+- Sibling skills: `claude-code` (Anthropic-only), `codex` (OpenAI-only), `opencode` (multi-provider via OpenCode), `niki-agent` (Niki subagents via `delegate_task`).

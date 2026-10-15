@@ -20,7 +20,7 @@ cd plugins/platforms/photon/sidecar
 npm install
 ```
 
-The Niki plugin's `hermes photon setup` command runs `npm install`
+The Niki plugin's `niki photon setup` command runs `npm install`
 here automatically.
 
 ## Run standalone

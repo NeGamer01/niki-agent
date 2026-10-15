@@ -13,7 +13,7 @@ from pathlib import Path
 from gateway.config import Platform
 from gateway.session import SessionEntry, SessionSource
 from gateway.session_contract import SessionRef
-from hermes_state_runtime import RuntimeStoreError
+from niki_state_runtime import RuntimeStoreError
 
 
 def bind_native_transport(authority, actor, identity):
@@ -33,7 +33,7 @@ def unbind_native_transport(authority, actor):
 
 def require_history_claim(authority, conn, actor, sid):
     """Import receipts confer ownership; merely knowing an old ID does not."""
-    from hermes_state_mutation_binding import BINDING_PREFIX
+    from niki_state_mutation_binding import BINDING_PREFIX
     row = conn.execute('SELECT session_key,chat_id,origin_json FROM sessions WHERE id=?', (sid,)).fetchone()
     if row is None or any(row):
         return
@@ -49,9 +49,9 @@ def resolve_local_target(authority, actor, sid):
     row = db.get_session(sid)
     if row is None:
         raise RuntimeStoreError('not_found')
-    from hermes_state_local import POLICY_PREFIX
+    from niki_state_local import POLICY_PREFIX
     with db._read_ctx() as conn:
-        from hermes_state_local_migration import LEGACY_PREFIX
+        from niki_state_local_migration import LEGACY_PREFIX
         bound = conn.execute('SELECT 1 FROM state_meta WHERE key IN (?,?)',
             (POLICY_PREFIX + (row.get('chat_id') or sid), LEGACY_PREFIX + (row.get('chat_id') or sid))).fetchone()
     if bound or str(row.get('chat_id') or '').startswith('local-'):
@@ -70,7 +70,7 @@ def legacy_launch_params(row):
     params = {key: row[key] for key in ('cwd', 'model') if row.get(key)}
     if row['source'] != 'acp':
         return params, None
-    from hermes_state_sessions import _parse_model_config
+    from niki_state_sessions import _parse_model_config
     saved = _parse_model_config(row.get('model_config'))
     route = {'cwd': saved.get('cwd'), 'provider': saved.get('provider') or row.get('billing_provider'),
              'base_url': saved.get('base_url') or row.get('billing_base_url'), 'api_mode': saved.get('api_mode')}
@@ -87,14 +87,14 @@ def adopt_legacy_session(authority, actor, row):
     if (getattr(authority, '_native_legacy_transports', {}).get(actor.transport_id) != actor
             or not {'session:read', 'session:create'} <= actor.capabilities):
         raise RuntimeStoreError('not_found')
-    from hermes_state_local_migration import LEGACY_CREATION_SOURCES, validate_legacy_row
+    from niki_state_local_migration import LEGACY_CREATION_SOURCES, validate_legacy_row
     validate_legacy_row(authority.db, row)
     authority._require_admission_open()
     from gateway.run import _load_gateway_config, _resolve_gateway_model
     from gateway.session_policy import build_policy, bind_launch_key
     from gateway.session_local_recovery import restore_local_session
-    from hermes_state_local import commit_local_session
-    from hermes_cli.active_sessions import active_session_liveness_guard, ActiveSessionRegistryError
+    from niki_state_local import commit_local_session
+    from niki_cli.active_sessions import active_session_liveness_guard, ActiveSessionRegistryError
 
     request_id = 'legacy:' + row['id']
     sid = row['id']

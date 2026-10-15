@@ -10,12 +10,12 @@ import uuid
 from pathlib import Path
 from typing import Dict, Optional
 
-from hermes_constants import get_hermes_home
+from niki_constants import get_niki_home
 
 
 def get_camofox_state_dir() -> Path:
     """Return the profile-scoped root directory for Camofox persistence."""
-    return get_hermes_home() / "browser_auth" / "camofox"
+    return get_niki_home() / "browser_auth" / "camofox"
 
 
 def get_camofox_identity(task_id: Optional[str] = None) -> dict[str, str]:
@@ -24,4 +24,4 @@ def get_camofox_identity(task_id: Optional[str] = None) -> dict[str, str]:
     scope_root = str(get_camofox_state_dir())
     user_digest = uuid.uuid5(uuid.NAMESPACE_URL, f"camofox-user:{scope_root}").hex[:10]
     session_digest = uuid.uuid5(uuid.NAMESPACE_URL, f"camofox-session:{scope_root}:{task_id or 'default'}").hex[:16]
-    return {"user_id": f"hermes_{user_digest}", "session_key": f"task_{session_digest}"}
+    return {"user_id": f"niki_{user_digest}", "session_key": f"task_{session_digest}"}

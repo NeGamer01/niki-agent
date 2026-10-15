@@ -10,7 +10,7 @@ Ported from [JimLiu/baoyu-skills](https://github.com/JimLiu/baoyu-skills) v1.57.
 
 | Change | Upstream | Niki |
 |--------|----------|--------|
-| Metadata namespace | `openclaw` | `hermes` |
+| Metadata namespace | `openclaw` | `niki` |
 | Trigger | `/baoyu-article-illustrator` slash command + CLI flags | Natural language skill matching |
 | User config | EXTEND.md (project/user/XDG paths) + first-time-setup | Removed — not part of Niki infra |
 | User prompts | `AskUserQuestion` (batched, multi-question) | `clarify` tool (batched, up to 5 questions) |

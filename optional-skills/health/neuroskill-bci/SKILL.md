@@ -3,10 +3,10 @@ name: neuroskill-bci
 description: "Use live BCI cognitive and mood state from NeuroSkill."
 platforms: [linux, macos, windows]
 version: 1.0.0
-author: Niki Agent + Nous Research
+author: Niki Agent + NeGamer01
 license: MIT
 metadata:
-  hermes:
+  niki:
     tags: [BCI, neurofeedback, health, focus, EEG, cognitive-state, biometrics, neuroskill]
     category: health
     related_skills: []

@@ -20,18 +20,18 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Callable
 
-from hermes_constants import get_hermes_home
-from hermes_cli.relay_plugin_cutover import (RELAY_PLUGINS_CONFIG_ENV, configured_legacy_relay_env_vars)
+from niki_constants import get_niki_home
+from niki_cli.relay_plugin_cutover import (RELAY_PLUGINS_CONFIG_ENV, configured_legacy_relay_env_vars)
 
 logger = logging.getLogger(__name__)
 
-SESSION_SCOPE = "hermes.session"
-TURN_SCOPE = "hermes.turn"
-LOGICAL_LLM_SCOPE = "hermes.logical_llm_call"
-RUNTIME_SCHEMA_KEY = "hermes.relay.schema_version"
-RUNTIME_SCHEMA_VERSION = "hermes.relay.runtime.v1"
-RUNTIME_INSTANCE_KEY = "hermes.relay.runtime_instance"
-RELAY_PLUGINS_EXECUTION_CONSUMER = "hermes.nemo_relay.plugins"
+SESSION_SCOPE = "niki.session"
+TURN_SCOPE = "niki.turn"
+LOGICAL_LLM_SCOPE = "niki.logical_llm_call"
+RUNTIME_SCHEMA_KEY = "niki.relay.schema_version"
+RUNTIME_SCHEMA_VERSION = "niki.relay.runtime.v1"
+RUNTIME_INSTANCE_KEY = "niki.relay.runtime_instance"
+RELAY_PLUGINS_EXECUTION_CONSUMER = "niki.nemo_relay.plugins"
 _PROFILE_KEY_CACHE: dict[str, str] = {}
 
 # Bound for native scope ops gating turn/session completion: a wedged pipeline costs one
@@ -245,10 +245,10 @@ def _load_segments_config() -> dict[str, Any]:
     on_compaction = False
     max_turns = 0
     try:
-        # Never import gateway.run here: its import-time env setup (_HERMES_GATEWAY, HERMES_QUIET,
-        # TERMINAL_CWD := home) rebinds a CLI/TUI/cron host — hung approvals (#87183), `hermes -z`
+        # Never import gateway.run here: its import-time env setup (_NIKI_GATEWAY, NIKI_QUIET,
+        # TERMINAL_CWD := home) rebinds a CLI/TUI/cron host — hung approvals (#87183), `niki -z`
         # running in $HOME without the launch dir's AGENTS.md (#95577). Same reader it delegates to.
-        from hermes_cli.config_effective import load_user_config_effective
+        from niki_cli.config_effective import load_user_config_effective
 
         telemetry = (load_user_config_effective().get("gateway") or {}).get("telemetry") or {}
         segments = telemetry.get("session_segments") or {}
@@ -534,7 +534,7 @@ class RelayRuntime:
             session.rotate_pending = False
             try:
                 self.run_in_session(
-                    session, self.relay.scope.pop, old_handle, output={"hermes.session.segment_reason": reason},
+                    session, self.relay.scope.pop, old_handle, output={"niki.session.segment_reason": reason},
                     metadata=runtime_metadata(self.runtime_id), timeout=SCOPE_OP_TIMEOUT,
                 )
             except Exception:
@@ -543,7 +543,7 @@ class RelayRuntime:
                     session.session_id, session.segment - 1, exc_info=True,
                 )
             scope_metadata = runtime_metadata(
-                self.runtime_id, **{"hermes.session.segment": session.segment, "hermes.session.segment_reason": reason},
+                self.runtime_id, **{"niki.session.segment": session.segment, "niki.session.segment_reason": reason},
             )
             try:
                 self._open_session_scope(session, scope_metadata, resolve_parent=False)
@@ -729,7 +729,7 @@ class RelayRuntime:
                 break
             try:
                 orphan_output = self._take_deferred_scope_output(top) or {
-                    "outcome": "cancelled", "hermes.orphan_drain": True,
+                    "outcome": "cancelled", "niki.orphan_drain": True,
                 }
                 pop_relay_scope(self.relay, top, output=orphan_output, metadata=metadata)
                 drained += 1
@@ -807,7 +807,7 @@ class RelayRuntime:
             return
         thread = threading.Thread(
             target=lambda: (self._operations_idle.wait(), self._finish_shutdown()),
-            name=f"hermes-nemo-relay-shutdown-{self.runtime_id[:8]}", daemon=True,
+            name=f"niki-nemo-relay-shutdown-{self.runtime_id[:8]}", daemon=True,
         )
         try:
             thread.start()
@@ -927,7 +927,7 @@ class RelayTurnContext:
 
 
 _CURRENT_TURN: contextvars.ContextVar[RelayTurnContext | None] = contextvars.ContextVar(
-    "hermes_relay_turn", default=None
+    "niki_relay_turn", default=None
 )
 
 # >0 while the native pipeline is mid-dispatch of a Niki tool/LLM callback. Nested managed
@@ -935,7 +935,7 @@ _CURRENT_TURN: contextvars.ContextVar[RelayTurnContext | None] = contextvars.Con
 # loop, blocked inside the synchronous callback), so resolve_execution_context() bypasses Relay.
 # A ContextVar so the marker follows copy_context() into worker threads / per-thread loops.
 _MANAGED_CALLBACK_DEPTH: contextvars.ContextVar[int] = contextvars.ContextVar(
-    "hermes_relay_managed_callback_depth", default=0
+    "niki_relay_managed_callback_depth", default=0
 )
 
 
@@ -1036,7 +1036,7 @@ class RelaySessionCoordinator:
     def _open_conversation_session(self, host: RelayRuntime, context: dict[str, Any]) -> RelaySession | None:
         self._prepare_session(host, context)
         session_id, parent_session_id = context["session_id"], context["parent_session_id"]
-        metadata = {"hermes.execution_surface": context["platform"] or "unknown"}
+        metadata = {"niki.execution_surface": context["platform"] or "unknown"}
         cwd = context.get("cwd")
         if parent_session_id and parent_session_id != session_id:
             event = {"parent_session_id": parent_session_id, "child_session_id": session_id}
@@ -1074,7 +1074,7 @@ class RelaySessionCoordinator:
             turn_metadata.update(
                 runtime_metadata(
                     host.runtime_id,
-                    **{"hermes.execution_surface": lease.platform or "unknown"},
+                    **{"niki.execution_surface": lease.platform or "unknown"},
                 )
             )
             turn.handle = _warn_on_error(
@@ -1324,7 +1324,7 @@ def get_runtime(*, create: bool = True, profile_key: str | None = None) -> Relay
 
 def current_profile_key() -> str:
     """Return the canonical profile identity used for runtime isolation."""
-    home = get_hermes_home().expanduser()
+    home = get_niki_home().expanduser()
     if not home.is_absolute():
         return str(home.resolve())
     return _PROFILE_KEY_CACHE.get(str(home)) or _PROFILE_KEY_CACHE.setdefault(str(home), str(home.resolve()))
@@ -1341,17 +1341,17 @@ def _configured_plugin_inputs() -> Path | None:
     if config_path is None and (legacy_vars := configured_legacy_relay_env_vars(os.environ)):
         logger.warning(
             "Legacy NeMo Relay exporter variables are set but no %s was provided. %s no longer configure "
-            "Relay exporters; any standard user or system plugins.toml still applies. Run `hermes migrate "
-            "relay` (or `hermes update`, which runs it for every profile) to generate %s and select it in .env.",
+            "Relay exporters; any standard user or system plugins.toml still applies. Run `niki migrate "
+            "relay` (or `niki update`, which runs it for every profile) to generate %s and select it in .env.",
             RELAY_PLUGINS_CONFIG_ENV,
             ", ".join(legacy_vars),
-            get_hermes_home() / "relay-plugins.toml",
+            get_niki_home() / "relay-plugins.toml",
         )
     return config_path
 
 
 def _explicit_plugins_toml() -> Path | None:
-    """Return the file selected by ``HERMES_NEMO_RELAY_PLUGINS_TOML`` after checking that it parses."""
+    """Return the file selected by ``NIKI_NEMO_RELAY_PLUGINS_TOML`` after checking that it parses."""
     configured = os.environ.get(RELAY_PLUGINS_CONFIG_ENV, "").strip()
     if not configured:
         return None
@@ -1424,7 +1424,7 @@ def _resolve_plugin_awaitable(value: Any) -> Any:
         asyncio.get_running_loop()
     except RuntimeError:
         return asyncio.run(value)
-    return _run_on_daemon_thread(lambda: asyncio.run(value), name="hermes-nemo-relay-plugin-lifecycle")
+    return _run_on_daemon_thread(lambda: asyncio.run(value), name="niki-nemo-relay-plugin-lifecycle")
 
 
 def _session_id(event: dict[str, Any]) -> str:

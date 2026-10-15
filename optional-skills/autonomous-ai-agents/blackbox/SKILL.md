@@ -2,13 +2,13 @@
 name: blackbox
 description: Delegate coding tasks to the Blackbox AI multi-model CLI.
 version: 1.0.1
-author: Niki Agent (Nous Research)
+author: Niki Agent (NeGamer01)
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  niki:
     tags: [Coding-Agent, Blackbox, Multi-Agent, Judge, Multi-Model]
-    related_skills: [claude-code, codex, hermes-agent]
+    related_skills: [claude-code, codex, niki-agent]
 ---
 
 # Blackbox CLI
@@ -90,8 +90,8 @@ terminal(command="REVIEW=$(mktemp -d) && git clone https://github.com/user/repo.
 Spawn multiple Blackbox instances for independent tasks:
 
 ```
-terminal(command="blackbox --prompt 'Fix the login bug'", workdir="~/.hermes/cache/scratch/issue-1", background=true, pty=true)
-terminal(command="blackbox --prompt 'Add unit tests for auth'", workdir="~/.hermes/cache/scratch/issue-2", background=true, pty=true)
+terminal(command="blackbox --prompt 'Fix the login bug'", workdir="~/.niki/cache/scratch/issue-1", background=true, pty=true)
+terminal(command="blackbox --prompt 'Add unit tests for auth'", workdir="~/.niki/cache/scratch/issue-2", background=true, pty=true)
 
 # Monitor all
 process(action="list")

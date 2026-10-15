@@ -1,0 +1,20 @@
+name: niki-workbench
+repo: https://github.com/sxuff/niki-workbench
+sha: f07fb5c90e24c1a396604758feb0fd4ae077760b
+description: The Niki desktop app in your browser. `niki workbench` serves the desktop interface through the Niki dashboard, for headless servers, VPSes and tablets. Disclosure — community plugin, not a Niki product. On the first `niki workbench` run and again after each Niki update it runs `npm install --ignore-scripts` (guided by Niki's lockfile) and Vite against your Niki checkout's desktop sources, writing only under ~/.niki/niki-workbench and its own plugin dir (the checkout is only read), and starts `niki dashboard` on loopback when none is running.
+maintainer: sxuff
+tier: community
+category: desktop
+requires_niki: ">=0.21"
+docs_url: https://github.com/sxuff/niki-workbench#readme
+version: "0.2.1"
+image: https://raw.githubusercontent.com/sxuff/niki-workbench/f07fb5c90e24c1a396604758feb0fd4ae077760b/docs/media/banner.png
+screenshots:
+  - https://raw.githubusercontent.com/sxuff/niki-workbench/f07fb5c90e24c1a396604758feb0fd4ae077760b/docs/media/session.png
+  - https://raw.githubusercontent.com/sxuff/niki-workbench/f07fb5c90e24c1a396604758feb0fd4ae077760b/docs/media/slash-commands.png
+  - https://raw.githubusercontent.com/sxuff/niki-workbench/f07fb5c90e24c1a396604758feb0fd4ae077760b/docs/media/model-picker.png
+capabilities:
+  provides_tools: []
+  provides_hooks: []
+  provides_middleware: []
+  requires_env: []

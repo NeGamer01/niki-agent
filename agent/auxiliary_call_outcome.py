@@ -1,4 +1,4 @@
-"""How one auxiliary logical call ended, for its Relay ``hermes.logical_llm_call`` scope.
+"""How one auxiliary logical call ended, for its Relay ``niki.logical_llm_call`` scope.
 
 The scope's ``outcome`` + ``error_class`` become the shared-metrics ``model_route`` row of an
 auxiliary call, under the same contract as a primary call: a failure carries the classifier's

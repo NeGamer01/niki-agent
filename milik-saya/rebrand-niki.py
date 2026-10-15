@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""Rebrand nama PRODUK Hermes -> Niki di repo fork (fase tampilan & identitas).
+"""Rebrand nama PRODUK Niki -> Niki di repo fork (fase tampilan & identitas).
 
-Yang diganti: 'Hermes Agent' -> 'Niki Agent', 'Hermes' mandiri -> 'Niki',
-'HERMES' mandiri -> 'NIKI' (teks tampilan, docs, README, desktop identity,
+Yang diganti: 'Niki Agent' -> 'Niki Agent', 'Niki' mandiri -> 'Niki',
+'NIKI' mandiri -> 'NIKI' (teks tampilan, docs, README, desktop identity,
 CLI strings, installer messages, metadata paket).
 
 Yang SENGAJA tidak diganti (identifier teknis / pihak ketiga — menggantinya
 merusak fungsi, bukan sekadar nama):
-- URL & domain eksternal (nousresearch.com, hermes-assets, github upstream)
+- URL & domain eksternal (nousresearch.com, niki-assets, github upstream)
 - paket pihak ketiga: hermes-parser / hermes-estree (Meta), model
-  'Hermes 3/4' milik Nous, slug model provider (nousresearch/hermes-...)
+  'Hermes 3/4' milik Niki, slug model provider (nousresearch/hermes-...)
 - file LICENSE & file .lock, berkas biner
-- identifier huruf kecil: modul python (hermes_cli dll), variabel HERMES_*,
-  folder data ~/.hermes — ini nama teknis internal, tidak tampil ke user.
+- identifier huruf kecil: modul python (niki_cli dll), variabel NIKI_*,
+  folder data ~/.niki — ini nama teknis internal, tidak tampil ke user.
 """
 import os
 import re
@@ -27,17 +27,17 @@ SKIP_EXT = {".png", ".jpg", ".jpeg", ".gif", ".ico", ".icns", ".woff",
             ".xz", ".7z", ".mp3", ".mp4", ".webm", ".webp", ".svgz",
             ".bin", ".dat", ".db", ".sqlite", ".snap", ".msix", ".dmg",
             ".exe", ".dll", ".so", ".dylib", ".a", ".o", ".pyc"}
-PROTECT_LINE = ("nousresearch", "hermes-assets", "hermes-parser",
-                "hermes-estree", "hermes-engine", "hermesjs")
+PROTECT_LINE = ("negamer01", "niki-assets", "hermes-parser",
+                "hermes-estree", "niki-engine", "nikijs")
 changed_files = 0
 changed_lines = 0
 
 RULES = [
-    (re.compile(r"Hermes Agent"), "Niki Agent"),
-    (re.compile(r"HERMES AGENT"), "NIKI AGENT"),
-    (re.compile(r"hermes agent"), "niki agent"),
-    (re.compile(r"\bHermes\b(?!\s?-?\s?\d)"), "Niki"),
-    (re.compile(r"\bHERMES\b"), "NIKI"),
+    (re.compile(r"Niki Agent"), "Niki Agent"),
+    (re.compile(r"NIKI AGENT"), "NIKI AGENT"),
+    (re.compile(r"niki agent"), "niki agent"),
+    (re.compile(r"\bNiki\b(?!\s?-?\s?\d)"), "Niki"),
+    (re.compile(r"\bNIKI\b"), "NIKI"),
 ]
 
 for dirpath, dirnames, filenames in os.walk(ROOT):

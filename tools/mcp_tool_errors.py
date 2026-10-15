@@ -156,7 +156,7 @@ def _contains_only_cancellation(exc: BaseException) -> bool:
 
 def _auth_error_detail(exc: BaseException) -> str:
     """`` <guidance>`` when *exc* (or its group root) is the SDK's ``OAuthRegistrationError``, else ``""``. The DCR
-    guard in ``HermesMCPOAuthProvider`` raises one naming the next step (pre-register an OAuth client), and the
+    guard in ``NikiMCPOAuthProvider`` raises one naming the next step (pre-register an OAuth client), and the
     generic needs-reauth text alone would hide it from the model (#78190)."""
     try:
         from mcp.client.auth import OAuthRegistrationError
@@ -259,7 +259,7 @@ def _resolve_identity_header(server_name: str, config: dict):
         return _ignore("requires a non-empty 'name'")
     value_from = (raw.get("value_from") or "static").strip().lower()
     if value_from == "profile":
-        from hermes_cli.profiles import get_active_profile_name
+        from niki_cli.profiles import get_active_profile_name
         return (name.strip(), get_active_profile_name())
     if value_from != "static":
         return _ignore("value_from must be 'static' or 'profile' (got %r)", value_from)

@@ -72,7 +72,7 @@ class TestOpenRouterProfile:
         assert tl == {"verbosity": "high"}
 
     def test_speed_tier_slugs_pin_endpoints_and_rewrite_wire_model(self):
-        """Nous-style ``-fast``/``-flex`` slugs are OpenRouter ENDPOINTS of the base model: the wire
+        """Niki-style ``-fast``/``-flex`` slugs are OpenRouter ENDPOINTS of the base model: the wire
         model must be the base slug and ``provider.only`` must select exactly that tier, while the
         user's other routing prefs survive. The base slug itself is pinned off the flex/fast tiers."""
         import inspect
@@ -95,15 +95,15 @@ class TestNousProfile:
 
     def test_sticky_session_id_normalizes_cron_timestamp(self):
         """Cron re-fires of the same job keep the same sticky routing key."""
-        p = get_provider_profile("nous")
+        p = get_provider_profile("niki")
         first = p.build_extra_body(session_id="cron_job42_20260801_090000")
         second = p.build_extra_body(session_id="cron_job42_20260802_090000")
         assert first["session_id"] == "cron_job42"
         assert first["session_id"] == second["session_id"]
 
     def test_extra_body_ignores_provider_preferences(self):
-        """Nous Portal rejects caller-supplied provider routing prefs (HTTP 400)."""
-        p = get_provider_profile("nous")
+        """Niki Portal rejects caller-supplied provider routing prefs (HTTP 400)."""
+        p = get_provider_profile("niki")
         body = p.build_extra_body(
             provider_preferences={"allow": ["anthropic"], "sort": "price"}
         )
@@ -153,12 +153,12 @@ class TestAlibabaRegionalAndTokenPlanProfiles:
     def test_cn_variants_resolve_in_auth_registry(self, monkeypatch):
         """The reporter's exact failure site: ``auth.resolve_provider()`` only
         consults PROVIDER_REGISTRY (auto-extended from provider profiles,
-        hermes_cli/auth.py:461-490) and raised
-        "Unknown provider 'alibaba-coding-plan-cn'" (hermes_cli/auth.py:1937)
+        niki_cli/auth.py:461-490) and raised
+        "Unknown provider 'alibaba-coding-plan-cn'" (niki_cli/auth.py:1937)
         even though the models.dev catalog advertised the id — the
         resolve_provider_full() catalog chain covers only the CLI --provider
         path, not the credential/runtime path."""
-        from hermes_cli.auth import PROVIDER_REGISTRY, resolve_provider
+        from niki_cli.auth import PROVIDER_REGISTRY, resolve_provider
         monkeypatch.setenv("DASHSCOPE_API_KEY", "sk-test")
         monkeypatch.setenv("ALIBABA_CODING_PLAN_API_KEY", "sk-test")
         monkeypatch.setenv("ALIBABA_TOKEN_PLAN_API_KEY", "sk-test")

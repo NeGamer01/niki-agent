@@ -11,7 +11,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-import hermes_yaml as yaml
+import niki_yaml as yaml
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -23,9 +23,9 @@ VALID_ENTRY = {
     "sha": "38fe0fb53eff98d477f807432e965429e665ca33",
     "subdir": "",
     "description": "One-line description.",
-    "maintainer": "NousResearch",
+    "maintainer": "NeGamer01",
     "tier": "official",
-    "requires_hermes": ">=0.19",
+    "requires_niki": ">=0.19",
     "docs_url": "",
     "platforms": [],
     "capabilities": {
@@ -195,12 +195,12 @@ def test_capabilities_list_of_non_strings_fails(tmp_path):
     )
 
 
-def test_bad_requires_hermes_spec_fails(tmp_path):
-    _expect_error(tmp_path, {"requires_hermes": "banana"}, "requires_hermes")
+def test_bad_requires_niki_spec_fails(tmp_path):
+    _expect_error(tmp_path, {"requires_niki": "banana"}, "requires_niki")
 
 
-def test_comma_separated_requires_hermes_passes(tmp_path):
-    entry = {**VALID_ENTRY, "requires_hermes": ">=0.19, <2.0"}
+def test_comma_separated_requires_niki_passes(tmp_path):
+    entry = {**VALID_ENTRY, "requires_niki": ">=0.19, <2.0"}
     path = write_entry(tmp_path, entry)
     result = run_validator(str(path))
     assert result.returncode == 0, result.stdout + result.stderr

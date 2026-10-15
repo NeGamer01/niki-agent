@@ -5,9 +5,9 @@ interface ProductIdentity {
   store: boolean
   /** Display name. e.g. "Niki Light" */
   displayName: string
-  /** OS-level app identity. e.g. "com.nousresearch.hermes-light" */
+  /** OS-level app identity. e.g. "com.negamer01.niki-light" */
   appId: string
-  /** app name in pascal case. e.g. "HermesLight" */
+  /** app name in pascal case. e.g. "NikiLight" */
   appNamePascal: string
   /** Artifact prefix stays compatible with release archive consumers. */
   artifactNamePascal: string
@@ -15,7 +15,7 @@ interface ProductIdentity {
   windowsExecutableName: string
   /** Exposed payload CLI command. */
   cliName: string
-  /** OS-level app identity w/ org prefix. e.g. "NousResearch.HermesLight" */
+  /** OS-level app identity w/ org prefix. e.g. "NeGamer01.NikiLight" */
   msixAppIdWithOrg: string
   /** R2 identity token on channel builds; absent on legacy products. */
   readonly token?: string

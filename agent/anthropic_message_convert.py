@@ -420,7 +420,7 @@ def _convert_assistant_message(m: dict[str, Any]) -> dict[str, Any]:
     # (injected as a fallback upstream). Prepend, since thinking must precede text/tool_use. Skip
     # when reasoning_details already supplied (signed) thinking blocks: a duplicate unsigned one
     # would be downgraded to a spurious text block on the last assistant message.
-    # See hermes-agent#13848. Accept empty string "" — _copy_reasoning_content_for_api() injects "" as a
+    # See niki-agent#13848. Accept empty string "" — _copy_reasoning_content_for_api() injects "" as a
     # tier-3 fallback for Kimi tool-call messages that had no reasoning.
     reasoning_content = m.get("reasoning_content")
     if isinstance(reasoning_content, str) and not _has_block_type(blocks, _THINKING_TYPES):
@@ -588,7 +588,7 @@ def _manage_thinking_signatures(result: list[dict[str, Any]], base_url: str | No
     """Strip or preserve thinking blocks per endpoint. Mutates ``result`` in place.
 
     Anthropic signs thinking blocks against the full turn; any upstream mutation invalidates them
-    (400 "Invalid signature in thinking block"). Signed routes (Anthropic, Nous Portal, Bedrock,
+    (400 "Invalid signature in thinking block"). Signed routes (Anthropic, Niki Portal, Bedrock,
     Vertex, Foundry; MiniMax for its own blocks) keep valid signed blocks on every assistant turn
     when the model keeps prior thinking, else on every turn of the in-flight tool loop (the API
     requires those back and strips older turns itself; cutting at the latest assistant message

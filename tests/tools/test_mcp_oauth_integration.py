@@ -37,7 +37,7 @@ async def test_external_refresh_picked_up_without_restart(tmp_path, monkeypatch)
     4. ``provider.context.current_tokens`` now reflects the new tokens
        with no process restart required.
     """
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("NIKI_HOME", str(tmp_path))
 
     from tools.mcp_oauth_manager import MCPOAuthManager, reset_manager_for_tests
     reset_manager_for_tests()
@@ -74,7 +74,7 @@ async def test_external_refresh_picked_up_without_restart(tmp_path, monkeypatch)
     assert provider.context.current_tokens.access_token == "OLD_ACCESS"
 
     # Now record the baseline mtime in the manager (this happens
-    # automatically via the HermesMCPOAuthProvider.async_auth_flow
+    # automatically via the NikiMCPOAuthProvider.async_auth_flow
     # pre-hook on the first real request, but we exercise it directly
     # here for test determinism).
     baseline_changed = await mgr.invalidate_if_disk_changed("srv")
@@ -113,7 +113,7 @@ async def test_handle_401_deduplicates_concurrent_callers(tmp_path, monkeypatch)
     caches and re-reading the keychain (which thrashes the storage and
     bogs down startup per CC-1096).
     """
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+    monkeypatch.setenv("NIKI_HOME", str(tmp_path))
 
     from tools.mcp_oauth_manager import MCPOAuthManager, reset_manager_for_tests
     reset_manager_for_tests()

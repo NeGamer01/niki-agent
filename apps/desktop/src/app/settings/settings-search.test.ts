@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { Settings2, Wrench } from '@/lib/icons'
-import type { ConfigFieldSchema, HermesConfigRecord } from '@/types/hermes'
+import type { ConfigFieldSchema, NikiConfigRecord } from '@/types/niki'
 
 import {
   buildConfigSearchEntries,
@@ -38,7 +38,7 @@ describe('settings search index', () => {
     const config = {
       display: { personality: 'default' },
       tts: { provider: 'edge', edge: { voice: '' }, openai: { voice: '' } }
-    } as unknown as HermesConfigRecord
+    } as unknown as NikiConfigRecord
 
     const entries = buildConfigSearchEntries(schema, config, searchCopy)
 

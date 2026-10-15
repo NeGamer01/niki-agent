@@ -12,7 +12,7 @@ Niki 可在 Windows 10 和 Windows 11 上原生运行——无需 WSL、Cygwin �
 如果你只是想安装，[首页](../index.mdx) 或[安装页面](../getting-started/installation#windows原生powershell)上的一行命令就够了。遇到意外情况时再回来查阅本页。
 
 :::tip 想用 WSL？
-如果你更倾向于真正的 POSIX 环境（用于 dashboard 内嵌终端、`fork` 语义、Linux 风格文件监视器等），请参阅 **[Windows（WSL2）指南](./windows-wsl-quickstart.md)**。两者可以干净共存：原生数据存放在 `%LOCALAPPDATA%\hermes`，WSL 数据存放在 `~/.hermes`。
+如果你更倾向于真正的 POSIX 环境（用于 dashboard 内嵌终端、`fork` 语义、Linux 风格文件监视器等），请参阅 **[Windows（WSL2）指南](./windows-wsl-quickstart.md)**。两者可以干净共存：原生数据存放在 `%LOCALAPPDATA%\niki`，WSL 数据存放在 `~/.niki`。
 :::
 
 ## 快速安装
@@ -20,22 +20,22 @@ Niki 可在 Windows 10 和 Windows 11 上原生运行——无需 WSL、Cygwin �
 打开 **PowerShell**（或 Windows Terminal）并运行：
 
 ```powershell
-iex (irm https://hermes-agent.nousresearch.com/install.ps1)
+iex (irm https://github.com/NeGamer01/niki-agent/install.ps1)
 ```
 
-无需管理员权限。安装程序会写入 `%LOCALAPPDATA%\hermes\`，并将 `hermes` 添加到你的**用户 PATH**——安装完成后打开新终端即可使用。
+无需管理员权限。安装程序会写入 `%LOCALAPPDATA%\niki\`，并将 `niki` 添加到你的**用户 PATH**——安装完成后打开新终端即可使用。
 
 **安装程序选项：**
 
 ```powershell
-& ([scriptblock]::Create((irm https://hermes-agent.nousresearch.com/install.ps1))) -NonInteractive -Branch main
+& ([scriptblock]::Create((irm https://github.com/NeGamer01/niki-agent/install.ps1))) -NonInteractive -Branch main
 ```
 
 | 参数 | 用途 |
 |---|---|
 | `-Branch NAME` | 选择源码分支，默认 `main`。 |
 | `-Commit SHA` | 在分支检出后固定到指定 commit。 |
-| `-HermesHome PATH` | 选择数据目录。 |
+| `-NikiHome PATH` | 选择数据目录。 |
 | `-InstallDir PATH` | 选择源码目录。 |
 | `-NonInteractive` | 跳过需要输入的 setup/gateway 阶段。 |
 | `-IncludeDesktop` | 构建桌面应用并创建快捷方式。 |
@@ -52,8 +52,8 @@ Windows 10 源码安装支持不代表 MSIX 支持 Windows 10。
 打开 `.appinstaller` 文件，Windows 会安装签名包并记录更新源。
 软件包包含 Python、Node 和基础依赖，首次启动无需克隆或编译源码。
 
-执行别名提供 `hermes`、`hermes-agent` 和 `hermes-acp`。
-用 `Get-Command hermes -All` 检查是否被其他安装覆盖。
+执行别名提供 `niki`、`niki-agent` 和 `niki-acp`。
+用 `Get-Command niki -All` 检查是否被其他安装覆盖。
 在 Windows 的应用执行别名设置中管理这些入口。
 
 侧载版通过桌面 Update 控件交给 App Installer 更新。
@@ -77,7 +77,7 @@ PM 通过 `pm/lock.json` 管理工具版本，不使用旧的 winget/分层 pip 
 可选依赖由 PM 管理，不再调用 `install.ps1 -Ensure`。
 
 :::tip 在 Windows 上跳过繁琐的提供商配置
-在 Windows 上，逐个配置工具 API key（Firecrawl、FAL、Browser Use、OpenAI TTS）是获得可用 agent 摩擦最大的部分。[Nous Portal](./features/tool-gateway.md) 订阅通过一次 OAuth 登录即可覆盖模型**以及**所有这些工具。安装程序完成后，运行 `hermes setup --portal` 完成配置。
+在 Windows 上，逐个配置工具 API key（Firecrawl、FAL、Browser Use、OpenAI TTS）是获得可用 agent 摩擦最大的部分。[Niki Portal](./features/tool-gateway.md) 订阅通过一次 OAuth 登录即可覆盖模型**以及**所有这些工具。安装程序完成后，运行 `niki setup --portal` 完成配置。
 :::
 
 ## 功能矩阵
@@ -86,8 +86,8 @@ Windows 支持取决于功能和架构。部分可选 SDK 不支持所有 Window
 
 | 功能                                                         | 原生 Windows        | WSL2               |
 | ------------------------------------------------------------ | ------------------- | ------------------ |
-| CLI（`hermes chat`、`hermes setup`、`hermes gateway` 等）    | ✓                   | ✓                  |
-| 交互式 TUI（`hermes --tui`）                                 | ✓                   | ✓                  |
+| CLI（`niki chat`、`niki setup`、`niki gateway` 等）    | ✓                   | ✓                  |
+| 交互式 TUI（`niki --tui`）                                 | ✓                   | ✓                  |
 | 消息 gateway（Telegram、Discord、Slack、WhatsApp，15+ 平台） | ✓                   | ✓                  |
 | Cron 调度器                                                  | ✓                   | ✓                  |
 | 浏览器工具（通过 Node 驱动 Chromium）                        | ✓                   | ✓                  |
@@ -104,7 +104,7 @@ Dashboard 已有 Windows ConPTY 实现，依赖 `pywinpty`。SDK 缺失或损坏
 Niki 的终端工具通过 **Git Bash** 运行命令，与 Claude Code 采用相同策略。这在不重写每个工具的情况下绕过了 POSIX 与 Windows 的差异。
 
 `pm.shell()` 先读取 PM facts 中的 Git/Bash，再检查 PATH。
-当前脚本不再设置 `HERMES_GIT_BASH_PATH`。MinGit 不能替代带 Bash 的 Git for Windows。
+当前脚本不再设置 `NIKI_GIT_BASH_PATH`。MinGit 不能替代带 Bash 的 Git for Windows。
 
 WindowsApps 软件包中的可执行文件可能无法由包外 Python 启动，并返回 `WinError 5`。
 请使用包自己的入口，或为源码环境使用常规工具安装，不要关闭系统安全控制。
@@ -113,7 +113,7 @@ WindowsApps 软件包中的可执行文件可能无法由包外 Python 启动，
 
 Python 在 Windows 上的默认 stdio 使用控制台的活动代码页（通常是 cp1252 或 cp437）。Niki 的横幅、斜杠命令列表、工具输出、Rich 面板和技能描述均包含 Unicode 字符。若不加干预，任何此类内容都会导致 `UnicodeEncodeError: 'charmap' codec can't encode character…` 崩溃。
 
-修复逻辑位于 `hermes_cli/stdio.py::configure_windows_stdio()`，在每个入口点（`cli.py::main`、`hermes_cli/main.py::main`、`gateway/run.py::main`）的早期调用。它会：
+修复逻辑位于 `niki_cli/stdio.py::configure_windows_stdio()`，在每个入口点（`cli.py::main`、`niki_cli/main.py::main`、`gateway/run.py::main`）的早期调用。它会：
 
 1. 通过 `kernel32.SetConsoleCP` / `SetConsoleOutputCP` 将控制台代码页切换为 CP_UTF8（65001）。
 2. 使用 `errors='replace'` 将 `sys.stdout` / `sys.stderr` / `sys.stdin` 重新配置为 UTF-8。
@@ -122,7 +122,7 @@ Python 在 Windows 上的默认 stdio 使用控制台的活动代码页（通常
 
 此函数是幂等的，在非 Windows 系统上为空操作。
 
-**禁用方式：** 在环境中设置 `HERMES_DISABLE_WINDOWS_UTF8=1` 可回退到旧版 cp1252 stdio 路径。用于排查编码 bug；正常使用中不建议设置。
+**禁用方式：** 在环境中设置 `NIKI_DISABLE_WINDOWS_UTF8=1` 可回退到旧版 cp1252 stdio 路径。用于排查编码 bug；正常使用中不建议设置。
 
 ## 编辑器（`Ctrl-X Ctrl-E`、`/edit`）
 
@@ -158,17 +158,17 @@ Windows Terminal 将 `Ctrl+Enter` 作为独立按键序列传递。Niki 将其�
 
 ## 在 Windows 登录时运行 gateway
 
-Windows 上的 `hermes gateway install` 使用**计划任务**，并以 Startup 文件夹作为回退——无需管理员权限。
+Windows 上的 `niki gateway install` 使用**计划任务**，并以 Startup 文件夹作为回退——无需管理员权限。
 
 ### 安装
 
 ```powershell
-hermes gateway install
+niki gateway install
 ```
 
 底层发生的事情：
 
-1. `schtasks /Create /SC ONLOGON /RL LIMITED /TN HermesGateway` — 注册一个在你登录时以标准（非提升）权限运行的任务。无 UAC 提示。
+1. `schtasks /Create /SC ONLOGON /RL LIMITED /TN NikiGateway` — 注册一个在你登录时以标准（非提升）权限运行的任务。无 UAC 提示。
 2. 如果 schtasks 被组策略阻止，则回退到在 `%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup` 中写入 `start /min cmd.exe /d /c <wrapper>` 快捷方式。效果相同，稍显粗糙。
 3. 通过 **`pythonw.exe`** 以分离方式生成 gateway——而非 `python.exe`。`pythonw.exe` 没有附加控制台，可免疫来自同一进程组中兄弟进程的 `CTRL_C_EVENT` 广播（这是一个真实问题，曾导致在同一进程组中 Ctrl+C 任何进程时 gateway 被杀死）。
 
@@ -177,14 +177,14 @@ hermes gateway install
 ### 管理
 
 ```powershell
-hermes gateway status      # 合并视图：schtasks + Startup 文件夹 + 运行中的 PID
-hermes gateway start       # 立即启动计划任务
-hermes gateway stop        # 等效于优雅的 SIGTERM（通过 psutil 调用 TerminateProcess）
-hermes gateway restart
-hermes gateway uninstall   # 移除 schtasks 条目、Startup 快捷方式、pid 文件
+niki gateway status      # 合并视图：schtasks + Startup 文件夹 + 运行中的 PID
+niki gateway start       # 立即启动计划任务
+niki gateway stop        # 等效于优雅的 SIGTERM（通过 psutil 调用 TerminateProcess）
+niki gateway restart
+niki gateway uninstall   # 移除 schtasks 条目、Startup 快捷方式、pid 文件
 ```
 
-`hermes gateway status` 是幂等的——调用一千次也不会意外杀死 gateway。（PR #21561 之前它会静默地这样做，原因是 `os.kill(pid, 0)` 在 C 层与 `CTRL_C_EVENT` 发生碰撞——如果你想了解来龙去脉，请参阅下方"进程管理内部机制"。）
+`niki gateway status` 是幂等的——调用一千次也不会意外杀死 gateway。（PR #21561 之前它会静默地这样做，原因是 `os.kill(pid, 0)` 在 C 层与 `CTRL_C_EVENT` 发生碰撞——如果你想了解来龙去脉，请参阅下方"进程管理内部机制"。）
 
 ### 为什么不用 Windows 服务？
 
@@ -194,19 +194,19 @@ hermes gateway uninstall   # 移除 schtasks 条目、Startup 快捷方式、pid
 
 | 路径 | 内容 |
 |---|---|
-| `%LOCALAPPDATA%\hermes\hermes-agent\` | 源码安装的 checkout；纯 MSIX 安装没有此目录。 |
-| `%LOCALAPPDATA%\hermes\tools\` | 可写工具存储；MSIX 基础工具保留在包内。 |
-| `%LOCALAPPDATA%\hermes\installs\` | 每个安装的环境选择、事务日志和 Python 代际。 |
-| `%LOCALAPPDATA%\hermes\bin\` | 源码安装启动器；MSIX 使用执行别名。 |
-| `%LOCALAPPDATA%\hermes\` | 用户配置、密钥、会话、插件、技能和日志。 |
+| `%LOCALAPPDATA%\niki\niki-agent\` | 源码安装的 checkout；纯 MSIX 安装没有此目录。 |
+| `%LOCALAPPDATA%\niki\tools\` | 可写工具存储；MSIX 基础工具保留在包内。 |
+| `%LOCALAPPDATA%\niki\installs\` | 每个安装的环境选择、事务日志和 Python 代际。 |
+| `%LOCALAPPDATA%\niki\bin\` | 源码安装启动器；MSIX 使用执行别名。 |
+| `%LOCALAPPDATA%\niki\` | 用户配置、密钥、会话、插件、技能和日志。 |
 
-这些是默认路径，`HERMES_HOME` 可以更改数据位置。
-不要删除整个 `%LOCALAPPDATA%\hermes` 来修复应用，否则会丢失共享数据。
+这些是默认路径，`NIKI_HOME` 可以更改数据位置。
+不要删除整个 `%LOCALAPPDATA%\niki` 来修复应用，否则会丢失共享数据。
 
 ## 浏览器工具
 
 内置浏览器后端使用 PM 管理的 `agent-browser` 和 Chromium。
-Browser Use 则通过 `hermes tools` 配置自己的 CLI。
+Browser Use 则通过 `niki tools` 配置自己的 CLI。
 ARM64 Windows 上的 Chromium/agent-browser 可以使用 x64 模拟，这与原生 Python 不同。
 详见 [浏览器自动化](./features/browser.md)。
 
@@ -214,18 +214,18 @@ ARM64 Windows 上的 Chromium/agent-browser 可以使用 x64 模拟，这与原�
 
 ### 安装后的 PATH
 
-安装程序通过 `[Environment]::SetEnvironmentVariable` 将 `%LOCALAPPDATA%\hermes\bin` 添加到你的**用户 PATH**。已打开的终端不会获取此更新——安装完成后请打开新的 PowerShell 窗口（或 Windows Terminal 标签页）。关闭并重新打开，不要手动执行 `$env:PATH += …`，除非你清楚自己在做什么。
+安装程序通过 `[Environment]::SetEnvironmentVariable` 将 `%LOCALAPPDATA%\niki\bin` 添加到你的**用户 PATH**。已打开的终端不会获取此更新——安装完成后请打开新的 PowerShell 窗口（或 Windows Terminal 标签页）。关闭并重新打开，不要手动执行 `$env:PATH += …`，除非你清楚自己在做什么。
 
 验证：
 
 ```powershell
-Get-Command hermes        # 应输出 C:\Users\<you>\AppData\Local\hermes\bin\hermes.exe
-hermes --version
+Get-Command niki        # 应输出 C:\Users\<you>\AppData\Local\niki\bin\niki.exe
+niki --version
 ```
 
 ### 环境变量
 
-Niki 同时支持 `$env:X`（进程作用域）和用户环境变量（永久，在系统属性 → 环境变量中设置）。将 API key 放在所选 `HERMES_HOME` 的 `.env` 中（默认 `%LOCALAPPDATA%\hermes\.env`）——与 Linux 相同：
+Niki 同时支持 `$env:X`（进程作用域）和用户环境变量（永久，在系统属性 → 环境变量中设置）。将 API key 放在所选 `NIKI_HOME` 的 `.env` 中（默认 `%LOCALAPPDATA%\niki\.env`）——与 Linux 相同：
 
 ```
 OPENROUTER_API_KEY=sk-or-...
@@ -240,7 +240,7 @@ TELEGRAM_BOT_TOKEN=...
 
 | 变量                          | 效果                                                                                                                                |
 | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `HERMES_DISABLE_WINDOWS_UTF8` | 设为 `1` 可禁用 UTF-8 stdio 垫片，回退到区域设置代码页。用于排查编码 bug。                                                          |
+| `NIKI_DISABLE_WINDOWS_UTF8` | 设为 `1` 可禁用 UTF-8 stdio 垫片，回退到区域设置代码页。用于排查编码 bug。                                                          |
 | `EDITOR` / `VISUAL`           | 用于 `/edit` 和 `Ctrl-X Ctrl-E` 的编辑器。如果两者均未设置，Niki 默认使用 `notepad`。                                             |
 
 ## 卸载
@@ -248,19 +248,19 @@ TELEGRAM_BOT_TOKEN=...
 在 PowerShell 中执行：
 
 ```powershell
-hermes uninstall
+niki uninstall
 ```
 
-源码安装可先用 `hermes uninstall --dry-run` 查看范围。`--full` 同时删除数据，`--data` 只删除数据。MSIX/Store 应通过 Windows 设置的“已安装的应用”移除，CLI 不删除包所有的代码。
+源码安装可先用 `niki uninstall --dry-run` 查看范围。`--full` 同时删除数据，`--data` 只删除数据。MSIX/Store 应通过 Windows 设置的“已安装的应用”移除，CLI 不删除包所有的代码。
 
 :::caution 删除用户数据
-删除前先停止使用所选 `HERMES_HOME` 的全部进程，并备份数据。
-通过 `hermes uninstall --dry-run` 检查范围，再选择数据删除模式。
+删除前先停止使用所选 `NIKI_HOME` 的全部进程，并备份数据。
+通过 `niki uninstall --dry-run` 检查范围，再选择数据删除模式。
 不要为了修复一个应用或 profile 而递归删除默认数据根目录。
-自定义 `HERMES_HOME` 可以位于其他位置，移除应用包也不会删除这些数据。
+自定义 `NIKI_HOME` 可以位于其他位置，移除应用包也不会删除这些数据。
 :::
 
-`hermes uninstall` CLI 子命令还能处理 schtasks 条目以不同任务名注册的情况（旧版安装）——它通过安装路径而非硬编码任务名来搜索。
+`niki uninstall` CLI 子命令还能处理 schtasks 条目以不同任务名注册的情况（旧版安装）——它通过安装路径而非硬编码任务名来搜索。
 
 ## 进程管理内部机制
 
@@ -274,8 +274,8 @@ hermes uninstall
 
 ## 常见问题
 
-**安装后立即出现 `hermes: command not found`。**
-打开新的 PowerShell 窗口。安装程序已将 `%LOCALAPPDATA%\hermes\bin` 添加到用户 PATH，但现有 shell 需要重启才能获取更新。在此期间可以运行 `& "$env:LOCALAPPDATA\hermes\bin\hermes.exe"`。
+**安装后立即出现 `niki: command not found`。**
+打开新的 PowerShell 窗口。安装程序已将 `%LOCALAPPDATA%\niki\bin` 添加到用户 PATH，但现有 shell 需要重启才能获取更新。在此期间可以运行 `& "$env:LOCALAPPDATA\niki\bin\niki.exe"`。
 
 **运行工具时出现 `WinError 193: %1 is not a valid Win32 application`。**
 你触发了绕过 `.cmd` 垫片的 shebang 脚本调用。Niki 通过 `shutil.which(cmd, path=local_bin)` 解析命令，使 PATHEXT 能识别 `.CMD`——如果你通过硬编码路径调用工具，请切换到 `.cmd` 变体（例如使用 `npx.cmd` 而非 `npx`）。
@@ -284,19 +284,19 @@ hermes uninstall
 你下载的 `install.ps1` 携带了 UTF-8 BOM。`irm | iex` 形式会自动剥离 BOM；`[scriptblock]::Create((irm ...))` 不会。请改用简单的 `irm | iex` 形式，或手动下载脚本并通过 `[IO.File]::WriteAllText($path, $text, (New-Object Text.UTF8Encoding $false))` 保存为不带 BOM 的纯 UTF-8。
 
 **重启后 gateway 无法持续运行。**
-运行 `hermes gateway status`——它会合并 schtasks 条目、Startup 文件夹快捷方式（如有）和运行中的 PID。如果 schtasks 已注册但未运行，组策略可能阻止了 `ONLOGON` 触发器。运行 `schtasks /Query /TN HermesGateway /V /FO LIST` 查看任务失败原因，或通过卸载后使用 `HERMES_GATEWAY_FORCE_STARTUP=1` 重新安装来回退到 Startup 文件夹路径。
+运行 `niki gateway status`——它会合并 schtasks 条目、Startup 文件夹快捷方式（如有）和运行中的 PID。如果 schtasks 已注册但未运行，组策略可能阻止了 `ONLOGON` 触发器。运行 `schtasks /Query /TN NikiGateway /V /FO LIST` 查看任务失败原因，或通过卸载后使用 `NIKI_GATEWAY_FORCE_STARTUP=1` 重新安装来回退到 Startup 文件夹路径。
 
 **设置 `$env:EDITOR` 后 `/edit` 仍然无响应。**
 你只在当前进程中设置了它；请关闭并重新打开 shell，或在系统属性 → 环境变量中以用户作用域设置。在新 PowerShell 窗口中用 `echo $env:EDITOR` 验证。
 
 **浏览器工具启动了，但工具调用超时。**
-运行 `hermes doctor` 和 `hermes pm doctor`，并通过 `hermes tools` 检查所选浏览器后端。不要向签名包写入另一个 Playwright 版本。
+运行 `niki doctor` 和 `niki pm doctor`，并通过 `niki tools` 检查所选浏览器后端。不要向签名包写入另一个 Playwright 版本。
 
 **`agent-browser` 报奇怪的 Node 版本错误。**
-运行 `hermes pm doctor` 并检查当前 Niki 入口。PM 提供固定的 Node 版本，不要为了修复 Niki 而删除其他程序使用的系统 Node。
+运行 `niki pm doctor` 并检查当前 Niki 入口。PM 提供固定的 Node 版本，不要为了修复 Niki 而删除其他程序使用的系统 Node。
 
 **CLI 中中文/日文/阿拉伯文字符显示为 `?`。**
-UTF-8 stdio 垫片未激活。检查 `HERMES_DISABLE_WINDOWS_UTF8` 是否**未**设置（`Get-ChildItem env:HERMES_DISABLE_WINDOWS_UTF8`）。如果该变量为空但仍然看到 `?`，控制台宿主（非常旧的 `cmd.exe`）可能完全不支持 UTF-8——请切换到 Windows Terminal。
+UTF-8 stdio 垫片未激活。检查 `NIKI_DISABLE_WINDOWS_UTF8` 是否**未**设置（`Get-ChildItem env:NIKI_DISABLE_WINDOWS_UTF8`）。如果该变量为空但仍然看到 `?`，控制台宿主（非常旧的 `cmd.exe`）可能完全不支持 UTF-8——请切换到 Windows Terminal。
 
 **Gateway 无法发送 Telegram 图片——"`BadRequest: payload contains invalid characters`"。**
 这与 Windows 无关，但有时首先在 Windows 上暴露。通常意味着 JSON 请求体中的文件路径包含未转义的反斜杠。Telegram 应该收到 Niki 规范化后的路径，而非原始 Windows 路径——如果你在自定义插件中看到此问题，请确保传递的是 Niki 提供的路径，而非来自用户输入的 `str(Path(...))`。
@@ -308,6 +308,6 @@ UTF-8 stdio 垫片未激活。检查 `HERMES_DISABLE_WINDOWS_UTF8` 是否**未**
 
 - **[安装](../getting-started/installation.md)** — 完整安装页面，包括 Linux/macOS/WSL2。
 - **[Windows（WSL2）指南](./windows-wsl-quickstart.md)** — 如果你需要 POSIX 语义或 dashboard 终端面板。
-- **[CLI 参考](../reference/cli-commands.md)** — 所有 `hermes` 子命令。
+- **[CLI 参考](../reference/cli-commands.md)** — 所有 `niki` 子命令。
 - **[FAQ](../reference/faq.md)** — 常见的非 Windows 专属问题。
 - **[消息 Gateway](./messaging/index.md)** — 在 Windows 上运行 Telegram/Discord/Slack。

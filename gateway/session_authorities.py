@@ -13,15 +13,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from hermes_constants import get_hermes_home, get_hermes_home_override, hermes_home_key
-from hermes_state_runtime import RuntimeStoreError
+from niki_constants import get_niki_home, get_niki_home_override, niki_home_key
+from niki_state_runtime import RuntimeStoreError
 
 
 class SessionAuthorities:
-    """Registry of authorities keyed by ``hermes_home_key(home)``."""
+    """Registry of authorities keyed by ``niki_home_key(home)``."""
 
     def __init__(self, launch_home, *, multiplexed=False):
-        self.launch_key = hermes_home_key(launch_home)
+        self.launch_key = niki_home_key(launch_home)
         self._by_key: dict[str, object] = {}
         self._names: dict[str, str | None] = {}
         # A multiplexing runtime (configured, or one that ever served a second home) keeps the
@@ -29,7 +29,7 @@ class SessionAuthorities:
         self.multiplexed = bool(multiplexed)
 
     def add(self, home, authority, name=None) -> None:
-        key = hermes_home_key(home)
+        key = niki_home_key(home)
         if key in self._by_key:
             raise RuntimeError(f'duplicate session authority for {home}')
         self._by_key[key] = authority
@@ -39,7 +39,7 @@ class SessionAuthorities:
 
     def replace(self, home, authority) -> None:
         """Fill the slot reserved by ``add(home, None, name=...)`` once the authority exists."""
-        key = hermes_home_key(home)
+        key = niki_home_key(home)
         if key not in self._by_key or self._by_key[key] is not None:
             raise RuntimeError(f'no reserved session authority slot for {home}')
         self._by_key[key] = authority
@@ -47,7 +47,7 @@ class SessionAuthorities:
     def remove(self, home):
         """Drop *home*'s slot (a parked boot, a hot-unserved profile); returns the authority or None.
         The launch slot is never removed."""
-        key = hermes_home_key(home)
+        key = niki_home_key(home)
         if key == self.launch_key:
             raise RuntimeError('the launch session authority cannot be removed')
         self._names.pop(key, None)
@@ -56,7 +56,7 @@ class SessionAuthorities:
     def profile_name(self, authority):
         """Served profile name for *authority*; None for the launch profile (its adapters are
         ``runner.adapters``, its session keys the historical ``agent:main`` namespace)."""
-        key = hermes_home_key(authority.profile_id)
+        key = niki_home_key(authority.profile_id)
         return None if key == self.launch_key else self._names.get(key)
 
     def __len__(self) -> int:
@@ -66,7 +66,7 @@ class SessionAuthorities:
         return iter(self._by_key.values())
 
     def __contains__(self, home) -> bool:
-        return hermes_home_key(home) in self._by_key
+        return niki_home_key(home) in self._by_key
 
     @property
     def launch(self):
@@ -74,7 +74,7 @@ class SessionAuthorities:
 
     def for_home(self, home):
         """Authority owning *home*, or None when this process does not serve it."""
-        return self._by_key.get(hermes_home_key(home))
+        return self._by_key.get(niki_home_key(home))
 
     def require(self, home):
         authority = self.for_home(home)
@@ -91,9 +91,9 @@ class SessionAuthorities:
         secondary leaves only the launch slot (a late callback of that profile). Only a runtime
         that never multiplexed is a map of one that answers every scope with the launch authority.
         """
-        if not self.multiplexed or get_hermes_home_override() is None:
+        if not self.multiplexed or get_niki_home_override() is None:
             return self._by_key[self.launch_key]
-        return self._by_key.get(hermes_home_key(get_hermes_home()))
+        return self._by_key.get(niki_home_key(get_niki_home()))
 
     def serving(self) -> list:
         """Authorities that accept work: not a reserved-but-unbuilt slot, not one retiring (a
@@ -109,10 +109,10 @@ class SessionAuthorities:
 
 def served_profile_name(home) -> str:
     """Canonical profile id of a served home: ``default`` for the root, the directory name for
-    ``profiles/<name>`` (via ``hermes_constants.profile_name_for_home``, the resolver main uses).
-    Any other custom HERMES_HOME is the process's own single profile and keeps the ``default``
-    label the CLI reports for it (``hermes -p`` never targets such a home by name)."""
-    from hermes_constants import profile_name_for_home
+    ``profiles/<name>`` (via ``niki_constants.profile_name_for_home``, the resolver main uses).
+    Any other custom NIKI_HOME is the process's own single profile and keeps the ``default``
+    label the CLI reports for it (``niki -p`` never targets such a home by name)."""
+    from niki_constants import profile_name_for_home
     return profile_name_for_home(home) or 'default'
 
 
@@ -159,7 +159,7 @@ def admission_owner(authority, session_id):
     """The admission identity a physical store row answers to: its compression root, then the
     local creation id a canonical reset forks under (a reset child is not a compression child, so
     ``logical_owner`` alone stops at the child and misses the conversation's admissions)."""
-    from hermes_state_local import local_lineage_owner
+    from niki_state_local import local_lineage_owner
     sid = authority.logical_owner(session_id)
     if not sid:
         return sid

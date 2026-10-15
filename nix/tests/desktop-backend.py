@@ -27,13 +27,13 @@ def _processes_under(home: Path) -> list[int]:
 
 
 desktop, expected = sys.argv[1:]
-with tempfile.TemporaryDirectory(prefix="hermes-desktop-backend-") as temporary:
+with tempfile.TemporaryDirectory(prefix="niki-desktop-backend-") as temporary:
     home = Path(temporary)
-    hermes_home = home / ".hermes"
-    legacy = hermes_home / "hermes-agent"
-    (legacy / "hermes_cli").mkdir(parents=True)
-    (legacy / "hermes_cli" / "main.py").touch()
-    launcher = legacy / "venv" / "bin" / "hermes"
+    niki_home = home / ".niki"
+    legacy = niki_home / "niki-agent"
+    (legacy / "niki_cli").mkdir(parents=True)
+    (legacy / "niki_cli" / "main.py").touch()
+    launcher = legacy / "venv" / "bin" / "niki"
     launcher.parent.mkdir(parents=True)
     # The old runtime passes discovery but cannot initialize a session. It
     # must not win merely because it was installed before the Nix desktop.
@@ -52,8 +52,8 @@ with tempfile.TemporaryDirectory(prefix="hermes-desktop-backend-") as temporary:
     env = {
         "PATH": os.environ["PATH"],
         "HOME": str(home),
-        "HERMES_HOME": str(hermes_home),
-        "HERMES_DESKTOP_USER_DATA_DIR": str(home / "electron"),
+        "NIKI_HOME": str(niki_home),
+        "NIKI_DESKTOP_USER_DATA_DIR": str(home / "electron"),
         "XDG_RUNTIME_DIR": str(runtime),
         "XDG_CONFIG_HOME": str(home / ".config"),
         "XDG_CACHE_HOME": str(home / ".cache"),
@@ -74,13 +74,13 @@ with tempfile.TemporaryDirectory(prefix="hermes-desktop-backend-") as temporary:
             deadline = time.monotonic() + 90
             while time.monotonic() < deadline:
                 output = log_path.read_text()
-                desktop_log = hermes_home / "logs" / "desktop.log"
+                desktop_log = niki_home / "logs" / "desktop.log"
                 if desktop_log.exists():
                     output += desktop_log.read_text()
                 assert "WRONG_BACKEND_SELECTED" not in output, output
                 assert child.poll() is None, output
-                # Desktop attaches to `hermes gateway ensure` (the daemon serves the dashboard), so
-                # readiness is Desktop's own attach line, not a spawned `hermes serve` sentinel.
+                # Desktop attaches to `niki gateway ensure` (the daemon serves the dashboard), so
+                # readiness is Desktop's own attach line, not a spawned `niki serve` sentinel.
                 if "[backend] Niki gateway is ready" in output:
                     assert f"[backend] using existing Niki CLI at {expected}" in output, output
                     print("PASS: packaged desktop selected its pinned backend over the mutable install")
@@ -95,9 +95,9 @@ with tempfile.TemporaryDirectory(prefix="hermes-desktop-backend-") as temporary:
             except subprocess.TimeoutExpired:
                 os.killpg(child.pid, signal.SIGKILL)
                 child.wait(timeout=5)
-            # The desktop spawns its backend in its own session (hermes serve outlives a
+            # The desktop spawns its backend in its own session (niki serve outlives a
             # window close on purpose), so killing cage's group leaves that gateway writing
-            # under HERMES_HOME while the tempdir is removed. Stop everything still rooted
+            # under NIKI_HOME while the tempdir is removed. Stop everything still rooted
             # in this home before cleanup; the sandbox has no other processes to confuse.
             survivors = _processes_under(home)
             for pid in survivors:

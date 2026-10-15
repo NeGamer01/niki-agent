@@ -215,7 +215,7 @@ preventing Arrow schema mismatch errors during dataset loading.
 
 ## Controlling Trajectory Saving
 
-Trajectory saving is a `run_agent.py` / library-level switch — the `hermes` CLI
+Trajectory saving is a `run_agent.py` / library-level switch — the `niki` CLI
 does not expose a config key or flag for it:
 
 ```bash

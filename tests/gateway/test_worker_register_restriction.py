@@ -16,10 +16,10 @@ async def test_worker_register_requires_the_owners_launched_worker(tmp_path, mon
     from gateway.session_authority import LiveSession, SessionAuthority
     from gateway.session_contract import Principal, SessionRef
     from gateway.session_worker import worker_request
-    from hermes_state import SessionDB
-    from hermes_state_runtime import RuntimeStoreError, begin_runtime_epoch
+    from niki_state import SessionDB
+    from niki_state_runtime import RuntimeStoreError, begin_runtime_epoch
 
-    monkeypatch.setenv('HERMES_HOME', str(tmp_path))
+    monkeypatch.setenv('NIKI_HOME', str(tmp_path))
     db = SessionDB(tmp_path / 'state.db')
     db.create_session('owned', 'telegram')
     runner = SimpleNamespace(_draining=False, config=SimpleNamespace(multiplex_profiles=False),

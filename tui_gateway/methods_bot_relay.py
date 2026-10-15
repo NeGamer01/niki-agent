@@ -18,9 +18,9 @@ method = _registry.method
 def _relay_root() -> Path:
     """Install root shared by every profile (relay state is install-wide). Same formula as the
     writers (``tools/bot_relay``, ``tools/bot_mode_dm``): both ends of the mailbox must agree for
-    every HERMES_HOME, including non-``profiles/`` subdirs of ``~/.hermes``."""
-    from tools.bot_mode_probe import _default_home, _hermes_root
-    return _hermes_root(Path(_default_home()))
+    every NIKI_HOME, including non-``profiles/`` subdirs of ``~/.niki``."""
+    from tools.bot_mode_probe import _default_home, _niki_root
+    return _niki_root(Path(_default_home()))
 
 
 # Desktop deadline mirror; no retry runs here. The owner gateway retries a transiently failed
@@ -84,7 +84,7 @@ def _(rid, params: dict, _root=_relay_root) -> dict:
         # A logged-in client's sender fields are NOT trusted — but the delivery is not refused
         # either: the Desktop is itself a logged-in client on every gateway that requires sign-in
         # (it mints a ws-ticket carrying the signed-in {user_id, provider} —
-        # hermes_cli/dashboard_auth/routes.py), so refusing took cross-connection relay offline
+        # niki_cli/dashboard_auth/routes.py), so refusing took cross-connection relay offline
         # for exactly the auth-gated gateways it serves; only ``?internal=`` callers are
         # identity-exempt and the Desktop cannot present one. Nor is the author dropped: an
         # unattributed turn is the HUMAN's to the recipient's memory, so a bot DM must stay
@@ -96,7 +96,7 @@ def _(rid, params: dict, _root=_relay_root) -> dict:
     forwarded = {key: value for key, value in params.items() if key not in sender_fields}
     if author:
         forwarded["author"] = author
-    resolved = 'default' if profile.lower() == 'hermes' else profile
+    resolved = 'default' if profile.lower() == 'niki' else profile
     root = _root()
     # Same identity predicate as `profile list`: infra dirs and tombstones under profiles/ are
     # not teammates (#99392), so a DM never targets one.
@@ -105,7 +105,7 @@ def _(rid, params: dict, _root=_relay_root) -> dict:
     if home is None:
         return _err(rid, 4092, f"no profile '{profile}' on this gateway", data={'reason': 'unknown_profile'})
     if isinstance(forwarded.get("message"), str):
-        # The sender stamped itself with its bare @handle; a relayed "@hermes" is ANOTHER machine's
+        # The sender stamped itself with its bare @handle; a relayed "@niki" is ANOTHER machine's
         # default, so re-stamp it with the form this gateway can reply to (#103731).
         from tools.bot_mode_probe import local_taken_forms
         from tools.bot_relay import qualify_sender_stamp, read_remote_roster

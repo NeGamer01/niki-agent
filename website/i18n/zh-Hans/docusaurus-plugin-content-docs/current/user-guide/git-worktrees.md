@@ -20,7 +20,7 @@ Git **worktrees** 是为每个 agent 提供独立检出（checkout）而无需�
 
 Niki 将**当前工作目录**视为项目根目录：
 
-- CLI：运行 `hermes` 或 `hermes chat` 时所在的目录
+- CLI：运行 `niki` 或 `niki chat` 时所在的目录
 - Messaging gateway：由 `MESSAGING_CWD` 设置的目录
 
 如果在**同一检出**中运行多个 agent，它们的变更可能相互干扰：
@@ -44,13 +44,13 @@ Niki 将**当前工作目录**视为项目根目录：
 cd /path/to/your/repo
 
 # 在 ../repo-feature 中创建新分支和 worktree
-git worktree add ../repo-feature feature/hermes-experiment
+git worktree add ../repo-feature feature/niki-experiment
 ```
 
 这将创建：
 
 - 新目录：`../repo-feature`
-- 新分支：`feature/hermes-experiment`，已在该目录中检出
+- 新分支：`feature/niki-experiment`，已在该目录中检出
 
 现在可以 `cd` 进入新 worktree 并在其中运行 Niki：
 
@@ -58,7 +58,7 @@ git worktree add ../repo-feature feature/hermes-experiment
 cd ../repo-feature
 
 # 在 worktree 中启动 Niki
-hermes
+niki
 ```
 
 Niki 将：
@@ -74,8 +74,8 @@ Niki 将：
 ```bash
 cd /path/to/your/repo
 
-git worktree add ../repo-experiment-a feature/hermes-a
-git worktree add ../repo-experiment-b feature/hermes-b
+git worktree add ../repo-experiment-a feature/niki-a
+git worktree add ../repo-experiment-b feature/niki-b
 ```
 
 在不同终端中分别运行：
@@ -83,16 +83,16 @@ git worktree add ../repo-experiment-b feature/hermes-b
 ```bash
 # 终端 1
 cd ../repo-experiment-a
-hermes
+niki
 
 # 终端 2
 cd ../repo-experiment-b
-hermes
+niki
 ```
 
 每个 Niki 进程：
 
-- 在各自的分支上工作（`feature/hermes-a` 与 `feature/hermes-b`）。
+- 在各自的分支上工作（`feature/niki-a` 与 `feature/niki-b`）。
 - 在不同的 shadow repo 哈希下写入 checkpoint（由 worktree 路径派生）。
 - 可独立使用 `/rollback`，互不影响。
 
@@ -122,7 +122,7 @@ git worktree remove ../repo-feature
 
 - `git worktree remove` 在 worktree 存在未提交变更时会拒绝移除，除非强制执行。
 - 移除 worktree **不会**自动删除分支；可使用常规 `git branch` 命令决定是否删除分支。
-- `~/.hermes/checkpoints/` 下的 Niki checkpoint 数据在移除 worktree 时不会自动清理，但通常体积很小。
+- `~/.niki/checkpoints/` 下的 Niki checkpoint 数据在移除 worktree 时不会自动清理，但通常体积很小。
 
 ## 最佳实践
 
@@ -130,26 +130,26 @@ git worktree remove ../repo-feature
   - 为每项重要变更创建专用的分支/worktree。
   - 这样可保持 diff 聚焦，PR 小而易于审查。
 - **以实验内容命名分支**
-  - 例如：`feature/hermes-checkpoints-docs`、`feature/hermes-refactor-tests`。
+  - 例如：`feature/niki-checkpoints-docs`、`feature/niki-refactor-tests`。
 - **频繁提交**
   - 使用 git commit 记录高层级里程碑。
   - 使用 [checkpoints 与 /rollback](./checkpoints-and-rollback.md) 作为工具驱动编辑之间的安全网。
 - **使用 worktrees 时避免从裸仓库根目录运行 Niki**
   - 优先使用 worktree 目录，使每个 agent 拥有明确的作用范围。
 
-## 使用 `hermes -w`（自动 Worktree 模式）
+## 使用 `niki -w`（自动 Worktree 模式）
 
 Niki 内置 `-w` 标志，可**自动创建一个一次性 git worktree** 及其独立分支。无需手动配置 worktree——只需 `cd` 进入仓库并运行：
 
 ```bash
 cd /path/to/your/repo
-hermes -w
+niki -w
 ```
 
 Niki 将：
 
 - 在仓库内的 `.worktrees/` 下创建临时 worktree。
-- 检出一个隔离分支（例如 `hermes/hermes-<hash>`）。
+- 检出一个隔离分支（例如 `niki/niki-<hash>`）。
 - 在该 worktree 内运行完整的 CLI 会话。
 
 Niki 检出该 worktree 时不会执行仓库自身的 git 配置：其 hooks、`core.fsmonitor` 和 clean/smudge 过滤器在这次检出中均被关闭，Niki 为 kanban 任务和子代理创建的 worktree 也是如此。通过 Git LFS 存储文件的仓库在其中得到的是指针文件；如果会话需要这些文件的内容，请在该 worktree 内运行 `git lfs pull`。
@@ -157,10 +157,10 @@ Niki 检出该 worktree 时不会执行仓库自身的 git 配置：其 hooks、
 这是获得 worktree 隔离的最简便方式。也可与单次查询结合使用：
 
 ```bash
-hermes -w -z "Fix issue #123"
+niki -w -z "Fix issue #123"
 ```
 
-如需并行运行多个 agent，在多个终端中分别运行 `hermes -w`——每次调用都会自动获得独立的 worktree 和分支。
+如需并行运行多个 agent，在多个终端中分别运行 `niki -w`——每次调用都会自动获得独立的 worktree 和分支。
 
 ## 综合运用
 

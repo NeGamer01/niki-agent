@@ -1,7 +1,7 @@
 # PANDUAN INSTALL — Niki Agent Milik Saya (Fork 1:1)
 
 Panduan memasang salinan pribadimu dari Niki Agent: kode & fitur sama
-persis dengan upstream (repo NousResearch/hermes-agent, lisensi MIT),
+persis dengan upstream (repo NeGamer01/niki-agent, lisensi MIT),
 di folder niki-agent. Commit acuan tercatat di
 milik-saya/UPSTREAM.txt. Tidak ada fitur yang dikurangi.
 
@@ -10,11 +10,11 @@ Dua cara pasang di tiap perangkat:
   niki-agent ke perangkat itu, lalu jalankan installer dari
   dalam folder.
 - Cara B, installer resmi upstream: satu perintah dari situs Niki.
-  Data & konfigurasimu tetap milikmu karena tersimpan di ~/.hermes/
+  Data & konfigurasimu tetap milikmu karena tersimpan di ~/.niki/
   perangkatmu.
 
-Setelah terpasang, perintah utamanya: niki (perintah lama hermes tetap jalan sebagai alias). Perintah lainnya sama di semua platform: hermes,
-hermes setup, hermes model, hermes gateway setup, hermes desktop.
+Setelah terpasang, perintah utamanya: niki (perintah lama niki tetap jalan sebagai alias). Perintah lainnya sama di semua platform: niki,
+niki setup, niki model, niki gateway setup, niki desktop.
 
 ## 1. Linux / VPS / WSL2 / macOS (CLI)
 
@@ -23,15 +23,15 @@ Cara A:
     cd niki-agent
     bash scripts/install.sh
     source ~/.bashrc        (macOS: ~/.zshrc)
-    hermes setup            (pilih provider, isi API key kamu sendiri)
-    hermes
+    niki setup            (pilih provider, isi API key kamu sendiri)
+    niki
 
-Cara B: jalankan installer resmi dari situs hermes-agent.nousresearch.com
+Cara B: jalankan installer resmi dari situs github.com/NeGamer01/niki-agent
 (halaman Installation), perintah curl install.sh yang ada di sana.
 
 Catatan: macOS resmi hanya Apple Silicon; Mac Intel tidak didukung
 upstream (lihat website/docs/getting-started/platform-support.md di
-salinanmu). Di VPS untuk jalan terus gunakan hermes gateway run, atau
+salinanmu). Di VPS untuk jalan terus gunakan niki gateway run, atau
 unit systemd / tmux sesuai docs upstream.
 
 ## 2. Windows
@@ -41,11 +41,11 @@ salinanmu gunakan skrip PowerShell-nya:
 
     cd niki-agent
     powershell -ExecutionPolicy Bypass -File scripts\install.ps1
-    hermes setup
+    niki setup
 
 Cara B resmi juga ada di halaman Installation upstream (perintah
 PowerShell install.ps1). Setelah CLI terpasang, aplikasi desktop bisa
-dibuka dengan perintah: hermes desktop
+dibuka dengan perintah: niki desktop
 
 ## 3. Android / Termux
 
@@ -53,7 +53,7 @@ Pakai aplikasi Termux standar, HP arm64 (aarch64), Android API 24+.
 Langkah lengkap persis ada di dalam salinanmu:
 website/docs/getting-started/termux.md — ringkasnya: tambahkan repo APT
 Niki (stable) dengan verifikasi fingerprint kuncinya, lalu
-pkg install hermes-agent, hermes setup, hermes --tui.
+pkg install niki-agent, niki setup, niki --tui.
 
 Peringatan jujur dari dokumen upstream di commit ini: paket Termux saat
 ini dinyatakan "currently broken" oleh upstream dan sedang diperbaiki,
@@ -76,7 +76,7 @@ persistenmu mengikuti pengaturan compose itu.
 ## 5. Menjadikannya benar-benar milik saya
 
 1. Data & aturanmu terpisah dari kode. Setelah install, semua milikmu
-   ada di ~/.hermes/ perangkat itu: profil, SOUL.md, memory, skills,
+   ada di ~/.niki/ perangkat itu: profil, SOUL.md, memory, skills,
    sesi, API key. Kode boleh di-update, datamu tetap.
 2. Pasang aturanmu: salin isi milik-saya/ATURAN-SAYA.md ke SOUL.md di
    folder data/profilmu (atau gabungkan), lalu edit bebas. Di situlah
@@ -88,17 +88,17 @@ persistenmu mengikuti pengaturan compose itu.
    resmi dari upstream kapan pun kamu mau — menerima update atau
    tidak, sepenuhnya keputusanmu. Catatan: salinan ini clone dangkal,
    jalankan git fetch --unshallow sebelum push pertama.
-4. Yang wajib dipertahankan: file LICENSE (MIT, Nous Research) harus
+4. Yang wajib dipertahankan: file LICENSE (MIT, NeGamer01) harus
    tetap disertakan bila kamu menyebarkan salinan ini; itu satu-satunya
    syarat lisensinya. Jangan mengklaim fork ini produk resmi
-   Nous Research.
+   NeGamer01.
 
 ## 6. Cek cepat setelah terpasang
 
-    hermes --version
-    hermes doctor
-    hermes setup
-    hermes
+    niki --version
+    niki doctor
+    niki setup
+    niki
 
 Dokumentasi lengkap upstream ikut tersalin persis di website/docs/
 dalam folder salinanmu.

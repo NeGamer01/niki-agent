@@ -16,7 +16,7 @@ async def test_runtime_describe_carries_the_profiles_resolved_skin(tmp_path, mon
     authority, _store = await _authority(tmp_path, monkeypatch)
     home = Path(authority.profile_id)
     (home / 'config.yaml').write_text('display:\n  skin: ares\n')
-    monkeypatch.setenv('HERMES_HOME', str(home))
+    monkeypatch.setenv('NIKI_HOME', str(home))
     conn = AuthorityConnection(authority, SimpleNamespace(write=lambda frame: None), {'user_id': 'owner'})
     try:
         described = await conn.dispatch({'id': 0, 'method': 'runtime.describe', 'params': {}})

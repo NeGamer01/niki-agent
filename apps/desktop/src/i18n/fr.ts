@@ -107,14 +107,14 @@ export const frOverrides = {
       showAllMatches: 'Afficher tous les résultats',
       segmentNoMatch: (segment: string) => `Aucun résultat dans ${segment} : tous les résultats sont affichés.`,
       freeTierNote: 'Les connexions restent sur cet ordinateur jusqu’à ce que vous vous connectiez.',
-      signInLine: 'Connectez-vous à Nous pour utiliser les applications gérées.',
+      signInLine: 'Connectez-vous à Niki pour utiliser les applications gérées.',
       signIn: 'Se connecter',
       managedUnavailable: 'Les applications gérées ne sont pas encore disponibles pour ce compte.',
       writeFailed: 'Cette modification n’a pas été enregistrée.',
       refreshFailed: 'La liste des outils n’a pas été actualisée.',
       disconnectNoAccount: 'Niki n’a aucun compte à déconnecter ici. Actualisez la page et réessayez.',
       disconnectRefused:
-        'Nous ne peut pas supprimer cette connexion pour le moment. Désactivez plutôt l’application avec l’interrupteur, ou réessayez plus tard.'
+        'Niki ne peut pas supprimer cette connexion pour le moment. Désactivez plutôt l’application avec l’interrupteur, ou réessayez plus tard.'
     },
     add: {
       action: 'Ajouter le vôtre',
@@ -165,7 +165,7 @@ export const frOverrides = {
       turnOffLocal: 'Désactiver le serveur local',
       providedByPlugin: (plugin: string) => `Fourni par le plugin ${plugin}`,
       openPlugins: "Ouvrir l'onglet Plugins",
-      nousLine: 'Les applications Nous suivent votre compte, pas le profil.',
+      nousLine: 'Les applications Niki suivent votre compte, pas le profil.',
       rulesReadOnly: 'Les règles ne peuvent pas être modifiées pour le moment.',
       rulesAppOff: (name: string) => `Activez ${name} pour modifier ses outils.`,
       rulesSignIn: 'Connectez-vous pour modifier ce que Niki peut faire ici.',
@@ -222,7 +222,7 @@ export const frOverrides = {
       remove: 'Supprimer',
       offTitle: (name: string) => `${name} est désactivé.`,
       offBody: "Activez-le avec l'interrupteur ci-dessus pour lire les outils qu'il apporte.",
-      signedOutTitle: 'Connectez-vous à Nous pour lire la liste des outils.',
+      signedOutTitle: 'Connectez-vous à Niki pour lire la liste des outils.',
       signedOutBody: 'Vos serveurs sur cet ordinateur ne sont pas affectés.',
       conflictTitle: "Quelqu'un a modifié cette règle pendant que vous l'éditiez.",
       conflictBody: (theyOff: number, theyOn: number) => {
@@ -409,7 +409,7 @@ export const frOverrides = {
       "Cette application Niki est plus ancienne que le backend auquel elle est connectée et peut ne pas fonctionner correctement. Effectuez la mise à jour de l'application pour les aligner.",
     updateDesktopApp: "Mettre à jour l'application",
     installMethodUnsupportedTitle: "Méthode d'installation non prise en charge",
-    updateHermes: 'Mettre à jour Niki',
+    updateNiki: 'Mettre à jour Niki',
     updateReadyTitle: 'Mise à jour prête',
     updateReadyMessage: count =>
       `${count} ${count === 1 ? 'nouvelle modification disponible' : 'nouvelles modifications disponibles'}.`,
@@ -441,10 +441,10 @@ export const frOverrides = {
       codeSkewRestartRequired:
         "Ce backend exécute encore l'ancien code après une mise à jour. Redémarrez-le pour charger le nouveau code.",
       rpcOutOfSync: "L'application et le backend ne sont pas sur la même version. Mettez-les tous les deux à jour.",
-      restartHermesFailed: 'Impossible de redémarrer Niki'
+      restartNikiFailed: 'Impossible de redémarrer Niki'
     },
     actions: {
-      restartHermes: 'Redémarrer Niki',
+      restartNiki: 'Redémarrer Niki',
       openKeys: 'Ouvrir les clés',
       openGateways: 'Ouvrir les gateways',
       openMaintenance: 'Ouvrir Maintenance'
@@ -494,7 +494,7 @@ export const frOverrides = {
   },
   ...frNotices,
   billingBlock: {
-    titleNous: 'Plus de crédits Nous',
+    titleNous: 'Plus de crédits Niki',
     titleProvider: provider => `Plus de crédits — ${provider}`,
     fallbackMessage: 'Votre compte est à court de crédits. Ajoutez-en pour continuer.',
     openBilling: 'Ouvrir la facturation',
@@ -502,9 +502,9 @@ export const frOverrides = {
     dismiss: 'Fermer'
   },
   sendDiagnostics: {
-    title: 'Envoyer les diagnostics à Nous',
+    title: 'Envoyer les diagnostics à Niki',
     privacyNotice:
-      "Cela téléverse un paquet de débogage vers un stockage interne de Nous, et non vers un service de partage public. Il contient des informations système (système d'exploitation, versions, fournisseur et clés API configurées — jamais les clés elles-mêmes) ainsi que les journaux complets de l'agent, du gateway et du Desktop (jusqu'à 512 Ko chacun), susceptibles de contenir des conversations, des résultats d'outils et des chemins de fichiers. Les secrets sont expurgés avant l'envoi. Seuls le personnel de Nous et les modérateurs Discord autorisés peuvent consulter le paquet, qui est automatiquement supprimé après 14 jours.",
+      "Cela téléverse un paquet de débogage vers un stockage interne de Niki, et non vers un service de partage public. Il contient des informations système (système d'exploitation, versions, fournisseur et clés API configurées — jamais les clés elles-mêmes) ainsi que les journaux complets de l'agent, du gateway et du Desktop (jusqu'à 512 Ko chacun), susceptibles de contenir des conversations, des résultats d'outils et des chemins de fichiers. Les secrets sont expurgés avant l'envoi. Seuls le personnel de Niki et les modérateurs Discord autorisés peuvent consulter le paquet, qui est automatiquement supprimé après 14 jours.",
     upload: 'Envoyer',
     uploading: 'Envoi en cours…',
     cancel: 'Annuler',
@@ -516,11 +516,11 @@ export const frOverrides = {
       "Votre paquet a été téléversé de manière privée. Partagez le lien ci-dessous dans votre fil d'assistance afin que l'équipe puisse consulter vos journaux.",
     failedTitle: "Échec de l'envoi",
     failedHint:
-      'Vous pouvez également exécuter `hermes debug share --nous` dans un terminal, ou `hermes debug share --local` pour afficher le rapport sans le téléverser.',
+      'Vous pouvez également exécuter `niki debug share --niki` dans un terminal, ou `niki debug share --local` pour afficher le rapport sans le téléverser.',
     handoffLead: 'Poursuivez la discussion sur :',
     links: {
       github: 'Issues GitHub',
-      portal: 'Assistance du portail Nous',
+      portal: 'Assistance du portail Niki',
       discord: 'Discord'
     }
   },
@@ -834,7 +834,7 @@ export const frOverrides = {
           `${name} est installé, mais a besoin d'une clé pour fonctionner : ${vars}. Ajoutez-la maintenant, sinon les outils du plugin échoueront.`,
         verified: 'Vérifié',
         unverified: 'Non vérifié',
-        reviewedByNous: 'Examiné par Nous.',
+        reviewedByNous: 'Examiné par Niki.',
         installsAndEnables: profile => `S’installe pour ${profile} et s’active tout de suite.`,
         installsOnly: profile => `S’installe pour ${profile}.`,
         advanced: 'Avancé',
@@ -1460,7 +1460,7 @@ export const frOverrides = {
     uninstallSection: {
       dangerZone: 'Zone dangereuse',
       checkingInstalled: 'Vérification des éléments installés…',
-      uninstallHermes: 'Désinstaller Niki',
+      uninstallNiki: 'Désinstaller Niki',
       chooseHowMuch:
         'Choisissez ce que vous souhaitez supprimer. L’application se ferme pour terminer ; rouvrez le programme d’installation à tout moment pour revenir.',
       confirmUninstall: 'Confirmer la désinstallation',
@@ -1739,7 +1739,7 @@ export const frOverrides = {
         'Local par défaut. Utilisez distant quand cette application doit piloter un backend Niki ailleurs. Remplacements par profil ci-dessous.',
       envOverrideTitle: "Des variables d'environnement contrôlent cette session desktop.",
       envOverrideDesc:
-        'Supprimez les variables HERMES_DESKTOP_REMOTE_URL et HERMES_DESKTOP_REMOTE_TOKEN pour utiliser le paramètre enregistré ci-dessous.',
+        'Supprimez les variables NIKI_DESKTOP_REMOTE_URL et NIKI_DESKTOP_REMOTE_TOKEN pour utiliser le paramètre enregistré ci-dessous.',
       modeTitle: 'Mode de connexion',
       localTitle: 'Gateway local',
       localDesc:
@@ -1765,7 +1765,7 @@ export const frOverrides = {
       cloudLoadingAgents: 'Chargement de vos agents…',
       cloudNoAgents: {
         before: 'Aucun agent trouvé sur ce compte… Créez-en un dans le ',
-        linkText: 'portail Nous',
+        linkText: 'portail Niki',
         after: ', puis actualisez.'
       },
       cloudRefresh: 'Actualiser',
@@ -1788,7 +1788,7 @@ export const frOverrides = {
       cloudStatusLabel: status => `État : ${status}`,
       remoteUrlTitle: 'URL distante',
       remoteUrlDesc:
-        'URL de base du backend de tableau de bord distant. Les préfixes de chemin sont pris en charge, par exemple /hermes.',
+        'URL de base du backend de tableau de bord distant. Les préfixes de chemin sont pris en charge, par exemple /niki.',
       probing: "Vérification de la méthode d'authentification de ce gateway…",
       probeError:
         "Impossible d'atteindre ce gateway pour le moment. Vérifiez l'URL — la méthode d'authentification apparaîtra une fois qu'il répondra.",
@@ -1866,9 +1866,9 @@ export const frOverrides = {
       sshPortDesc: 'Vide = 22 ou le port de ~/.ssh/config.',
       sshKeyTitle: "Fichier d'identité",
       sshKeyDesc: 'Chemin de la clé privée. Vide = ssh-agent ou ~/.ssh/config.',
-      sshHermesPathTitle: 'Chemin Niki (facultatif)',
-      sshHermesPathDesc: 'Chemin complet vers le binaire hermes distant. Vide = détection automatique.',
-      sshHermesPathPlaceholder: 'détection automatique',
+      sshNikiPathTitle: 'Chemin Niki (facultatif)',
+      sshNikiPathDesc: 'Chemin complet vers le binaire niki distant. Vide = détection automatique.',
+      sshNikiPathPlaceholder: 'détection automatique',
       sshTestConnection: 'Tester SSH',
       sshConnect: 'Se connecter',
       sshButtonsHint: "Enregistrer s'applique au prochain lancement. Connecter se reconnecte immédiatement.",
@@ -1880,7 +1880,7 @@ export const frOverrides = {
       sshErrHostKey:
         "La clé de l'hôte a changé depuis votre dernière connexion. Vérifiez que ce changement est attendu, puis exécutez ssh-keygen -R <host> et reconnectez-vous.",
       sshErrNotInstalled:
-        "Hermes n'est pas installé sur l'hôte distant. Installez-le là-bas (curl -fsSL https://hermes-agent.nousresearch.com/install.sh | sh) ou définissez le chemin Hermes.",
+        "Niki n'est pas installé sur l'hôte distant. Installez-le là-bas (curl -fsSL https://raw.githubusercontent.com/NeGamer01/niki-agent/main/scripts/install.sh | sh) ou définissez le chemin Niki.",
       sshErrPlatform:
         'Plateforme distante non prise en charge. Le mode SSH de Niki Desktop supporte les hôtes distants Linux, macOS et Windows.',
       sshErrTimeout: "Expiration de la connexion SSH. L'hôte peut être inaccessible ou en veille.",
@@ -2018,13 +2018,13 @@ export const frOverrides = {
       usageLabel: (label: string) => `Utilisation ${label}`,
       freeTier: {
         signIn: 'Se connecter',
-        title: 'Vous utilisez l’offre gratuite Nous',
-        message: 'Connectez-vous avec un compte Nous pour débloquer davantage de modèles et d’outils.',
+        title: 'Vous utilisez l’offre gratuite Niki',
+        message: 'Connectez-vous avec un compte Niki pour débloquer davantage de modèles et d’outils.',
         caption:
-          'Fonctionne avec nous/welcome, connecteurs inclus. La connexion conserve vos connecteurs et ajoute les outils qui nécessitent un compte ainsi que tous les autres modèles.',
-        name: 'Nous · offre gratuite',
+          'Fonctionne avec niki/welcome, connecteurs inclus. La connexion conserve vos connecteurs et ajoute les outils qui nécessitent un compte ainsi que tous les autres modèles.',
+        name: 'Niki · offre gratuite',
         footnote:
-          'L’offre gratuite n’a ni solde ni rien à payer. Le paiement et l’utilisation apparaissent une fois connecté avec un compte Nous.',
+          'L’offre gratuite n’a ni solde ni rien à payer. Le paiement et l’utilisation apparaissent une fois connecté avec un compte Niki.',
         plan: 'Offre gratuite',
         model: 'Modèle',
         connectors: 'Connecteurs',
@@ -2131,9 +2131,9 @@ export const frOverrides = {
       state: {
         notice: {
           loggedOut: {
-            title: 'Connectez votre compte Nous',
+            title: 'Connectez votre compte Niki',
             message:
-              'Connectez-vous avec votre compte Nous pour voir ici votre solde, votre offre et votre utilisation.',
+              'Connectez-vous avec votre compte Niki pour voir ici votre solde, votre offre et votre utilisation.',
             action: 'Se connecter'
           },
           openPortal: 'Ouvrir le portail ↗',
@@ -2384,14 +2384,14 @@ export const frOverrides = {
       activeBackend: 'Actif',
       activeBackendHint: "Il s'agit de votre backend actif",
       useBackend: 'Utiliser ce backend',
-      nousIncluded: 'Inclus avec un abonnement Nous — connectez-vous au portail Nous pour activer.',
-      nousAuthNeededTitle: 'Se connecter au portail Nous',
+      nousIncluded: 'Inclus avec un abonnement Niki — connectez-vous au portail Niki pour activer.',
+      nousAuthNeededTitle: 'Se connecter au portail Niki',
       nousAuthNeededMessage: provider =>
-        `${provider} est enregistré mais ne s'activera pas tant que vous ne vous serez pas connecté au portail Nous.`,
+        `${provider} est enregistré mais ne s'activera pas tant que vous ne vous serez pas connecté au portail Niki.`,
       nousAuthSignIn: 'Se connecter',
-      nousAuthDoneTitle: 'Portail Nous connecté',
+      nousAuthDoneTitle: 'Portail Niki connecté',
       nousAuthDoneMessage: "Vos backends d'abonnement sont maintenant actifs.",
-      nousAuthFailed: "La connexion au portail Nous n'a pas été terminée",
+      nousAuthFailed: "La connexion au portail Niki n'a pas été terminée",
       nousAuthFailedMessage: 'Réessayez.',
       nousAuthTryAgain: 'Réessayer',
       noApiKeyRequired: 'Aucune clé API requise.',
@@ -2534,7 +2534,7 @@ export const frOverrides = {
     edit: 'Modifier',
     archive: 'Archiver',
     skillArchivedTitle: 'Skill archivé',
-    skillArchivedMessage: 'Restaurable via hermes curator restore.',
+    skillArchivedMessage: 'Restaurable via niki curator restore.',
     tabPlugins: 'Plugins',
     plugins: {
       agentTitle: "Plugins de l'agent",
@@ -2575,7 +2575,7 @@ export const frOverrides = {
       serverStates: {
         connected: 'connecté',
         app_not_running: 'application non lancée',
-        hermes_not_connected: 'connexion MCP manquante',
+        niki_not_connected: 'connexion MCP manquante',
         endpoint_unavailable: 'point de terminaison indisponible',
         no_interactive_session: 'aucune session interactive',
         version_too_old: 'version trop ancienne',
@@ -2897,7 +2897,7 @@ export const frOverrides = {
     noSessions: 'Aucune session pour le moment.',
     gatewayRunning: 'Gateway de messagerie en cours',
     gatewayStopped: 'Gateway de messagerie arrêté',
-    hermesActiveSessions: (version, count) => `Niki ${version} · Sessions actives ${count}`,
+    nikiActiveSessions: (version, count) => `Niki ${version} · Sessions actives ${count}`,
     restartGateway: 'Redémarrer le gateway',
     openBrowser: 'Basculer le navigateur',
     toggleBrowser: 'Basculer le navigateur',
@@ -2906,7 +2906,7 @@ export const frOverrides = {
     sharedGatewayRestartDescription: bots => `Tous les bots de cet appareil se reconnecteront : ${bots}`,
     sharedGatewayRestartConfirm: 'Tout redémarrer',
     sharedGatewayRestarted: count => `Gateway partagé redémarré (${count} ${count === 1 ? 'bot' : 'bots'})`,
-    updateHermes: 'Mettre à jour Niki',
+    updateNiki: 'Mettre à jour Niki',
     reloadWindow: 'Recharger la fenêtre',
     actionRunning: 'en cours',
     actionDone: 'terminé',
@@ -3194,7 +3194,7 @@ export const frOverrides = {
       },
       MATRIX_USER_ID: {
         label: "ID d'utilisateur du bot",
-        placeholder: '@hermes:example.org'
+        placeholder: '@niki:example.org'
       },
       MATRIX_ALLOWED_USERS: {
         label: "IDs d'utilisateurs Matrix autorisés",
@@ -3345,7 +3345,7 @@ export const frOverrides = {
       description:
         "Les sessions de ce profil s'exécuteront sur le système Niki distant indiqué, plutôt que sur cet ordinateur.",
       urlLabel: 'Adresse distante',
-      urlPlaceholder: 'https://hermes.exemple.fr',
+      urlPlaceholder: 'https://niki.exemple.fr',
       urlInvalid: 'Saisissez une adresse complète commençant par http:// ou https://',
       tokenLabel: "Jeton d'accès",
       tokenPlaceholder: 'Collez le jeton de session distant',
@@ -3813,7 +3813,7 @@ export const frOverrides = {
     placeholderReconnecting: 'Reconnexion à Niki…',
     placeholderFollowUp: 'Envoyer un suivi',
     newSessionPlaceholders: [
-      'Sur quoi travaillons-nous ?',
+      'Sur quoi travaillons-niki ?',
       'Donnez une tâche à Niki',
       "Qu'avez-vous en tête ?",
       'Décrivez ce dont vous avez besoin',
@@ -3910,7 +3910,7 @@ export const frOverrides = {
       '/refine': 'Passer en revue cette conversation maintenant et enregistrer les leçons en mémoire/skills',
       '/review': 'Lancer un sous-agent indépendant pour relire le travail qui vient d’être discuté (PR, code, docs)',
       '/loop': 'Relancer un prompt à intervalle régulier dans cette session',
-      '/plan': 'Écrire un plan d’implémentation markdown dans .hermes/plans/ sans rien exécuter',
+      '/plan': 'Écrire un plan d’implémentation markdown dans .niki/plans/ sans rien exécuter',
       '/moa': 'Exécuter un prompt avec le préréglage Mixture of Agents par défaut, puis restaurer votre modèle',
       '/subgoal': 'Ajouter ou gérer des critères supplémentaires sur l’objectif actif',
       '/status': 'Afficher l’état de la session actuelle',
@@ -3944,8 +3944,8 @@ export const frOverrides = {
       '/palette': 'Ouvrir la palette de commandes floue (aussi Ctrl+P)',
       '/usage':
         'Afficher l’utilisation des jetons et les limites de débit ; `reset` utilise une réinitialisation de limite Codex en réserve',
-      '/subscription': 'Voir votre forfait Nous et le modifier dans le navigateur',
-      '/topup': 'Afficher votre solde Nous et gérer la facturation sur le portail',
+      '/subscription': 'Voir votre forfait Niki et le modifier dans le navigateur',
+      '/topup': 'Afficher votre solde Niki et gérer la facturation sur le portail',
       '/platform': 'Suspendre, reprendre ou lister une plateforme de gateway en échec',
       '/version': 'Afficher la version de Niki Agent',
       '/debug': 'Téléverser un rapport de débogage (infos système + journaux) et obtenir des liens partageables',
@@ -4263,9 +4263,9 @@ export const frOverrides = {
     versionDetailsDistributionDesktopMsix: 'Application Desktop (MSIX)',
     versionDetailsDistributionDesktopInstaller: 'Application Desktop (installateur)',
     versionDetailsDistributionSourceInstaller: "Code source (script d'installation)",
-    versionDetailsDistributionSourceInstallerDesktop: "Code source (script d'installation) + hermes desktop",
+    versionDetailsDistributionSourceInstallerDesktop: "Code source (script d'installation) + niki desktop",
     versionDetailsDistributionSource: 'Code source',
-    versionDetailsDistributionSourceDesktop: 'Code source + hermes desktop',
+    versionDetailsDistributionSourceDesktop: 'Code source + niki desktop',
     versionDetailsDistributionStore: 'Microsoft Store',
     versionDetailsRuntime: "Environnement d'exécution",
     versionDetailsRuntimeEmbedded: "Environnement d'exécution intégré",
@@ -4427,7 +4427,7 @@ export const frOverrides = {
       "Entrez l'URL du gateway. Niki Desktop détectera s'il a besoin d'un jeton ou d'une connexion par navigateur.",
     remoteUrlTitle: 'URL du gateway',
     remoteUrlDesc: "Utilisez l'URL de base du gateway Niki, y compris https:// pour les connexions distantes.",
-    remoteUrlPlaceholder: 'https://gateway.example.com/hermes',
+    remoteUrlPlaceholder: 'https://gateway.example.com/niki',
     probing: "Détection de l'authentification du gateway...",
     probeError: "Impossible d'atteindre ce gateway Niki.",
     probeErrorDetails: 'Détails',
@@ -4474,21 +4474,21 @@ export const frOverrides = {
   },
   onboarding: frOnboarding,
   freeTier: {
-    providerRowTitle: 'Nous · offre gratuite',
-    providerRowPitch: 'Connectez-vous avec un compte Nous pour débloquer davantage de modèles et outils.',
+    providerRowTitle: 'Niki · offre gratuite',
+    providerRowPitch: 'Connectez-vous avec un compte Niki pour débloquer davantage de modèles et outils.',
     readyTitle: 'Niki est prêt.',
     readyCaption: 'Gratuit · connecteurs inclus',
     begin: 'Commencer',
-    signInInstead: 'Se connecter plutôt avec un compte Nous',
+    signInInstead: 'Se connecter plutôt avec un compte Niki',
     otherProviders: 'Autres fournisseurs',
-    stripTitle: "L'inférence Nous gratuite et les connecteurs sont maintenant disponibles.",
-    stripBody: 'Ouvrez le sélecteur de modèle pour les essayer ou connectez-vous avec un compte Nous.',
+    stripTitle: "L'inférence Niki gratuite et les connecteurs sont maintenant disponibles.",
+    stripBody: 'Ouvrez le sélecteur de modèle pour les essayer ou connectez-vous avec un compte Niki.',
     openModelPicker: 'Ouvrir le sélecteur de modèle',
     dismiss: 'Fermer',
-    providerName: 'Nous',
-    statusLabel: model => `Nous · ${model}`,
+    providerName: 'Niki',
+    statusLabel: model => `Niki · ${model}`,
     signIn: 'Se connecter',
-    signInHeading: 'Connectez-vous avec un compte Nous pour débloquer davantage de modèles et outils.',
+    signInHeading: 'Connectez-vous avec un compte Niki pour débloquer davantage de modèles et outils.',
     settingUp: "Configuration de l'inférence gratuite…",
     codeBody: 'Saisissez ce code dans votre navigateur pour terminer la connexion.',
     copyLink: 'Copier le lien',
@@ -4515,35 +4515,35 @@ export const frOverrides = {
     errorBody: "La connexion n'a pas abouti ; relancez-la.",
     busyHeading: 'Presque terminé',
     busyBody: wait =>
-      `Niki n'a pas pu terminer votre connexion car le service Nous est occupé. Réessayez dans ${wait}. Votre session reste disponible entre-temps.`,
+      `Niki n'a pas pu terminer votre connexion car le service Niki est occupé. Réessayez dans ${wait}. Votre session reste disponible entre-temps.`,
     unreachableBody:
-      "Niki n'a pas pu joindre le service Nous pour terminer votre connexion. Vérifiez votre connexion Internet et réessayez. Votre session reste disponible.",
+      "Niki n'a pas pu joindre le service Niki pour terminer votre connexion. Vérifiez votre connexion Internet et réessayez. Votre session reste disponible.",
     alreadySignedInHeading: 'Déjà connecté.',
-    alreadySignedInBody: 'Cette installation Niki est déjà connectée à un compte Nous.',
+    alreadySignedInBody: 'Cette installation Niki est déjà connectée à un compte Niki.',
     offer: {
       heading: 'Continuez avec Niki',
-      body: 'Vous utilisez le quota gratuit. Si vous continuez à utiliser Niki, vous allez commencer à atteindre des limites. Connectez-vous avec un compte Nous gratuit pour obtenir un quota plus important.',
+      body: 'Vous utilisez le quota gratuit. Si vous continuez à utiliser Niki, vous allez commencer à atteindre des limites. Connectez-vous avec un compte Niki gratuit pour obtenir un quota plus important.',
       signIn: 'Se connecter',
       notNow: 'Pas maintenant'
     },
     setupFailed: {
       gateClosed:
-        'Cette version de Niki ne peut pas démarrer sans compte Nous. Connectez-vous ou créez-en un gratuitement en une minute.',
+        'Cette version de Niki ne peut pas démarrer sans compte Niki. Connectez-vous ou créez-en un gratuitement en une minute.',
       paused:
         "L'utilisation de Niki sans connexion est momentanément suspendue. Niki continuera à vérifier. La connexion est gratuite et vous permet de continuer immédiatement.",
       rateLimited: wait =>
         `Beaucoup de personnes démarrent en ce moment ; Niki réessaiera dans ${wait}. La connexion est gratuite et évite l'attente.`,
       unreachable:
-        "Niki n'a pas pu joindre le service Nous. Vérifiez votre connexion Internet, puis appuyez sur Réessayer. Vous pouvez aussi connecter un autre fournisseur.",
+        "Niki n'a pas pu joindre le service Niki. Vérifiez votre connexion Internet, puis appuyez sur Réessayer. Vous pouvez aussi connecter un autre fournisseur.",
       serverError:
-        'Le service Nous a rencontré un problème. Réessayez dans un instant ou connectez un autre fournisseur.',
+        'Le service Niki a rencontré un problème. Réessayez dans un instant ou connectez un autre fournisseur.',
       powRequired:
-        "Le serveur Nous a demandé une preuve de travail qui n'est pas encore gérée par votre Agent. Connectez-vous ou créez un compte Nous gratuit pour continuer.",
+        "Le serveur Niki a demandé une preuve de travail qui n'est pas encore gérée par votre Agent. Connectez-vous ou créez un compte Niki gratuit pour continuer.",
       locked:
-        'Cette session ne peut pas continuer sans connexion. Connectez-vous ou créez un compte Nous gratuit pour poursuivre.',
+        'Cette session ne peut pas continuer sans connexion. Connectez-vous ou créez un compte Niki gratuit pour poursuivre.',
       generic:
         "Niki n'a pas pu configurer l'accès gratuit sans connexion. Connectez-vous gratuitement ou choisissez un autre fournisseur.",
-      signInBelow: 'La connexion est gratuite. Choisissez Nous ci-dessous.',
+      signInBelow: 'La connexion est gratuite. Choisissez Niki ci-dessous.',
       tryAgain: 'Réessayer',
       retrying: 'Nouvelle tentative…'
     }
@@ -4561,7 +4561,7 @@ export const frOverrides = {
     localDownloadsHeading: 'Local',
     noAuthenticatedProviders: 'Aucun fournisseur authentifié.',
     pro: 'Pro',
-    proNeedsSubscription: 'Les modèles Pro nécessitent un abonnement payant Nous.',
+    proNeedsSubscription: 'Les modèles Pro nécessitent un abonnement payant Niki.',
     free: 'Gratuit',
     freeTier: 'Gratuit',
     priceTitle: 'Prix entrant / sortant par million de jetons',
@@ -5146,11 +5146,11 @@ export const frOverrides = {
         },
         free_tier_disabled: {
           title: "L'utilisation de Niki sans connexion est désactivée pour le moment",
-          body: 'Connectez-vous avec un compte Nous gratuit pour continuer.'
+          body: 'Connectez-vous avec un compte Niki gratuit pour continuer.'
         },
         free_tier_rate_limited: {
           title: 'Vous avez épuisé le quota sans connexion',
-          body: 'Il sera bientôt renouvelé. Connectez-vous avec un compte Nous gratuit pour obtenir un quota plus élevé.'
+          body: 'Il sera bientôt renouvelé. Connectez-vous avec un compte Niki gratuit pour obtenir un quota plus élevé.'
         },
         free_tier_at_capacity: {
           title: 'Le service sans connexion est très sollicité',
@@ -5158,11 +5158,11 @@ export const frOverrides = {
         },
         free_tier_model_not_free: {
           title: "Ce modèle n'est pas disponible sans connexion",
-          body: 'Niki utilise le modèle gratuit pour le moment. Connectez-vous avec un compte Nous gratuit pour accéder à plus de modèles.'
+          body: 'Niki utilise le modèle gratuit pour le moment. Connectez-vous avec un compte Niki gratuit pour accéder à plus de modèles.'
         },
         free_tier_route: {
           title: "Niki n'a pas pu joindre le modèle gratuit par cette route",
-          body: 'Connectez-vous avec un compte Nous gratuit ou vérifiez le paramètre NOUS_INFERENCE_BASE_URL.'
+          body: 'Connectez-vous avec un compte Niki gratuit ou vérifiez le paramètre NIKI_INFERENCE_BASE_URL.'
         },
         free_tier_outage: {
           title: 'Le modèle gratuit rencontre des difficultés',
@@ -5170,7 +5170,7 @@ export const frOverrides = {
         },
         free_tier_refused: {
           title: "Niki n'a pas pu envoyer ce message sans connexion",
-          body: 'La connexion avec un compte Nous est gratuite.'
+          body: 'La connexion avec un compte Niki est gratuite.'
         }
       },
       errorAuthKinds: {
@@ -5196,11 +5196,11 @@ export const frOverrides = {
       errorChooseModel: 'Choisir un modèle',
       errorCompressConversation: 'Compresser la conversation',
       errorCompressFailed: 'Impossible de compresser la conversation',
-      errorOpenHermesFolder: 'Ouvrir le dossier Niki',
-      errorOpenHermesFolderFailed: "Impossible d'ouvrir le dossier Niki",
+      errorOpenNikiFolder: 'Ouvrir le dossier Niki',
+      errorOpenNikiFolderFailed: "Impossible d'ouvrir le dossier Niki",
       errorUpdateApiKey: 'Mettre à jour la clé API',
       errorSignInAgain: provider => `Se reconnecter à ${provider}`,
-      errorSignInFreeTier: 'Se connecter avec un compte Nous',
+      errorSignInFreeTier: 'Se connecter avec un compte Niki',
       errorOauthExpired: provider =>
         `Votre connexion à ${provider} a expiré ou a été révoquée. Reconnectez-vous pour continuer la conversation.`,
       errorOpenLogs: 'Ouvrir les journaux',
@@ -5248,7 +5248,7 @@ export const frOverrides = {
       reject: 'Rejeter',
       alwaysTitle: 'Toujours autoriser cette commande ?',
       alwaysDescription: pattern =>
-        `Cela ajoute le motif « ${pattern} » à votre liste d'autorisation permanente (~/.hermes/config.yaml). Niki ne redemandera plus pour ce type de commande — que ce soit dans cette session ou dans une session future.`,
+        `Cela ajoute le motif « ${pattern} » à votre liste d'autorisation permanente (~/.niki/config.yaml). Niki ne redemandera plus pour ce type de commande — que ce soit dans cette session ou dans une session future.`,
       alwaysAllow: 'Toujours autoriser'
     },
     clarify: frClarify,
@@ -5618,7 +5618,7 @@ export const frOverrides = {
       success: platform => `Transféré vers ${platform}. Reprenez ici à tout moment.`,
       systemNote: platform => `↻ Transféré vers ${platform} — reprenez ici à tout moment.`,
       failed: error => `Échec du transfert : ${error}`,
-      timedOut: "Délai d'expiration en attendant la Gateway. `hermes gateway` est-il en cours d'exécution ?",
+      timedOut: "Délai d'expiration en attendant la Gateway. `niki gateway` est-il en cours d'exécution ?",
       startMessaging: 'Démarrer la messagerie'
     }
   },

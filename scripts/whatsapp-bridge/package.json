@@ -1,5 +1,5 @@
 {
-  "name": "hermes-whatsapp-bridge",
+  "name": "niki-whatsapp-bridge",
   "version": "1.0.0",
   "description": "WhatsApp bridge for Niki Agent using Baileys",
   "private": true,

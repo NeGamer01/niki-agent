@@ -1,7 +1,7 @@
 name: inline-platform
 repo: https://github.com/inline-chat/inline
 sha: 2d3b360da0430684eabab2d946eca0e725c08aa5
-subdir: plugins/hermes-agent/plugin/inline
+subdir: plugins/niki-agent/plugin/inline
 description: >-
   Use Niki Agent from Inline work-chat DMs, chats, and reply threads.
   Disclosure — the setup wizard can, on explicit opt-in, download
@@ -13,7 +13,7 @@ description: >-
 maintainer: morajabi
 tier: community
 category: platform
-requires_hermes: ">=0.21.3"
+requires_niki: ">=0.21.3"
 version: "0.0.21"
 capabilities:
   provides_tools:

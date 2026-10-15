@@ -48,7 +48,7 @@ def private_db_probe_cleanup(tmp_path):
     owns the inode cancels its POSIX locks. Opt-in tests must first register normal
     runner/store cleanup and use only databases underneath their private tmp_path.
     """
-    import hermes_state_dbfile as dbfile
+    import niki_state_dbfile as dbfile
 
     with dbfile._HEADER_PROBE_LOCK:
         existing = set(dbfile._HEADER_PROBE_FDS)
@@ -91,7 +91,7 @@ def make_async_session_db(sync_mock=None):
     """Wrap a sync mock SessionDB in AsyncSessionDB so gateway code that awaits
     the facade works in tests. Returns (facade, sync_mock); configure return
     values and assert calls on sync_mock."""
-    from hermes_state import AsyncSessionDB
+    from niki_state import AsyncSessionDB
     sync_mock = sync_mock if sync_mock is not None else MagicMock()
     return AsyncSessionDB(sync_mock), sync_mock
 
@@ -651,8 +651,8 @@ def owner(tmp_path):
     from gateway.config import GatewayConfig
     from gateway.session import SessionStore
     from gateway.session_authority import SessionAuthority
-    from hermes_state import SessionDB
-    from hermes_state_runtime import begin_runtime_epoch
+    from niki_state import SessionDB
+    from niki_state_runtime import begin_runtime_epoch
 
     db = SessionDB(tmp_path / 'state.db')
     store = SessionStore(config=GatewayConfig(), sessions_dir=tmp_path / 'sessions')
@@ -671,7 +671,7 @@ def api(owner, tmp_path, monkeypatch):
     from gateway.config import PlatformConfig
     from gateway.platforms.api_server import APIServerAdapter
 
-    monkeypatch.setenv('HERMES_HOME', str(tmp_path))
+    monkeypatch.setenv('NIKI_HOME', str(tmp_path))
     adapter = APIServerAdapter(PlatformConfig(enabled=True))
     adapter.gateway_runner = owner.runner
     adapter._session_db = owner.db

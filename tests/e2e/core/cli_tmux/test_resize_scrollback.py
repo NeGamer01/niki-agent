@@ -1,7 +1,7 @@
 """#95375 on a reflowing terminal: resizing the classic CLI leaves every transcript line in
 tmux's scrollback + screen exactly once, with no stray blank or prompt rows.
 
-A real ``hermes chat --cli`` runs in a private tmux server against the scripted fake provider.
+A real ``niki chat --cli`` runs in a private tmux server against the scripted fake provider.
 One session goes through a resize storm while a reply streams, a shrink while idle, and a
 two-step shrink while the next reply streams; ``capture-pane -J`` then joins tmux's re-wrapped
 rows back into lines. Reply lines are 146 columns, so each one wraps at every width here, and
@@ -25,7 +25,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.fakes.fake_llm_provider import FakeLLMServer, Text, write_hermes_home
+from tests.fakes.fake_llm_provider import FakeLLMServer, Text, write_niki_home
 
 pytestmark = pytest.mark.skipif(shutil.which("tmux") is None, reason="needs tmux")
 
@@ -39,7 +39,7 @@ def _reply(turn: int) -> str:
 
 
 def test_resizes_keep_each_transcript_line_once_in_tmux_scrollback(tmp_path: Path) -> None:
-    sock = f"hermes-e2e-{uuid.uuid4().hex[:8]}"
+    sock = f"niki-e2e-{uuid.uuid4().hex[:8]}"
     home = tmp_path / "home"
     (tmp_path / "work").mkdir()
 
@@ -58,7 +58,7 @@ def test_resizes_keep_each_transcript_line_once_in_tmux_scrollback(tmp_path: Pat
         kinds = Counter(r["kind"] for r in llm.requests)
         out = [f"fake provider requests: main={kinds['main']} aux={kinds['aux']}"]
         for name in ("agent.log", "errors.log"):
-            log = home / ".hermes" / "logs" / name
+            log = home / ".niki" / "logs" / name
             tail = log.read_text(encoding="utf-8", errors="replace").splitlines()[-40:] if log.exists() else ["<missing>"]
             out += [f"--- {name} (tail) ---", *tail]
         pid = tmux("display-message", "-p", "-t", "p", "#{pane_pid}").strip()
@@ -97,11 +97,11 @@ def test_resizes_keep_each_transcript_line_once_in_tmux_scrollback(tmp_path: Pat
         time.sleep(2.0)
 
     with llm:
-        write_hermes_home(home / ".hermes", llm.base_url)
-        env = {k: v for k, v in os.environ.items() if not k.startswith(("HERMES_", "TMUX"))}
-        env.update(HOME=str(home), HERMES_HOME=str(home / ".hermes"), PYTHONPATH=str(REPO_ROOT),
-                   TERM="xterm-256color", HERMES_STATE_DB_GUARD_BYPASS="1", PYTHONFAULTHANDLER="1")
-        argv = [sys.executable, "-m", "hermes_cli.main", "chat", "--cli", "--yolo"]
+        write_niki_home(home / ".niki", llm.base_url)
+        env = {k: v for k, v in os.environ.items() if not k.startswith(("NIKI_", "TMUX"))}
+        env.update(HOME=str(home), NIKI_HOME=str(home / ".niki"), PYTHONPATH=str(REPO_ROOT),
+                   TERM="xterm-256color", NIKI_STATE_DB_GUARD_BYPASS="1", PYTHONFAULTHANDLER="1")
+        argv = [sys.executable, "-m", "niki_cli.main", "chat", "--cli", "--yolo"]
         subprocess.run(["tmux", "-L", sock, "-f", os.devnull, "new-session", "-d", "-s", "p", "-x", "120",
                         "-y", "24", "-c", str(tmp_path / "work"), *argv], env=env, check=True, timeout=30)
         try:

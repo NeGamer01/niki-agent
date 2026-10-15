@@ -47,16 +47,16 @@ class TestResolveOpenaiAudioClientConfig:
 
 
     def test_nous_selection_overrides_config_credentials(self):
-        """A stored 'nous' selection (or legacy use_gateway: true) routes
+        """A stored 'niki' selection (or legacy use_gateway: true) routes
         managed even when direct credentials are present."""
         config = {"openai": {"api_key": "cfg-key", "base_url": "http://localhost:4003/v1"}}
         managed = SimpleNamespace(
-            nous_user_token="managed-token",
+            niki_user_token="managed-token",
             gateway_origin="https://openai-audio-gateway.nousresearch.com",
         )
 
         with patch.object(tts_tool, "_load_tts_config", return_value=config), \
-             patch.object(tts_tool_openai, "read_selection", return_value="nous"), \
+             patch.object(tts_tool_openai, "read_selection", return_value="niki"), \
              patch.object(tts_tool_openai, "resolve_openai_audio_api_key", return_value="env-key"), \
              patch.object(tts_tool_openai, "resolve_managed_tool_gateway", return_value=managed):
             assert tts_tool_openai._resolve_openai_audio_client_config() == (
@@ -70,12 +70,12 @@ class TestResolveOpenaiAudioClientConfig:
         the selection, never a silent fall back to direct credentials."""
         config = {"openai": {"api_key": "cfg-key"}}
         with patch.object(tts_tool, "_load_tts_config", return_value=config), \
-             patch.object(tts_tool_openai, "read_selection", return_value="nous"), \
+             patch.object(tts_tool_openai, "read_selection", return_value="niki"), \
              patch.object(tts_tool_openai, "resolve_openai_audio_api_key", return_value="env-key"), \
              patch.object(tts_tool_openai, "resolve_managed_tool_gateway", return_value=None):
             with pytest.raises(ValueError) as exc:
                 tts_tool_openai._resolve_openai_audio_client_config()
-        assert "nous" in str(exc.value)
+        assert "niki" in str(exc.value)
 
     def test_vendor_selection_missing_key_raises_selection_error(self):
         """A stored vendor selection with no credentials errors by name —

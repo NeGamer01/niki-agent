@@ -14,7 +14,7 @@ import threading
 from dataclasses import dataclass, field
 from typing import Any, Awaitable, Callable, Optional
 
-from hermes_constants import hermes_home_key
+from niki_constants import niki_home_key
 
 logger = logging.getLogger(__name__)
 
@@ -74,11 +74,11 @@ class PlatformEntry:
     # Connected/configured for this PlatformConfig (``get_connected_platforms``, setup UI);
     # None falls back to ``validate_config`` or ``check_fn``.
     is_connected: Optional[Callable[[Any], bool]] = None
-    required_env: list = field(default_factory=list)  # ``hermes setup`` display
+    required_env: list = field(default_factory=list)  # ``niki setup`` display
     install_hint: str = ""  # shown when check_fn is False
     setup_fn: Optional[Callable[[], None]] = None  # None = _setup_standard_platform / env display
     source: str = "plugin"  # "builtin" or "plugin"
-    plugin_name: str = ""  # owning manifest so ``hermes gateway setup`` can auto-enable it
+    plugin_name: str = ""  # owning manifest so ``niki gateway setup`` can auto-enable it
     allowed_users_env: str = ""  # comma-separated allowed user IDs (_is_user_authorized)
     allow_all_env: str = ""  # truthy "allow everyone" switch
     max_message_length: int = 0  # smart-chunking cap; 0 = no limit
@@ -137,12 +137,12 @@ class PlatformRegistry:
     def __init__(self) -> None:
         self._lock = threading.RLock()
         self._entries: dict[str, PlatformEntry] = {}  # process-global (e.g. the built-in relay)
-        # Plugin adapters are isolated per resolved HERMES_HOME and overlay the
+        # Plugin adapters are isolated per resolved NIKI_HOME and overlay the
         # process-global entries for lookups in that profile's runtime scope.
         self._scoped_entries: dict[str, dict[str, PlatformEntry]] = {}
         # Deferred loaders: name -> callable importing the owning plugin module (which calls
         # register()); eagerly importing ~20 SDK-heavy adapters added seconds to every
-        # `hermes` invocation, so the import happens only when a lookup asks for it.
+        # `niki` invocation, so the import happens only when a lookup asks for it.
         self._deferred: dict[str, _Loader] = {}
         self._scoped_deferred: dict[str, dict[str, _Loader]] = {}
         self._inflight: dict[_LoadKey, threading.Event] = {}
@@ -163,7 +163,7 @@ class PlatformRegistry:
 
     @staticmethod
     def current_scope_key() -> str:
-        return hermes_home_key()
+        return niki_home_key()
 
     def _scope_maps(
         self, scope: Optional[str], *, create: bool = False
@@ -253,7 +253,7 @@ class PlatformRegistry:
             event = self._inflight.get(scoped_key)
             load_key = scoped_key
             if event is None and name not in entries and self._loading.get():
-                from hermes_cli.plugins_loader import in_plugin_load_worker
+                from niki_cli.plugins_loader import in_plugin_load_worker
                 if in_plugin_load_worker():
                     return  # on a deadline worker: never block on a sibling load the parent may hold the lock for; caller sees it unloaded
             if event is None and name not in entries:

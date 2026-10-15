@@ -3,8 +3,8 @@ import asyncio
 from types import SimpleNamespace
 
 from gateway.session_controls import AuthorityConnection
-from hermes_state import SessionDB
-from hermes_state_runtime import RuntimeStoreError
+from niki_state import SessionDB
+from niki_state_runtime import RuntimeStoreError
 
 
 class RoomService:
@@ -60,7 +60,7 @@ class RoomService:
 
 
 def test_execution_controls_preserve_native_wire_and_exact_task_identity(tmp_path, monkeypatch):
-    monkeypatch.setenv('HERMES_HOME', str(tmp_path))
+    monkeypatch.setenv('NIKI_HOME', str(tmp_path))
     with SessionDB(tmp_path / 'state.db') as db:
         authority = SimpleNamespace(profile_id=str(tmp_path), instance_id='owner', db=db, events={})
         connection = AuthorityConnection(authority, object(), {'user_id': 'alice'})
@@ -111,7 +111,7 @@ def test_execution_controls_preserve_native_wire_and_exact_task_identity(tmp_pat
 
 
 def test_execution_controls_reject_foreign_actor_profile_room_and_unready_service(tmp_path, monkeypatch):
-    monkeypatch.setenv('HERMES_HOME', str(tmp_path))
+    monkeypatch.setenv('NIKI_HOME', str(tmp_path))
     with SessionDB(tmp_path / 'state.db') as db:
         authority = SimpleNamespace(profile_id=str(tmp_path), instance_id='owner', db=db, events={})
         owner = AuthorityConnection(authority, object(), {'user_id': 'alice'})

@@ -3,7 +3,7 @@ import { EventEmitter } from 'node:events'
 import { resolve } from 'node:path'
 import { promisify } from 'node:util'
 
-import type { GatewayEvent } from '@hermes/shared/gateway-events'
+import type { GatewayEvent } from '@niki/shared/gateway-events'
 import {
   DEFAULT_HEARTBEAT_DEADLINE_MS,
   DEFAULT_HEARTBEAT_INTERVAL_MS,
@@ -11,8 +11,8 @@ import {
   JsonRpcRequestChannel,
   type ServerRequest,
   wireFrameText
-} from '@hermes/shared/json-rpc-channel'
-import { reconnectBackoffDelayMs } from '@hermes/shared/reconnect-backoff'
+} from '@niki/shared/json-rpc-channel'
+import { reconnectBackoffDelayMs } from '@niki/shared/reconnect-backoff'
 import { WebSocket as UndiciWebSocket } from 'undici'
 
 import {
@@ -31,15 +31,15 @@ const MAX_GATEWAY_LOG_LINES = 200
 const MAX_LOG_LINE_BYTES = 4096
 const MAX_BUFFERED_EVENTS = 2000
 const MAX_LOG_PREVIEW = 240
-const STARTUP_TIMEOUT_MS = Math.max(5000, parseInt(process.env.HERMES_TUI_STARTUP_TIMEOUT_MS ?? '15000', 10) || 15000)
-const REQUEST_TIMEOUT_MS = Math.max(30000, parseInt(process.env.HERMES_TUI_RPC_TIMEOUT_MS ?? '120000', 10) || 120000)
+const STARTUP_TIMEOUT_MS = Math.max(5000, parseInt(process.env.NIKI_TUI_STARTUP_TIMEOUT_MS ?? '15000', 10) || 15000)
+const REQUEST_TIMEOUT_MS = Math.max(30000, parseInt(process.env.NIKI_TUI_RPC_TIMEOUT_MS ?? '120000', 10) || 120000)
 const WS_CONNECTING = 0
 const WS_OPEN = 1
 const WS_CLOSING = 2
 const WS_CLOSED = 3
 
 // Keepalive + dead-connection detection (issue #32997) lives in
-// @hermes/shared's JsonRpcRequestChannel; these re-exports keep the TUI's
+// @niki/shared's JsonRpcRequestChannel; these re-exports keep the TUI's
 // timing constants readable at their call sites and in tests.
 export const WS_HEARTBEAT_INTERVAL_MS = DEFAULT_HEARTBEAT_INTERVAL_MS
 export const WS_HEARTBEAT_DEAD_MS = DEFAULT_HEARTBEAT_DEADLINE_MS
@@ -56,26 +56,26 @@ const truncateLine = (line: string) =>
   line.length > MAX_LOG_LINE_BYTES ? `${line.slice(0, MAX_LOG_LINE_BYTES)}… [truncated ${line.length} bytes]` : line
 
 const resolveGatewayAttachUrl = () => {
-  const raw = process.env.HERMES_TUI_GATEWAY_URL?.trim()
+  const raw = process.env.NIKI_TUI_GATEWAY_URL?.trim()
 
   return raw ? raw : null
 }
 
 const resolveSidecarUrl = () => {
-  const raw = process.env.HERMES_TUI_SIDECAR_URL?.trim()
+  const raw = process.env.NIKI_TUI_SIDECAR_URL?.trim()
 
   return raw ? raw : null
 }
 
 const resolvePython = () => {
-  // Trust HERMES_PYTHON only. The launcher guarantees it: hermes_cli/main.py
+  // Trust NIKI_PYTHON only. The launcher guarantees it: niki_cli/main.py
   // validates it and falls back to its own sys.executable, and the Nix
   // wrapper sets it too. So a TUI started the normal way already knows its
   // interpreter, and scanning VIRTUAL_ENV / .venv here can only find a
   // DIFFERENT python than the parent process runs on — with the pm store,
   // a stale venv path is actively dangerous (the interpreter a gateway
   // child gets must match the one that spawned it).
-  const configured = process.env.HERMES_PYTHON?.trim()
+  const configured = process.env.NIKI_PYTHON?.trim()
 
   if (configured) {
     return configured
@@ -123,14 +123,14 @@ export interface LocalGatewayGrant { url: string; protocols: string[]; profile_i
 
 // Reconnects after the first launch are discovery-only, except that a bounded number per window
 // re-ensure an owner that is not ready (gateway_bootstrap.py --recover): crashed, idle-exited,
-// stopped with `hermes gateway stop` while this TUI is open, or an older Niki's gateway. Main's
+// stopped with `niki gateway stop` while this TUI is open, or an older Niki's gateway. Main's
 // TUI owned its sidecar, so an open TUI comes back on its own; the budget keeps a crash-looping
 // owner from being respawned without pause.
 export const OWNER_RECOVERY_LIMIT = 3
 export const OWNER_RECOVERY_WINDOW_MS = 60_000
 
 const bootstrapLocalGateway = async (start: boolean, recover = false): Promise<LocalGatewayGrant> => {
-  const root = process.env.HERMES_PYTHON_SRC_ROOT ?? resolve(import.meta.dirname, '../../')
+  const root = process.env.NIKI_PYTHON_SRC_ROOT ?? resolve(import.meta.dirname, '../../')
 
   const { stdout } = await promisify(execFile)(resolvePython(),
     [resolve(root, 'ui-tui/scripts/gateway_bootstrap.py'), ...(start ? ['--start'] : recover ? ['--recover'] : [])],
@@ -222,7 +222,7 @@ export class GatewayClient extends EventEmitter {
   private publishWire(ev: AnyGatewayEvent) {
     if (!this.isCanonical && ev.type === 'gateway.ready' && this.attachUrl !== null &&
         (ev as { payload?: { session_authority?: boolean } }).payload?.session_authority === true) {
-      // An explicit HERMES_TUI_GATEWAY_URL endpoint whose session verbs belong to an authority:
+      // An explicit NIKI_TUI_GATEWAY_URL endpoint whose session verbs belong to an authority:
       // negotiate the canonical wire exactly like a local grant, keeping the listener's skin.
       return this.adoptCanonicalAttach(ev as GatewayEvent<'gateway.ready'>)
     }

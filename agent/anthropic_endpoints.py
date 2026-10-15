@@ -1,7 +1,7 @@
 """Endpoint-family detection for Anthropic-compatible base URLs.
 
 A dozen services speak the Anthropic Messages API but differ in auth style, accepted beta
-headers, and request quirks (MiniMax, Kimi/Moonshot, DeepSeek, OpenCode, Azure AI Foundry, Nous
+headers, and request quirks (MiniMax, Kimi/Moonshot, DeepSeek, OpenCode, Azure AI Foundry, Niki
 Portal, Bedrock). Every such difference is decided from the configured base URL, so the
 predicates live together here as pure functions (no I/O, SDK or credentials) that both
 ``agent/anthropic_adapter.py`` and ``agent/anthropic_message_convert.py`` can import without a
@@ -99,20 +99,20 @@ def _is_deepseek_anthropic_endpoint(base_url: str | None) -> bool:
 
     Per DeepSeek's published compatibility matrix the blocks are unsigned (no Anthropic-proprietary
     signature, no ``redacted_thinking`` support), so this endpoint is handled with the same strip-signed /
-    keep-unsigned policy used for Kimi's ``/coding`` endpoint. See hermes-agent#16748.
+    keep-unsigned policy used for Kimi's ``/coding`` endpoint. See niki-agent#16748.
     """
     return base_url_host_matches(base_url or "", "api.deepseek.com") and "/anthropic" in _normalized_lower(base_url)
 
 
 def _is_nous_portal_endpoint(base_url: str | None) -> bool:
-    """Nous Portal's Anthropic Messages route (Bearer JWT, verbatim catalog ids, native
+    """Niki Portal's Anthropic Messages route (Bearer JWT, verbatim catalog ids, native
     thinking-signature replay). Trusted hosts only: prod ``inference-api.nousresearch.com`` or the
-    operator-set ``NOUS_INFERENCE_BASE_URL`` host (exact hostname equality, so neither lookalike
+    operator-set ``NIKI_INFERENCE_BASE_URL`` host (exact hostname equality, so neither lookalike
     domains nor sibling hosts of the override match)."""
     if base_url_host_matches(base_url or "", "inference-api.nousresearch.com"):
         return True
     try:
-        from hermes_cli.auth import _nous_inference_env_override
+        from niki_cli.auth import _nous_inference_env_override
         override = _nous_inference_env_override()
     except Exception:
         return False
@@ -122,7 +122,7 @@ def _is_nous_portal_endpoint(base_url: str | None) -> bool:
 
 def _requires_bearer_auth(base_url: str | None) -> bool:
     """Providers needing ``Authorization: Bearer`` instead of ``x-api-key``: MiniMax, Azure AI
-    Foundry, Palantir Foundry's LLM proxy, CommandCode, Nous Portal. Palantir/CommandCode use
+    Foundry, Palantir Foundry's LLM proxy, CommandCode, Niki Portal. Palantir/CommandCode use
     hostname matching (not substring) so ``evil.com/palantirfoundry`` paths don't trigger it."""
     normalized = _normalized_lower(base_url)
     return (

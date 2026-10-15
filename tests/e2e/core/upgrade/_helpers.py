@@ -2,13 +2,13 @@
 
 Every Niki process these suites spawn runs:
 
-* with a HOME/HERMES_HOME under the test's tmp dir and an environment built from an
-  allowlist (no inherited ``*_API_KEY`` / ``HERMES_*``), so only the fake provider is
+* with a HOME/NIKI_HOME under the test's tmp dir and an environment built from an
+  allowlist (no inherited ``*_API_KEY`` / ``NIKI_*``), so only the fake provider is
   configured;
 * inside a ``bwrap`` sandbox when bubblewrap is usable: its own PID namespace (the
   updater's process-table scans cannot see, let alone signal, any real gateway on the
   host), a tmpfs over ``/run/user/<uid>`` (no user systemd bus), the real
-  ``~/.hermes`` bind-mounted read-only, and ``--die-with-parent`` so killing the
+  ``~/.niki`` bind-mounted read-only, and ``--die-with-parent`` so killing the
   sandbox kills every descendant (no orphans);
 * with ``systemctl``/``launchctl``/``sudo``/``loginctl`` shims first on PATH that log
   their argv and fail, so a service-restart attempt is observable and never reaches a
@@ -91,29 +91,29 @@ def isolated_env(
     pythonpath: Path | None = None,
     extra: dict[str, str] | None = None,
 ) -> dict[str, str]:
-    """Allowlisted environment with HOME/HERMES_HOME under ``root``."""
+    """Allowlisted environment with HOME/NIKI_HOME under ``root``."""
     home = root / "home"
-    hermes_home = home / ".hermes"
-    hermes_home.mkdir(parents=True, exist_ok=True)
+    niki_home = home / ".niki"
+    niki_home.mkdir(parents=True, exist_ok=True)
     shim_dir = root / "shims"
     write_shims(shim_dir)
     env = {k: os.environ[k] for k in _ENV_ALLOW if k in os.environ}
     env.setdefault("LANG", "C.UTF-8")
     env.update(
         HOME=str(home),
-        HERMES_HOME=str(hermes_home),
+        NIKI_HOME=str(niki_home),
         # The pytest ancestor marks this child as guarded; its HOME is already the sandbox.
-        HERMES_STATE_DB_GUARD_BYPASS="1",
+        NIKI_STATE_DB_GUARD_BYPASS="1",
         XDG_RUNTIME_DIR=str(root / "run"),
         XDG_CONFIG_HOME=str(home / ".config"),
         XDG_DATA_HOME=str(home / ".local" / "share"),
         XDG_CACHE_HOME=str(home / ".cache"),
-        DBUS_SESSION_BUS_ADDRESS="unix:path=/nonexistent/hermes-test-bus",
+        DBUS_SESSION_BUS_ADDRESS="unix:path=/nonexistent/niki-test-bus",
         NO_COLOR="1",
         TERM="dumb",
         PYTHONUNBUFFERED="1",
         PYTHONHASHSEED="0",
-        HERMES_DISABLE_LAZY_INSTALLS="1",
+        NIKI_DISABLE_LAZY_INSTALLS="1",
         # The pre-upgrade release under test still bundles tirith; keep its scanner off.
         TIRITH_ENABLED="false",
         GIT_TERMINAL_PROMPT="0",
@@ -124,12 +124,12 @@ def isolated_env(
     )
     (root / "run").mkdir(parents=True, exist_ok=True)
     # Reuse the host uv cache (read/write, uv is concurrency-safe) so dependency syncs are
-    # warm; never the real ~/.hermes.
+    # warm; never the real ~/.niki.
     real_uv_cache = Path(os.environ.get("UV_CACHE_DIR") or REAL_HOME / ".cache" / "uv")
     if real_uv_cache.is_dir():
         env["UV_CACHE_DIR"] = str(real_uv_cache)
     base_path = os.environ.get("PATH", "/usr/bin:/bin")
-    uv = shutil.which("uv") or (str(REAL_HOME / ".hermes" / "bin" / "uv") if (REAL_HOME / ".hermes" / "bin" / "uv").exists() else None)
+    uv = shutil.which("uv") or (str(REAL_HOME / ".niki" / "bin" / "uv") if (REAL_HOME / ".niki" / "bin" / "uv").exists() else None)
     path_parts = [str(shim_dir), *[str(p) for p in extra_path]]
     if uv:
         path_parts.append(str(Path(uv).parent))
@@ -156,9 +156,9 @@ def sandbox_argv(argv: Sequence[str], *, writable: Iterable[Path], unshare_net: 
     # The child's allowlisted PATH may omit the Nix-provided bwrap (notably a login shell
     # with a clean distro PATH); resolve it in the parent before wrapping the command.
     cmd = [shutil.which("bwrap") or "bwrap", "--dev-bind", "/", "/"]
-    real_hermes = REAL_HOME / ".hermes"
-    if real_hermes.is_dir():
-        cmd += ["--ro-bind", str(real_hermes), str(real_hermes)]
+    real_niki = REAL_HOME / ".niki"
+    if real_niki.is_dir():
+        cmd += ["--ro-bind", str(real_niki), str(real_niki)]
     for w in writable:
         w = Path(w)
         w.mkdir(parents=True, exist_ok=True)

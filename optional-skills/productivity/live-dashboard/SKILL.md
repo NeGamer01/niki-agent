@@ -6,7 +6,7 @@ author: Teknium (teknium1), Niki Agent
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  niki:
     tags: [dashboards, monitoring, status, automation, reporting]
     category: productivity
     related_skills: [product-price-monitor, competitor-news-monitor, email-inbox-triage, google-workspace]

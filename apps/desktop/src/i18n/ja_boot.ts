@@ -11,7 +11,7 @@ export const jaBoot = {
       loadingSessions: '最近のセッションを読み込み中',
       retryingRemoteBackend: 'リモート Niki バックエンドに再接続中…',
       startingDesktopConnection: 'デスクトップ接続を開始中',
-      startingHermesDesktop: 'Niki Desktop を起動中…'
+      startingNikiDesktop: 'Niki Desktop を起動中…'
     },
     errors: {
       backgroundExited: 'Niki バックグラウンドプロセスが終了しました。',
@@ -43,11 +43,11 @@ export const jaBoot = {
       signOutAndSignIn: 'サインアウトして再サインイン',
       remoteFailureHint:
         '「ゲートウェイ設定」でゲートウェイの URL とサインインを確認するか、ローカルゲートウェイに切り替えてください。',
-      cloudDownTitle: 'Nous Cloud エージェントが停止しています',
+      cloudDownTitle: 'Niki Cloud エージェントが停止しています',
       cloudDownDescription:
-        'このゲートウェイが接続している Nous 管理のクラウドエージェントがサーバーエラーを返しています。ここから再起動することはできません。ステータスを確認するか、ローカルゲートウェイに切り替えるか、サポートに連絡してください。',
+        'このゲートウェイが接続している Niki 管理のクラウドエージェントがサーバーエラーを返しています。ここから再起動することはできません。ステータスを確認するか、ローカルゲートウェイに切り替えるか、サポートに連絡してください。',
       cloudDownHint:
-        '下のボタンから Nous Portal（インスタンスの状態と操作）を開くか、Discord でサポートを受けられます。',
+        '下のボタンから Niki Portal（インスタンスの状態と操作）を開くか、Discord でサポートを受けられます。',
       cloudDownCheckPortal: 'Portal のステータスを確認',
       cloudDownDiscord: 'Discord でサポートを受ける',
       hideRecentLogs: '最近のログを非表示',

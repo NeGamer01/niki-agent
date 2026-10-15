@@ -15,18 +15,18 @@ pytestmark = pytest.mark.platforms("windows")
 
 
 @pytest.mark.parametrize("channel", ["stable", "main"])
-def test_installer_reads_the_channel_hermes_recorded(tmp_path, monkeypatch, channel):
-    from hermes_cli.update_channel import set_install_channel
+def test_installer_reads_the_channel_niki_recorded(tmp_path, monkeypatch, channel):
+    from niki_cli.update_channel import set_install_channel
 
     powershell = shutil.which("powershell")
     if not powershell:
         pytest.skip("Windows PowerShell is required")
     home = tmp_path / "home"
-    install = home / "hermes-agent"
+    install = home / "niki-agent"
     install.mkdir(parents=True)
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("NIKI_HOME", str(home))
     set_install_channel(channel, install)
-    script = (f". '{ROOT / 'scripts' / 'install.ps1'}' -InstallDir '{install}' -HermesHome '{home}'\n"
+    script = (f". '{ROOT / 'scripts' / 'install.ps1'}' -InstallDir '{install}' -NikiHome '{home}'\n"
               "Write-Output \"channel=$(Get-ChosenChannel)\"\n")
     wrapper = tmp_path / "read.ps1"
     wrapper.write_text(script, encoding="utf-8")

@@ -74,8 +74,8 @@ def _submit_api_worker(loop, fn):
             _API_WORKER_LIVE -= 1
         raise
 _ROOM_RETENTION_REQUEST_KEY = (
-    RequestKey("hermes.room_run_retention_until", float) if RequestKey is not None
-    else "hermes.room_run_retention_until")
+    RequestKey("niki.room_run_retention_until", float) if RequestKey is not None
+    else "niki.room_run_retention_until")
 # Forwarded subagent lifecycle fields; free-text ones are secret-redacted.
 _SUBAGENT_EVENT_KEYS = (
     "goal", "task_count", "task_index", "subagent_id", "child_session_id", "delegation_id", "parent_id",
@@ -167,14 +167,14 @@ def _remember_room_retention(request: web.Request, claims: dict[str, Any]) -> No
     try:
         request[_ROOM_RETENTION_REQUEST_KEY] = value
     except (AttributeError, TypeError):
-        request._hermes_room_run_retention_until = value
+        request._niki_room_run_retention_until = value
 
 
 def _room_retention_until(request: web.Request) -> float:
     try:
         value = request.get(_ROOM_RETENTION_REQUEST_KEY, 0)
     except AttributeError:
-        value = getattr(request, "_hermes_room_run_retention_until", 0)
+        value = getattr(request, "_niki_room_run_retention_until", 0)
     return max(0.0, float(value or 0))
 
 
@@ -270,7 +270,7 @@ def _set_run_status(self, run_id: str, status: str, **fields: Any) -> dict[str, 
     current = self._run_statuses.get(run_id, {})
     previous_status = str(current.get("status") or "")
     field_names = set(fields)
-    current.update({"object": "hermes.run", "run_id": run_id, "status": status, "updated_at": now})
+    current.update({"object": "niki.run", "run_id": run_id, "status": status, "updated_at": now})
     current.setdefault("created_at", fields.pop("created_at", now))
     current.update(fields)
     shutdown_requested_at = getattr(self, "_run_shutdown_requested_at", None)
@@ -415,7 +415,7 @@ def _durable_run_status(self, request: web.Request, run_id: str) -> dict[str, An
         # The documented poll shape: the canonical projection decides status/output/usage; the
         # retained run record still names the object, the requested model and the served runtime.
         retained = self._run_statuses.get(run_id) or {}
-        return {"object": "hermes.run", **{key: retained[key] for key in ("model", "runtime", "created_at")
+        return {"object": "niki.run", **{key: retained[key] for key in ("model", "runtime", "created_at")
                                            if key in retained}, **canonical}
     status = self._run_statuses.get(run_id)
     if status is not None:
@@ -672,7 +672,7 @@ async def _admit_run_to_authority(
     from gateway.platforms.api_server_authority_runs import run_admission, store_error_response
     from gateway.session_api_turn import admit_api_turn_async
     from gateway.session_contract import SessionRef
-    from hermes_state_runtime import RuntimeStoreError
+    from niki_state_runtime import RuntimeStoreError
     try:
         with self._profile_scope(launch.request_profile):
             launch.admission = await admit_api_turn_async(self, user_message=launch.user_message,
@@ -882,7 +882,7 @@ def _run_agent_sync(self, run: _RunLaunch, agent, approval_notify, *, _api_serve
             # Contextvars, not process env: concurrent runs must not share identity.
             resets.append((set_current_session_key(run.approval_session_key), reset_current_session_key))
             # chat_id carries the raw session id like _run_agent() does; without it
-            # tools.async_delegation sees no HERMES_SESSION_CHAT_ID and forces delegations sync.
+            # tools.async_delegation sees no NIKI_SESSION_CHAT_ID and forces delegations sync.
             session_tokens = self._bind_api_server_session(
                 chat_id=session_id or "", session_key=run.approval_session_key, session_id=session_id or "",
                 profile=run.request_profile or "",
@@ -1339,13 +1339,13 @@ async def _handle_run_approval(self, request: web.Request, *, _api_server) -> we
     request_id_field = {"request_id": request_id} if request_id else {}
     _mark_run_event(self, run_id, "approval.responded", choice=choice, **request_id_field, resolved=resolved)
     return web.json_response({
-        "object": "hermes.run.approval_response", "run_id": run_id, "choice": choice, **request_id_field,
+        "object": "niki.run.approval_response", "run_id": run_id, "choice": choice, **request_id_field,
         "resolved": resolved})
 
 
 async def _respond_authority_run(self, run_id, body, *, kind, _api_server):
     from gateway.platforms.api_server_authority_runs import respond_run, store_error_response
-    from hermes_state_runtime import RuntimeStoreError
+    from niki_state_runtime import RuntimeStoreError
     try:
         result = await respond_run(self, run_id, body, kind=kind)
         return web.json_response({'run_id': run_id, **result})
@@ -1397,7 +1397,7 @@ async def _handle_steer_run(self, request: web.Request, *, _api_server) -> web.R
             code="invalid_steer_input", status=400)
     if owned is not None:
         from gateway.session_contract import SessionRef
-        from hermes_state_runtime import RuntimeStoreError
+        from niki_state_runtime import RuntimeStoreError
         authority, row = owned
         sid, latched = row['target_session_id'], False
         try:
@@ -1411,7 +1411,7 @@ async def _handle_steer_run(self, request: web.Request, *, _api_server) -> web.R
             return _steer_refused(_openai_error, run_id)
         if latched:
             _mark_run_event(self, run_id, "run.steered", accepted=True)
-            return web.json_response({"object": "hermes.run.steer", "run_id": run_id, "accepted": True})
+            return web.json_response({"object": "niki.run.steer", "run_id": run_id, "accepted": True})
     try:
         accepted = bool(agent.steer(steer_text))
     except Exception as exc:
@@ -1421,7 +1421,7 @@ async def _handle_steer_run(self, request: web.Request, *, _api_server) -> web.R
         return _json_error(
             _openai_error, f"Run did not accept steer text: {run_id}", code="steer_not_accepted", status=409)
     _mark_run_event(self, run_id, "run.steered", accepted=True)
-    return web.json_response({"object": "hermes.run.steer", "run_id": run_id, "accepted": True})
+    return web.json_response({"object": "niki.run.steer", "run_id": run_id, "accepted": True})
 
 
 async def _handle_stop_run(self, request: web.Request, *, _api_server) -> web.Response:
@@ -1436,7 +1436,7 @@ async def _handle_stop_run(self, request: web.Request, *, _api_server) -> web.Re
     if (getattr(self.gateway_runner, 'session_authority', None) is not None
             and not (task is not None and status.get("delivery_id"))):
         from gateway.platforms.api_server_authority_runs import stop_run, store_error_response
-        from hermes_state_runtime import RuntimeStoreError
+        from niki_state_runtime import RuntimeStoreError
         try:
             return web.json_response(await stop_run(self, run_id))
         except RuntimeStoreError as exc:
@@ -1471,7 +1471,7 @@ async def _handle_resolve_unknown_run(
     except (ValueError, LookupError):  # bad JSON/UTF-8 (ValueError) or unknown charset: no body
         body = None
     from gateway.platforms.api_server_authority_runs import resolve_unknown_run, store_error_response
-    from hermes_state_runtime import RuntimeStoreError
+    from niki_state_runtime import RuntimeStoreError
     try:
         result = await resolve_unknown_run(self, run_id, body)
         return web.json_response({'run_id': run_id, **result})

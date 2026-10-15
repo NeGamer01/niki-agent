@@ -16,7 +16,7 @@ fires for ``uv build``, ``pip wheel``, ``python -m build``, and direct
 
 The one legitimate consumer of ``build_wheel`` is uv2nix, which calls
 ``setuptools.build_meta.build_wheel`` (→ ``bdist_wheel``) inside a Nix
-build sandbox. ``nix/python.nix`` sets ``HERMES_NIX_BUILD=1`` on the
+build sandbox. ``nix/python.nix`` sets ``NIKI_NIX_BUILD=1`` on the
 Niki package derivation, so only that build may create an artifact.
 
 Editable installs (``uv sync``, ``pip install -e .``, ``nix develop``)
@@ -31,18 +31,18 @@ from setuptools.command.sdist import sdist
 
 _ROOT = os.path.dirname(os.path.abspath(__file__))
 
-_IN_NIX_BUILD = os.environ.get("HERMES_NIX_BUILD") == "1"
+_IN_NIX_BUILD = os.environ.get("NIKI_NIX_BUILD") == "1"
 
 _BLOCK_MESSAGE = (
-    "Building wheels or sdists for hermes-agent is not supported.\n"
+    "Building wheels or sdists for niki-agent is not supported.\n"
     "Niki is distributed via the shell installer, Docker image, or Nix.\n"
-    "See: https://hermes-agent.nousresearch.com/docs/getting-started/installation\n"
+    "See: https://github.com/NeGamer01/niki-agent/docs/getting-started/installation\n"
     "\n"
     "If you are developing, use an editable install instead:\n"
     "  source ./activate  # PowerShell: . .\\activate.ps1\n"
     "\n"
     "If you are building with Nix (uv2nix), this error should not fire —\n"
-    "the Niki Nix derivation sets HERMES_NIX_BUILD=1. If it does, file a bug."
+    "the Niki Nix derivation sets NIKI_NIX_BUILD=1. If it does, file a bug."
 )
 
 
@@ -73,7 +73,7 @@ try:
 except ImportError:
     pass
 
-# Root single-file modules (``run_agent``, ``hermes_state``, ``toolsets``...)
+# Root single-file modules (``run_agent``, ``niki_state``, ``toolsets``...)
 # are invisible to ``packages.find``: that finder sees only directories with an
 # ``__init__.py``. The wheel build needs them on ``py_modules``, so derive the
 # list from the source tree at build time. A static list in ``pyproject.toml``

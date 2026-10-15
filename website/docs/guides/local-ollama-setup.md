@@ -42,8 +42,8 @@ By the end, you'll have:
 Ollama runs on CPU-only servers. A 9B model on a modern 8-core CPU gives ~10 tokens/sec. A 31B model on CPU is slower (~2–5 tokens/sec) — each response takes 30–120 seconds, but it works. A GPU dramatically improves this. For CPU-only setups, widen the API timeout via the env var (it's not a `config.yaml` key):
 
 ```bash
-# ~/.hermes/.env
-HERMES_API_TIMEOUT=1800   # 30 minutes — generous for slow local models
+# ~/.niki/.env
+NIKI_API_TIMEOUT=1800   # 30 minutes — generous for slow local models
 ```
 :::
 
@@ -104,7 +104,7 @@ You should see a JSON response with the model's reply.
 Run the Niki setup wizard:
 
 ```bash
-hermes setup
+niki setup
 ```
 
 When prompted for a provider, select **Custom Endpoint** and enter:
@@ -113,7 +113,7 @@ When prompted for a provider, select **Custom Endpoint** and enter:
 - **API Key:** Leave empty or type `no-key` (Ollama doesn't need one)
 - **Model:** `gemma4:31b` (or whichever model you pulled)
 
-Alternatively, edit `~/.hermes/config.yaml` directly:
+Alternatively, edit `~/.niki/config.yaml` directly:
 
 ```yaml
 model:
@@ -125,7 +125,7 @@ model:
 ## Step 4: Start Using Niki
 
 ```bash
-hermes
+niki
 ```
 
 That's it. You're now running a fully local agent. Try it out:
@@ -168,12 +168,12 @@ By default, Ollama uses a 2048-token context. Niki requires at least 64,000 toke
 
 ```bash
 # Create a Modelfile that extends context
-cat > ~/.hermes/cache/scratch/Modelfile << 'EOF'
+cat > ~/.niki/cache/scratch/Modelfile << 'EOF'
 FROM gemma4:31b
 PARAMETER num_ctx 64000
 EOF
 
-ollama create gemma4-64k -f ~/.hermes/cache/scratch/Modelfile
+ollama create gemma4-64k -f ~/.niki/cache/scratch/Modelfile
 ```
 
 Then update your Niki config to use `gemma4-64k` as the model name.
@@ -213,7 +213,7 @@ Once Niki works locally in the CLI, you can expose it as a Telegram or Discord b
 ### Telegram
 
 1. Create a bot via [@BotFather](https://t.me/BotFather) and get the token
-2. Add to your `~/.hermes/config.yaml`:
+2. Add to your `~/.niki/config.yaml`:
 
 ```yaml
 model:
@@ -230,7 +230,7 @@ platforms:
 3. Start the gateway:
 
 ```bash
-hermes gateway
+niki gateway
 ```
 
 Now message your bot on Telegram — it responds using your local model.
@@ -247,7 +247,7 @@ platforms:
     token: "YOUR_DISCORD_BOT_TOKEN"
 ```
 
-3. Start: `hermes gateway`
+3. Start: `niki gateway`
 
 ## Step 8: Set Up Fallbacks (Optional)
 
@@ -270,7 +270,7 @@ This way, 90% of your usage is free (local), and only the hard tasks hit the pai
 
 ### "provider 'ollama' has no endpoint configured"
 
-`hermes chat --provider ollama` (or `vllm`) stops with this error when no endpoint is configured for that alias anywhere — no `providers.ollama.base_url`, no `model.base_url`. Niki refuses to send the request rather than fall back to OpenRouter with a cloud key (`OPENROUTER_API_KEY` / `OPENAI_API_KEY`) that happens to be set. Add the endpoint:
+`niki chat --provider ollama` (or `vllm`) stops with this error when no endpoint is configured for that alias anywhere — no `providers.ollama.base_url`, no `model.base_url`. Niki refuses to send the request rather than fall back to OpenRouter with a cloud key (`OPENROUTER_API_KEY` / `OPENAI_API_KEY`) that happens to be set. Add the endpoint:
 
 ```yaml
 providers:
@@ -296,13 +296,13 @@ ollama serve
 
 ### Slow first response (prefill)
 
-Niki sends a fixed payload on every API call — the system prompt plus the tool schemas for all enabled tools — before any of your conversation content. On CPU-only or low-VRAM setups, processing that prompt (the *prefill* phase) dominates the first turn: the model can sit silent for minutes while it works through the prompt, then generate at its normal pace. This is expected behaviour, not a hang. The [Mac local-LLM guide](./local-llm-on-mac.md#timeouts) documents the same effect — during prefill on large contexts, local models may produce no output for minutes while processing the prompt — and Niki automatically raises its stream read timeout from 120s to 1800s for local endpoints (`HERMES_STREAM_READ_TIMEOUT`).
+Niki sends a fixed payload on every API call — the system prompt plus the tool schemas for all enabled tools — before any of your conversation content. On CPU-only or low-VRAM setups, processing that prompt (the *prefill* phase) dominates the first turn: the model can sit silent for minutes while it works through the prompt, then generate at its normal pace. This is expected behaviour, not a hang. The [Mac local-LLM guide](./local-llm-on-mac.md#timeouts) documents the same effect — during prefill on large contexts, local models may produce no output for minutes while processing the prompt — and Niki automatically raises its stream read timeout from 120s to 1800s for local endpoints (`NIKI_STREAM_READ_TIMEOUT`).
 
 What helps:
 
 - **Keep the model loaded** — Ollama unloads idle models after 5 minutes, adding a full reload before the next prefill. Set `OLLAMA_KEEP_ALIVE=24h` (see [Step 6](#keep-the-model-loaded)).
-- **Widen the API timeout** — set `HERMES_API_TIMEOUT=1800` in `~/.hermes/.env` (see [What You Need](#what-you-need)).
-- **Measure and trim the fixed prompt** — run `hermes prompt-size` for a byte breakdown of the system prompt and tool schemas, then disable unused toolsets with `hermes tools` and uninstall skills you don't need with `hermes skills`.
+- **Widen the API timeout** — set `NIKI_API_TIMEOUT=1800` in `~/.niki/.env` (see [What You Need](#what-you-need)).
+- **Measure and trim the fixed prompt** — run `niki prompt-size` for a byte breakdown of the system prompt and tool schemas, then disable unused toolsets with `niki tools` and uninstall skills you don't need with `niki skills`.
 - **Use GPU offloading** — even a partial offload gives a significant speedup (see [Step 6](#use-gpu-offloading-if-available)).
 
 ### Model doesn't follow tool calls
@@ -313,7 +313,7 @@ Models without tool-call support produce plain text instead of structured functi
 - **Niki has auto-repair** — it detects malformed tool calls and attempts to fix them automatically.
 - **Set up a fallback** — if the local model fails 3 times, Niki falls back to a cloud provider.
 
-If the model prints raw JSON like `{"name": "web_search", ...}` in its reply instead of actually running the tool, that's usually the *server*, not the model — tool calling isn't enabled or the tool-call format isn't parsed. See the per-server fix table in [Tool calls appear as text instead of executing](../integrations/providers.md#tool-calls-appear-as-text-instead-of-executing) (llama.cpp needs `--jinja`, vLLM needs `--enable-auto-tool-choice --tool-call-parser hermes`, and so on).
+If the model prints raw JSON like `{"name": "web_search", ...}` in its reply instead of actually running the tool, that's usually the *server*, not the model — tool calling isn't enabled or the tool-call format isn't parsed. See the per-server fix table in [Tool calls appear as text instead of executing](../integrations/providers.md#tool-calls-appear-as-text-instead-of-executing) (llama.cpp needs `--jinja`, vLLM needs `--enable-auto-tool-choice --tool-call-parser niki`, and so on).
 
 ### Context window errors
 

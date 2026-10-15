@@ -22,7 +22,7 @@ Niki Agent 可作为 ACP 服务器运行，让兼容 ACP 的编辑器通过 stdi
 
 ## Niki 在 ACP 模式下暴露的内容
 
-Niki 使用专为编辑器工作流设计的精选 `hermes-acp` 工具集运行，包括：
+Niki 使用专为编辑器工作流设计的精选 `niki-acp` 工具集运行，包括：
 
 - 文件工具：`read_file`、`write_file`、`patch`、`search_files`
 - 终端工具：`terminal`、`process`
@@ -39,13 +39,13 @@ Niki 使用专为编辑器工作流设计的精选 `hermes-acp` 工具集运行�
 正常安装 Niki 后，从安装检出目录添加 ACP 扩展：
 
 ```bash
-cd ~/.hermes/hermes-agent && python -c "import pm; pm.sync_venv(['acp'], explicit=True)"
+cd ~/.niki/niki-agent && python -c "import pm; pm.sync_venv(['acp'], explicit=True)"
 ```
 
 这将安装 `agent-client-protocol` 依赖并启用：
 
-- `hermes acp`
-- `hermes-acp`
+- `niki acp`
+- `niki-acp`
 - `python -m acp_adapter`
 
 ## 启动 ACP 服务器
@@ -53,11 +53,11 @@ cd ~/.hermes/hermes-agent && python -c "import pm; pm.sync_venv(['acp'], explici
 以下任意命令均可以 ACP 模式启动 Niki：
 
 ```bash
-hermes acp
+niki acp
 ```
 
 ```bash
-hermes-acp
+niki-acp
 ```
 
 ```bash
@@ -69,8 +69,8 @@ Niki 将日志输出到 stderr，以保留 stdout 用于 ACP JSON-RPC 流量。
 非交互式检查：
 
 ```bash
-hermes acp --version
-hermes acp --check
+niki acp --version
+niki acp --check
 ```
 
 ### 浏览器工具（可选）
@@ -78,15 +78,15 @@ hermes acp --check
 浏览器工具（`browser_navigate`、`browser_click` 等）依赖 `agent-browser` npm 包和 Chromium，这些不包含在 Python wheel 中。通过以下命令安装：
 
 ```bash
-hermes acp --setup-browser           # 交互式（下载约 400 MB 前会提示确认）
-hermes acp --setup-browser --yes     # 非交互式接受下载
+niki acp --setup-browser           # 交互式（下载约 400 MB 前会提示确认）
+niki acp --setup-browser --yes     # 非交互式接受下载
 ```
 
-这是独立命令。终端认证流程（`hermes acp --setup`）在模型选择后也会将浏览器引导作为后续问题提供，因此大多数用户无需直接运行 `--setup-browser`。
+这是独立命令。终端认证流程（`niki acp --setup`）在模型选择后也会将浏览器引导作为后续问题提供，因此大多数用户无需直接运行 `--setup-browser`。
 
 具体操作：
 
-- 若缺少 Node.js 22 LTS，将其安装到 `~/.hermes/node/`
+- 若缺少 Node.js 22 LTS，将其安装到 `~/.niki/node/`
 - 将 `npm install -g agent-browser @askjo/camofox-browser` 安装到该前缀（无需 sudo — `npm` 的 `--prefix` 指向用户可写的 Niki 管理 Node）
 - 安装 Playwright Chromium，或在检测到系统 Chrome/Chromium 时使用已有版本
 
@@ -104,14 +104,14 @@ Buzz relay <-- WebSocket --> buzz-acp <-- ACP over stdio --> Niki Agent
 ```
 
 这是一种传输层集成，不是第二个 Niki 安装。由 `buzz-acp` 启动的子进程使用该主机上
-与 `hermes` 相同的配置、凭据、记忆、技能和状态。
+与 `niki` 相同的配置、凭据、记忆、技能和状态。
 
 （这与 [Buzz Desktop 的托管运行时](#buzz-desktop)不同——后者在本地将 Niki 作为
 预设 harness 启动。中继桥接用于以 agent 身份加入 Buzz *频道*，通常部署在服务器上。）
 
 前置条件：
 
-- 完成上文的 ACP 安装并通过 `hermes acp --check`。
+- 完成上文的 ACP 安装并通过 `niki acp --check`。
 - 从 [Buzz 仓库](https://github.com/block/buzz)构建 `buzz-acp` 和 `buzz` CLI
   （`cargo build --release -p buzz-acp`）。
 - 为 Niki 铸造专用的 Nostr 密钥对（`buzz-admin generate-key`）并将其注册为
@@ -125,7 +125,7 @@ Buzz relay <-- WebSocket --> buzz-acp <-- ACP over stdio --> Niki Agent
 export BUZZ_RELAY_URL="wss://community.example.com"
 export BUZZ_PRIVATE_KEY="..."
 export BUZZ_API_TOKEN="..."
-export BUZZ_ACP_AGENT_COMMAND="hermes"
+export BUZZ_ACP_AGENT_COMMAND="niki"
 export BUZZ_ACP_AGENT_ARGS="acp"
 
 buzz-acp
@@ -175,7 +175,7 @@ Desktop 会在该 agent 的 **Activity log** 中实时渲染生命周期、工�
 {
   "acp.agents": {
     "Niki Agent": {
-      "command": "hermes",
+      "command": "niki",
       "args": ["acp"]
     }
   }
@@ -192,9 +192,9 @@ Desktop 会在该 agent 的 **Activity log** 中实时渲染生命周期、工�
 ```json
 {
   "agent_servers": {
-    "hermes-agent": {
+    "niki-agent": {
       "type": "custom",
-      "command": "hermes",
+      "command": "niki",
       "args": ["acp"]
     }
   }
@@ -205,11 +205,11 @@ Desktop 会在该 agent 的 **Activity log** 中实时渲染生命周期、工�
 
 前提条件：
 
-- 先通过 `hermes model` 配置 Niki provider 凭据，或在 `~/.hermes/.env` / `~/.hermes/config.yaml` 中设置。
+- 先通过 `niki model` 配置 Niki provider 凭据，或在 `~/.niki/.env` / `~/.niki/config.yaml` 中设置。
 
 ### JetBrains
 
-使用兼容 ACP 的插件并将其指向 `hermes acp` 或 `hermes-acp`。
+使用兼容 ACP 的插件并将其指向 `niki acp` 或 `niki-acp`。
 
 ### Buzz Desktop
 
@@ -220,19 +220,19 @@ Niki 就会出现在你的运行时列表中。
 如果发现失败（较旧的安装），请确认 ACP 启动器可以在登录 shell 的 PATH 上解析：
 
 ```bash
-command -v hermes-acp || command -v hermes
+command -v niki-acp || command -v niki
 ```
 
-较新的安装会将 `hermes` 和 `hermes-acp` 两个启动器写入 `~/.local/bin`；
-运行 `hermes update` 会为较旧的安装补上 `hermes-acp` 启动器。作为手动兜底方案，
-可以将 Buzz 的 agent 命令配置为 `hermes`，参数为 `["acp"]`。
+较新的安装会将 `niki` 和 `niki-acp` 两个启动器写入 `~/.local/bin`；
+运行 `niki update` 会为较旧的安装补上 `niki-acp` 启动器。作为手动兜底方案，
+可以将 Buzz 的 agent 命令配置为 `niki`，参数为 `["acp"]`。
 
 #### 将 Buzz agent 保持为 owner-only
 
 Buzz 创建的每个 agent 默认都将 **Who can talk to this agent** 设为 `Owner only`。
 当运行时为 Niki 时，请保持该设置。
 
-这条路径上有两种行为叠加。`hermes-acp` 工具集包含 `terminal` 和 `execute_code`，
+这条路径上有两种行为叠加。`niki-acp` 工具集包含 `terminal` 和 `execute_code`，
 而 Buzz 的 ACP 桥接层会自行以 `allow_once` 回应 Niki 的权限请求，不会转交给你确认。
 因此 Buzz 中的 Niki agent 会在不提示的情况下在宿主机上执行 shell 命令。
 让它对一个临时目录执行 `rm -rf`，该目录会被直接删除，全程没有任何提示。
@@ -252,10 +252,10 @@ Buzz 在你选择该选项时不会给出任何警告。
 
 ACP 模式使用与 CLI 相同的 Niki 配置：
 
-- `~/.hermes/.env`
-- `~/.hermes/config.yaml`
-- `~/.hermes/skills/`
-- `~/.hermes/state.db`
+- `~/.niki/.env`
+- `~/.niki/config.yaml`
+- `~/.niki/skills/`
+- `~/.niki/state.db`
 
 Provider 解析使用 Niki 的正常运行时解析器，因此 ACP 继承当前配置的 provider 和凭据。Niki 还为首次运行的 ACP 客户端提供终端认证方法（`--setup`）；这将打开 Niki 的交互式模型/provider 设置。
 
@@ -312,19 +312,19 @@ ACP 桥接将这些选项映射到 Niki 的内部审批语义——`allow_always
 
 检查：
 
-- 对于手动/本地开发，验证自定义 `agent_servers` 命令是否指向 `hermes acp`。
+- 对于手动/本地开发，验证自定义 `agent_servers` 命令是否指向 `niki acp`。
 - Niki 已安装且在 PATH 中。
-- ACP 扩展已安装（`cd ~/.hermes/hermes-agent && python -c "import pm; pm.sync_venv(['acp'], explicit=True)"`）。
+- ACP 扩展已安装（`cd ~/.niki/niki-agent && python -c "import pm; pm.sync_venv(['acp'], explicit=True)"`）。
 
 ### ACP 启动后立即报错
 
 尝试以下检查：
 
 ```bash
-hermes acp --version
-hermes acp --check
-hermes doctor
-hermes status
+niki acp --version
+niki acp --check
+niki doctor
+niki status
 ```
 
 ### 缺少凭据
@@ -332,10 +332,10 @@ hermes status
 ACP 模式使用 Niki 现有的 provider 设置。通过以下方式配置凭据：
 
 ```bash
-hermes model
+niki model
 ```
 
-或编辑 `~/.hermes/.env`。终端认证流程（`hermes acp --setup`）也可以触发交互式 provider/模型设置。
+或编辑 `~/.niki/.env`。终端认证流程（`niki acp --setup`）也可以触发交互式 provider/模型设置。
 
 ## 另请参阅
 

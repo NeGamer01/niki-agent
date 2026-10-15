@@ -10,7 +10,7 @@ This page is the compact reference companion to the main MCP docs.
 
 For conceptual guidance, see:
 - [MCP (Model Context Protocol)](../user-guide/features/mcp.md)
-- [Use MCP with Niki](../guides/use-mcp-with-hermes.md)
+- [Use MCP with Niki](../guides/use-mcp-with-niki.md)
 
 ## Root config shape
 
@@ -83,7 +83,7 @@ mcp_servers:
       GITHUB_PERSONAL_ACCESS_TOKEN: "${env:GITHUB_TOKEN}"   # same as "${GITHUB_TOKEN}"
 ```
 
-Values resolve from the active profile's secret scope (falling back to the process environment), so put the secret in `~/.hermes/.env`. An unset variable keeps its literal placeholder — except in a remote server's `url` or `headers`: sending a literal `${VAR}` there is a guaranteed 401 that reads as a bad credential, so the connect fails closed instead, with the variable named in the server's status (`MCP server 'name': ${VAR} in url/headers is not set in this profile's .env or secret source`). Fix the profile's `.env` (or its secret source); the next connect attempt renders the reference afresh.
+Values resolve from the active profile's secret scope (falling back to the process environment), so put the secret in `~/.niki/.env`. An unset variable keeps its literal placeholder — except in a remote server's `url` or `headers`: sending a literal `${VAR}` there is a guaranteed 401 that reads as a bad credential, so the connect fails closed instead, with the variable named in the server's status (`MCP server 'name': ${VAR} in url/headers is not set in this profile's .env or secret source`). Fix the profile's `.env` (or its secret source); the next connect attempt renders the reference afresh.
 
 ### Context variables
 
@@ -334,7 +334,7 @@ mcp_servers:
 Behavior:
 - Niki uses the MCP SDK's OAuth 2.1 PKCE flow (metadata discovery, client identification, token exchange, and refresh)
 - On first connect, a browser window opens for authorization
-- Tokens are persisted to `~/.hermes/mcp-tokens/<server>.json` (a named profile uses `~/.hermes/profiles/<name>/mcp-tokens/`) and reused across sessions
+- Tokens are persisted to `~/.niki/mcp-tokens/<server>.json` (a named profile uses `~/.niki/profiles/<name>/mcp-tokens/`) and reused across sessions
 - Token refresh is automatic; re-authorization only happens when refresh fails
 - Only applies to HTTP/StreamableHTTP transport (`url`-based servers)
 - Under a [multiplexed gateway](../user-guide/multi-profile-gateways.md), an OAuth connection is never shared across profiles: each profile authenticates with its own token and opens its own connection, even when the `mcp_servers` entries are identical
@@ -345,7 +345,7 @@ For an authorization server advertising `device_authorization_endpoint`, explici
 device authorization from a terminal on the machine running Niki:
 
 ```bash
-hermes mcp login protected_api --flow device
+niki mcp login protected_api --flow device
 ```
 
 Open the printed verification URL on any device and enter the displayed user code.
@@ -359,7 +359,7 @@ the only accepted difference is the path-scoped shape described under "OAuth-aut
 in the MCP feature guide (a server advertised as `https://host/path` whose document at
 `/.well-known/oauth-authorization-server/path` names `https://host`).
 
-Set `oauth.flow: device` on the server to make `hermes mcp login` and `hermes mcp reauth`
+Set `oauth.flow: device` on the server to make `niki mcp login` and `niki mcp reauth`
 (including `reauth --all`) use device authorization. `login --flow browser` overrides that
 setting for one login; browser PKCE remains the default. Unsupported metadata produces
 an actionable error rather than silently falling back to a different flow.
@@ -380,7 +380,7 @@ another explicit login.
 ### Client identification: CIMD and DCR
 
 Niki identifies itself to authorization servers with a **Client ID Metadata Document** (CIMD), the mechanism the MCP `2026-07-28` spec adopted in place of Dynamic Client Registration. The document is published at
-`https://nousresearch.github.io/hermes-agent/docs/oauth/client-metadata.json`, and that URL *is* the `client_id` — the authorization server fetches it to learn Hermes' name, logo, and permitted redirect URIs. Nothing is registered per install, and nothing is user-specific.
+`https://nousresearch.github.io/niki-agent/docs/oauth/client-metadata.json`, and that URL *is* the `client_id` — the authorization server fetches it to learn Niki' name, logo, and permitted redirect URIs. Nothing is registered per install, and nothing is user-specific.
 
 The final choice belongs to the authorization server: the SDK sends the document URL as the `client_id` only when the server advertises `client_id_metadata_document_supported: true` in its metadata, and otherwise registers via DCR exactly as before. DCR is deprecated in the MCP spec but still what almost every deployed server uses today.
 
@@ -398,9 +398,9 @@ Each pinned port is bound as soon as it is chosen and held until the browser red
 
 #### When a server rejects the document
 
-If a server fetches the document and refuses it at the *token* endpoint (`invalid_client`), Niki logs the rejection, records it under `~/.hermes/mcp-tokens/<server>.cimd-off`, and uses DCR for that server from then on.
+If a server fetches the document and refuses it at the *token* endpoint (`invalid_client`), Niki logs the rejection, records it under `~/.niki/mcp-tokens/<server>.cimd-off`, and uses DCR for that server from then on.
 
-A server that cannot fetch or validate the document at all aborts at the *authorization* endpoint instead, before any redirect happens. There is no signal Niki can observe there, so the browser shows an invalid-client error and the login times out after five minutes. The timeout message names the document and points at `cimd: false`. Running `hermes mcp login <server>` clears the recorded rejection, so a corrected document gets another chance.
+A server that cannot fetch or validate the document at all aborts at the *authorization* endpoint instead, before any redirect happens. There is no signal Niki can observe there, so the browser shows an invalid-client error and the login times out after five minutes. The timeout message names the document and points at `cimd: false`. Running `niki mcp login <server>` clears the recorded rejection, so a corrected document gets another chance.
 
 #### Optional per-server keys
 
@@ -417,7 +417,7 @@ mcp_servers:
 
 `client_metadata_url` must be an HTTPS URL with a path (no bare origin, no fragment, no userinfo, no `.`/`..` segments) that returns `200` and `Content-Type: application/json` with **no redirect** — authorization servers are forbidden from following redirects when fetching it. Niki still pins its callback to the same `27890`–`27894` range, so a self-hosted document must declare all ten loopback URIs (`http://127.0.0.1:<port>/callback` and `http://localhost:<port>/callback` for each port), and its `client_id` must be its own URL.
 
-`user_agent` replaces the default `User-Agent` on **token-endpoint requests only** (authorization-code exchange, refresh and the device-flow token poll). Without it Niki sends `Niki-Agent/<version>` — never a header-less request, which WAF-fronted authorization servers answer with `403`. It never applies to MCP traffic, and no other token-request headers are configurable. Empty or null values are ignored. A failed exchange reports the status plus a short, redacted excerpt of the error body (a WAF's "Request blocked" page vs the issuer's `invalid_grant`), so the cause is visible without packet captures. `hermes mcp login` clears the stale grant and client registration before re-authorizing but keeps the cached authorization-server metadata, so the announced authorize URL stays the discovered one even when the metadata document cannot be re-fetched.
+`user_agent` replaces the default `User-Agent` on **token-endpoint requests only** (authorization-code exchange, refresh and the device-flow token poll). Without it Niki sends `Niki-Agent/<version>` — never a header-less request, which WAF-fronted authorization servers answer with `403`. It never applies to MCP traffic, and no other token-request headers are configurable. Empty or null values are ignored. A failed exchange reports the status plus a short, redacted excerpt of the error body (a WAF's "Request blocked" page vs the issuer's `invalid_grant`), so the cause is visible without packet captures. `niki mcp login` clears the stale grant and client registration before re-authorizing but keeps the cached authorization-server metadata, so the announced authorize URL stays the discovered one even when the metadata document cannot be re-fetched.
 
 OAuth discovery and dynamic-client-registration requests (the `/.well-known/...` metadata documents and the `registration_endpoint` POST) always carry `User-Agent: Niki-Agent/<version>`. The MCP SDK builds those requests without any client default headers, and WAF-fronted authorization servers answer a header-less request with `403` — the metadata document then looks unreadable, registration falls back to a guessed `/register` on the MCP host, and the login fails with `Registration failed: 404`. When every metadata fetch does fail, the error now leads with those statuses (`Could not read authorization-server metadata (403 from https://…/.well-known/oauth-authorization-server; …)`) before the registration fallback's own error.
 
@@ -426,7 +426,7 @@ OAuth discovery and dynamic-client-registration requests (the `/.well-known/...`
 MCP vendors and docs can offer a one-click **"Add to Niki"** button that opens the Niki desktop app with a pre-filled server config, mirroring Cursor's `cursor://anysphere.cursor-deeplink/mcp/install` scheme:
 
 ```text
-hermes://mcp/install?name=NAME&config=BASE64
+niki://mcp/install?name=NAME&config=BASE64
 ```
 
 - `name` — the server name. Must match `^[A-Za-z0-9._-]{1,64}$`.
@@ -436,7 +436,7 @@ Example (JavaScript):
 
 ```js
 const config = { url: 'https://mcp.example.com/mcp' }
-const link = `hermes://mcp/install?name=example&config=${btoa(JSON.stringify(config))
+const link = `niki://mcp/install?name=example&config=${btoa(JSON.stringify(config))
   .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')}`
 ```
 

@@ -2,7 +2,7 @@
 import asyncio
 from pathlib import Path
 
-from hermes_state_runtime import RuntimeStoreError
+from niki_state_runtime import RuntimeStoreError
 
 
 async def discover_commands(authority, actor, params, *, completion=False):
@@ -14,7 +14,7 @@ async def discover_commands(authority, actor, params, *, completion=False):
         raise RuntimeStoreError('invalid_params')
 
     def discover():
-        from hermes_cli.profiles import profile_matches_home
+        from niki_cli.profiles import profile_matches_home
         home = Path(authority.profile_id)
         if params.get('profile') and not profile_matches_home(params['profile'], home):
             raise RuntimeStoreError('profile_mismatch')

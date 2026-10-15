@@ -134,7 +134,7 @@ def test_init_openrouter_exhausted_without_chain_keeps_generic_error():
 
 
 def test_init_fallback_recomputes_api_mode_for_copilot_gpt5_mini():
-    """#46527: Nous primary (api_mode=codex_responses, no creds) -> Copilot gpt-5-mini
+    """#46527: Niki primary (api_mode=codex_responses, no creds) -> Copilot gpt-5-mini
     fallback must end up with api_mode=chat_completions, not codex_responses.
 
     Copilot's gpt-5-mini is the documented exception that uses Chat Completions,
@@ -149,7 +149,7 @@ def test_init_fallback_recomputes_api_mode_for_copilot_gpt5_mini():
                      explicit_base_url=None, explicit_api_key=None):
         if provider == "copilot":
             return fb_client, "gpt-5-mini"
-        return None, None  # primary (nous) has no usable credentials
+        return None, None  # primary (niki) has no usable credentials
 
     with patch("agent.auxiliary_client.resolve_provider_client", side_effect=fake_resolve), \
          patch("model_tools.get_tool_definitions", return_value=_make_tool_defs()), \
@@ -157,7 +157,7 @@ def test_init_fallback_recomputes_api_mode_for_copilot_gpt5_mini():
          patch("agent.process_bootstrap.OpenAI", return_value=MagicMock()):
 
         agent = AIAgent(
-            provider="nous",
+            provider="niki",
             model="gpt-5.4-mini",
             api_mode="codex_responses",
             api_key=None,
@@ -175,7 +175,7 @@ def test_init_fallback_recomputes_api_mode_for_copilot_gpt5_mini():
 
 
 def test_init_fallback_keeps_codex_responses_for_openai_codex():
-    """#46527: Nous primary (api_mode=codex_responses, no creds) -> openai-codex
+    """#46527: Niki primary (api_mode=codex_responses, no creds) -> openai-codex
     fallback must keep api_mode=codex_responses (openai-codex always uses the
     Responses API)."""
     fb_client = _mock_client(base_url="https://chatgpt.com/backend-api/codex")
@@ -192,7 +192,7 @@ def test_init_fallback_keeps_codex_responses_for_openai_codex():
          patch("agent.process_bootstrap.OpenAI", return_value=MagicMock()):
 
         agent = AIAgent(
-            provider="nous",
+            provider="niki",
             model="gpt-5.4-mini",
             api_mode="codex_responses",
             api_key=None,

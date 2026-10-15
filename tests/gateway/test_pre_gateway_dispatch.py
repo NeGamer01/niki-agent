@@ -75,7 +75,7 @@ async def test_internal_events_bypass_hook(monkeypatch):
     async def _capture(event, source, _quick_key, _run_generation):
         return "ok"
 
-    monkeypatch.setattr("hermes_cli.plugins.invoke_hook", _fake_hook)
+    monkeypatch.setattr("niki_cli.plugins.invoke_hook", _fake_hook)
 
     runner, _adapter = _make_runner(Platform.WHATSAPP)
     runner._handle_message_with_agent = _capture
@@ -109,7 +109,7 @@ async def test_hook_fires_without_session_store_attribute(monkeypatch):
         return []
 
     # The inbound path awaits the hook, so the seam is the async entry point.
-    monkeypatch.setattr("hermes_cli.plugins.ainvoke_hook", _fake_hook)
+    monkeypatch.setattr("niki_cli.plugins.ainvoke_hook", _fake_hook)
 
     runner, adapter = _make_runner(Platform.WHATSAPP)
     del runner.session_store
@@ -142,7 +142,7 @@ async def test_async_hook_callback_is_awaited_on_the_gateway_loop(monkeypatch):
         await gate.wait()
         return [{"action": "skip", "reason": "gated"}]
 
-    monkeypatch.setattr("hermes_cli.plugins.ainvoke_hook", _hook)
+    monkeypatch.setattr("niki_cli.plugins.ainvoke_hook", _hook)
 
     async def _release():
         await asyncio.sleep(0)
@@ -166,14 +166,14 @@ async def test_rewritten_message_keeps_its_callback_provenance_and_is_admitted(m
     from gateway.run import GatewayRunner
     from gateway.session_authority import SessionAuthority, initialize_session_authority
     from gateway.session_ingress_context import capture_provenance, native_callback, register_transport_home
-    from hermes_constants import get_hermes_home
-    from hermes_state_runtime import list_session_admissions
+    from niki_constants import get_niki_home
+    from niki_state_runtime import list_session_admissions
     from plugins.platforms.discord.adapter import DiscordAdapter
 
     async def rewrite(name, **_kwargs):
         return [{"action": "rewrite", "text": "rewritten"}] if name == "pre_gateway_dispatch" else []
 
-    monkeypatch.setattr("hermes_cli.lifecycle.ainvoke_hook", rewrite)
+    monkeypatch.setattr("niki_cli.lifecycle.ainvoke_hook", rewrite)
     monkeypatch.setattr(SessionAuthority, "_schedule", lambda self, ref: None)
     monkeypatch.setenv("DISCORD_ALLOWED_USERS", "42")
     runner = GatewayRunner(GatewayConfig())
@@ -183,12 +183,12 @@ async def test_rewritten_message_keeps_its_callback_provenance_and_is_admitted(m
     runner._wire_adapter_handlers(adapter)
     # The multiplexed admission check that refused the reporter (thanks @unsupportedpastels).
     runner.config.multiplex_profiles = True
-    runner.config._runtime_profile_homes = [("default", get_hermes_home())]
-    register_transport_home(runner, None, get_hermes_home())
+    runner.config._runtime_profile_homes = [("default", get_niki_home())]
+    register_transport_home(runner, None, get_niki_home())
     source = adapter.build_source(chat_id="42", chat_type="dm", user_id="42")
     human = MessageEvent(text="original", source=source, message_id="h")
 
-    with native_callback(runner, human, get_hermes_home()):
+    with native_callback(runner, human, get_niki_home()):
         expected = capture_provenance(runner, human)
         event = await runner._hm_pre_gateway_dispatch_hook(human, source)
         receipt = await authority.admit_native(event)

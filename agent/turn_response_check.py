@@ -149,7 +149,7 @@ def check_api_response(
 
     agent._turn_received_provider_response = True
     finish_reason = _derive_finish_reason(agent, response, messages)
-    from hermes_cli.observability.shared_metrics_harness import record_reply_finish
+    from niki_cli.observability.shared_metrics_harness import record_reply_finish
     record_reply_finish(agent, response, finish_reason)
 
     # HTTP-200 refusals are deterministic: one fallback try, else return the refusal.
@@ -203,11 +203,11 @@ def check_api_response(
         _last_preflight_pressure = None
 
     _retry.has_retried_429 = False
-    # Clearing Nous rate-limit state proves the limit reset so other sessions may resume.
-    if agent.provider == "nous":
+    # Clearing Niki rate-limit state proves the limit reset so other sessions may resume.
+    if agent.provider == "niki":
         try:
-            from agent.nous_rate_guard import clear_nous_rate_limit
-            from hermes_cli.anon_auth import is_anonymous_agent
+            from agent.niki_rate_guard import clear_nous_rate_limit
+            from niki_cli.anon_auth import is_anonymous_agent
             clear_nous_rate_limit(anonymous=is_anonymous_agent(agent))
         except Exception:
             pass

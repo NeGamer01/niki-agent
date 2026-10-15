@@ -24,7 +24,7 @@ effect-level invariant that follows, per obligation id, is:
 What is real
 ------------
 * The ledger module, on a real ``state.db`` under an isolated
-  ``HOME=<tmp>/home``, ``HERMES_HOME=<tmp>/home/.hermes`` (every child).
+  ``HOME=<tmp>/home``, ``NIKI_HOME=<tmp>/home/.niki`` (every child).
 * The turn-side checkpoints: ``BasePlatformAdapter._record_delivery_obligation``
   (record + mark_attempting) and ``_finalize_delivery_obligation``
   (mark_delivered) — the exact methods the adapter's final-send path calls.
@@ -223,7 +223,7 @@ if barrier_dir:
 
     dl._owner_alive = _gated_owner_alive
 
-home = Path(os.environ["HERMES_HOME"])
+home = Path(os.environ["NIKI_HOME"])
 runner = object.__new__(GatewayRunner)
 runner.adapters = {Platform.TELEGRAM: JournalAdapter()}
 runner._profile_adapters = {}
@@ -259,14 +259,14 @@ class Cell:
     def __init__(self, tmp_path: Path):
         self.root = tmp_path
         self.home = tmp_path / "home"
-        self.hermes_home = self.home / ".hermes"
-        self.hermes_home.mkdir(parents=True)
-        (self.hermes_home / "config.yaml").write_text(
+        self.niki_home = self.home / ".niki"
+        self.niki_home.mkdir(parents=True)
+        (self.niki_home / "config.yaml").write_text(
             "gateway:\n  delivery_ledger: true\n", encoding="utf-8"
         )
         self.journal = tmp_path / "transport.jsonl"
         self.ids_file = tmp_path / "ids.json"
-        self.db_path = self.hermes_home / "state.db"
+        self.db_path = self.niki_home / "state.db"
         (tmp_path / "tmp").mkdir()
         self._boots = 0
 
@@ -278,11 +278,11 @@ class Cell:
             "PYTHONPATH": f"{REPO_ROOT}{os.pathsep}{inherited}" if inherited else str(REPO_ROOT),
             "PYTHONUNBUFFERED": "1",
             "HOME": str(self.home),
-            "HERMES_HOME": str(self.hermes_home),
+            "NIKI_HOME": str(self.niki_home),
             "TMPDIR": str(self.root / "tmp"),
-            # HOME/.hermes IS the temp home here, so the live-system guard would
+            # HOME/.niki IS the temp home here, so the live-system guard would
             # read it as production; bypass it in the CHILD only.
-            "HERMES_STATE_DB_GUARD_BYPASS": "1",
+            "NIKI_STATE_DB_GUARD_BYPASS": "1",
             "CELL5_JOURNAL": str(self.journal),
             "CELL5_ROLE": role,
             "CELL5_CHAT_ID": CHAT_ID,

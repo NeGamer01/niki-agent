@@ -6,9 +6,9 @@ author: Niki Agent + Teknium
 license: MIT
 platforms: [macos, linux]
 metadata:
-  hermes:
+  niki:
     tags: [Search, Knowledge-Base, RAG, Notes, MCP, Local-AI]
-    related_skills: [obsidian, hermes-agent, arxiv]
+    related_skills: [obsidian, niki-agent, arxiv]
 ---
 
 # QMD — Query Markup Documents
@@ -226,7 +226,7 @@ without needing to load this skill.
 
 ### Option A: Stdio Mode (Simple)
 
-Add to `~/.hermes/config.yaml`:
+Add to `~/.niki/config.yaml`:
 
 ```yaml
 mcp_servers:
@@ -291,9 +291,9 @@ cat > ~/Library/LaunchAgents/com.qmd.daemon.plist << 'EOF'
   <key>KeepAlive</key>
   <true/>
   <key>StandardOutPath</key>
-  <string>/Users/YOU/.hermes/cache/scratch/qmd-daemon.log</string>
+  <string>/Users/YOU/.niki/cache/scratch/qmd-daemon.log</string>
   <key>StandardErrorPath</key>
-  <string>/Users/YOU/.hermes/cache/scratch/qmd-daemon.log</string>
+  <string>/Users/YOU/.niki/cache/scratch/qmd-daemon.log</string>
 </dict>
 </plist>
 EOF

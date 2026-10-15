@@ -9,7 +9,7 @@ from functools import partial
 import sys
 
 from gateway.session_busy_controls import authorize
-from hermes_state_runtime import RuntimeStoreError
+from niki_state_runtime import RuntimeStoreError
 
 
 _SUBAGENT_FIELDS = (
@@ -326,15 +326,15 @@ def _owner_objects(authority, ref):
 def physical_target(authority, ref):
     from gateway.config import Platform
     if authority.sessions[ref.session_id].source.platform == Platform.LOCAL:
-        from hermes_state_local import local_receipt
+        from niki_state_local import local_receipt
         return local_receipt(authority.db, ref.session_id)['entry']['session_id']
     return ref.session_id
 
 
 def control_snapshot(authority, ref):
-    from hermes_cli.goals import GoalState
-    from hermes_cli.loops import LoopState
-    from hermes_cli.heartbeat import HeartbeatState
+    from niki_cli.goals import GoalState
+    from niki_cli.loops import LoopState
+    from niki_cli.heartbeat import HeartbeatState
     # These pure serializers don't bind/import the legacy server. In particular
     # do not reuse _snapshot_control: its manager loader can write on a read.
     from tui_gateway.methods_session_control import (

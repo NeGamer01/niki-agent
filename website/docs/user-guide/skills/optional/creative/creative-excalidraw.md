@@ -14,7 +14,7 @@ Hand-drawn Excalidraw JSON diagrams (arch, flow, seq).
 
 | | |
 |---|---|
-| Source | Optional — install with `hermes skills install official/creative/excalidraw` |
+| Source | Optional — install with `niki skills install official/creative/excalidraw` |
 | Path | `optional-skills/creative/excalidraw` |
 | Version | `1.0.1` |
 | Author | Niki Agent |
@@ -51,7 +51,7 @@ Wrap your elements array in the standard `.excalidraw` envelope and save with `w
 {
   "type": "excalidraw",
   "version": 2,
-  "source": "hermes-agent",
+  "source": "niki-agent",
   "elements": [ ...your elements array here... ],
   "appState": {
     "viewBackgroundColor": "#ffffff"

@@ -16,7 +16,7 @@ import os
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from hermes_time import safe_strftime
+from niki_time import safe_strftime
 
 logger = logging.getLogger(__name__)
 
@@ -38,11 +38,11 @@ def _fmt_usd(value: Optional[float]) -> str:
     return f"${(value or 0.0):,.2f}"
 
 
-def nous_logged_in() -> bool:
-    """Cheap local auth-state check: a Nous access token is present. Fail-closed."""
+def niki_logged_in() -> bool:
+    """Cheap local auth-state check: a Niki access token is present. Fail-closed."""
     try:
-        from hermes_cli.auth import get_provider_auth_state
-        tok = (get_provider_auth_state("nous") or {}).get("access_token")
+        from niki_cli.auth import get_provider_auth_state
+        tok = (get_provider_auth_state("niki") or {}).get("access_token")
         return isinstance(tok, str) and bool(tok.strip())
     except Exception:
         return False
@@ -167,11 +167,11 @@ def usage_model_from_account(account_info: Any) -> UsageModel:
 
 
 def build_usage_model(*, timeout: float = 10.0) -> UsageModel:
-    """Fetch account-info and build the usage model; fail-open. ``HERMES_DEV_CREDITS_FIXTURE`` short-circuits to a fixture."""
+    """Fetch account-info and build the usage model; fail-open. ``NIKI_DEV_CREDITS_FIXTURE`` short-circuits to a fixture."""
     fixture = _dev_fixture_usage_model()
     if fixture is not None:
         return fixture
-    if not nous_logged_in():
+    if not niki_logged_in():
         return UsageModel(available=False)
     try:
         return usage_model_from_account(fetch_nous_account(timeout))
@@ -185,8 +185,8 @@ def _plan_bar(remaining: float, spent: float) -> UsageBar:
 
 
 def _dev_fixture_usage_model() -> Optional[UsageModel]:
-    """``HERMES_DEV_CREDITS_FIXTURE`` -> fixture model (``free|healthy|low|topup|depleted``), else None."""
-    name = (os.getenv("HERMES_DEV_CREDITS_FIXTURE") or "").strip().lower()
+    """``NIKI_DEV_CREDITS_FIXTURE`` -> fixture model (``free|healthy|low|topup|depleted``), else None."""
+    name = (os.getenv("NIKI_DEV_CREDITS_FIXTURE") or "").strip().lower()
     name = {"mid": "healthy", "top-up": "topup"}.get(name, name)
     plus = dict(available=True, plan_name="Plus", renews_at="2026-07-01")
     specs: dict[str, dict] = {

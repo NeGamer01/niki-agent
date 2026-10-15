@@ -28,9 +28,9 @@
  * terminal pane keeps working unimpaired.
  */
 
-import { Button } from '@nous-research/ui/ui/components/button'
-import { Badge } from '@nous-research/ui/ui/components/badge'
-import { Card } from '@nous-research/ui/ui/components/card'
+import { Button } from '@niki-research/ui/ui/components/button'
+import { Badge } from '@niki-research/ui/ui/components/badge'
+import { Card } from '@niki-research/ui/ui/components/card'
 
 import { ModelPickerDialog } from '@/components/ModelPickerDialog'
 import { ModelReloadConfirm } from '@/components/ModelReloadConfirm'
@@ -377,7 +377,7 @@ export function ChatSidebar({
 
   // Event subscriber WebSocket — receives the rebroadcast of every
   // dispatcher emit from the PTY child's gateway.  See /api/pub +
-  // /api/events in hermes_cli/web_server.py for the broadcast hop.
+  // /api/events in niki_cli/web_server.py for the broadcast hop.
   //
   // Framing, dispatch and connect timeout come from the shared JSON-RPC
   // client (`EventsFeedClient`); this effect owns only the retry policy and

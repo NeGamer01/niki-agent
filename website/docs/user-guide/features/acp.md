@@ -27,7 +27,7 @@ conversation transport.
 
 ## What Niki exposes in ACP mode
 
-Niki runs with a curated `hermes-acp` toolset designed for editor workflows. It includes:
+Niki runs with a curated `niki-acp` toolset designed for editor workflows. It includes:
 
 - file tools: `read_file`, `write_file`, `patch`, `search_files`
 - terminal tools: `terminal`, `process`
@@ -42,11 +42,11 @@ It intentionally excludes things that do not fit typical editor UX, such as mess
 The toolset resolves the same way as on the messaging gateway for the same
 platform config. That includes the extras the gateway adds on top of the
 list, such as enabled plugin toolsets, so ACP sessions get those too.
-`platform_toolsets.acp` replaces the `hermes-acp` default, and
+`platform_toolsets.acp` replaces the `niki-acp` default, and
 `agent.disabled_toolsets` removes toolsets from every ACP session. MCP
 servers from `mcp_servers` follow the same rules too. By default ACP gets
 every enabled server. If you list server names in `platform_toolsets.acp`,
-only those servers are included, and `no_mcp` drops them all. `hermes tools`
+only those servers are included, and `no_mcp` drops them all. `niki tools`
 has no ACP entry, so edit `config.yaml` directly:
 
 ```yaml
@@ -84,13 +84,13 @@ changing the server configuration. Commands and paths run on the gateway host.
 Install Niki normally, then add the ACP extra from the install checkout:
 
 ```bash
-cd ~/.hermes/hermes-agent && python -c "import pm; pm.sync_venv(['acp'], explicit=True)"
+cd ~/.niki/niki-agent && python -c "import pm; pm.sync_venv(['acp'], explicit=True)"
 ```
 
 This installs the `agent-client-protocol` dependency and enables:
 
-- `hermes acp`
-- `hermes-acp`
+- `niki acp`
+- `niki-acp`
 - `python -m acp_adapter`
 
 ## Launching the ACP server
@@ -98,11 +98,11 @@ This installs the `agent-client-protocol` dependency and enables:
 Any of the following starts Niki in ACP mode:
 
 ```bash
-hermes acp
+niki acp
 ```
 
 ```bash
-hermes-acp
+niki-acp
 ```
 
 ```bash
@@ -114,8 +114,8 @@ Niki logs to stderr so stdout remains reserved for ACP JSON-RPC traffic.
 For non-interactive checks:
 
 ```bash
-hermes acp --version
-hermes acp --check
+niki acp --version
+niki acp --check
 ```
 
 ### Browser tools (optional)
@@ -125,15 +125,15 @@ Browser tools (`browser_navigate`, `browser_click`, etc.) depend on the
 wheel. Install them with:
 
 ```bash
-hermes acp --setup-browser           # interactive (prompts before ~400 MB download)
-hermes acp --setup-browser --yes     # accept the download non-interactively
+niki acp --setup-browser           # interactive (prompts before ~400 MB download)
+niki acp --setup-browser --yes     # accept the download non-interactively
 ```
 
-This is the standalone command. The terminal-auth flow (`hermes acp --setup`) also offers the browser bootstrap as a follow-up question after model selection, so most users never need to run `--setup-browser` directly.
+This is the standalone command. The terminal-auth flow (`niki acp --setup`) also offers the browser bootstrap as a follow-up question after model selection, so most users never need to run `--setup-browser` directly.
 
 What it does:
 
-- Installs Node.js 26 into `~/.hermes/node/` if missing
+- Installs Node.js 26 into `~/.niki/node/` if missing
 - `npm install -g agent-browser @askjo/camofox-browser` into that prefix (no sudo needed — `npm`'s `--prefix` points at the user-writable Niki-managed Node)
 - Installs Playwright Chromium, or uses a detected system Chrome/Chromium when available
 
@@ -153,7 +153,7 @@ Buzz relay <-- WebSocket --> buzz-acp <-- ACP over stdio --> Niki Agent
 
 This is a transport integration, not a second Niki installation. The
 subprocess launched by `buzz-acp` uses the same Niki configuration,
-credentials, memory, skills, and state as `hermes` on that host.
+credentials, memory, skills, and state as `niki` on that host.
 
 (This is distinct from [Buzz Desktop's managed runtime](#buzz-desktop), which
 spawns Niki locally as a preset harness. The relay bridge is for joining Buzz
@@ -161,7 +161,7 @@ spawns Niki locally as a preset harness. The relay bridge is for joining Buzz
 
 Prerequisites:
 
-- Complete the ACP installation and `hermes acp --check` above.
+- Complete the ACP installation and `niki acp --check` above.
 - Build `buzz-acp` and the `buzz` CLI from the
   [Buzz repository](https://github.com/block/buzz)
   (`cargo build --release -p buzz-acp`).
@@ -176,7 +176,7 @@ Start a bridge with:
 export BUZZ_RELAY_URL="wss://community.example.com"
 export BUZZ_PRIVATE_KEY="..."
 export BUZZ_API_TOKEN="..."
-export BUZZ_ACP_AGENT_COMMAND="hermes"
+export BUZZ_ACP_AGENT_COMMAND="niki"
 export BUZZ_ACP_AGENT_ARGS="acp"
 
 buzz-acp
@@ -231,7 +231,7 @@ If you want to define Niki manually, add it through VS Code settings under `acp.
 {
   "acp.agents": {
     "Niki Agent": {
-      "command": "hermes",
+      "command": "niki",
       "args": ["acp"]
     }
   }
@@ -248,9 +248,9 @@ Configure Niki as a custom agent server in Zed settings:
 ```json
 {
   "agent_servers": {
-    "hermes-agent": {
+    "niki-agent": {
       "type": "custom",
-      "command": "hermes",
+      "command": "niki",
       "args": ["acp"]
     }
   }
@@ -261,11 +261,11 @@ Configure Niki as a custom agent server in Zed settings:
 
 Prerequisites:
 
-- Configure Niki provider credentials first with `hermes model`, or set them in `~/.hermes/.env` / `~/.hermes/config.yaml`.
+- Configure Niki provider credentials first with `niki model`, or set them in `~/.niki/.env` / `~/.niki/config.yaml`.
 
 ### JetBrains
 
-Use an ACP-compatible plugin and point it at `hermes acp` or `hermes-acp`.
+Use an ACP-compatible plugin and point it at `niki acp` or `niki-acp`.
 
 ### Buzz Desktop
 
@@ -277,33 +277,33 @@ If discovery fails (older installs), make sure the ACP launcher resolves on a
 login-shell PATH:
 
 ```bash
-command -v hermes-acp || command -v hermes
+command -v niki-acp || command -v niki
 ```
 
-Recent installs write both `hermes` and `hermes-acp` launchers into
-`~/.local/bin`; running `hermes update` adds the `hermes-acp` launcher to
+Recent installs write both `niki` and `niki-acp` launchers into
+`~/.local/bin`; running `niki update` adds the `niki-acp` launcher to
 older installs. As a manual fallback, configure Buzz's agent command as
-`hermes` with args `["acp"]`.
+`niki` with args `["acp"]`.
 
 #### Model picker
 
 Buzz Desktop (v0.5.1+) renders Niki' full model menu in the agent's runtime
 settings. The list comes from Niki itself over ACP: it shows every model
 from providers you have authenticated in Niki (the same inventory behind
-`hermes model` and the `/model` command), so a model missing from the menu
+`niki model` and the `/model` command), so a model missing from the menu
 means its provider has no credentials configured on the Niki side.
 
 Entry IDs take the form `provider:model` (e.g. `openrouter:z-ai/glm-5.1`), or
 `custom:<name>:<model>` for custom OpenAI-compatible endpoints defined in
 `config.yaml`. Picking a model applies to that agent's session; it does not
-change your Niki-wide default — use `hermes model` for that.
+change your Niki-wide default — use `niki model` for that.
 
 #### Keep Buzz agents owner-only
 
 Buzz creates every agent with **Who can talk to this agent** set to `Owner only`.
 Leave it there when the runtime is Niki.
 
-Two behaviors combine on this path. The `hermes-acp` toolset includes `terminal`
+Two behaviors combine on this path. The `niki-acp` toolset includes `terminal`
 and `execute_code`, and Buzz's ACP bridge answers Niki' permission requests
 itself with `allow_once` rather than surfacing them. A Niki agent in Buzz
 therefore runs shell commands on the host without prompting. I asked one to run
@@ -327,10 +327,10 @@ command from everyone else.
 
 ACP mode uses the same Niki configuration as the CLI:
 
-- `~/.hermes/.env`
-- `~/.hermes/config.yaml`
-- `~/.hermes/skills/`
-- `~/.hermes/state.db`
+- `~/.niki/.env`
+- `~/.niki/config.yaml`
+- `~/.niki/skills/`
+- `~/.niki/state.db`
 
 Provider resolution uses Niki' normal runtime resolver, so ACP inherits the currently configured provider and credentials. Niki also advertises a terminal auth method (`--setup`) for first-run ACP clients; this opens Niki' interactive model/provider setup.
 
@@ -342,12 +342,12 @@ spawn. It is not user configuration — do not set it by hand in `.env` or
 
 | Variable | Value | Effect |
 |----------|-------|--------|
-| `HERMES_ACP_SKIP_CONFIGURED_MCP` | `1` | **No effect.** Niki no longer reads it. `hermes acp` / `hermes-acp` runs as a viewer of the gateway daemon and never starts the `config.yaml` MCP servers itself, so there is no ACP-side startup to skip. |
+| `NIKI_ACP_SKIP_CONFIGURED_MCP` | `1` | **No effect.** Niki no longer reads it. `niki acp` / `niki-acp` runs as a viewer of the gateway daemon and never starts the `config.yaml` MCP servers itself, so there is no ACP-side startup to skip. |
 
 The ACP process does no MCP discovery. The gateway daemon starts the
 `mcp_servers` from its own profile's `config.yaml` once at gateway boot, and ACP
 sessions get those servers through the `platform_toolsets.acp` rules
-[above](#what-hermes-exposes-in-acp-mode). Setting the variable on the ACP
+[above](#what-niki-exposes-in-acp-mode). Setting the variable on the ACP
 subprocess or on the gateway does not change that. Use `platform_toolsets.acp`
 or `no_mcp` to keep configured servers out of ACP sessions.
 
@@ -376,8 +376,8 @@ still be updated even when its current history is empty.
 
 Existing empty rows from older versions are not automatically deleted. An open ACP
 row does not prove its client has disconnected. After closing the relevant editor
-sessions, inspect unwanted rows with `hermes sessions show <id>` and remove only
-confirmed unwanted sessions with `hermes sessions delete <id>`.
+sessions, inspect unwanted rows with `niki sessions show <id>` and remove only
+confirmed unwanted sessions with `niki sessions delete <id>`.
 
 ## Working directory behavior
 
@@ -421,19 +421,19 @@ The ACP bridge maps these options onto Niki' internal approval semantics — `al
 
 Check:
 
-- For manual/local development, verify the host command points to `hermes acp`.
+- For manual/local development, verify the host command points to `niki acp`.
 - Niki is installed and on your PATH.
-- The ACP extra is installed (`cd ~/.hermes/hermes-agent && python -c "import pm; pm.sync_venv(['acp'], explicit=True)"`).
+- The ACP extra is installed (`cd ~/.niki/niki-agent && python -c "import pm; pm.sync_venv(['acp'], explicit=True)"`).
 
 ### ACP starts but immediately errors
 
 Try these checks:
 
 ```bash
-hermes acp --version
-hermes acp --check
-hermes doctor
-hermes status
+niki acp --version
+niki acp --check
+niki doctor
+niki status
 ```
 
 ### Missing credentials
@@ -441,10 +441,10 @@ hermes status
 ACP mode uses Niki' existing provider setup. Configure credentials with:
 
 ```bash
-hermes model
+niki model
 ```
 
-or by editing `~/.hermes/.env`. The terminal auth flow (`hermes acp --setup`) can also trigger the interactive provider/model setup.
+or by editing `~/.niki/.env`. The terminal auth flow (`niki acp --setup`) can also trigger the interactive provider/model setup.
 
 ## See also
 

@@ -104,13 +104,13 @@ def _check_frontmatter(frontmatter: dict[str, Any], skill_dir: Optional[Path]) -
         if key not in frontmatter:
             yield _warn("missing-metadata", f"frontmatter is missing '{key}'; every peer skill has it.")
     meta = frontmatter.get("metadata")
-    hermes_meta = meta.get("hermes") if isinstance(meta, dict) else None
-    if not isinstance(hermes_meta, dict):
-        yield _warn("missing-metadata", "frontmatter is missing metadata.hermes.{tags, related_skills}.")
-    elif "tags" not in hermes_meta:
-        yield _warn("missing-metadata", "metadata.hermes.tags is missing.")
+    niki_meta = meta.get("niki") if isinstance(meta, dict) else None
+    if not isinstance(niki_meta, dict):
+        yield _warn("missing-metadata", "frontmatter is missing metadata.niki.{tags, related_skills}.")
+    elif "tags" not in niki_meta:
+        yield _warn("missing-metadata", "metadata.niki.tags is missing.")
     author = str(frontmatter.get("author", ""))
-    if author and author.strip().lower() in ("hermes", "agent", "niki agent") and (
+    if author and author.strip().lower() in ("niki", "agent", "niki agent") and (
         author != "Niki Agent"):
         yield _warn("author-caps", f"author '{author}' should be 'Niki Agent' (proper caps) "
                     f"or a real contributor name.")

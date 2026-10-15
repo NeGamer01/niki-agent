@@ -6,7 +6,7 @@ author: Niki Agent
 license: MIT
 platforms: [macos]
 metadata:
-  hermes:
+  niki:
     tags: [iMessage, SMS, messaging, macOS, Apple]
 prerequisites:
   commands: [imsg]

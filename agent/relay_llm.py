@@ -48,7 +48,7 @@ def _relay_operation_name(provider_name: str, metadata: dict[str, Any] | None) -
 def _relay_metadata(provider_name: str, metadata: dict[str, Any] | None) -> dict[str, Any]:
     """Preserve the physical provider when the operation name is canonicalized."""
     relay_metadata = _jsonable_dict(metadata or {})
-    relay_metadata.setdefault("hermes.provider", provider_name)
+    relay_metadata.setdefault("niki.provider", provider_name)
     return relay_metadata
 
 
@@ -696,7 +696,7 @@ def _logical_parent(
                 handle = turn.logical_llm_calls[request_id] = runtime.run_in_session(
                     session, runtime.relay.scope.push, relay_runtime.LOGICAL_LLM_SCOPE,
                     runtime.relay.ScopeType.Function, handle=parent, input={},
-                    metadata=relay_runtime.runtime_metadata(runtime.runtime_id, **{"hermes.call_role": call_role}),
+                    metadata=relay_runtime.runtime_metadata(runtime.runtime_id, **{"niki.call_role": call_role}),
                 )
     return turn, handle, request_id
 

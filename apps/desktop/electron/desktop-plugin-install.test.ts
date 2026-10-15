@@ -58,7 +58,7 @@ describe('desktopPluginFolderName', () => {
 
 describe('resolveSubdirWithin', () => {
   it('rejects path traversal', () => {
-    const root = mkdtemp('hermes-plugin-root-')
+    const root = mkdtemp('niki-plugin-root-')
 
     expect(() => resolveSubdirWithin(root, '../escape')).toThrow(/escapes/)
   })
@@ -66,7 +66,7 @@ describe('resolveSubdirWithin', () => {
 
 describe('findDesktopEntry', () => {
   it('finds root plugin.js', () => {
-    const root = mkdtemp('hermes-plugin-detect-')
+    const root = mkdtemp('niki-plugin-detect-')
     fs.mkdirSync(path.join(root, 'desktop'), { recursive: true })
     fs.writeFileSync(path.join(root, 'plugin.js'), 'export default {}')
 
@@ -74,7 +74,7 @@ describe('findDesktopEntry', () => {
   })
 
   it('finds desktop/plugin.js', () => {
-    const root = mkdtemp('hermes-plugin-detect-')
+    const root = mkdtemp('niki-plugin-detect-')
     fs.mkdirSync(path.join(root, 'desktop'), { recursive: true })
     fs.writeFileSync(path.join(root, 'desktop', 'plugin.js'), 'export default {}')
 
@@ -95,7 +95,7 @@ describe('detectPluginComponents', () => {
   })
 
   it('detects agent-only layout', async () => {
-    const root = mkdtemp('hermes-plugin-agent-')
+    const root = mkdtemp('niki-plugin-agent-')
     roots.push(root)
     fs.writeFileSync(path.join(root, 'plugin.yaml'), 'name: hello-agent\n')
     fs.writeFileSync(path.join(root, '__init__.py'), 'def register(ctx): pass\n')
@@ -108,7 +108,7 @@ describe('detectPluginComponents', () => {
   })
 
   it('detects dual layout', async () => {
-    const root = mkdtemp('hermes-plugin-dual-')
+    const root = mkdtemp('niki-plugin-dual-')
     roots.push(root)
     fs.mkdirSync(path.join(root, 'desktop'), { recursive: true })
     fs.writeFileSync(path.join(root, 'plugin.yaml'), 'name: dual\n')
@@ -134,10 +134,10 @@ describe('probePluginRepo', () => {
   })
 
   it('probes a monorepo subdirectory through the sparse partial clone', async () => {
-    const repo = mkdtemp('hermes-plugin-monorepo-')
+    const repo = mkdtemp('niki-plugin-monorepo-')
     roots.push(repo)
     const git = (...args: string[]) => execFileSync('git', args, { cwd: repo, stdio: 'pipe' })
-    const plugin = path.join(repo, 'integrations', 'hermes')
+    const plugin = path.join(repo, 'integrations', 'niki')
     fs.mkdirSync(plugin, { recursive: true })
     fs.writeFileSync(path.join(plugin, 'plugin.yaml'), 'name: nested-agent\n')
     fs.writeFileSync(path.join(plugin, '__init__.py'), 'def register(ctx): pass\n')
@@ -147,7 +147,7 @@ describe('probePluginRepo', () => {
     git('add', '.')
     git('-c', 'user.email=fixture@example.com', '-c', 'user.name=Fixture', 'commit', '-qm', 'init')
 
-    const result = await probePluginRepo('git', `${pathToFileURL(repo).href}#integrations/hermes`)
+    const result = await probePluginRepo('git', `${pathToFileURL(repo).href}#integrations/niki`)
 
     expect(result).toMatchObject({ ok: true, agent: true, agentName: 'nested-agent' })
   })
@@ -165,7 +165,7 @@ describe('installDesktopPluginFromGit', () => {
   /** A git repo whose root is one plugin: `desktop/plugin.js` plus, when
    *  `agentName` is given, the agent half that makes it a unified package. */
   function pluginRepo(agentName: null | string): string {
-    const repo = mkdtemp('hermes-plugin-install-')
+    const repo = mkdtemp('niki-plugin-install-')
     roots.push(repo)
     const git = (...args: string[]) => execFileSync('git', args, { cwd: repo, stdio: 'pipe' })
 
@@ -189,15 +189,15 @@ describe('installDesktopPluginFromGit', () => {
     // agent row's desktop half: the row sits on "copying…" while the copy shows
     // up as a second, default-enabled standalone row, and reconcile refuses to
     // re-copy the folder ever again.
-    const repo = pluginRepo('hermes-talk')
-    const appRoot = mkdtemp('hermes-plugin-root-')
+    const repo = pluginRepo('niki-talk')
+    const appRoot = mkdtemp('niki-plugin-root-')
     roots.push(appRoot)
 
     const result = await installDesktopPluginFromGit('git', pathToFileURL(repo).href, appRoot)
 
-    expect(result).toMatchObject({ ok: true, pluginName: 'hermes-talk' })
-    const marker = JSON.parse(fs.readFileSync(path.join(appRoot, 'hermes-talk', PACKAGE_MARKER), 'utf8'))
-    expect(marker.package).toBe('hermes-talk')
+    expect(result).toMatchObject({ ok: true, pluginName: 'niki-talk' })
+    const marker = JSON.parse(fs.readFileSync(path.join(appRoot, 'niki-talk', PACKAGE_MARKER), 'utf8'))
+    expect(marker.package).toBe('niki-talk')
     expect(marker.repo).toBe(pathToFileURL(repo).href)
   })
 
@@ -205,15 +205,15 @@ describe('installDesktopPluginFromGit', () => {
     // Remote backends (and a Desktop-only install) never have
     // plugins/<name>/desktop locally. The marker used to name the temp clone,
     // which this function deletes, so the next reconcile ghost-pruned the half.
-    const repo = pluginRepo('hermes-talk')
-    const home = mkdtemp('hermes-plugin-home-')
+    const repo = pluginRepo('niki-talk')
+    const home = mkdtemp('niki-plugin-home-')
     roots.push(home)
     const appRoot = path.join(home, 'desktop-plugins')
 
     const result = await installDesktopPluginFromGit('git', pathToFileURL(repo).href, appRoot)
 
-    expect(result).toMatchObject({ ok: true, pluginName: 'hermes-talk' })
-    const published = path.join(appRoot, 'hermes-talk')
+    expect(result).toMatchObject({ ok: true, pluginName: 'niki-talk' })
+    const published = path.join(appRoot, 'niki-talk')
     const marker = JSON.parse(fs.readFileSync(path.join(published, PACKAGE_MARKER), 'utf8'))
     expect(marker.source).toBe(published)
     expect(fs.existsSync(path.join(marker.source, 'plugin.js'))).toBe(true)
@@ -225,27 +225,27 @@ describe('installDesktopPluginFromGit', () => {
   })
 
   it('lets a local agent package replace the git-installed half on reconcile', async () => {
-    const repo = pluginRepo('hermes-talk')
-    const home = mkdtemp('hermes-plugin-home-')
+    const repo = pluginRepo('niki-talk')
+    const home = mkdtemp('niki-plugin-home-')
     roots.push(home)
     const appRoot = path.join(home, 'desktop-plugins')
 
     await installDesktopPluginFromGit('git', pathToFileURL(repo).href, appRoot)
 
-    const packageDesktop = path.join(home, 'plugins', 'hermes-talk', 'desktop')
+    const packageDesktop = path.join(home, 'plugins', 'niki-talk', 'desktop')
     fs.mkdirSync(packageDesktop, { recursive: true })
     fs.writeFileSync(path.join(packageDesktop, 'plugin.js'), 'from the agent package\n')
 
     await reconcileUnifiedDesktopHalves(home, appRoot)
 
-    expect(fs.readFileSync(path.join(appRoot, 'hermes-talk', 'plugin.js'), 'utf8')).toBe('from the agent package\n')
-    const marker = JSON.parse(fs.readFileSync(path.join(appRoot, 'hermes-talk', PACKAGE_MARKER), 'utf8'))
+    expect(fs.readFileSync(path.join(appRoot, 'niki-talk', 'plugin.js'), 'utf8')).toBe('from the agent package\n')
+    const marker = JSON.parse(fs.readFileSync(path.join(appRoot, 'niki-talk', PACKAGE_MARKER), 'utf8'))
     expect(marker.source).toBe(packageDesktop)
   })
 
   it('leaves a desktop-only repo unmarked so it stays a standalone plugin', async () => {
     const repo = pluginRepo(null)
-    const appRoot = mkdtemp('hermes-plugin-root-')
+    const appRoot = mkdtemp('niki-plugin-root-')
     roots.push(appRoot)
 
     const result = await installDesktopPluginFromGit('git', pathToFileURL(repo).href, appRoot)

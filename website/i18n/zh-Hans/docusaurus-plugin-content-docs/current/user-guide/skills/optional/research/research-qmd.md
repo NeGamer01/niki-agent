@@ -14,14 +14,14 @@ description: "使用 qmd 在本地搜索个人知识库、笔记、文档和会�
 
 | | |
 |---|---|
-| 来源 | 可选 — 通过 `hermes skills install official/research/qmd` 安装 |
+| 来源 | 可选 — 通过 `niki skills install official/research/qmd` 安装 |
 | 路径 | `optional-skills/research/qmd` |
 | 版本 | `1.0.0` |
 | 作者 | Niki Agent + Teknium |
 | 许可证 | MIT |
 | 平台 | macos, linux |
 | 标签 | `Search`, `Knowledge-Base`, `RAG`, `Notes`, `MCP`, `Local-AI` |
-| 相关 skill | [`obsidian`](/user-guide/skills/bundled/note-taking/note-taking-obsidian), [`hermes-agent`](/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-hermes-agent), [`arxiv`](/user-guide/skills/bundled/research/research-arxiv) |
+| 相关 skill | [`obsidian`](/user-guide/skills/bundled/note-taking/note-taking-obsidian), [`niki-agent`](/user-guide/skills/bundled/autonomous-ai-agents/autonomous-ai-agents-niki-agent), [`arxiv`](/user-guide/skills/bundled/research/research-arxiv) |
 
 ## 参考：完整 SKILL.md
 
@@ -236,7 +236,7 @@ qmd 提供 MCP 服务器，可通过原生 MCP 客户端直接向 Niki Agent 提
 
 ### 方案 A：Stdio 模式（简单）
 
-在 `~/.hermes/config.yaml` 中添加：
+在 `~/.niki/config.yaml` 中添加：
 
 ```yaml
 mcp_servers:

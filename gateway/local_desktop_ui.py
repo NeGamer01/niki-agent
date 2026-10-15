@@ -17,7 +17,7 @@ _wire_desktop_sinks`` and ``tui_gateway/agent_callbacks.py::_agent_cbs``):
 On the session authority none was installed, so every ``desktop_ui`` tool the session policy
 still offers a GUI session failed with "only available in the Niki desktop app". Here the
 emitter and the process sinks are installed once per process; the emitter routes each event to the
-turn that raised it (by the turn's bound ``HERMES_SESSION_ID``) through the generation-fenced
+turn that raised it (by the turn's bound ``NIKI_SESSION_ID``) through the generation-fenced
 execution stream, and the process sinks route by the process's ``session_key`` to the owning
 session's event stream (a background process outlives the turn that started it). The callbacks
 are installed per turn on the cached agent and restored with the other turn sinks.
@@ -68,7 +68,7 @@ _TOUR_BRIDGE_UNAVAILABLE = json.dumps({
               "in this session.")})
 
 _lock = threading.Lock()
-# turn key (the turn's bound HERMES_SESSION_ID) -> publish(event_type, payload) of the live turn
+# turn key (the turn's bound NIKI_SESSION_ID) -> publish(event_type, payload) of the live turn
 _turns: dict[str, object] = {}
 # canonical session id -> {"state": "answered"|"unanswered", "retry_at": monotonic}
 _preview_bridge: dict[str, dict] = {}
@@ -83,7 +83,7 @@ _process_sinks_installed = False
 def _emit(sid, event, payload) -> None:
     """``desktop_ui`` sink: publish *event* on the stream of the turn that raised it."""
     from gateway.session_context import get_session_env
-    keys = [str(sid or ""), get_session_env("HERMES_SESSION_ID", "")]
+    keys = [str(sid or ""), get_session_env("NIKI_SESSION_ID", "")]
     with _lock:
         publish = next((_turns[key] for key in keys if key and key in _turns), None)
     if publish is None:

@@ -46,7 +46,7 @@ reverse proxy's access log may record an already-spent ticket.
 - The gateway host runs Linux. macOS and Windows hosts already have a real
   display; the pane is not offered there.
 - TigerVNC's `Xvnc` and the Xfce core components are installed on the host.
-  Nothing installs them silently: `hermes update` and fresh installs leave every
+  Nothing installs them silently: `niki update` and fresh installs leave every
   machine as it is. When they are missing the Screen pane in Niki Desktop shows
   **Install on host** — one click runs the package manager on the gateway host
   (it asks for that host's sudo password in a masked card; the password goes to
@@ -55,14 +55,14 @@ reverse proxy's access log may record an already-spent ticket.
   manager directly, with no sudo and no password card. When it is not root and
   the host has no `sudo` at all, the pane and the CLI print the exact install
   command for you to run on the host instead of showing a card. The official
-  Docker image (`nousresearch/hermes-agent`, which also powers Hermes Cloud) is
+  Docker image (`negamer01/niki-agent`, which also powers Niki Cloud) is
   that second case: the gateway runs as an unprivileged user and the image has no
   `sudo`, so the pane shows the `apt-get` line and an operator runs it once as
   root in the container (`docker exec -u 0 <container> apt-get install -y …`).
   Add `chromium` to that line if you want the dock's Browser icon; see
   [Browser sessions](#browser-sessions-that-survive-the-handoff) below. From a shell,
-  `hermes computer-use screen status` prints the exact line and
-  `hermes computer-use screen install` runs it:
+  `niki computer-use screen status` prints the exact line and
+  `niki computer-use screen install` runs it:
 
   | Distro | Packages |
   |---|---|
@@ -86,7 +86,7 @@ reverse proxy's access log may record an already-spent ticket.
   cgroup, whichever is tighter — has `bot_desktop.min_free_memory_mb` free
   (default 1536; `0` disables the check). Below that the pane shows why in place
   of **Start screen** and
-  `hermes computer-use screen start` refuses; a screen already running is never
+  `niki computer-use screen start` refuses; a screen already running is never
   taken down by this check. A screen nobody uses is stopped after
   `bot_desktop.idle_stop_minutes` (default 30) and comes back on the next use, so
   an instance pays for a desktop only while something is on it. Practical guidance
@@ -109,7 +109,7 @@ Build your own only if you want the packages in a custom image. The official
 `docker build .` stays lean:
 
 ```bash
-docker build --build-arg HERMES_BOT_DESKTOP=1 -t hermes-agent:screen .
+docker build --build-arg NIKI_BOT_DESKTOP=1 -t niki-agent:screen .
 ```
 
 It adds TigerVNC, the Xfce components and the distro `chromium` (the sandbox
@@ -142,7 +142,7 @@ Every bot's computer is one click away in three places of Niki Desktop:
 
 1. Open the Screen with any of the entries above.
    The screen is **off by default** and nothing starts it for you: click
-   **Start screen** in the pane, run `hermes computer-use screen start` on the
+   **Start screen** in the pane, run `niki computer-use screen start` on the
    host, or set `bot_desktop.auto_start: true` if you want a headless host to
    start the screen by itself on the bot's first `computer_use` call or first
    headed browser use (`browser.headed: true`) — off so that installing
@@ -179,9 +179,9 @@ controller drops back to watching.
 
 While the screen runs, the bot's browser tool and the dock's **Browser** icon are
 the same browser: the Chromium agent-browser drives, with one persistent
-user-data-dir per bot (`<HERMES_HOME>/bot-desktop/browser-profile`; set
+user-data-dir per bot (`<NIKI_HOME>/bot-desktop/browser-profile`; set
 `AGENT_BROWSER_PROFILE` to pin your own — `~` expands, and a relative path such
-as `pin` resolves against that bot's `HERMES_HOME`, i.e. `<HERMES_HOME>/pin`).
+as `pin` resolves against that bot's `NIKI_HOME`, i.e. `<NIKI_HOME>/pin`).
 Click Browser during a takeover and you
 are in the bot's own windows and cookie jar; what you sign in to is what the bot
 uses afterwards and in every later session, until the site expires the login.
@@ -189,7 +189,7 @@ Set `browser.headed: true` so the bot's own browsing is visible on the screen to
 
 The dock is seeded **once**, the first time the screen starts for a profile.
 The guard is the panel layout file
-`<HERMES_HOME>/bot-desktop/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml`:
+`<NIKI_HOME>/bot-desktop/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml`:
 while it exists the launcher leaves the panel alone, so changing
 `AGENT_BROWSER_EXECUTABLE_PATH` or `AGENT_BROWSER_PROFILE` and restarting the
 screen does not re-pin the Browser icon. Delete that file and the dock is
@@ -218,12 +218,12 @@ and the same.
 ## CLI
 
 ```bash
-hermes computer-use screen status          # installed? running? who holds control?
-hermes computer-use screen start           # start this profile's screen
-hermes computer-use screen stop            # stop it; refuses while a human holds control
-hermes computer-use screen stop --force    # ...unless you say so (also frees a stuck lease)
-hermes computer-use screen install [-y]    # apt/dnf/pacman the packages
-hermes -p research computer-use screen start   # another bot's screen
+niki computer-use screen status          # installed? running? who holds control?
+niki computer-use screen start           # start this profile's screen
+niki computer-use screen stop            # stop it; refuses while a human holds control
+niki computer-use screen stop --force    # ...unless you say so (also frees a stuck lease)
+niki computer-use screen install [-y]    # apt/dnf/pacman the packages
+niki -p research computer-use screen start   # another bot's screen
 ```
 
 ## Where the screen runs
@@ -296,14 +296,14 @@ kept, not replaced: when `docker_image` is unset and a persisted container runs
 another image (the old default, `nikolaik/python-nodejs:python3.11-nodejs20`),
 the terminal keeps using that container and you decide the switch. The
 interactive CLI asks once at startup; the Screen pane shows the same choice
-with **Switch image** / **Keep current image**; `hermes config set
+with **Switch image** / **Keep current image**; `niki config set
 terminal.docker_image nousresearch/hermes-sandbox:desktop` is the same answer
 from any shell. Either answer writes `terminal.docker_image`, and a written
 image is a decision: the container is recreated on the next terminal call only
 when you chose the new image, and only once the new image has been pulled (a
 private or misspelled tag, or a registry outage, keeps your current container
 running instead of leaving you with nothing). What a switch means: files under `/root` and
-`/workspace` stay (they are host directories under `~/.hermes/sandboxes/`),
+`/workspace` stay (they are host directories under `~/.niki/sandboxes/`),
 packages installed inside the container with `apt`/`pip`/`npm -g` are
 reinstalled on demand, and Python 3.11 virtualenvs need a rebuild on 3.13.
 Gateways and cron never decide; they keep the sandbox and log the notice.
@@ -316,9 +316,9 @@ denies the user namespaces its own sandbox needs; the container is the
 sandbox).
 
 Runtime state inside the sandbox (X socket, cookie, launcher log) lives under
-`<sandbox tmp>/hermes-bot-desktop/<profile>/`; the host keeps only a marker under
-`<HERMES_HOME>/bot-desktop/`. The browser profile (logins, cookies) lives in the
-desktop user's home inside the sandbox, `~/.hermes/bot-desktop/browser-profile`,
+`<sandbox tmp>/niki-bot-desktop/<profile>/`; the host keeps only a marker under
+`<NIKI_HOME>/bot-desktop/`. The browser profile (logins, cookies) lives in the
+desktop user's home inside the sandbox, `~/.niki/bot-desktop/browser-profile`,
 shared by the agent's browser and the dock's **Browser** icon. It follows the
 container's own persistence: kept across stops and restarts of a persisted
 container, gone with an ephemeral one or when you approve an image switch (the
@@ -341,12 +341,12 @@ bot_desktop:
 ```
 
 `auto_start` is off by default. Start the screen from the Desktop's Screen
-pane (**Start screen**), from `hermes computer-use screen start`, or set the
+pane (**Start screen**), from `niki computer-use screen start`, or set the
 flag to `true` for a headless host that should bring its screen up the first
 time the bot calls `computer_use` or opens a headed browser (`browser.headed:
 true`) and no display is available.
 
-State lives under `<HERMES_HOME>/bot-desktop/` per profile (RFB Unix socket,
+State lives under `<NIKI_HOME>/bot-desktop/` per profile (RFB Unix socket,
 Xauthority, launcher log, per-profile xfconf).
 
 ## How it works
@@ -367,7 +367,7 @@ Xauthority, launcher log, per-profile xfconf).
 - **Control lease.** The gateway drops keyboard, pointer and clipboard messages
   from any viewer that does not hold the lease, at the RFB byte level; noVNC's
   view-only flag is only the UI hint. The same lease gates `computer_use` and
-  the browser tools. It is a file under `<HERMES_HOME>/bot-desktop/`: no file
+  the browser tools. It is a file under `<NIKI_HOME>/bot-desktop/`: no file
   means the bot holds control (a fresh profile); a file that exists but cannot
   be read or parsed fails closed — the bot is treated as locked out until the
   next successful hand-off rewrites it. Xvnc never pushes the screen's clipboard
@@ -382,7 +382,7 @@ Xauthority, launcher log, per-profile xfconf).
 - **"Screen packages missing"** — click **Install on host** in the pane, or run
   the printed install line on the gateway host (not on the machine running
   Niki Desktop). The pane refuses a second install while one is running.
-- **Screen starts then stops** — read `<HERMES_HOME>/bot-desktop/launcher.log`.
+- **Screen starts then stops** — read `<NIKI_HOME>/bot-desktop/launcher.log`.
 - **Typing produces wrong characters during a takeover** — the screen runs a
   US keymap so RFB keysyms and cua-driver agree, and noVNC sends raw keycodes
   (QEMU extended key events) once Xvnc offers them, so on a non-US physical
@@ -391,9 +391,9 @@ Xauthority, launcher log, per-profile xfconf).
   with `setxkbmap` on that `DISPLAY`.
 - **Bot says `human_has_control` after you left** — click **Hand back** in the
   pane (or **Hand back (force)** after a reload). From a shell,
-  `hermes computer-use screen stop --force` releases the lease and stops the
+  `niki computer-use screen stop --force` releases the lease and stops the
   screen (without `--force` the command refuses while a human holds control, so a
-  runbook can never yank a live takeover); `hermes computer-use screen start`
+  runbook can never yank a live takeover); `niki computer-use screen start`
   brings it back with the bot in control.
 
 ### Testing under WSL

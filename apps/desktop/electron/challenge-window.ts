@@ -5,8 +5,8 @@ import { createWindowOpenHandler } from './window-open-policy'
 /**
  * The free tier's browser challenge, desktop half.
  *
- * The Nous account service can ask an anonymous install to clear a challenge
- * before it mints a token (`hermes_cli/anon_challenge.py`). The challenge is a
+ * The Niki account service can ask an anonymous install to clear a challenge
+ * before it mints a token (`niki_cli/anon_challenge.py`). The challenge is a
  * portal page; everything it does (bot detection, an in-browser proof of work,
  * an interactive fallback) belongs to the portal and changes without a Desktop
  * release. Desktop's whole job is this file: load that page in a HIDDEN
@@ -58,7 +58,7 @@ export interface ChallengeWindowDependencies {
   now?: () => number
 }
 
-export const CHALLENGE_PARTITION = 'persist:hermes-challenge'
+export const CHALLENGE_PARTITION = 'persist:niki-challenge'
 export const CHALLENGE_PATH = '/challenge'
 
 // While hidden nobody can see it hang: BotID plus a CPU-fallback proof of work

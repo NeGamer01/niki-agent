@@ -14,7 +14,7 @@ import os
 import threading
 from typing import Any, Dict, List, Optional
 
-from hermes_cli._subprocess_compat import windows_hide_flags
+from niki_cli._subprocess_compat import windows_hide_flags
 from tools.computer_use import cua_backend_driver as _driver
 from tools.computer_use.cua_backend_parse import _extract_tool_result, _mcp_field, _tool_envelope
 
@@ -303,11 +303,11 @@ class _CuaDriverSession:
             self._signal_shutdown_locked()
             # Surface which startup phase wedged (issue #57025) — "doctor passes but the wrapper times out"
             # reports are undiagnosable from a bare "never reached ready".
-            from hermes_constants import display_hermes_home
+            from niki_constants import display_niki_home
             raise RuntimeError(
                 f"cua-driver session never reached ready (timeout 30s; stuck in phase: "
-                f"{getattr(self, '_startup_phase', 'unknown')}). Run `hermes computer-use doctor` and check "
-                f"{display_hermes_home()}/logs/agent.log for the phase timings.")
+                f"{getattr(self, '_startup_phase', 'unknown')}). Run `niki computer-use doctor` and check "
+                f"{display_niki_home()}/logs/agent.log for the phase timings.")
         if self._setup_error is not None:
             raise RuntimeError(f"cua-driver session setup failed: {self._setup_error}") from self._setup_error
         self._transport_generation += 1

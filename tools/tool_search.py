@@ -1,6 +1,6 @@
 """Progressive tool disclosure ("tool search"): MCP/plugin tools and a curated set of
 event-triggered core tools are replaced in the model-visible array by three bridge tools —
-tool_search / tool_describe / tool_call. Invariants: core tools (``toolsets._HERMES_CORE_TOOLS``)
+tool_search / tool_describe / tool_call. Invariants: core tools (``toolsets._NIKI_CORE_TOOLS``)
 and session-gated GUI toolsets never defer unless named in ``defer``; ANY deferrable tool
 activates the bridge (the listing scales with budget, not activation); the catalog is
 stateless — rebuilt from the live tool-defs every assembly (a session-keyed one drifts and
@@ -16,7 +16,7 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
-from hermes_cli.config_defaults import DEFAULT_CONFIG
+from niki_cli.config_defaults import DEFAULT_CONFIG
 from tools.registry import tool_error
 from toolsets import CLIENT_SURFACE_TOOLSETS, TOOLSET_SESSION_PLATFORMS
 from tools.tool_search_catalog import (
@@ -110,9 +110,9 @@ def _safe_float(value: Any, fallback: float) -> float:
 
 
 def _config_from_loader(loader_name: str) -> ToolSearchConfig:
-    """Tool-search config via ``hermes_cli.config.<loader_name>`` (defaults on any failure)."""
+    """Tool-search config via ``niki_cli.config.<loader_name>`` (defaults on any failure)."""
     try:
-        import hermes_cli.config as _cfg_mod
+        import niki_cli.config as _cfg_mod
         tools_cfg = (getattr(_cfg_mod, loader_name)() or {}).get("tools")
         tools_cfg = tools_cfg if isinstance(tools_cfg, dict) else {}
         return ToolSearchConfig.from_raw(tools_cfg.get("tool_search"))
@@ -128,13 +128,13 @@ load_config_readonly = functools.partial(_config_from_loader, "load_config_reado
 def _core_tool_names() -> frozenset[str]:
     """Names that never defer by default (lazy: ``toolsets`` imports ``tools.registry``)."""
     try:
-        from toolsets import _HERMES_CORE_TOOLS
-        return frozenset(_HERMES_CORE_TOOLS)
+        from toolsets import _NIKI_CORE_TOOLS
+        return frozenset(_NIKI_CORE_TOOLS)
     except Exception:
         return frozenset()
 
 
-# Session-gated GUI toolsets: off ``_HERMES_CORE_TOOLS`` so non-GUI clients never pay
+# Session-gated GUI toolsets: off ``_NIKI_CORE_TOOLS`` so non-GUI clients never pay
 # their schema; once enabled they stay direct unless the deferral list names them.
 _DIRECT_SURFACE_TOOLSETS = CLIENT_SURFACE_TOOLSETS | TOOLSET_SESSION_PLATFORMS.keys()
 
@@ -475,8 +475,8 @@ def dispatch_tool_search(args: dict[str, Any], *, current_tool_defs: list[dict[s
 
 def _record_search_metric(current_tool_defs: list[dict[str, Any]], *, hits: int, outcome: str,
                           catalog: Optional[list[CatalogEntry]] = None) -> None:
-    """One ``hermes.tool_search.count`` row: which corpora the search read, never the query."""
-    from hermes_cli.observability.shared_metrics_events import record_tool_search
+    """One ``niki.tool_search.count`` row: which corpora the search read, never the query."""
+    from niki_cli.observability.shared_metrics_events import record_tool_search
 
     local = bool(catalog if catalog is not None else _deferrable_in(current_tool_defs))
     hosted = connections_in_scope(current_tool_defs)

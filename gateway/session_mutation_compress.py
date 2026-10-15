@@ -2,7 +2,7 @@
 import asyncio
 import json
 
-from hermes_state_runtime import RuntimeStoreError
+from niki_state_runtime import RuntimeStoreError
 
 
 def compress_request(payload):
@@ -29,7 +29,7 @@ async def prepare_compress(authority, live, payload, prepared):
     from agent.context_compressor import ContextCompressor
     from agent.agent_init import _parse_config_int
     from agent.model_metadata import estimate_request_tokens_rough
-    from hermes_cli.partial_compress import (
+    from niki_cli.partial_compress import (
         rejoin_compressed_head_and_tail, split_history_for_partial_compress, summarize_compress_preview)
     from utils import is_truthy_value
     request = compress_request(payload)

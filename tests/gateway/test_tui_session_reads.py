@@ -23,8 +23,8 @@ async def owner(tmp_path, monkeypatch):
     home.mkdir()
     (home / 'config.yaml').write_text(
         'model: {default: fake-model, provider: custom, base_url: "http://127.0.0.1:9/v1"}\n')
-    monkeypatch.setenv('HERMES_HOME', str(home))
-    monkeypatch.setattr(run, '_hermes_home', home)
+    monkeypatch.setenv('NIKI_HOME', str(home))
+    monkeypatch.setattr(run, '_niki_home', home)
     store = SessionStore(tmp_path / 'sessions', GatewayConfig())
     runner = SimpleNamespace(session_store=store, _session_db=store._db, adapters={}, _draining=False,
                              _cached_agent_for=lambda route: None)
@@ -85,12 +85,12 @@ async def test_tui_context_with_a_live_agent_renders_the_category_table(owner, m
 @pytest.mark.asyncio
 async def test_tui_cron_is_the_classic_overview_with_the_profile_jobs(owner):
     from cron.jobs import create_job
-    from hermes_constants import reset_hermes_home_override, set_hermes_home_override
-    token = set_hermes_home_override(str(owner.home))
+    from niki_constants import reset_niki_home_override, set_niki_home_override
+    token = set_niki_home_override(str(owner.home))
     try:
         create_job('Summarize the news', '0 9 * * *', name='daily-digest')
     finally:
-        reset_hermes_home_override(token)
+        reset_niki_home_override(token)
     sid = (await owner.call('session.create', request_id='t', source='tui', cwd=str(owner.workdir)))['session_id']
     out = await _exec(owner, sid, 'cron')
     assert '(^_^) Scheduled Tasks' in out and '/cron list' in out, out

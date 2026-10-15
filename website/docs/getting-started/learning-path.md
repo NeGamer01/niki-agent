@@ -13,7 +13,7 @@ If you haven't installed Niki Agent yet, begin with the [Installation guide](./i
 :::
 
 :::tip First-time provider setup
-First-time users almost always want `hermes setup --portal` — one OAuth covers a model plus the four Tool Gateway tools (search/image/TTS/browser). See [Nous Portal](../integrations/nous-portal.md).
+First-time users almost always want `niki setup --portal` — one OAuth covers a model plus the four Tool Gateway tools (search/image/TTS/browser). See [Niki Portal](../integrations/niki-portal.md).
 :::
 
 ## How to Use This Page
@@ -59,7 +59,7 @@ Deploy Niki Agent as a bot on your favorite messaging platform.
 4. [Telegram Setup](../user-guide/messaging/telegram.md)
 5. [Discord Setup](../user-guide/messaging/discord.md)
 6. [Voice Mode](../user-guide/features/voice-mode.md)
-7. [Use Voice Mode with Niki](../guides/use-voice-mode-with-hermes.md)
+7. [Use Voice Mode with Niki](../guides/use-voice-mode-with-niki.md)
 8. [Security](../user-guide/security.md)
 
 For full project examples, see:
@@ -110,11 +110,11 @@ page is for built-in Niki core development, not the usual user/custom-tool path.
 
 ### "I want to train models"
 
-Use reinforcement learning to fine-tune model behavior with Niki Agent's RL training pipeline (powered by [Atropos](https://github.com/NousResearch/atropos)).
+Use reinforcement learning to fine-tune model behavior with Niki Agent's RL training pipeline (powered by [Atropos](https://github.com/NeGamer01/atropos)).
 
 1. [Quickstart](./quickstart.md)
 2. [Configuration](../user-guide/configuration.md)
-3. [Atropos RL Environments](https://github.com/NousResearch/atropos) (external)
+3. [Atropos RL Environments](https://github.com/NeGamer01/atropos) (external)
 4. [Provider Routing](../user-guide/features/provider-routing.md)
 5. [Architecture](../developer-guide/architecture.md)
 

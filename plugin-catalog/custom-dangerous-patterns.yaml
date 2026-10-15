@@ -1,5 +1,5 @@
 name: custom-dangerous-patterns
-repo: https://github.com/scross01/hermes-custom-dangerous-patterns-plugin
+repo: https://github.com/scross01/niki-custom-dangerous-patterns-plugin
 sha: 256ff08d0be04baf1916f5e7d841b1c2718aa1e4
 description: >-
   Add custom dangerous command patterns to Niki's built-in approval
@@ -9,9 +9,9 @@ description: >-
 maintainer: scross01
 tier: community
 category: tools
-requires_hermes: ">=0.21.4"
+requires_niki: ">=0.21.4"
 version: "0.5.1"
-image: https://raw.githubusercontent.com/scross01/hermes-custom-dangerous-patterns-plugin/256ff08d0be04baf1916f5e7d841b1c2718aa1e4/assets/card.png
+image: https://raw.githubusercontent.com/scross01/niki-custom-dangerous-patterns-plugin/256ff08d0be04baf1916f5e7d841b1c2718aa1e4/assets/card.png
 platforms: []
 capabilities:
   provides_tools: []

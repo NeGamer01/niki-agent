@@ -370,8 +370,8 @@ class GatewayNotificationsMixin(GatewayUpdateNotificationsMixin, GatewayNotifica
     async def _send_restart_notification(self) -> Optional[tuple[str, str, Optional[str]]]:
         """Notify the chat that initiated /restart that the gateway is back."""
         from gateway.delivery import resolve_delivery_transport
-        from gateway.run import _hermes_home, _non_conversational_metadata
-        notify_path = _hermes_home / ".restart_notify.json"
+        from gateway.run import _niki_home, _non_conversational_metadata
+        notify_path = _niki_home / ".restart_notify.json"
         if not notify_path.exists():
             return None
         try:
@@ -591,22 +591,22 @@ class GatewayNotificationsMixin(GatewayUpdateNotificationsMixin, GatewayNotifica
             if not error:
                 logger.info("state.db recovered before the home-channel warning went out; not broadcasting")
                 return
-        from hermes_constants import get_default_hermes_root, profile_cli_selector
-        from hermes_state import _default_db_path, classify_persistence_error
+        from niki_constants import get_default_niki_root, profile_cli_selector
+        from niki_state import _default_db_path, classify_persistence_error
         cause = classify_persistence_error(error)
-        # Copy-pasteable, so name the real store and pin the profile: a bare `hermes` follows
+        # Copy-pasteable, so name the real store and pin the profile: a bare `niki` follows
         # active_profile, which may be a different database (#105887).
         profile_arg = profile_cli_selector()
         if cause == "corrupt":
             db_path = _default_db_path()
-            backups_dir = get_default_hermes_root() / "backups"
+            backups_dir = get_default_niki_root() / "backups"
             message = t("gateway.startup.db_corrupt", profile_arg=profile_arg, db_path=db_path, backups_dir=backups_dir)
         elif cause == "fts_index":
             # Index-scoped corruption: the message tables are not damaged, so the recover /
             # restore advice above would be destructive on a healthy file (#97794).
             message = t("gateway.startup.db_fts_corrupt", profile_arg=profile_arg)
         else:
-            from hermes_state_user_copy import describe_storage_failure
+            from niki_state_user_copy import describe_storage_failure
             failure = describe_storage_failure(error)
             # The cause table owns the remedy: for a held retired-WAL generation a bare `doctor --fix`
             # is the second-writer trap this notice used to send users into (#110054). Its copy is
@@ -886,7 +886,7 @@ class GatewayNotificationsMixin(GatewayUpdateNotificationsMixin, GatewayNotifica
             authority = active_authority(self)
             if authority is not None:
                 from gateway.session_automation import producer_identity
-                from hermes_state_runtime import RuntimeStoreError
+                from niki_state_runtime import RuntimeStoreError
                 try:
                     identity = producer_identity(self, evt)
                     await authority.admit_automation(adapter, synth_event, identity)
@@ -1106,12 +1106,12 @@ class GatewayNotificationsMixin(GatewayUpdateNotificationsMixin, GatewayNotifica
         event is the default profile's or the scope is already installed).
 
         The pre-flight (``_classify_completion_target`` → ``_session_db``) and every durable-ledger op
-        (``tools.async_delegation`` → ``get_hermes_home()/state.db``) resolve from the ambient scope.
+        (``tools.async_delegation`` → ``get_niki_home()/state.db``) resolve from the ambient scope.
         The supervised ``_async_delegation_watcher`` and startup-recovered process watchers run under
         the ROOT scope, so a secondary profile's completion was looked up in the DEFAULT profile's
         state.db — classified ``terminal`` and dropped, its ledger row stranded ``pending`` forever."""
         from gateway.run import _async_profile_runtime_scope
-        from hermes_constants import get_hermes_home_override
+        from niki_constants import get_niki_home_override
         source = self._build_process_event_source(evt)
         if source is None or not getattr(source, "profile", None):
             raw_sid = _raw_process_event_session_id(evt)
@@ -1123,7 +1123,7 @@ class GatewayNotificationsMixin(GatewayUpdateNotificationsMixin, GatewayNotifica
             from tui_gateway.launch_profile_policy import async_launch_profile_scope_if_multiplexed
             return async_launch_profile_scope_if_multiplexed()
         profile_home = self._resolve_profile_home_for_source(source)
-        if get_hermes_home_override() == str(profile_home):
+        if get_niki_home_override() == str(profile_home):
             return contextlib.nullcontext()  # already inside this profile's scope
         return _async_profile_runtime_scope(profile_home)
 

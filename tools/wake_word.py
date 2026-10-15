@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 SAMPLE_RATE = 16000  # 16 kHz mono int16 — Whisper-native and what every engine expects.
 
-# Minimum gap between two wake fires, so one "hey hermes" can't retrigger across
+# Minimum gap between two wake fires, so one "hey niki" can't retrigger across
 # several frames while the caller is still reacting.
 _FIRE_COOLDOWN_SECONDS = 2.0
 _START_TIMEOUT_SECONDS = 5.0
@@ -76,18 +76,18 @@ class WakeWordInUse(RuntimeError):
 # frames via wake.feed), or "auto" (local when a device exists, else client).
 _DEFAULTS: dict[str, Any] = {
     "enabled": False, "surface": "auto", "input_device": None, "capture": "auto",
-    "provider": "auto", "phrase": "hey hermes", "sensitivity": 0.6,
+    "provider": "auto", "phrase": "hey niki", "sensitivity": 0.6,
     "confirmation_frames": _DEFAULT_CONFIRMATION_FRAMES, "start_new_session": True,
 }
 
-# Bundled "hey hermes" model (tools/wakewords/) — the default; alias names resolve
+# Bundled "hey niki" model (tools/wakewords/) — the default; alias names resolve
 # to it, not to an openWakeWord built-in.
-_BUNDLED_MODEL_NAME = "hey_hermes"
-_BUNDLED_MODEL_ALIASES = frozenset({"", "hey_hermes", "hey hermes", "hermes"})
+_BUNDLED_MODEL_NAME = "hey_niki"
+_BUNDLED_MODEL_ALIASES = frozenset({"", "hey_niki", "hey niki", "niki"})
 
 
 def _bundled_wakeword_path() -> str:
-    """Path to the shipped hey_hermes.tflite — pyopen-wakeword runs TFLite only."""
+    """Path to the shipped hey_niki.tflite — pyopen-wakeword runs TFLite only."""
     return os.path.join(os.path.dirname(__file__), "wakewords", f"{_BUNDLED_MODEL_NAME}.tflite")
 
 
@@ -95,7 +95,7 @@ def load_wake_word_config() -> dict[str, Any]:
     """Return the ``wake_word`` config section, shape-guarded to a dict."""
     cfg = None
     with suppress(Exception):
-        from hermes_cli.config import load_config
+        from niki_cli.config import load_config
         cfg = load_config().get("wake_word")
     return cfg if isinstance(cfg, dict) else {}
 
@@ -142,7 +142,7 @@ def _confirmation_frames(cfg: dict[str, Any]) -> int:
 def wake_phrase(cfg: Optional[dict[str, Any]] = None) -> str:
     """Human-facing wake phrase label (purely cosmetic; engine keys detection)."""
     cfg = cfg if cfg is not None else load_wake_word_config()
-    return str(_get(cfg, "phrase")) or "hey hermes"
+    return str(_get(cfg, "phrase")) or "hey niki"
 
 
 def resolve_capture_mode(cfg: Optional[dict[str, Any]] = None, *, prefer_client: bool = False,
@@ -191,7 +191,7 @@ def wake_surface_enabled(surface: str, cfg: Optional[dict[str, Any]] = None) -> 
 
 def _active_profile_name() -> str:
     with suppress(Exception):
-        from hermes_cli.profiles import get_active_profile_name
+        from niki_cli.profiles import get_active_profile_name
         return get_active_profile_name() or "default"
     return "default"
 
@@ -202,8 +202,8 @@ def enrolled_profile_phrases() -> dict[str, str]:
     ``"hey <profile>"``; the sherpa engine listens for all and routes to the match. Unreadable → skipped."""
     phrases: dict[str, str] = {}
     with suppress(Exception):
-        from hermes_cli.config import read_user_config_raw
-        from hermes_cli.profiles import get_profile_dir, list_profiles
+        from niki_cli.config import read_user_config_raw
+        from niki_cli.profiles import get_profile_dir, list_profiles
         for info in list_profiles():
             name = getattr(info, "name", None) or str(info)
             with suppress(Exception):
@@ -404,7 +404,7 @@ def check_wake_word_requirements(cfg: Optional[dict[str, Any]] = None, *,
         missing = " and ".join(
             name for name, ok in (("speech-to-text", stt_ok), ("text-to-speech", tts_ok)) if not ok
         )
-        hint = (f"Wake word needs {missing} configured — run `hermes tools` "
+        hint = (f"Wake word needs {missing} configured — run `niki tools` "
                 f"(Voice section) or see the voice-mode docs.")
 
     capture_mode = resolve_capture_mode(cfg)
@@ -754,7 +754,7 @@ class WakeWordDetector:
                 self.on_failure(self)
 
 
-# ── Process-wide singleton (mirrors hermes_cli.voice's continuous API) ──
+# ── Process-wide singleton (mirrors niki_cli.voice's continuous API) ──
 
 _detector: Optional[WakeWordDetector] = None
 _detector_owner: object | None = None
@@ -763,8 +763,8 @@ _detector_lock = threading.Lock()
 
 
 def _lock_path() -> Path:
-    from hermes_constants import get_default_hermes_root
-    return get_default_hermes_root() / "runtime" / "wake-word.lock"
+    from niki_constants import get_default_niki_root
+    return get_default_niki_root() / "runtime" / "wake-word.lock"
 
 
 def _flock(handle, acquire: bool) -> None:

@@ -10,10 +10,10 @@ const DEFAULT_PROBE_TIMEOUT_MS = 15_000
 
 /**
  * Resolve the backend probe timeout (ms).
- * Honours HERMES_PROBE_TIMEOUT_MS when it parses as a positive integer.
+ * Honours NIKI_PROBE_TIMEOUT_MS when it parses as a positive integer.
  */
 function resolveProbeTimeoutMs(env: NodeJS.ProcessEnv = process.env): number {
-  const raw = env.HERMES_PROBE_TIMEOUT_MS
+  const raw = env.NIKI_PROBE_TIMEOUT_MS
 
   if (raw == null || raw === '') {
     return DEFAULT_PROBE_TIMEOUT_MS
@@ -97,13 +97,13 @@ async function execProbe(
       throw err
     }
 
-    // One cold-cache / AV miss should not force hermes-setup --update (#61764).
+    // One cold-cache / AV miss should not force niki-setup --update (#61764).
     await run()
   }
 }
 
 /** Probe the checkout at cwd with the same dependency activation as launch. */
-async function canImportHermesCli(
+async function canImportNikiCli(
   pythonPath: string,
   opts: { env?: NodeJS.ProcessEnv; cwd?: string } = {}
 ): Promise<boolean> {
@@ -117,7 +117,7 @@ async function canImportHermesCli(
     // Bootstrap selects the committed generation before any dependency import.
     await execProbe(
       pythonPath,
-      ['-c', 'import hermes_bootstrap; import hermes_yaml; import dotenv; import hermes_cli.config'],
+      ['-c', 'import niki_bootstrap; import niki_yaml; import dotenv; import niki_cli.config'],
       {
         cwd: opts.cwd,
         env: { ...env, ...buildDesktopBackendEnv({ currentEnv: env }) },
@@ -134,23 +134,23 @@ async function canImportHermesCli(
 }
 
 /**
- * Return true iff `<hermesCommand> --version` exits 0.
+ * Return true iff `<nikiCommand> --version` exits 0.
  *
- * Used to gate the "existing `hermes` on PATH" rung. Without this, a
- * stale hermes.cmd shim left behind by an uninstalled pip install (or
- * a half-built venv whose `hermes` entry-point points at a deleted
+ * Used to gate the "existing `niki` on PATH" rung. Without this, a
+ * stale niki.cmd shim left behind by an uninstalled pip install (or
+ * a half-built venv whose `niki` entry-point points at a deleted
  * Python) survives findOnPath() and gets selected as the backend.
  *
  * We intentionally avoid invoking the command with the dashboard args
  * here -- `--version` is the cheapest "is this binary alive" smoke
- * test that every hermes_cli entry-point has supported since 0.1.
+ * test that every niki_cli entry-point has supported since 0.1.
  *
- * @param {string} hermesCommand - Resolved absolute path to a hermes
+ * @param {string} nikiCommand - Resolved absolute path to a niki
  *   executable (or an interpreter+script wrapper).
  * @param {boolean} [opts.shell] - Whether to run through a shell. For
  *   .cmd/.bat shims on Windows spawn needs shell:true to find
  *   the cmd interpreter; mirrors the same flag isCommandScript() drives
- *   in resolveHermesBackend.
+ *   in resolveNikiBackend.
  * @returns {boolean}
  */
 /**
@@ -159,17 +159,17 @@ async function canImportHermesCli(
  * its immutable, matching Niki package; it must never fall through to the
  * mutable install-script bootstrap path if a best-effort probe is slow.
  */
-function shouldTrustHermesOverride(hermesOverride?: string) {
-  return typeof hermesOverride === 'string' && hermesOverride.trim().length > 0
+function shouldTrustNikiOverride(nikiOverride?: string) {
+  return typeof nikiOverride === 'string' && nikiOverride.trim().length > 0
 }
 
-async function verifyHermesCli(hermesCommand: string, opts?: { shell?: boolean }) {
-  if (!hermesCommand) {
+async function verifyNikiCli(nikiCommand: string, opts?: { shell?: boolean }) {
+  if (!nikiCommand) {
     return false
   }
 
   try {
-    await execProbe(windowsShellCommand(hermesCommand, Boolean(opts?.shell)), ['--version'], {
+    await execProbe(windowsShellCommand(nikiCommand, Boolean(opts?.shell)), ['--version'], {
       stdio: 'ignore',
       timeout: PROBE_TIMEOUT_MS,
       shell: Boolean(opts?.shell),
@@ -183,12 +183,12 @@ async function verifyHermesCli(hermesCommand: string, opts?: { shell?: boolean }
 }
 
 export {
-  canImportHermesCli,
+  canImportNikiCli,
   DEFAULT_PROBE_TIMEOUT_MS,
   execProbe,
   isTimeoutError,
   PROBE_TIMEOUT_MS,
   resolveProbeTimeoutMs,
-  shouldTrustHermesOverride,
-  verifyHermesCli
+  shouldTrustNikiOverride,
+  verifyNikiCli
 }

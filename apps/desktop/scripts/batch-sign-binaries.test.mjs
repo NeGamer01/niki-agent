@@ -91,7 +91,7 @@ test('chunk splits into ~100-file batches with no leftovers', () => {
 
 test('customSign skips Store- submission packages (Partner Center signs)', async () => {
   const result = await customSign(
-    { path: 'C:/out/Store-HermesBundled-0.28.0-win-x64.msix' },
+    { path: 'C:/out/Store-NikiBundled-0.28.0-win-x64.msix' },
     { appInfo: { productFilename: 'Niki' } },
     { signMsix: async () => { throw new Error('must not be called') } }
   )
@@ -116,12 +116,12 @@ test('customSign delegates only the msix package and root product exe to the Azu
       files: structuredClone(builderConfig.files),
       extraResources: structuredClone(builderConfig.extraResources),
       directories: { output },
-      win: { ...builderConfig.win, executableName: 'hermes-collision' }
+      win: { ...builderConfig.win, executableName: 'niki-collision' }
     }
   })
   await info.validateConfig()
   const packager = new WinPackager(info)
-  const msix = path.join(tmpTree(), 'HermesBundled-0.28.0-win-x64.msix')
+  const msix = path.join(tmpTree(), 'NikiBundled-0.28.0-win-x64.msix')
   assert.equal(await customSign({ path: msix }, packager, deps), true)
   assert.deepEqual(delegated, [['msix', msix]])
 
@@ -171,7 +171,7 @@ test('batchSignAppTree is a no-op (skipped=true) without the Azure env, and sign
     env: {
       AZURE_SIGN_ENDPOINT: 'https://cus.codesigning.azure.net',
       AZURE_SIGN_ACCOUNT: 'codesign2',
-      AZURE_SIGN_PROFILE: 'hermesagent'
+      AZURE_SIGN_PROFILE: 'nikiagent'
     },
     exec: fakeExec,
     mkdtemp: () => root,
@@ -219,7 +219,7 @@ test('batchSignAppTree chunks large trees into ~100-file signtool invocations, s
     env: {
       AZURE_SIGN_ENDPOINT: 'https://cus.codesigning.azure.net',
       AZURE_SIGN_ACCOUNT: 'codesign2',
-      AZURE_SIGN_PROFILE: 'hermesagent'
+      AZURE_SIGN_PROFILE: 'nikiagent'
     },
     exec: (tool, args) => {
       invocations.push(args)
@@ -271,7 +271,7 @@ test('sign chunks run concurrently, capped at the configured concurrency', async
     env: {
       AZURE_SIGN_ENDPOINT: 'https://cus.codesigning.azure.net',
       AZURE_SIGN_ACCOUNT: 'codesign2',
-      AZURE_SIGN_PROFILE: 'hermesagent'
+      AZURE_SIGN_PROFILE: 'nikiagent'
     },
     exec: fakeExec,
     mkdtemp: () => root,
@@ -300,7 +300,7 @@ test.each([false, true])('timestamp retry is bounded; permanent failure=%s', asy
     env: {
       AZURE_SIGN_ENDPOINT: 'https://cus.codesigning.azure.net',
       AZURE_SIGN_ACCOUNT: 'codesign2',
-      AZURE_SIGN_PROFILE: 'hermesagent'
+      AZURE_SIGN_PROFILE: 'nikiagent'
     },
     exec: fakeExec,
     mkdtemp: () => root,

@@ -20,7 +20,7 @@ from contextlib import contextmanager
 from typing import Any, Optional
 from urllib.parse import parse_qsl, quote, unquote, urljoin, urlparse, urlsplit, urlunsplit
 
-from hermes_constants import get_hermes_home_override
+from niki_constants import get_niki_home_override
 from utils import is_truthy_value
 
 logger = logging.getLogger(__name__)
@@ -142,12 +142,12 @@ _fake_ip_resolved, _cached_fake_ip_ranges = False, ()
 
 
 def _global_allow_private_urls() -> bool:
-    """True when the user has opted out of private-IP blocking. Priority: ``HERMES_ALLOW_PRIVATE_URLS``
+    """True when the user has opted out of private-IP blocking. Priority: ``NIKI_ALLOW_PRIVATE_URLS``
     env, ``security.allow_private_urls``, legacy ``browser.allow_private_urls``. Profile-scoped turns
-    (``get_hermes_home_override()`` set) bypass the process-global cache — a multiplex gateway serves
+    (``get_niki_home_override()`` set) bypass the process-global cache — a multiplex gateway serves
     several profiles in one process; the first profile's opt-out must not disable blocking for later ones."""
     global _allow_private_resolved, _cached_allow_private
-    if get_hermes_home_override() is not None:
+    if get_niki_home_override() is not None:
         return _resolve_allow_private_urls()
     if not _allow_private_resolved:
         _allow_private_resolved, _cached_allow_private = True, _resolve_allow_private_urls()
@@ -156,13 +156,13 @@ def _global_allow_private_urls() -> bool:
 
 def _resolve_allow_private_urls() -> bool:
     """Resolve the effective private-URL toggle from the active config scope."""
-    env_val = os.getenv("HERMES_ALLOW_PRIVATE_URLS", "").strip().lower()
+    env_val = os.getenv("NIKI_ALLOW_PRIVATE_URLS", "").strip().lower()
     if env_val in {"true", "1", "yes"}:
         return True
     if env_val in {"false", "0", "no"}:
         return False  # explicit false does not fall through to config
     try:
-        from hermes_cli.config import read_raw_config
+        from niki_cli.config import read_raw_config
         cfg = read_raw_config()
         for section in ("security", "browser"):  # preferred, then legacy
             block = cfg.get(section, {})
@@ -190,7 +190,7 @@ def _resolve_fake_ip_ranges() -> tuple:
     declares one, and the sentinel range keeps the ordinary private-address verdict otherwise.
     """
     try:
-        from hermes_cli.config import read_raw_config
+        from niki_cli.config import read_raw_config
         block = read_raw_config().get("security", {})
         raw = block.get("fake_ip_ranges") if isinstance(block, dict) else None
     except Exception:
@@ -215,7 +215,7 @@ def _global_fake_ip_ranges() -> tuple:
     """Process-lifetime cache with the same profile-scope bypass as ``_global_allow_private_urls``:
     a multiplex gateway must not apply the first profile's declaration to later ones."""
     global _fake_ip_resolved, _cached_fake_ip_ranges
-    if get_hermes_home_override() is not None:
+    if get_niki_home_override() is not None:
         return _resolve_fake_ip_ranges()
     if not _fake_ip_resolved:
         _fake_ip_resolved, _cached_fake_ip_ranges = True, _resolve_fake_ip_ranges()
@@ -519,7 +519,7 @@ def _install_ssrf_guard_on_transport(transport: Any, schemes_by_origin_var: Any,
     """Swap the transport's pool network backend for the SSRF-guarded one (idempotent). Only the
     direct transport is guarded; proxy mounts delegate final-target resolution to the trusted proxy."""
     state = getattr(transport, "__dict__", {}) if transport is not None else {}
-    if transport is None or state.get("_hermes_ssrf_guarded", False):
+    if transport is None or state.get("_niki_ssrf_guarded", False):
         return
     label = "async httpx transport" if is_async else "httpx transport"
     pool = state.get("_pool")
@@ -540,13 +540,13 @@ def _install_ssrf_guard_on_transport(transport: Any, schemes_by_origin_var: Any,
         with _origin_scope(schemes_by_origin_var, request):
             return handle(request)
     setattr(transport, method_name, guarded_async if is_async else guarded_sync)
-    transport._hermes_ssrf_guarded = True
+    transport._niki_ssrf_guarded = True
 
 
 def _install_ssrf_guard_on_client(client: Any, *, is_async: bool = False) -> None:
     """Guard ``client._transport`` only; ``_mounts`` (env/explicit proxies) stay untouched."""
     import contextvars
-    var_name = "hermes_ssrf_async_origin_schemes" if is_async else "hermes_ssrf_origin_schemes"
+    var_name = "niki_ssrf_async_origin_schemes" if is_async else "niki_ssrf_origin_schemes"
     _install_ssrf_guard_on_transport(
         getattr(client, "__dict__", {}).get("_transport"), contextvars.ContextVar(var_name), is_async=is_async)
 

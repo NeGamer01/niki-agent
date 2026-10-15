@@ -14,14 +14,14 @@ Neutral arbiter for merge conflicts between two agents.
 
 | | |
 |---|---|
-| Source | Optional — install with `hermes skills install official/autonomous-ai-agents/agent-merge-conflict-arbiter` |
+| Source | Optional — install with `niki skills install official/autonomous-ai-agents/agent-merge-conflict-arbiter` |
 | Path | `optional-skills/autonomous-ai-agents/agent-merge-conflict-arbiter` |
 | Version | `1.0.0` |
 | Author | Niki Agent |
 | License | MIT |
 | Platforms | linux, macos, windows |
 | Tags | `Multi-Agent`, `Git`, `Merge-Conflict`, `Kanban`, `Arbitration` |
-| Related skills | [`hermes-agent`](../../bundled/autonomous-ai-agents/autonomous-ai-agents-hermes-agent.md) |
+| Related skills | [`niki-agent`](../../bundled/autonomous-ai-agents/autonomous-ai-agents-niki-agent.md) |
 
 ## Reference: full SKILL.md
 
@@ -52,7 +52,7 @@ produces a merged result, like a merge-queue arbiter.
 - A repo checkout containing the halted merge, or the two branch names plus
   permission to run the merge yourself.
 - Both sides' intent sources: kanban completion summaries (`terminal` running
-  `hermes kanban show <task-id>`), PR bodies, or at minimum each branch's
+  `niki kanban show <task-id>`), PR bodies, or at minimum each branch's
   commit messages.
 - The project's build/test command, if one exists.
 
@@ -94,7 +94,7 @@ explicitly in the hand-back summary.
   `git log --oneline <base>..<side>` and `git diff <base>..<side> -- <file>`
   for every conflicted file. In a halted merge, `HEAD` is one side and
   `MERGE_HEAD` is the other.
-- Collect each side's intent: `hermes kanban show <task-id>` for completion
+- Collect each side's intent: `niki kanban show <task-id>` for completion
   summaries/metadata, or the PR body, or the commit messages from the log
   above. Write down one sentence of intent per side before touching any file.
 - Done when: you can state both intents in your own words and have both diffs

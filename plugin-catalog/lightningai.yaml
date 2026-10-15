@@ -1,5 +1,5 @@
 name: lightningai
-repo: https://github.com/dinosauria123/hermes-lightningai-provider
+repo: https://github.com/dinosauria123/niki-lightningai-provider
 sha: e4350ca278f8994322fc3b79a55a52e83388b7da
 description: >-
   Lightning AI as a Niki model provider (--provider lightning, lightning-ai, lightningai):
@@ -11,7 +11,7 @@ description: >-
 maintainer: dinosauria123
 tier: community
 category: models
-requires_hermes: ">=0.21.5"
+requires_niki: ">=0.21.5"
 version: "1.0.0"
 platforms: []
 capabilities:

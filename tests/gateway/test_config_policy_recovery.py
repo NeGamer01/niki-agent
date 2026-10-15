@@ -8,10 +8,10 @@ import pytest
 
 def test_config_credentials_recover_only_exact_source(tmp_path, monkeypatch):
     from gateway.session_policy import build_policy, bind_launch_key
-    from hermes_state_runtime import RuntimeStoreError
+    from niki_state_runtime import RuntimeStoreError
     home = tmp_path / 'profile'
     home.mkdir()
-    monkeypatch.setenv('HERMES_HOME', str(home))
+    monkeypatch.setenv('NIKI_HOME', str(home))
     cfg = {'model': {'provider': 'custom', 'api_key': 'owned-config-token',
                      'base_url': 'http://127.0.0.1:1234/v1'}}
     (home / 'config.yaml').write_text(json.dumps(cfg))

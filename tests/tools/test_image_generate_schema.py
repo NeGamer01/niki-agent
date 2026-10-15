@@ -94,19 +94,19 @@ class TestDynamicParamGating(unittest.TestCase):
                           return_value="codex"), \
              patch("agent.image_gen_registry.get_provider",
                    return_value=_Prov()), \
-             patch("hermes_cli.plugins._ensure_plugins_discovered"):
+             patch("niki_cli.plugins._ensure_plugins_discovered"):
             schema = _build_dynamic_image_schema()
         props = schema["parameters"]["properties"]
         self.assertEqual(sorted(props), ["aspect_ratio", "prompt"])
         self.assertNotIn("upscale", props)
 
     def test_managed_krea_model_advertises_krea_edit_args_and_upscale(self):
-        """provider nous + a Krea model id is served by the Krea gateway, so the
+        """provider niki + a Krea model id is served by the Krea gateway, so the
         schema must advertise what the Krea plugin declares, not the FAL catalog."""
         from plugins.image_gen.krea import KreaImageGenProvider
 
         with patch.object(ig, "_read_configured_image_provider",
-                          return_value="nous"), \
+                          return_value="niki"), \
              patch.object(ig, "_read_configured_image_model",
                           return_value="krea-2-medium"):
             schema = _build_dynamic_image_schema()
@@ -122,7 +122,7 @@ class TestDynamicParamGating(unittest.TestCase):
         """A managed Krea model renders exactly the controls the Krea plugin declares; FAL renders none."""
         from plugins.image_gen.krea import KreaImageGenProvider
 
-        with patch.object(ig, "_read_configured_image_provider", return_value="nous"), \
+        with patch.object(ig, "_read_configured_image_provider", return_value="niki"), \
              patch.object(ig, "_read_configured_image_model", return_value="krea-2-medium"):
             props = _build_dynamic_image_schema()["parameters"]["properties"]
         declared = KreaImageGenProvider().capabilities()["creative_controls"]
@@ -133,7 +133,7 @@ class TestDynamicParamGating(unittest.TestCase):
 
     def test_style_reference_backend_describes_image_inputs_as_style_not_edit(self):
         """A backend declaring source_image_role "style" gets the style wording; FAL keeps the edit wording."""
-        with patch.object(ig, "_read_configured_image_provider", return_value="nous"), \
+        with patch.object(ig, "_read_configured_image_provider", return_value="niki"), \
              patch.object(ig, "_read_configured_image_model", return_value="krea-2-medium"):
             krea = _build_dynamic_image_schema()
         fal = self._schema_for(self._edit_multi_ref())

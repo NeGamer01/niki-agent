@@ -20,7 +20,7 @@ def test_session_save_exports_the_stored_transcript_under_the_profile_home(tmp_p
                 saved = await rpc(ws, 'session.save', session_id=sid)
                 assert 'result' in saved, saved
                 path = saved['result']['file']
-                assert path.startswith(str(home / 'sessions' / 'saved' / 'hermes_conversation_')), path
+                assert path.startswith(str(home / 'sessions' / 'saved' / 'niki_conversation_')), path
                 data = json.loads(await asyncio.to_thread(Path(path).read_text, encoding='utf-8'))
                 contents = [m.get('content') for m in data['messages']]
                 assert 'SAVE_ME' in contents and 'CONTROL_ACK' in contents, data
@@ -82,13 +82,13 @@ async def _git_rpc(ws, method, **params):
 
 def _checkpoint(home, cwd, reason):
     """A checkpoint in the owner profile's shared store (what the agent takes before a write)."""
-    from hermes_constants import reset_hermes_home_override, set_hermes_home_override
+    from niki_constants import reset_niki_home_override, set_niki_home_override
     from tools.checkpoint_manager import CheckpointManager
-    token = set_hermes_home_override(str(home))
+    token = set_niki_home_override(str(home))
     try:
         assert CheckpointManager(enabled=True).ensure_checkpoint(str(cwd), reason)
     finally:
-        reset_hermes_home_override(token)
+        reset_niki_home_override(token)
 
 
 @pytest.mark.platforms("linux")

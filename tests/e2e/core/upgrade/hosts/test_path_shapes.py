@@ -195,7 +195,7 @@ def test_mcp_server_runs_on_the_managed_node_and_an_abi_mismatch_names_the_rebui
     sb, user = world["sb"], world["user"]
     assert world["install"].returncode == 0, I.describe(world["install"])
     X.configure(sb, provider)
-    cfg = sb.hermes_home / "config.yaml"
+    cfg = sb.niki_home / "config.yaml"
     cfg.write_text(cfg.read_text(encoding="utf-8")
                    + f"mcp_servers:\n  usernode:\n    command: node\n    args: [\"{user['server_js']}\"]\n",
                    encoding="utf-8")
@@ -206,9 +206,9 @@ def test_mcp_server_runs_on_the_managed_node_and_an_abi_mismatch_names_the_rebui
     managed = user["marker"].read_text(encoding="utf-8").split()[0] if user["marker"].exists() else ""
     assert I.TRACEBACK not in out, I.describe(probe)
     assert not ran_js, f"the user's node ({USER_NODE_VERSION}) ran the MCP server instead of Niki's: {ran_js}"
-    assert managed.startswith(str(sb.home / ".hermes")), (
+    assert managed.startswith(str(sb.home / ".niki")), (
         f"the MCP server did not run on Niki's managed node (ran on {managed!r}):\n" + I.describe(probe))
-    assert probe.returncode == 1, "`hermes mcp test` passed for a server that died at startup:\n" + I.describe(probe)
+    assert probe.returncode == 1, "`niki mcp test` passed for a server that died at startup:\n" + I.describe(probe)
     # The failure reaches the user with the remedy: drop the npx entry, or rebuild with Niki's own npm
     # under Niki's own node (never "point the server at your node").
     assert "NODE_MODULE_VERSION 127" in out and f"rm -rf {sb.home / NPX_ENTRY}" in out, (

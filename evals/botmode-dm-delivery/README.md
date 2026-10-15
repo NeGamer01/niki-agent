@@ -1,6 +1,6 @@
 # Native Bot Mode delivery probe
 
-Real Electron, production Python backend and tool execution, disposable HOME/HERMES_HOME,
+Real Electron, production Python backend and tool execution, disposable HOME/NIKI_HOME,
 loopback scripted inference (no paid model). Linux seat fixture; run from repository root:
 
 ```sh
@@ -10,14 +10,14 @@ git apply evals/botmode-dm-delivery/mock-trigger.patch
 (cd apps/desktop && npm run build)
 (cd apps/desktop && DISPLAY=:0 XAUTHORITY=/run/user/1000/xauth_cnpsqU \
   XDG_RUNTIME_DIR=/run/user/1000 VIRTUAL_ENV="$VIRTUAL_ENV" \
-  HERMES_DESKTOP_CDP_PORT=off npx playwright test e2e/probe-dm-delivery.spec.ts --reporter=list)
+  NIKI_DESKTOP_CDP_PORT=off npx playwright test e2e/probe-dm-delivery.spec.ts --reporter=list)
 git apply -R evals/botmode-dm-delivery/mock-trigger.patch
 rm apps/desktop/e2e/probe-dm-delivery.spec.ts
 ```
 
 Use the current seat's actual Xauthority path and an existing runtime venv.
 Artifacts default to `/tmp/botmode-dm-review/native` (override with `BOT_DM_EVIDENCE`); sandbox path is printed. The
-fixture's generated hermes shim pins every child to this checkout, not an installed launcher.
+fixture's generated niki shim pins every child to this checkout, not an installed launcher.
 
 ## Verified results
 
@@ -61,7 +61,7 @@ Prior `/tmp/botmode-dm-recovery*` evidence remains untouched.
 
 ## Per-record delivery exception isolation
 
-Retired with the deferred `hermes chat` pending lane (`cron/bot_chat_delivery.py`): cron
+Retired with the deferred `niki chat` pending lane (`cron/bot_chat_delivery.py`): cron
 output now reaches Bot Chat through the gateway authority door (`gateway/session_bot.py`),
 which records a per-target receipt on the job and creates the Bot Chat when missing, so a
 per-record file-scan exception has no counterpart. The regression case lives in
@@ -78,7 +78,7 @@ custom Niki root, and holds the real quiet CLI child at loopback inference.
 The child shim PID must match Alpha's real CLI lease; default's lease is unchanged.
 After release, Alpha has exactly one input and Desktop renders the output.
 The same case removes unused Beta and verifies delivery neither recreates Beta nor
-creates a second `.hermes` root under HOME.
+creates a second `.niki` root under HOME.
 
 Both `origin/main`'s scheduler and pre-follow-up `c827ae179d67c` fail with
 `Profile 'alpha' does not exist` before any recipient turn. Fixed native run:

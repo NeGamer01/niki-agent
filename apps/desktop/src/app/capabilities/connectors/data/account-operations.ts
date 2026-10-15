@@ -3,10 +3,10 @@ import type {
   ConnectionSettleReason,
   ConnectionUpdatePayload,
   ConnectorsConnectResult
-} from '@hermes/shared'
+} from '@niki/shared'
 import { atom } from 'nanostores'
 
-import type { ProfileScope } from '@/hermes'
+import type { ProfileScope } from '@/niki'
 import { type ConnectionTarget, parseConnectionTarget } from '@/store/connection-request'
 import { activeGatewayConnectionId } from '@/store/gateway'
 import { normalizeProfileKey } from '@/store/profile'

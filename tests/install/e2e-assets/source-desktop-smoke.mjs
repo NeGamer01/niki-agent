@@ -28,7 +28,7 @@ if (values.desktop === 'absent') {
   fs.rmSync(path.join(values.out, `desktop-chat-${values.phase}.json`), { force: true });
   const release = path.join(values.root, 'apps', 'desktop', 'release');
   const candidates = {
-    linux: ['linux-unpacked/Niki', 'linux-unpacked/hermes'],
+    linux: ['linux-unpacked/Niki', 'linux-unpacked/niki'],
     darwin: [process.arch === 'arm64' ? 'mac-arm64/Niki.app/Contents/MacOS/Niki' : 'mac/Niki.app/Contents/MacOS/Niki'],
     win32: [process.arch === 'arm64' ? 'win-arm64-unpacked/Niki.exe' : 'win-unpacked/Niki.exe'],
   }[process.platform];
@@ -38,7 +38,7 @@ if (values.desktop === 'absent') {
   const driver = fileURLToPath(new URL('./desktop-smoke.ts', import.meta.url));
   const args = [driver, '--exe', executables[0], '--origin', 'source'];
   for (const key of ['root', 'home', 'user-data', 'out', 'phase', 'expect-commit']) args.push(`--${key}`, values[key]);
-  const mockUrl = values['mock-url'] || process.env.HERMES_E2E_MOCK_URL;
+  const mockUrl = values['mock-url'] || process.env.NIKI_E2E_MOCK_URL;
   if (mockUrl) args.push('--mock-url', mockUrl);
   const result = spawnSync(process.execPath, args, { stdio: 'inherit', cwd: values.root });
   if (result.error) throw result.error;

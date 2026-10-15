@@ -228,7 +228,7 @@ const svg = k.figureSvg({
   body: [plate(), computer(), keyboard(), cable()],
 });
 
-const PHRASES = ["hello, hermes", "what is a crt?", "draw it isometric"];
+const PHRASES = ["hello, niki", "what is a crt?", "draw it isometric"];
 
 const live = `
 const P = ${JSON.stringify(P)};

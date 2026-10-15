@@ -15,15 +15,15 @@ from utils import base_url_host_matches
 
 @dataclass
 class BillingBlock:
-    """Structured billing-wall descriptor shared across every surface. ``is_nous`` is the routing bit:
-    Nous has an in-app billing surface (Settings → Billing, ``/topup``) preferred over ``billing_url``;
+    """Structured billing-wall descriptor shared across every surface. ``is_niki`` is the routing bit:
+    Niki has an in-app billing surface (Settings → Billing, ``/topup``) preferred over ``billing_url``;
     third-party providers have none, so ``billing_url`` is the deep link needed."""
 
     provider: str
     provider_label: str
     model: str
     billing_url: Optional[str]
-    is_nous: bool
+    is_niki: bool
     message: str
 
     def to_dict(self) -> dict:
@@ -62,15 +62,15 @@ _BY_SLUG: dict[str, _Provider] = {slug: p for p in _PROVIDERS for slug in p.slug
 
 
 def is_nous_inference_route(provider: str, base_url: str) -> bool:
-    """True when the failing route is the Nous-managed inference gateway."""
-    return (provider or "").strip().lower() == "nous" or base_url_host_matches(str(base_url or ""), "inference-api.nousresearch.com")
+    """True when the failing route is the Niki-managed inference gateway."""
+    return (provider or "").strip().lower() == "niki" or base_url_host_matches(str(base_url or ""), "inference-api.nousresearch.com")
 
 
 def _nous_billing_url() -> Optional[str]:
-    """Best-effort Nous portal billing URL (text-surface fallback; Nous prefers the in-app flow)."""
+    """Best-effort Niki portal billing URL (text-surface fallback; Niki prefers the in-app flow)."""
     try:
-        from hermes_cli.nous_account import nous_portal_billing_url
-        return nous_portal_billing_url(None)
+        from niki_cli.niki_account import niki_portal_billing_url
+        return niki_portal_billing_url(None)
     except Exception:
         return "https://portal.nousresearch.com/billing"
 
@@ -91,6 +91,6 @@ def build_billing_block(*, provider: str, base_url: str, model: str, message: st
     slug = (provider or "").strip().lower()
     model = (model or "").strip()
     if is_nous_inference_route(slug, base_url):
-        return BillingBlock(slug or "nous", "Nous Portal", model, _nous_billing_url(), True, message or "")
+        return BillingBlock(slug or "niki", "Niki Portal", model, _nous_billing_url(), True, message or "")
     label, url = _resolve_provider_link(slug, base_url)
     return BillingBlock(slug, label, model, url, False, message or "")

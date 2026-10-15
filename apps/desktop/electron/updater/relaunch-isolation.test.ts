@@ -16,7 +16,7 @@ import {
 import type { RelaunchWaiterHandle } from './relaunch-waiter'
 
 let root: string
-let hermesHome: string
+let nikiHome: string
 let stable: Pick<App, 'getPath'>
 let canary: Pick<App, 'getPath'>
 let commit: Pick<App, 'getPath'>
@@ -40,9 +40,9 @@ function marker(app: Pick<App, 'getPath'>): string {
 
 beforeEach((): void => {
   root = fs.mkdtempSync(path.join(os.tmpdir(), 'relaunch-isolation-'))
-  hermesHome = path.join(root, 'hermes-home')
-  fs.mkdirSync(hermesHome)
-  vi.stubEnv('HERMES_HOME', hermesHome)
+  nikiHome = path.join(root, 'niki-home')
+  fs.mkdirSync(nikiHome)
+  vi.stubEnv('NIKI_HOME', nikiHome)
   stable = installation('stable')
   canary = installation('canary')
   commit = installation('commit')
@@ -54,7 +54,7 @@ afterEach((): void => {
 })
 
 test('writes and startup consumption stay in each installation despite a shared Niki home', async (): Promise<void> => {
-  const globalMarker: string = path.join(hermesHome, PENDING_RELAUNCH_FILENAME)
+  const globalMarker: string = path.join(nikiHome, PENDING_RELAUNCH_FILENAME)
   const legacyContents: string = JSON.stringify({ schemaVersion: 1, fromVersion: 'legacy', startedAt: 1 })
   fs.writeFileSync(globalMarker, legacyContents)
 
@@ -167,7 +167,7 @@ test('cancellation and failed registration remove only their own installation ma
   assert.equal(attempts, 1)
   assert.equal(fs.existsSync(marker(canary)), false)
   assert.equal(fs.readFileSync(marker(stable), 'utf8'), stableContents)
-  assert.equal(fs.existsSync(path.join(hermesHome, PENDING_RELAUNCH_FILENAME)), false)
+  assert.equal(fs.existsSync(path.join(nikiHome, PENDING_RELAUNCH_FILENAME)), false)
 
   const sibling: RelaunchRegistration = await registerUpdateRelaunch(canary, 'canary-old', {
     relaunch: (): undefined => undefined

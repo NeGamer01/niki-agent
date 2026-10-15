@@ -7,12 +7,12 @@ the raw session record, neither of which creates a new environment.
 
 import pytest
 
-import hermes_constants
+import niki_constants
 from tools import terminal_tool
 from tools.file_operations import ShellFileOperations
 
 
-HOST_HOME = "/srv/hermes-host/home"
+HOST_HOME = "/srv/niki-host/home"
 
 
 class RecordingEnvironment:
@@ -28,8 +28,8 @@ class RecordingEnvironment:
 
 @pytest.fixture(autouse=True)
 def isolated_session_state(monkeypatch):
-    monkeypatch.setattr(hermes_constants, "get_subprocess_home", lambda: HOST_HOME)
-    monkeypatch.setattr(hermes_constants, "get_real_home", lambda: "/srv/os-user")
+    monkeypatch.setattr(niki_constants, "get_subprocess_home", lambda: HOST_HOME)
+    monkeypatch.setattr(niki_constants, "get_real_home", lambda: "/srv/os-user")
     for name in ("_session_cwd", "_task_env_overrides", "_active_environments", "_container_aliases"):
         monkeypatch.setattr(terminal_tool, name, {})
 

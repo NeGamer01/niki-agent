@@ -5,7 +5,7 @@ import asyncio
 class DiscordAuthorizationMixin:
     async def reauthorize_native_roles(self, source):
         from plugins.platforms.discord.adapter import _read_dm_role_auth_guild, _scoped_gate_env
-        from hermes_cli.config import read_raw_config
+        from niki_cli.config import read_raw_config
         from discord import HTTPException
 
         # Unlike ingress caches, recovery reads current transport-scoped policy.
@@ -35,8 +35,8 @@ class DiscordAuthorizationMixin:
         # The entry-time ContextVar contains a secret snapshot. Reload the same
         # transport home after SDK I/O so an intervening .env edit is visible too.
         from gateway.run import _profile_runtime_scope
-        from hermes_constants import get_hermes_home
-        with _profile_runtime_scope(get_hermes_home()):
+        from niki_constants import get_niki_home
+        with _profile_runtime_scope(get_niki_home()):
             current_policy = policy()
         if self._client is not client or current_policy != (roles, guild_id):
             return False

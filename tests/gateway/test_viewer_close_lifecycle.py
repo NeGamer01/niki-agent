@@ -21,7 +21,7 @@ async def _owner(tmp_path, monkeypatch):
     from gateway.run_shutdown_session_end import GatewaySessionEndMixin
     from gateway.session_authority import initialize_session_authority
 
-    monkeypatch.setenv('HERMES_HOME', str(tmp_path))
+    monkeypatch.setenv('NIKI_HOME', str(tmp_path))
     monkeypatch.setattr(run, '_load_gateway_config', lambda: {'platform_toolsets': {'cli': []}})
     store = SessionStore(tmp_path / 'sessions', GatewayConfig())
     calls = []
@@ -33,7 +33,7 @@ async def _owner(tmp_path, monkeypatch):
     async def housekeeping(func, *args):
         return func(*args)
 
-    monkeypatch.setattr('hermes_cli.lifecycle.invoke_hook', lambda name, **kwargs: calls.append((name, kwargs)))
+    monkeypatch.setattr('niki_cli.lifecycle.invoke_hook', lambda name, **kwargs: calls.append((name, kwargs)))
     runner = SimpleNamespace(session_store=store, _session_db=store._db, adapters={}, _draining=False,
                              _cached_agent_for=lambda route: None,
                              _evict_cached_agent_at_boundary=lambda key: calls.append(('commit', key)),
@@ -110,7 +110,7 @@ async def test_a_viewer_new_resets_the_session_on_the_owner_after_finalize(tmp_p
 @pytest.mark.asyncio
 async def test_close_while_a_turn_is_queued_completes_when_the_fifo_goes_idle(tmp_path, monkeypatch):
     from gateway.session_contract import SessionRef
-    from hermes_state_runtime import admit_session_input, cancel_session_input
+    from niki_state_runtime import admit_session_input, cancel_session_input
 
     db, authority, calls = await _owner(tmp_path, monkeypatch)
     viewer, subscription = await _open(db, authority, tmp_path)
@@ -133,7 +133,7 @@ async def test_close_while_a_turn_is_queued_completes_when_the_fifo_goes_idle(tm
 async def test_a_turn_queued_during_a_slow_finalize_starts_after_it(tmp_path, monkeypatch):
     from gateway import session_finite
     from gateway.session_contract import SessionRef
-    from hermes_state_runtime import admit_session_input
+    from niki_state_runtime import admit_session_input
 
     db, authority, _calls = await _owner(tmp_path, monkeypatch)
     viewer, subscription = await _open(db, authority, tmp_path)
@@ -256,7 +256,7 @@ async def test_a_viewer_reattaching_during_the_stamp_keeps_the_session_live(tmp_
 @pytest.mark.asyncio
 async def test_input_admitted_during_the_stamp_defers_the_close_to_the_idle_point(tmp_path, monkeypatch):
     from gateway.session_contract import SessionRef
-    from hermes_state_runtime import admit_session_input, cancel_session_input
+    from niki_state_runtime import admit_session_input, cancel_session_input
 
     db, authority, calls = await _owner(tmp_path, monkeypatch)
     viewer, subscription = await _open(db, authority, tmp_path)

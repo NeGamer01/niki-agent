@@ -288,22 +288,22 @@ class WhatsAppBehaviorMixin(OwnAccessPolicyMixin):
 
 def resolve_whatsapp_bridge_dir() -> Path:
     """Bridge directory for CLI and adapter. A read-only install tree (e.g. Docker
-    /opt/hermes) is mirrored to HERMES_HOME so npm install works."""
+    /opt/niki) is mirrored to NIKI_HOME so npm install works."""
     import shutil
-    from hermes_constants import get_hermes_home
+    from niki_constants import get_niki_home
     install_bridge = Path(__file__).resolve().parents[2] / "scripts" / "whatsapp-bridge"
-    hermes_home_bridge = get_hermes_home() / "scripts" / "whatsapp-bridge"
+    niki_home_bridge = get_niki_home() / "scripts" / "whatsapp-bridge"
     try:
         (install_bridge / ".write_test").touch()
         (install_bridge / ".write_test").unlink()
         return install_bridge
     except OSError:
         pass
-    if hermes_home_bridge.exists():
-        return hermes_home_bridge
+    if niki_home_bridge.exists():
+        return niki_home_bridge
     try:
-        hermes_home_bridge.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(install_bridge, hermes_home_bridge, dirs_exist_ok=False)
-        return hermes_home_bridge
+        niki_home_bridge.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(install_bridge, niki_home_bridge, dirs_exist_ok=False)
+        return niki_home_bridge
     except Exception:
         return install_bridge

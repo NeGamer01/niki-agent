@@ -13,7 +13,7 @@ process does not need a public URL, a tunnel, or a TLS certificate. It connects,
 authenticates, and listens on a subscription — the same way a Telegram bot listens
 on a token.
 
-> Run `hermes gateway setup` and pick **Google Chat** for a guided walk-through.
+> Run `niki gateway setup` and pick **Google Chat** for a guided walk-through.
 
 :::note Workspace edition
 Google Chat is part of Google Workspace. You can use this integration with a
@@ -60,13 +60,13 @@ Both are free for the volumes a personal bot generates.
 
 **IAM & Admin → Service Accounts → Create Service Account.**
 
-- Name: `hermes-chat-bot`
+- Name: `niki-chat-bot`
 - Skip the "Grant this service account access to project" step. IAM on the specific
   subscription is all you need — do **NOT** grant project-level Pub/Sub roles.
 
 After creation, open the SA, go to **Keys → Add Key → Create new key → JSON** and
 download the file. Save it somewhere only Niki can read (e.g.,
-`~/.hermes/google-chat-sa.json`, `chmod 600`).
+`~/.niki/google-chat-sa.json`, `chmod 600`).
 
 :::caution There is NO "Chat Bot Caller" role
 A common mistake is to search for a Chat-specific IAM role and grant it at the
@@ -81,14 +81,14 @@ the subscription you create in the next step.
 
 **Pub/Sub → Topics → Create topic.**
 
-- Topic ID: `hermes-chat-events`
+- Topic ID: `niki-chat-events`
 - Leave the defaults for everything else.
 
 After creation, the topic's detail page has a **Subscriptions** tab. Create one:
 
-- Subscription ID: `hermes-chat-events-sub`
+- Subscription ID: `niki-chat-events-sub`
 - Delivery type: **Pull**
-- Message retention: **7 days** (so backlog survives a hermes restart)
+- Message retention: **7 days** (so backlog survives a niki restart)
 - Leave the rest default.
 
 ---
@@ -109,7 +109,7 @@ never receive anything.
 
 On the **subscription**, add your own Service Account as a principal:
 
-- Principal: `hermes-chat-bot@<your-project>.iam.gserviceaccount.com`
+- Principal: `niki-chat-bot@<your-project>.iam.gserviceaccount.com`
 - Role: `Pub/Sub Subscriber`
 
 Also grant `Pub/Sub Viewer` on the same subscription — Niki calls
@@ -127,7 +127,7 @@ Go to **APIs & Services → Google Chat API → Configuration**.
 - **Functionality**: enable **Receive 1:1 messages** and **Join spaces and group
   conversations**.
 - **Connection settings**: select **Cloud Pub/Sub**, enter the topic name
-  `projects/<your-project>/topics/hermes-chat-events`.
+  `projects/<your-project>/topics/niki-chat-events`.
 - **Visibility**: restrict to your workspace (or specific users) — do not publish
   to everyone while you're testing.
 
@@ -146,13 +146,13 @@ self-message filtering.
 
 ## Step 9: Configure Niki
 
-Add the Google Chat section to `~/.hermes/.env`:
+Add the Google Chat section to `~/.niki/.env`:
 
 ```bash
 # Required
 GOOGLE_CHAT_PROJECT_ID=my-chat-bot-123
-GOOGLE_CHAT_SUBSCRIPTION_NAME=projects/my-chat-bot-123/subscriptions/hermes-chat-events-sub
-GOOGLE_CHAT_SERVICE_ACCOUNT_JSON=/home/you/.hermes/google-chat-sa.json
+GOOGLE_CHAT_SUBSCRIPTION_NAME=projects/my-chat-bot-123/subscriptions/niki-chat-events-sub
+GOOGLE_CHAT_SERVICE_ACCOUNT_JSON=/home/you/.niki/google-chat-sa.json
 
 # Authorization — paste the emails of people allowed to talk to the bot
 GOOGLE_CHAT_ALLOWED_USERS=you@yourdomain.com,coworker@yourdomain.com
@@ -185,14 +185,14 @@ python -m plugins.platforms.google_chat.oauth --install-deps
 `--install-deps` asks PM to add the `google-chat` extra to the managed Python
 environment (`pm.sync_venv`); restart the gateway after it finishes so the new
 environment is active. On Docker / hosted images the venv is read-only and
-on-demand installs are disabled (`HERMES_DISABLE_LAZY_INSTALLS=1`), so this
+on-demand installs are disabled (`NIKI_DISABLE_LAZY_INSTALLS=1`), so this
 step cannot add anything there. The published image bakes the `[google-chat]`
 extra instead, so a fresh container does not need a first-boot install.
 
 Start the gateway:
 
 ```bash
-hermes gateway
+niki gateway
 ```
 
 You should see a log line like:
@@ -209,7 +209,7 @@ tombstones.
 ### Customizing the working-state marker
 
 The marker text is configurable via `typing_status_text` in
-`~/.hermes/config.yaml` — e.g. a kitten assistant named Ada:
+`~/.niki/config.yaml` — e.g. a kitten assistant named Ada:
 
 ```yaml
 platforms:
@@ -288,12 +288,12 @@ python -m plugins.platforms.google_chat.oauth \
     --client-secret /path/to/client_secret.json
 
 # A named profile gets its own separate registration:
-hermes -p <profile> python -m plugins.platforms.google_chat.oauth \
+niki -p <profile> python -m plugins.platforms.google_chat.oauth \
     --client-secret /path/to/client_secret.json
 ```
 
 That writes the client secret into the active profile's Niki home (e.g.
-`~/.hermes/google_chat_user_client_secret.json` for the default profile). The
+`~/.niki/google_chat_user_client_secret.json` for the default profile). The
 client secret is **profile-scoped, not shared across profiles** — each profile
 registers its own. This is deliberate: profiles are isolated auth boundaries, so
 two profiles can point at different Google OAuth apps / accounts. Register it
@@ -313,7 +313,7 @@ Each user runs the flow once, in their own DM with the bot:
    into chat as `/setup-files <PASTED_URL>`. The bot exchanges it for a
    refresh token.
 
-The token lands at `~/.hermes/google_chat_user_tokens/<sanitized_email>.json`.
+The token lands at `~/.niki/google_chat_user_tokens/<sanitized_email>.json`.
 Subsequent file requests in that user's DM use *their* token, so the bot
 uploads as them and the message lands in their space.
 
@@ -330,7 +330,7 @@ on purpose.
 ### Multi-user behavior
 
 When the asker has no per-user token yet, the bot falls back to a legacy
-single-user token at `~/.hermes/google_chat_user_token.json` (if present from
+single-user token at `~/.niki/google_chat_user_token.json` (if present from
 a pre-multi-user install). When neither is available, the bot posts a clear
 text notice telling the asker to run `/setup-files`.
 
@@ -349,7 +349,7 @@ evicts only that user's cache. Users don't disrupt each other.
 2. If the subscription has zero messages, Google Chat isn't publishing.
    Double-check the IAM binding on the **topic**:
    `chat-api-push@system.gserviceaccount.com` must have `Pub/Sub Publisher`.
-3. Check `hermes gateway` logs for `[GoogleChat] Connected`. If you see
+3. Check `niki gateway` logs for `[GoogleChat] Connected`. If you see
    `[GoogleChat] Config validation failed`, the error message tells you which
    env var to fix.
 
@@ -390,7 +390,7 @@ python -m plugins.platforms.google_chat.oauth \
     --client-secret /path/to/client_secret.json
 
 # Named profile:
-hermes -p <profile> python -m plugins.platforms.google_chat.oauth \
+niki -p <profile> python -m plugins.platforms.google_chat.oauth \
     --client-secret /path/to/client_secret.json
 ```
 
@@ -425,6 +425,6 @@ The auth code is single-use and short-lived (typically a few minutes). Send
 - **User OAuth scope**: the per-user attachment flow requests *only*
   `chat.messages.create` — the minimum that covers `media.upload` plus the
   follow-up `messages.create`. Tokens are persisted as plain JSON at
-  `~/.hermes/google_chat_user_tokens/<sanitized_email>.json` (filesystem
+  `~/.niki/google_chat_user_tokens/<sanitized_email>.json` (filesystem
   permissions are the protection — same model as the SA key file). Each
   token is owned by exactly one user; revoke is scoped to that user.

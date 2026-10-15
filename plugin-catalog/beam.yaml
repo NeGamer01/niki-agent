@@ -1,5 +1,5 @@
 name: beam
-repo: https://github.com/Beam-Network/beam-hermes
+repo: https://github.com/Beam-Network/beam-niki
 sha: 8cd66dd6dc01f5ea105e314050501ea720d922e0
 version: "0.1.0"
 title: Beam
@@ -7,8 +7,8 @@ description: "Beam (b1m.ai) as native tools: estimate, start, track and cancel v
 maintainer: Beam-Network
 tier: community
 category: tools
-requires_hermes: ">=0.21.6"
-docs_url: https://github.com/Beam-Network/beam-hermes#readme
+requires_niki: ">=0.21.6"
+docs_url: https://github.com/Beam-Network/beam-niki#readme
 readme: true
 capabilities:
   provides_tools:

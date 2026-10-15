@@ -9,16 +9,16 @@ import { setTimeout as delay } from 'node:timers/promises'
 import { waitForDashboardPortAnnouncement } from '../../apps/desktop/electron/backend-ready.ts'
 
 const repo = fileURLToPath(new URL('../../', import.meta.url))
-const home = mkdtempSync(join(tmpdir(), 'hermes-native-ready-'))
+const home = mkdtempSync(join(tmpdir(), 'niki-native-ready-'))
 const token = randomUUID()
 const env = {
-  PATH: process.env.PATH, HOME: home, HERMES_HOME: home,
-  LANG: 'C.UTF-8', PYTHONUNBUFFERED: '1', HERMES_NONINTERACTIVE: '1',
-  HERMES_DASHBOARD_SESSION_TOKEN: token, HERMES_SERVE_HEADLESS: '1',
-  HERMES_PARENT_PID: String(process.pid),
+  PATH: process.env.PATH, HOME: home, NIKI_HOME: home,
+  LANG: 'C.UTF-8', PYTHONUNBUFFERED: '1', NIKI_NONINTERACTIVE: '1',
+  NIKI_DASHBOARD_SESSION_TOKEN: token, NIKI_SERVE_HEADLESS: '1',
+  NIKI_PARENT_PID: String(process.pid),
 }
 const child = spawn(process.argv[2] || join(repo, '.venv/bin/python'),
-  ['-m', 'hermes_cli.main', 'serve', '--host', '127.0.0.1', '--port', '0', '--isolated'],
+  ['-m', 'niki_cli.main', 'serve', '--host', '127.0.0.1', '--port', '0', '--isolated'],
   { cwd: repo, env, stdio: ['ignore', 'pipe', 'pipe'] })
 let tail = ''
 for (const stream of [child.stdout, child.stderr]) {
