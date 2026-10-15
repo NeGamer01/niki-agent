@@ -45,3 +45,20 @@ Mengganti ini akan merusak fungsi / layanan pihak ketiga, jadi dibiarkan:
   lingkungan PM kamu dan commit hasil `uv.lock` yang baru. Installer
   upstream membangun environment-nya sendiri lewat PM, jadi langkah
   ini adalah bagian dari setup pertama di mesin kamu.
+
+## Pembaruan 15 Okt 2026 malam — banner & tema biru muda (permintaan pemilik)
+
+- `assets/banner.png` DIGANTI TOTAL: gambar pixel baru bertuliskan
+  "NIKI-AGENT" gradasi biru muda (#7DD3FC → #38BDF8 → #0284C7),
+  ukuran sama 1145×196. Banner HERMES-AGENT emas sudah tidak ada.
+- Logo ASCII terminal di `hermes_cli/banner.py` digambar ulang menjadi
+  "NIKI AGENT" (nama variabel internal `HERMES_AGENT_LOGO` dipertahankan
+  demi kompatibilitas skin/test) dan caduceus diwarnai ulang ke biru.
+- Tema terminal default → biru muda: skin `default` di
+  `hermes_cli/skin_engine.py` (termasuk overlay mode terang), seeds TUI
+  di `ui-tui/src/theme.ts`, cermin desktop di
+  `apps/desktop/electron/local-skin.ts`, dan fallback warna di
+  `hermes_cli/cli_render.py`. Warna semantik (ok hijau, error merah,
+  warn kuning) sengaja dipertahankan agar maknanya tidak hilang.
+- Skin bawaan lain (ares, mono, slate, poseidon, dll.) tidak diubah;
+  pemilik bisa beralih kapan saja dengan perintah `/skin`.

@@ -370,17 +370,17 @@ export function buildPalette(seeds: ThemeSeeds, isLight: boolean): ThemeColors {
 }
 
 export const DARK_SEEDS: ThemeSeeds = {
-  accent: '#FFBF00',
+  accent: '#38BDF8',
   // The classic Niki navy surfaces are IDENTITY, not derivation drift —
   // keep them as explicit fill seeds (the ladder derives them for skins
   // that don't care).
   activeRow: '#333355',
   bg: '#101014',
-  border: '#CD7F32',
+  border: '#38BDF8',
   error: '#ef5350',
   ok: '#4caf50',
-  primary: '#FFD700',
-  prompt: '#FFF8DC',
+  primary: '#7DD3FC',
+  prompt: '#EAF7FF',
   selection: '#3a3a55',
   shellDollar: '#4dabf7',
   statusBad: '#FF8C00',
@@ -388,7 +388,7 @@ export const DARK_SEEDS: ThemeSeeds = {
   statusGood: '#8FBC8F',
   statusWarn: '#FFD700',
   surface: '#1a1a2e',
-  text: '#FFF8DC',
+  text: '#EAF7FF',
   warn: '#ffa726'
 }
 
@@ -401,19 +401,19 @@ export const DARK_SEEDS: ThemeSeeds = {
 // render the same thing Cursor always showed. Text/prompt stay ink — body
 // copy historically rendered in the terminal's default near-black fg.
 export const LIGHT_SEEDS: ThemeSeeds = {
-  accent: '#956E00',
+  accent: '#0369A1',
   bg: '#ffffff',
-  border: '#A56628',
+  border: '#0284C7',
   error: '#C14240',
   ok: '#367E39',
-  primary: '#867000',
-  prompt: '#2B2014',
+  primary: '#075985',
+  prompt: '#0C2D48',
   shellDollar: '#377BB3',
   statusBad: '#A65A00',
   statusCritical: '#B94D4D',
   statusGood: '#5C7A5C',
   statusWarn: '#867000',
-  text: '#3D2F13',
+  text: '#16324A',
   warn: '#956115'
 }
 
