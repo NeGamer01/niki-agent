@@ -1,95 +1,77 @@
 ---
 sidebar_position: 3
 title: "Android / Termux"
-description: "Install Niki Agent on Android from its signed Termux APT repository"
+description: "Build and install Niki Agent on Android from this repository — no third-party package channel"
 ---
 
 # Niki on Android with Termux
 
-:::danger Termux is currently broken
-The Termux package does not work right now. A fix is in progress and will
-ship soon. Until then, the steps below may fail or install a package that
-does not run.
+Niki Agent is a personal fork. There is **no prebuilt Termux package channel
+for this fork**: the package is built from this repository by its owner, and
+installed on the phone as a local `.deb` file. Nothing is downloaded from
+any other project's servers at install time.
+
+:::warning Upstream channel does not apply here
+The original project published its own Termux APT repository. That channel
+belongs to the original project, is **not** used by this fork, and must not
+be added to a device that runs this fork — its packages contain a different
+build. (Upstream also currently flags its own Termux package as broken.)
 :::
 
-The Termux package runs Niki on **aarch64 (arm64-v8a)** Android devices.
-Two APT channels are published under
-`https://hermes-assets.nousresearch.com/releases/termux/<channel>`:
+The package runs on **aarch64 (arm64-v8a)** Android devices with the standard
+Termux prefix, `/data/data/com.termux/files/usr`. The wheels target
+Android API 24. Do not use the desktop/server `install.sh` on this target —
+it refuses Termux on purpose; the `.deb` below is the Termux path.
 
-| Channel | APT suite | Contents |
-| --- | --- | --- |
-| `stable` | `niki-stable` | Tagged `vMAJOR.MINOR.PATCH` releases that passed the stable release gate |
-| `canary` | `niki-canary` | Prerelease builds from canary tags; versions carry `~canary.<timestamp>` |
+The package bundles Python, Node.js, npm, uv, ripgrep, ffmpeg, and their
+runtime libraries. The phone never compiles core dependencies: all native
+wheels are built on the build host.
 
-The steps below use `stable`. To follow prereleases, replace `stable` with
-`canary` and `niki-stable` with `niki-canary` in steps 2 and 4. Both
-channels are signed with the same key.
+## Step 1 — Build the package (on a computer)
 
-The package includes Python, Node.js, npm, uv, ripgrep, ffmpeg, and their runtime libraries.
-CI builds the native Python wheels and the TUI before it creates the package.
-The device does not compile core dependencies or assemble its base Python
-environment during installation. The package uses Python 3.14 with the bionic
-interpreter pin; it does not require the same patch version as desktop CPython.
-The wheel closure is core plus `acp`, not all desktop extras.
+Requirements: a Linux or macOS computer with **Docker** running and `git`.
+The whole pipeline is Docker-based; the phone cannot build it.
 
-## Install
+```bash
+git clone https://github.com/NeGamer01/niki-agent.git
+cd niki-agent
+git checkout v1.0.0        # a release tag must exist; versions come from tags
+```
 
-Use the standard [Termux](https://termux.dev/) application.
-The package requires its standard prefix, `/data/data/com.termux/files/usr`.
-Other architectures and renamed Termux application packages are not supported.
-The wheels target Android API 24 (`android_24_arm64_v8a`).
-Do not use the desktop/server `install.sh` or a glibc Linux archive on this target.
+Assemble the payload and the wheelhouse:
 
-1. Install the tools for repository setup:
+```bash
+mkdir -p build/payload build/out
+scripts/termux/build_cpython.sh build/payload
+scripts/termux/build_node.sh    build/payload
+scripts/termux/build_uv.sh      build/payload
+scripts/termux/termux_build.sh  --repo . --tag v1.0.0 --out build/out
+git archive v1.0.0 -o build/app.tar
+mkdir -p build/payload/app && tar -xf build/app.tar -C build/payload/app
+cp -r build/out/wheelhouse build/payload/
+```
 
-   ```bash
-   pkg install curl gnupg
-   ```
+Assemble and smoke-test the `.deb` (the builder installs it into a fresh
+pinned Termux container image and runs the installed-package checks):
 
-2. Download the public key:
+```bash
+scripts/termux/build_deb.sh --repo . --tag v1.0.0 --payload build/payload --out build/out
+# → build/out/niki-agent_1.0.0_aarch64.deb
+```
 
-   ```bash
-   mkdir -p "$PREFIX/etc/apt/keyrings"
-   curl -fsSL \
-     https://hermes-assets.nousresearch.com/releases/termux/stable/key.asc \
-     -o "$PREFIX/etc/apt/keyrings/niki-agent.asc"
-   ```
+## Step 2 — Install on the phone
 
-3. Verify its primary fingerprint:
+Copy `niki-agent_1.0.0_aarch64.deb` to the phone (USB, `termux-setup-storage`,
+or any file transfer), then in the standard [Termux](https://termux.dev/) app:
 
-   ```bash
-   gpg --show-keys --with-fingerprint "$PREFIX/etc/apt/keyrings/niki-agent.asc"
-   ```
+```bash
+pkg install ./niki-agent_1.0.0_aarch64.deb
+niki setup
+niki --tui
+```
 
-   The repository key fingerprint is:
-
-   ```text
-   C572 B5FD D1A2 9CCF A9A9 12B6 840B 0848 E139 156D
-   ```
-
-   If the fingerprint differs, stop. Do not disable signature verification.
-
-4. Add the repository:
-
-   ```bash
-   printf '%s\n' \
-     "deb [signed-by=$PREFIX/etc/apt/keyrings/niki-agent.asc] https://hermes-assets.nousresearch.com/releases/termux/stable niki-stable main" \
-     > "$PREFIX/etc/apt/sources.list.d/niki-agent.list"
-   ```
-
-5. Install Niki:
-
-   ```bash
-   pkg update
-   pkg install niki-agent
-   ```
-
-6. Configure a provider, then start the TUI:
-
-   ```bash
-   niki setup
-   niki --tui
-   ```
+`niki setup` asks for a model provider and **your own API key** — this fork
+has no account, subscription, or hosted portal.
 
 The `niki`, `niki-agent`, and `niki-acp` commands use the packaged runtimes.
 They do not require Termux's `python` or `nodejs` packages.
@@ -102,23 +84,17 @@ They do not require Termux's `python` or `nodejs` packages.
 | Command symlinks | `$PREFIX/bin/niki`, `$PREFIX/bin/niki-agent`, `$PREFIX/bin/niki-acp` |
 | Configuration and user data | `~/.niki/`, or the selected `NIKI_HOME` |
 
-Update through APT:
+To update: build a new `.deb` from a newer tag (Step 1) and install it over
+the old one (Step 2). `niki update` refuses to modify an APT-owned
+installation and prints the package-manager command instead.
 
-```bash
-pkg update
-pkg upgrade niki-agent
-```
-
-`niki update` refuses to modify an APT-owned installation.
-It prints the package-manager command instead.
-Canary versions contain `~canary.<timestamp>` and sort before the corresponding
-stable version. Each suite only lists its own channel's packages; to move
-between channels, edit the channel path and suite in `niki-agent.list`, then
-`pkg update && pkg upgrade niki-agent`.
+Optionally, `scripts/termux/stage_apt_repo.py` can stage the built packages
+as a private APT repository if the owner later wants `pkg upgrade`-style
+updates from their own server.
 
 ## Gateway
 
-This APT installation does not use systemd, launchd, or Windows Scheduled Tasks.
+This installation does not use systemd, launchd, or Windows Scheduled Tasks.
 Run the gateway in a Termux session:
 
 ```bash
@@ -139,19 +115,13 @@ Battery optimization exemptions and `termux-wake-lock` can help, but do not guar
 
 ## Limits
 
-The package does not include the `nemo-relay` exporter. Its vendored build
-toolchain does not support this target.
+The package does not include Electron, local Chromium, or desktop
+computer-use tools. A local Docker daemon is not part of the Termux
+environment. Phone-native Termux:API microphone and clipboard adapters are
+not provided by this package path. Optional integrations and third-party
+plugins can require dependencies that do not support Android.
 
-The package does not include Electron, local Chromium, or desktop computer-use
-tools. A local Docker daemon is not part of the Termux environment. Remote
-services have their own requirements and connectivity limits.
-
-Phone-native Termux:API microphone and clipboard adapters are not provided by
-this package path. The prebuilt CLI/TUI is not proof of local voice or wake-word
-support. Optional integrations and third-party plugins can require dependencies
-that do not support Android.
-
-Python 3.14 on this target reports `sys.platform == "android"`. A dependency
+Python on this target reports `sys.platform == "android"`. A dependency
 or skill gated only to `linux` is not automatically available on Android.
 
 ## Uninstall
@@ -164,10 +134,8 @@ APT removes the package and its command symlinks. It preserves your configuratio
 
 ## Troubleshooting
 
-- **Package not found:** verify the repository entry, then run `pkg update`.
-- **Signature error:** verify the public key fingerprint. Do not use an unsigned repository or bypass the error.
-- **Missing command:** verify that `$PREFIX/bin` is on `PATH`, or reinstall the package.
-- **Missing library or TUI bundle:** report `niki --version` and the complete error. The core package must not require a local rebuild.
+- **Missing command:** verify that `$PREFIX/bin` is on `PATH`, or reinstall the `.deb`.
+- **Missing library or TUI bundle:** check `niki --version` and the complete error. The core package must not require a local rebuild — if it does, the build in Step 1 was incomplete.
 - **Gateway stops with the screen off:** review Android's battery and background-process limits.
 
 For general diagnostics, run `niki doctor`.
