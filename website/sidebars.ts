@@ -75,7 +75,6 @@ const sidebars: SidebarsConfig = {
       collapsed: true,
       items: [
         'user-guide/features/overview',
-        'user-guide/features/tool-gateway',
         {
           type: 'category',
           label: 'Core',
@@ -147,7 +146,6 @@ const sidebars: SidebarsConfig = {
             'user-guide/features/web-dashboard',
             'user-guide/features/extending-the-dashboard',
             'user-guide/features/api-server',
-            'user-guide/features/subscription-proxy',
           ],
         },
         {

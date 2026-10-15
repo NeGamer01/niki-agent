@@ -7,7 +7,6 @@ import shutil
 import subprocess
 import sys
 from tools import tool_backend_helpers
-from niki_cli import niki_subscription
 
 logger = logging.getLogger("niki_cli.setup")
 
@@ -239,9 +238,6 @@ def _setup_tts_provider(config: dict):
     _setup.print_header("Text-to-Speech Provider (optional)")
     _setup._info(f"Current: {current_label}", None)
     options = list(_TTS_PROVIDER_CHOICES)
-    if tool_backend_helpers.managed_nous_tools_enabled() and niki_subscription.get_nous_subscription_features(config).niki_auth_present:
-        options.insert(0, ("niki-openai",
-                           "Niki Subscription (managed OpenAI TTS, billed to your subscription)"))
     choices = [label for _, label in options] + [f"Keep current ({current_label})"]
     keep_current_idx = len(choices) - 1
     idx = _setup.prompt_choice("Select TTS provider:", choices, keep_current_idx)

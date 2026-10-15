@@ -32,7 +32,6 @@ DOTENV = HOME / ".env"
 
 # name -> (kind, base_url, credential source). "niki-auth" reads auth.json at call time.
 ROUTES = {
-    "niki": ("chat", "https://inference-api.nousresearch.com/v1", "niki-auth"),
     "openai-chat": ("chat", "https://api.openai.com/v1", "OPENAI_API_KEY"),
     "openai-responses": ("responses", "https://api.openai.com/v1", "OPENAI_API_KEY"),
     "xai-chat": ("chat", "https://api.x.ai/v1", "XAI_API_KEY"),
@@ -691,11 +690,6 @@ def read_calls(out: Path) -> list:
 
 # ---------------------------------------------------------------- models / prices
 
-def niki_catalog() -> list:
-    req = urllib.request.Request("https://inference-api.nousresearch.com/v1/models",
-                                 headers={"Authorization": "Bearer " + _nous_key()})
-    with urllib.request.urlopen(req, timeout=60) as r:
-        return json.loads(r.read())["data"]
 
 
 def niki_selection(catalog: list) -> tuple[list, list]:

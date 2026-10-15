@@ -155,23 +155,6 @@ def _keyless_backend() -> Optional[str]:
     return None
 
 
-def _managed_web_search() -> bool:
-    """True when web_search is on the managed Niki route: the stored ``niki`` selection (a
-    ``web.search_backend: niki`` pin, else the shared one), or a never-configured install whose
-    autodetect lands on the gateway — the entitled Firecrawl gateway, or free Perplexity fast search
-    for any Niki identity when nothing else is configured (search-only: the extract ladder is
-    untouched). A stored vendor selection never is."""
-    search_pin = _configured_backend("search_backend")
-    if search_pin:
-        return search_pin == NIKI_MANAGED_PROVIDER
-    selected = read_selection("web")
-    if selected is not None:
-        return selected == NIKI_MANAGED_PROVIDER
-    backend = _autodetect_backend()
-    if backend == "firecrawl":
-        return not (_has_env("FIRECRAWL_API_KEY") or _has_env("FIRECRAWL_API_URL")) and _is_tool_gateway_ready()
-    from tools.managed_tool_gateway import peek_nous_access_token, resolve_free_search_gateway
-    return backend is None and resolve_free_search_gateway(token_reader=peek_nous_access_token) is not None
 
 
 def _get_search_backend() -> str:

@@ -1022,7 +1022,7 @@ def build_cache_parity_fork(
         # into a different bucket than the gateway parent, costing one cold ~full-context
         # request per review. Inherit the parent's ALREADY-RESOLVED scope once, here: no DB
         # access from the fork, persistence stays fully detached, and both consumers (the
-        # affinity header via set_affinity_scope and the body prompt_cache_key via
+        # affinity header and the body prompt_cache_key via
         # cache_scope_id) resolve the parent's bucket together. Routed (different-model)
         # forks do NOT inherit: their prefix is cache-cold anyway.
         inherited_scope = resolve_prompt_cache_scope_safe(agent)

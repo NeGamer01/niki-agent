@@ -1054,14 +1054,7 @@ export default function SystemPage() {
                   inference provider: {portal.provider}
                 </span>
               )}
-              <a
-                href={portal?.subscription_url || "https://portal.nousresearch.com/manage-subscription"}
-                target="_blank"
-                rel="noreferrer"
-                className="ml-auto text-xs text-primary underline"
-              >
-                Manage subscription
-              </a>
+
             </div>
             {portal?.features && portal.features.length > 0 && (
               <div className="flex flex-col gap-1 border-t border-border pt-3">

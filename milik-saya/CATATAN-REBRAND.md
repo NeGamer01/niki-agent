@@ -101,3 +101,29 @@ Sisa yang SENGAJA dipertahankan (bukan merek Niki, melainkan):
 Verifikasi: `python3 -m compileall` seluruh repo = 0 error;
 `import niki_constants` dan `get_niki_home()` → `~/.niki` terbukti jalan.
 Skrip: `milik-saya/rebrand-total.py` (+ pass2/pass3 dijalankan dari workspace).
+
+## PENGHAPUSAN FITUR PORTAL (15–16 Okt 2026, perintah pemilik)
+
+Fitur "Portal" (dulu Nous Portal: login/akun/langganan/billing/free-trial,
+endpoint portal.nousresearch.com & inference-api.nousresearch.com, provider
+inference bawaan, Tool Gateway terkelola, telemetri bawaan) DIHAPUS TOTAL
+karena agen ini dipakai pribadi.
+
+- ±160 file dihapus (modul auth/akun/billing/subscription Portal, provider,
+  halaman settings billing desktop, overlay & perintah /topup-/subscription
+  di TUI, dokumen Portal & Tool Gateway, test khusus Portal).
+- ±250 file dibedah: referensi Portal dicabut dari auth, katalog model &
+  pricing, setup wizard, gateway, web server, konfigurasi tools (baris
+  "Niki Subscription" terkelola hilang — semua tool kini memakai API key
+  sendiri), status, dan dokumentasi (EN + zh-Hans).
+- Endpoint telemetri bawaan dimatikan (DEFAULT_ENDPOINT kosong): agen tidak
+  lagi "menelepon pulang" ke server mana pun secara bawaan.
+- Verifikasi: compileall seluruh repo = 0 error; referensi ke modul Portal
+  yang dihapus = 0 di kode Python (di luar fixture tests/compat); endpoint
+  Portal = 0 di kode & docs (dua penyebutan tersisa hanya di catatan ini).
+- Sisa kata "portal"/"nousresearch" yang BUKAN fitur: library portalocker,
+  React createPortal, LICENSE (wajib MIT), contributors/, alamat repo
+  eksternal pihak ketiga (image sandbox), dan file lock yang belum dibuat
+  ulang. Definisi tipe internal billing yang tak terpakai masih ada di
+  ui-tui/src/app/interfaces.ts (tidak terlihat pengguna, tidak terhubung
+  ke backend mana pun).

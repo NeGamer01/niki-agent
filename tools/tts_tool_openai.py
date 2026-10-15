@@ -13,9 +13,7 @@ import uuid
 from typing import Any, Dict, Optional
 from urllib.parse import urljoin
 
-from tools.managed_tool_gateway import resolve_managed_tool_gateway
 from tools.tool_backend_helpers import (
-    NIKI_MANAGED_PROVIDER, managed_nous_tools_enabled, niki_tool_gateway_unavailable_message,
     read_selection, resolve_openai_audio_api_key, selection_error)
 from tools.tts_tool_delivery import _origin, _section
 from tools.tts_tool_providers import _tts_response_format_from_path
@@ -31,43 +29,19 @@ DEFAULT_OPENAI_BASE_URL = "https://api.openai.com/v1"
 DEFAULT_DEEPINFRA_TTS_VOICE = "default"
 
 
-def _managed_openai_audio_route() -> Optional[tuple]:
-    gateway = resolve_managed_tool_gateway("openai-audio")
-    if gateway is None:
-        return None
-    return gateway.niki_user_token, urljoin(f"{gateway.gateway_origin.rstrip('/')}/", "v1"), True
-
-
 def _resolve_openai_audio_client_config() -> tuple[str, str, bool]:
-    """``(api_key, base_url, is_managed)`` for the OpenAI audio client (``is_managed`` = the restricted
-    Niki proxy, so callers coerce the request). Strict on the stored ``tts`` selection: ``"niki"``
-    → managed ONLY (error if unavailable); any other → direct credentials ONLY (``tts.openai.api_key``
-    then ``VOICE_TOOLS_OPENAI_KEY``/``OPENAI_API_KEY``); unset → config key → env key → managed."""
+    """``(api_key, base_url, is_managed)`` for the OpenAI audio client: direct credentials ONLY
+    (``tts.openai.api_key`` then ``VOICE_TOOLS_OPENAI_KEY``/``OPENAI_API_KEY``)."""
     origin = _origin()
     openai_cfg = _section(origin._load_tts_config(), "openai")
     selected = read_selection("tts")
-    if selected == NIKI_MANAGED_PROVIDER:
-        route = _managed_openai_audio_route()
-        if route is None:
-            raise ValueError(selection_error(
-                "tts", NIKI_MANAGED_PROVIDER,
-                "the Niki Tool Gateway is not available (not entitled or unreachable)"))
-        return route
     direct_api_key = openai_cfg.get("api_key") or resolve_openai_audio_api_key()
     if direct_api_key:
         return direct_api_key, openai_cfg.get("base_url") or DEFAULT_OPENAI_BASE_URL, False
-    if selected is not None:
-        raise ValueError(selection_error(
-            "tts", selected,
-            "neither tts.openai.api_key in config nor VOICE_TOOLS_OPENAI_KEY/OPENAI_API_KEY is set",
-        ))
-    route = _managed_openai_audio_route()
-    if route is None:
-        message = "Neither tts.openai.api_key in config nor VOICE_TOOLS_OPENAI_KEY/OPENAI_API_KEY is set"
-        if managed_nous_tools_enabled():
-            message += ". " + niki_tool_gateway_unavailable_message("managed OpenAI audio for TTS")
-        raise ValueError(message)
-    return route
+    raise ValueError(selection_error(
+        "tts", selected,
+        "neither tts.openai.api_key in config nor VOICE_TOOLS_OPENAI_KEY/OPENAI_API_KEY is set",
+    ))
 
 
 def _has_openai_audio_backend() -> bool:

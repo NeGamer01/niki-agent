@@ -93,7 +93,7 @@ describe('resolveOauthPartition (#92183 per-connection cookie jars)', () => {
   it('falls back to the legacy partition for unmatched, portal, and malformed inputs', () => {
     const reg = registry('local', [remote('conn-a', 'https://gw-a.example.com')])
 
-    expect(resolveOauthPartition('https://portal.nousresearch.com/api/agents', { registry: reg })).toBe(
+    expect(resolveOauthPartition('https://example.com/api/agents', { registry: reg })).toBe(
       LEGACY_OAUTH_PARTITION
     )
     expect(resolveOauthPartition('not a url', { registry: reg })).toBe(LEGACY_OAUTH_PARTITION)

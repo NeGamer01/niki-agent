@@ -67,19 +67,13 @@ event("skin.changed", SkinPayload,
 
 
 class SetupReadyPayload(OpenPayload):
-    """``niki_cli/free_tier_bootstrap.py::SetupRecord.as_payload``."""
+    """Setup readiness payload."""
 
     provider_configured: bool
     inference_provider: str
-    free_tier_account: bool
-    free_tier_route: bool
     has_identity: bool
     other_providers: bool
     error: str = ""
-    # Present only when the free-tier mint did not happen (``anon_auth.MintFailure.as_payload``).
-    error_code: str | None = None
-    retryable: bool | None = None
-    retry_after: int | None = None
     finished_at: float
 
 
@@ -204,18 +198,6 @@ class ErrorSurface(Payload):
     model_config = Payload.model_config | {"extra": "allow"}
 
 
-class BillingBlock(Payload):
-    """``agent/billing_links.py::BillingBlock.to_dict`` (+ ``unverified`` from conversation_loop)."""
-
-    provider: str
-    provider_label: str
-    model: str
-    billing_url: str | None
-    is_niki: bool
-    message: str
-    unverified: bool | None = None
-
-
 class PersistedTurn(Payload):
     """Committed SQLite row addresses for the agent's current-turn suffix. Missing ids are
     unproven, never negative acknowledgements. ``complete`` permits retiring the whole local
@@ -248,7 +230,6 @@ class MessageCompletePayload(Payload):
     #: ``text`` is a response this turn already delivered (streamed and/or sealed) — it adds no text.
     response_reused: bool | None = None
     response_transformed: bool | None = None
-    billing: BillingBlock | None = None
     failure_reason: str | None = None
     rendered: str | None = None
     error: str | None = None
@@ -513,17 +494,6 @@ class SessionControlUpdatePayload(Payload):
 
 
 event("session.control.update", SessionControlUpdatePayload, doc="Persisted goal / loop / heartbeat state changed.")
-
-
-class BillingStepUpVerificationPayload(Payload):
-    """``methods_session`` billing.step_up on_verification."""
-
-    verification_url: str
-    user_code: str
-
-
-event("billing.step_up.verification", BillingStepUpVerificationPayload,
-      doc="Device-flow URL + code for the billing scope step-up; the client opens the browser.")
 
 
 # ── side agents (methods_prompt._spawn_side_agent) ────────────────────────────────────────────
@@ -824,7 +794,7 @@ event("bot_relay.outbox.pending", ChangeSignalPayload, doc="A bot-relay outbox e
 
 
 __all__ = [
-    "BillingBlock", "BillingStepUpVerificationPayload", "BrowserControllerCancelPayload",
+"BrowserControllerCancelPayload",
     "BrowserControllerCommandPayload", "BrowserProgressPayload", "ChangeSignalPayload", "ErrorPayload",
     "ErrorSurface", "FreeTierChallengePayload", "GatewayReadyPayload",
     "MessageCompletePayload", "MessageInterimPayload", "MessageReaction", "MessageReactionPayload", "MoaAggregatingPayload",

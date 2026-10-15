@@ -243,27 +243,9 @@ class CompressionFacadeMixin:
             resolve_context_compression_timeouts,
         )
         reset_context_compression_timeout_outcome(self)
-        from agent.portal_tags import (
-            get_affinity_scope, get_conversation_context, reset_affinity_scope, reset_conversation_context,
-            set_affinity_scope, set_conversation_context,
-        )
         from agent.prompt_cache_scope import declared_conversation_scope_safe
-        # Out-of-turn compaction (/compact, gateway /compress, partial head compression) runs outside
-        # run_conversation's ambient scope; publish the root as a fallback so the summarizer's call carries
-        # the conversation tag. No-op for in-turn callers. Same for the ROUTING scope when declared.
         token = None
-        if get_conversation_context() is None:
-            root = self._conversation_root_id()
-            if root:
-                token = set_conversation_context(root)
-        # Initialized alongside `token`: the turn-lease timeout/interrupt early returns leave the try block
-        # before set_affinity_scope() runs, and the finally reads this name unconditionally
-        # (UnboundLocalError otherwise — the 4 red cross-process lease tests on PR #97158).
         affinity_token = None
-        if get_affinity_scope() is None:
-            declared = declared_conversation_scope_safe(self)
-            if declared:
-                affinity_token = set_affinity_scope(declared)
         # Every compression has a fence; hard_interrupt() uses this exact instance to serialize cancel
         # admission against begin_commit(). Publication is serialized so overlapping automatic/manual
         # entrypoints cannot replace the fence of the attempt currently committing.
@@ -321,8 +303,3 @@ class CompressionFacadeMixin:
                     self._active_compression_commit_fence = fence_stack[-1].fence
                 else:
                     vars(self).pop("_active_compression_commit_fence", None)
-            # Restore whatever the caller had, so a compaction never leaks its tag into the surrounding scope.
-            if token is not None:
-                reset_conversation_context(token)
-            if affinity_token is not None:
-                reset_affinity_scope(affinity_token)

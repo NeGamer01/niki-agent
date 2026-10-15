@@ -43,7 +43,7 @@ import agent.auxiliary_client as aux
 
 AUX_MODEL = "z-ai/glm-5.3-flash"
 FALLBACK_MODEL = "fallback-model"
-NIKI_HOST = "inference-api.nousresearch.com"
+NIKI_HOST = "example.com"
 
 
 class _ApiError(Exception):

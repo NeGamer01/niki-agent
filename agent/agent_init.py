@@ -461,11 +461,6 @@ def _finalize_routing(agent, api_mode, credential_pool):
     # pool benched the provider for all of them. The gateway and web server start this thread
     # at boot; the CLI process (and everything spawned inside it) never did. Idempotent,
     # process-wide, daemon.
-    if agent.provider == "niki":
-        with suppress(Exception):
-            from niki_cli.niki_auth_keepalive import start_nous_auth_keepalive
-            start_nous_auth_keepalive()
-
     with suppress(Exception):
         from niki_cli.model_normalize import (
             _AGGREGATOR_PROVIDERS, normalize_model_for_provider
@@ -473,11 +468,6 @@ def _finalize_routing(agent, api_mode, credential_pool):
 
         if agent.provider not in _AGGREGATOR_PROVIDERS:
             agent.model = normalize_model_for_provider(agent.model, agent.provider)
-
-    # Niki model policy follows the ROUTE (the welcome host serves one model); a credential-pool
-    # swap can change the route later, so ``_swap_credential`` applies the same helper again.
-    from niki_cli.anon_auth import pin_model_for_route
-    agent.model = pin_model_for_route(agent.provider, agent.base_url, agent.model)
 
     # Auto-upgrade to Responses for GPT-5.x-style models and direct OpenAI URLs, unless
     # api_mode was explicit, the runtime is ACP (`acp://` clients route themselves, no

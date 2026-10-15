@@ -72,7 +72,6 @@ niki [global-options] <command> [subcommand/options]
 | `niki acp` | 将 Niki 作为 ACP 服务器运行，用于编辑器集成。 |
 | `niki mcp` | 管理 MCP 服务器配置，并将 Niki 作为 MCP 服务器运行。 |
 | `niki plugins` | 管理 Niki Agent plugin（安装、启用、禁用、删除）。 |
-| `niki portal` | Niki Portal 状态、订阅链接和 Tool Gateway 路由。参见 [Tool Gateway](../user-guide/features/tool-gateway.md)。 |
 | `niki tools` | 按平台配置已启用的工具。 |
 | `niki computer-use` | 安装或检查 cua-driver 后端（macOS Computer Use）。 |
 | `niki sessions` | 浏览、导出、修剪、重命名和删除会话。 |
@@ -284,21 +283,6 @@ niki setup [model|tts|terminal|gateway|tools|agent] [--non-interactive] [--reset
 | `--reconfigure` | 向后兼容别名——在已有安装上裸运行 `niki setup` 现在默认执行此操作。 |
 | `--portal` | 一键 Niki Portal 设置：通过 OAuth 登录，将 Niki 设为推理 provider，并选择加入 [Tool Gateway](../user-guide/features/tool-gateway.md)。跳过向导其余部分。 |
 
-## `niki portal`
-
-```bash
-niki portal [status|open|tools]
-```
-
-检查 Niki Portal 认证、Tool Gateway 路由，并访问订阅页面。不带子命令时运行 `status`。
-
-| 子命令 | 说明 |
-|------------|-------------|
-| `status`（默认） | Portal 认证状态 + 每个工具的 Tool Gateway 路由摘要。不带子命令时也会显示。 |
-| `open` | 在默认浏览器中打开 `portal.nousresearch.com/manage-subscription`。 |
-| `tools` | 列出每个 Tool Gateway 合作伙伴（Firecrawl、FAL、OpenAI TTS、Browser Use、Modal）及哪些通过 Niki 路由。 |
-
-关于 gateway 本身的配置，请参阅 [Tool Gateway](../user-guide/features/tool-gateway.md)。关于一键设置路径，请参阅上方的 `niki setup --portal`。
 
 ## `niki whatsapp`
 

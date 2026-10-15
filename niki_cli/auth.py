@@ -6,7 +6,7 @@
   only I/O primitives (cross-process flock, atomic 0o600 writes).
 - ``resolve_provider()`` picks the active provider via the documented priority chain.
 - ``OAUTH_PROVIDER_FLOWS`` maps each OAuth provider to its resolver/status builder; the flows live in
-  ``auth_niki``/``auth_codex``/``auth_xai``/``auth_qwen``/``auth_minimax``/``auth_openrouter`` and are
+  ``auth_codex``/``auth_xai``/``auth_qwen``/``auth_minimax``/``auth_openrouter`` and are
   re-imported here so ``niki_cli.auth.<name>`` stays the public/patchable surface."""
 
 from __future__ import annotations
@@ -40,7 +40,7 @@ from niki_cli.auth_model_picker import (
     _prompt_model_selection, _save_model_choice)
 from niki_cli.auth_device_flow import (
     _can_open_graphical_browser, _default_verify, _is_remote_session,
-    _nous_device_auth_timeout_message, _offer_existing_oauth_credentials,
+    _offer_existing_oauth_credentials,
     _poll_device_token_generic, _poll_for_token, _print_device_code_instructions,
     _print_login_success, _print_loopback_ssh_hint, _prompt_yes_no, _request_device_code,
     _resolve_verify, _ssh_user_at_host)
@@ -48,20 +48,7 @@ from niki_cli.auth_oauth_grants import (
     SINGLE_USE_REFRESH_POOL_PROVIDERS, _oauth_heal_clean_marks, _oauth_heal_notices,
     consume_oauth_heal_notices, heal_forked_single_use_oauth_grants,
     strip_cloned_single_use_oauth_grants)
-from niki_cli.auth_niki import (
-    NIKI_SESSION_TERMINAL, NIKI_SESSION_UNKNOWN, NIKI_SESSION_VALID, _ALLOWED_NOUS_INFERENCE_HOSTS,
-    _agent_key_is_usable, _apply_nous_refreshed_tokens, _assert_nous_inference_jwt_usable,
-    _compute_nous_auth_status, _format_nous_entitlement_auth_error, _healed_nous_inference_url,
-    _login_niki, _merge_shared_nous_oauth_state, _migrate_stale_nous_portal_url,
-    _nous_device_code_login, _nous_inference_env_override, _nous_invoke_jwt_is_usable,
-    _nous_invoke_jwt_status, _nous_portal_base_url, _nous_portal_env_override, _nous_shared_store_lock,
-    _nous_shared_store_path, _pool_first_oauth_status, _quarantine_nous_oauth_state,
-    _quarantine_nous_pool_entries, _read_shared_nous_state, _refresh_access_token,
-    _refresh_nous_or_quarantine, _select_nous_invoke_jwt, _sync_nous_pool_from_auth_store,
-    _token_fingerprint, _try_import_shared_nous_state, _validate_nous_inference_url_from_network,
-    _write_shared_nous_state, fetch_nous_models, get_nous_auth_status_local,
-    get_nous_session_validity, persist_nous_credentials, refresh_nous_oauth_from_state,
-    resolve_nous_runtime_credentials, step_up_nous_billing_scope)
+
 from niki_cli.auth_minimax import (
     _MINIMAX_OAUTH_ERROR_BODY_LIMIT, _login_minimax_oauth, _minimax_oauth_login, _minimax_pkce_pair,
     _minimax_poll_token, _minimax_post_form, _minimax_request_user_code,
@@ -87,10 +74,8 @@ from niki_cli.auth_qwen import (
     _refresh_qwen_cli_tokens, _save_qwen_cli_tokens, get_qwen_auth_status,
     resolve_qwen_runtime_credentials)
 from niki_cli.auth_constants import (
-    _decode_jwt_claims, AUTH_STORE_VERSION, AUTH_LOCK_TIMEOUT_SECONDS, DEFAULT_NOUS_PORTAL_URL,
-    DEFAULT_NOUS_INFERENCE_URL, DEFAULT_NOUS_CLIENT_ID, NIKI_BILLING_MANAGE_SCOPE,
-    DEFAULT_NOUS_SCOPE, NIKI_DEVICE_CODE_SOURCE, NIKI_AUTH_PATH_INVOKE_JWT,
-    ACCESS_TOKEN_REFRESH_SKEW_SECONDS, NIKI_INVOKE_JWT_MIN_TTL_SECONDS, DEFAULT_CODEX_BASE_URL,
+    _decode_jwt_claims, AUTH_STORE_VERSION, AUTH_LOCK_TIMEOUT_SECONDS,
+    ACCESS_TOKEN_REFRESH_SKEW_SECONDS, DEFAULT_CODEX_BASE_URL,
     DEFAULT_XAI_OAUTH_BASE_URL, MINIMAX_OAUTH_CLIENT_ID, MINIMAX_OAUTH_SCOPE,
     MINIMAX_OAUTH_GLOBAL_BASE, MINIMAX_OAUTH_CN_BASE, MINIMAX_OAUTH_GLOBAL_INFERENCE,
     MINIMAX_OAUTH_CN_INFERENCE, MINIMAX_OAUTH_REFRESH_SKEW_SECONDS, DEFAULT_QWEN_BASE_URL,
@@ -100,7 +85,7 @@ from niki_cli.auth_constants import (
     CODEX_ACCESS_TOKEN_REFRESH_SKEW_SECONDS, XAI_OAUTH_CLIENT_ID, XAI_OAUTH_SCOPE,
     XAI_ACCESS_TOKEN_REFRESH_SKEW_SECONDS, QWEN_ACCESS_TOKEN_REFRESH_SKEW_SECONDS,
     LMSTUDIO_NOAUTH_PLACEHOLDER,
-    ACTUAL_LOCAL_NOAUTH_PLACEHOLDER, CODEX_RATE_LIMITED_CODE, AuthError, _nous_err, httpx)
+    ACTUAL_LOCAL_NOAUTH_PLACEHOLDER, CODEX_RATE_LIMITED_CODE, AuthError, httpx)
 
 logger = logging.getLogger(__name__)
 
@@ -169,10 +154,6 @@ def _api_key_provider(
 # row is ``_api_key_provider(id, name, inference_base_url, api_key_env_vars[, base_url_env_var
 # [, auth_type]])``; OAuth / bespoke rows are full ``ProviderConfig`` objects.
 _REGISTRY_ROWS: tuple[Any, ...] = (
-    ProviderConfig(
-        "niki", "Niki Portal", "oauth_device_code", portal_base_url=DEFAULT_NOUS_PORTAL_URL,
-        inference_base_url=DEFAULT_NOUS_INFERENCE_URL, client_id=DEFAULT_NOUS_CLIENT_ID,
-        scope=DEFAULT_NOUS_SCOPE),
     ProviderConfig("openai-codex", "OpenAI Codex", "oauth_external", inference_base_url=DEFAULT_CODEX_BASE_URL),
     ("openai-api", "OpenAI API", "https://api.openai.com/v1", ("OPENAI_API_KEY",), "OPENAI_BASE_URL"),
     ProviderConfig(
@@ -473,8 +454,6 @@ def format_auth_error(error: Exception) -> str:
 
         return f"{error} Run `niki {profile_cli_selector()}model` to re-authenticate."
     if error.code in _ENTITLEMENT_ERROR_CODES:
-        if error.provider == "niki":
-            return _format_nous_entitlement_auth_error(error)
         generic = _GENERIC_ENTITLEMENT_MESSAGES.get(error.code)
         if generic:
             return generic
@@ -722,8 +701,7 @@ def _auth_store_lock(
     """Cross-process advisory lock for one auth.json read/write transaction.
 
     ``target_path`` is required for profile-to-global write-throughs: each path has its own
-    reentrancy tracker and kernel lock. Lock ordering invariant: ``_auth_store_lock`` FIRST (outer),
-    ``_nous_shared_store_lock`` SECOND (inner), else deadlock against a concurrent shared import."""
+    reentrancy tracker and kernel lock."""
     auth_path = target_path if target_path is not None else _auth_file_path()
     lock_path = auth_path.with_suffix(".lock")
     with _file_lock(
@@ -772,15 +750,10 @@ def _load_auth_store(auth_file: Optional[Path] = None) -> dict[str, Any]:
     if isinstance(raw, dict) and (
         isinstance(raw.get("providers"), dict) or isinstance(raw.get("credential_pool"), dict)):
         raw.setdefault("providers", {})
-        if isinstance(raw.get("providers"), dict):
-            _migrate_stale_nous_portal_url(raw["providers"])
         return raw
 
     if isinstance(raw, dict) and isinstance(raw.get("systems"), dict):  # legacy "systems" format
-        systems = raw["systems"]
-        providers = {"niki": systems["niki_portal"]} if "niki_portal" in systems else {}
-        return {**_empty_auth_store(), "providers": providers,
-                "active_provider": "niki" if providers else None}
+        return _empty_auth_store()
     return _empty_auth_store()
 
 
@@ -1193,22 +1166,6 @@ def get_provider_auth_state(provider_id: str) -> Optional[dict[str, Any]]:
     return _load_provider_state(_load_auth_store(), provider_id)
 
 
-def niki_token_has_billing_scope() -> bool:
-    """Return True if the currently-held Niki token carries ``billing:manage``.
-
-    Reads the persisted ``scope`` string saved at login (``_save_provider_state``
-    stores ``token_data.get("scope") or scope``). A space-delimited match. Used by
-    the lazy step-up: if False, the first billing call will 403 ``insufficient_scope``
-    anyway, but checking up front lets a surface skip a doomed round-trip.
-    """
-    try:
-        state = get_provider_auth_state("niki") or {}
-    except Exception:
-        return False
-    scope = state.get("scope")
-    if not isinstance(scope, str):
-        return False
-    return NIKI_BILLING_MANAGE_SCOPE in scope.split()
 
 
 def get_active_provider() -> Optional[str]:
@@ -1543,10 +1500,6 @@ def _logged_in_oauth_active_provider(*, skip_free_tier: bool = False) -> Optiona
     """auth.json ``active_provider`` when it is a registry provider that reports logged in."""
     try:
         _maybe = _load_auth_store().get("active_provider")
-        if _maybe == "niki":
-            from niki_cli.anon_auth import free_inference_active, has_guest
-            if has_guest() and (skip_free_tier or not free_inference_active()):
-                return None  # this guest carries no inference here (or is being discounted): not a login
         if _maybe and _maybe in PROVIDER_REGISTRY and get_auth_status(_maybe).get("logged_in"):
             return _maybe
     except Exception as e:
@@ -1562,7 +1515,7 @@ def _config_model_provider() -> tuple[Any, Optional[str]]:
     The normal chat/gateway path resolves config.provider upstream in resolve_requested_provider();
     this is the safety net for the direct ``resolve_provider("auto")`` callers. A configured custom
     endpoint is explicit intent like any registry pin: without this rung the boot inventory
-    (``free_tier_bootstrap``) read a llama.cpp/vLLM install as "nothing configured" and the
+    read a llama.cpp/vLLM install as "nothing configured" and the
     dashboard's Ink chat parked every session on Setup Required while ``niki chat`` worked
     (#108383)."""
     try:
@@ -1690,25 +1643,12 @@ def resolve_provider(
                 _oauth_active)
         return _oauth_active
 
-    # Niki free tier, when this guest claimed the welcome trial and this is the desktop's local
-    # backend (``anon_auth.free_inference_active``). This rung sits ABOVE the Bedrock
-    # chain on purpose: every rung above this line is explicit user intent (CLI creds, config, env
-    # keys, a sign-in); the boto chain below is implicit host state, and a leftover ~/.aws profile
-    # used to win the first turn of a fresh install (NS-829). The rung never CREATES the identity:
-    # only the desktop's trial claim does (welcome_trial), so provider resolution stays free of network.
-    if not skip_free_tier:
-        try:
-            from niki_cli.anon_auth import free_inference_active
-            if free_inference_active():
-                return "niki"
-        except Exception as exc:
-            logger.debug("free tier check during provider resolution skipped: %s", exc)
     # AWS Bedrock via the boto3 credential chain (IAM roles, SSO, env vars): implicit host state,
-    # below explicit keys and below the free tier.
+    # below explicit keys. A leftover ~/.aws profile used to win the first turn of a fresh
+    # install (NS-829).
     try:
         from agent.bedrock_adapter import has_aws_credentials
-        from niki_cli.anon_auth import on_local_desktop_backend  # a laptop: no EC2 metadata lookup
-        if has_aws_credentials(instance_metadata=not on_local_desktop_backend()):
+        if has_aws_credentials():
             return "bedrock"
     except ImportError:
         pass  # boto3 not installed
@@ -1788,126 +1728,8 @@ def _optional_base_url(value: Any) -> Optional[str]:
 
 # Valid Niki Portal hosts; a stored portal_base_url outside this set is a misconfiguration and falls
 # back to the default. localhost / 127.0.0.1 are for local development and testing.
-_NOUS_PORTAL_ALLOWED_HOSTS: frozenset[str] = frozenset({
-    "portal.nousresearch.com", "localhost", "127.0.0.1"})
-
-# Per-process memo for resolve_nous_access_token: startup runs one check_fn per managed tool and
-# each would trigger its own ~15s blocking refresh of an expired token; a short-TTL memo collapses
-# the burst into one round-trip. Callers needing freshness use force_fresh/refresh_nous_oauth_pure.
-# Keyed by niki_home_key(): the resolution itself is profile-scoped (_auth_file_path reads the
-# per-turn NIKI_HOME override a multiplex gateway sets), so a single slot would hand profile A's
-# Portal bearer to profile B for up to the TTL.
-_RESOLVE_TOKEN_CACHE_LOCK = threading.Lock()
-_RESOLVE_TOKEN_CACHE: dict[str, tuple[float, str]] = {}
-_RESOLVE_TOKEN_CACHE_TTL_S = 5.0
 
 
-def resolve_nous_access_token(
-    *,
-    timeout_seconds: float = 15.0,
-    insecure: Optional[bool] = None,
-    ca_bundle: Optional[str] = None,
-    refresh_skew_seconds: int = ACCESS_TOKEN_REFRESH_SKEW_SECONDS) -> str:
-    """Refresh-aware Niki Portal token for managed tool gateways, connectors and account reads, never
-    the free model: a guest gets a live held token, else a connectors-only mint NAS never challenges.
-    Only a NAS from before niki-portal#1516 challenges that mint; it is worked here as before."""
-    from niki_cli.anon_challenge import run_with_challenge
-    return run_with_challenge(lambda: _resolve_nous_access_token(
-        timeout_seconds=timeout_seconds, insecure=insecure, ca_bundle=ca_bundle,
-        refresh_skew_seconds=refresh_skew_seconds))
-
-
-def _resolve_nous_access_token(
-    *,
-    timeout_seconds: float,
-    insecure: Optional[bool],
-    ca_bundle: Optional[str],
-    refresh_skew_seconds: int) -> str:
-    # Only a default-TLS resolution is memoised; error paths never populate the memo.
-    memoable = not insecure and ca_bundle is None
-    cache_key = niki_home_key()
-    if memoable:
-        with _RESOLVE_TOKEN_CACHE_LOCK:
-            cached = _RESOLVE_TOKEN_CACHE.get(cache_key)
-        if cached is not None and (time.monotonic() - cached[0]) < _RESOLVE_TOKEN_CACHE_TTL_S:
-            return cached[1]
-
-    def _memo(token: str) -> str:
-        if memoable:
-            with _RESOLVE_TOKEN_CACHE_LOCK:
-                _RESOLVE_TOKEN_CACHE[cache_key] = (time.monotonic(), token)
-        return token
-
-    with _provider_state_transaction("niki") as (auth_store, state, state_source_path):
-        if not state:
-            raise _nous_err("Niki is not logged into Niki Portal.", "niki_auth_missing", relogin=True)
-        portal_base_url = _nous_portal_base_url(state)
-        client_id = str(state.get("client_id") or DEFAULT_NOUS_CLIENT_ID)
-        verify = _resolve_verify(insecure=insecure, ca_bundle=ca_bundle, auth_state=state)
-        persist = lambda: _save_provider_state_to_source(
-            auth_store, "niki", state, state_source_path)
-
-        lock_timeout = max(timeout_seconds + 5.0, AUTH_LOCK_TIMEOUT_SECONDS)
-        with _nous_shared_store_lock(timeout_seconds=lock_timeout):
-            from niki_cli.anon_auth import held_connectors_token, is_guest_state, refresh_guest_state
-            if is_guest_state(state):
-                # A live held token serves (an inference one is a superset); else mint connectors-only.
-                if access_token := held_connectors_token(state, skew_seconds=refresh_skew_seconds):
-                    return _memo(access_token)
-                with httpx.Client(timeout=httpx.Timeout(timeout_seconds or 15.0),
-                                  headers={"Accept": "application/json"}, verify=verify) as client:
-                    minted = refresh_guest_state(state, client, purpose="connectors")
-                persist()
-                _write_shared_nous_state(state)
-                return _memo(minted)
-
-            merged_shared = _merge_shared_nous_oauth_state(state)
-            access_token = state.get("access_token")
-            refresh_token = state.get("refresh_token")
-            if not isinstance(access_token, str) or not access_token:
-                raise _nous_err(
-                    "No access token found for Niki Portal login.", "niki_auth_missing_access_token", relogin=True)
-
-            if not _is_expiring(state.get("expires_at"), refresh_skew_seconds):
-                if merged_shared:
-                    persist()
-                # Memoise the valid-token fast path too: each check_fn otherwise pays two
-                # cross-process file locks to get here. The token has >= refresh_skew_seconds (>=
-                # 120s) of life, so a 5s memo can never serve an expired token.
-                return _memo(access_token)
-
-            if not isinstance(refresh_token, str) or not refresh_token:
-                raise _nous_err(
-                    "Session expired and no refresh token is available.", "niki_auth_missing_refresh_token",
-                    relogin=True)
-
-            with httpx.Client(timeout=httpx.Timeout(timeout_seconds or 15.0),
-                              headers={"Accept": "application/json"}, verify=verify) as client:
-                refreshed = _refresh_nous_or_quarantine(
-                    client=client, auth_store=auth_store, state=state, portal_base_url=portal_base_url,
-                    client_id=client_id, refresh_token=refresh_token,
-                    reason="managed_access_token_refresh_failure", persist=persist)
-
-            _apply_nous_refreshed_tokens(state, refreshed, refresh_token)
-            state["portal_base_url"] = portal_base_url
-            state["client_id"] = client_id
-            state["tls"] = _tls_state_from_verify(verify)
-            persist()
-            _write_shared_nous_state(state)
-            return _memo(state["access_token"])
-
-
-# ── Status helpers ──────────────────────────────────────────────────────────────────────────────────
-
-# Process-level memo for get_nous_auth_status(): it validates via a synchronous refresh POST
-# (~350ms) and read-only UI surfaces call it many times per render (~31x per menu paint), burning
-# single-use refresh tokens. Keyed on auth.json path + mtime so profile switches don't share a memo
-# and login/logout/add/remove invalidate naturally.
-_NOUS_AUTH_STATUS_CACHE_TTL = 15.0  # seconds
-_nous_auth_status_cache: Optional[tuple[float, str, Optional[float], dict[str, Any]]] = None
-
-# mtime-keyed memo for _load_global_auth_store(): (path, mtime_ns, store); same invalidation rule.
-_global_auth_store_cache: Optional[tuple[str, int, dict[str, Any]]] = None
 
 
 def _auth_file_cache_key() -> tuple[str, Optional[float]]:
@@ -1918,28 +1740,8 @@ def _auth_file_cache_key() -> tuple[str, Optional[float]]:
         return _resolved_key(auth_file), None
 
 
-def invalidate_nous_auth_status_cache() -> None:
-    """Clear the get_nous_auth_status() memo (for code paths that mutate Niki auth state without
-    touching auth.json, e.g. tests; login/logout invalidate via the mtime check automatically)."""
-    global _nous_auth_status_cache
-    _nous_auth_status_cache = None
 
 
-def get_nous_auth_status() -> dict[str, Any]:
-    """Status snapshot for Niki auth, memoised ~15s keyed on the auth.json mtime.
-
-    Prefers the auth-store provider state (the live source of truth for refresh) and validates it by
-    resolving runtime credentials so revoked refresh sessions do not show up as a healthy login."""
-    global _nous_auth_status_cache
-    now = time.monotonic()
-    auth_file_key, mtime = _auth_file_cache_key()
-    cached = _nous_auth_status_cache
-    if (cached is not None and cached[1:3] == (auth_file_key, mtime)
-            and (now - cached[0]) < _NOUS_AUTH_STATUS_CACHE_TTL):
-        return dict(cached[3])
-    status = _compute_nous_auth_status()
-    _nous_auth_status_cache = (now, auth_file_key, mtime, dict(status))
-    return status
 
 
 @dataclass(frozen=True)
@@ -1970,15 +1772,7 @@ class OAuthProviderFlow:
 
 _OAUTH_GRANT_DEAD_CODES = frozenset({"invalid_grant", "invalid_token", "refresh_token_reused"})
 
-# Niki state-shape failures raised BEFORE any refresh POST (no login, no token pair): retrying
-# cannot succeed either, so the pool must not bench them as a transient outage (#113718).
-_NOUS_AUTH_MISSING_CODES = frozenset({
-    "niki_auth_missing", "niki_auth_missing_access_token", "niki_auth_missing_refresh_token"})
-
 OAUTH_PROVIDER_FLOWS: dict[str, OAuthProviderFlow] = {
-    "niki": OAuthProviderFlow(
-        "niki", "resolve_nous_runtime_credentials", "get_nous_auth_status",
-        terminal_refresh_codes=_OAUTH_GRANT_DEAD_CODES | _NOUS_AUTH_MISSING_CODES, logout_from_config=True),
     "openai-codex": OAuthProviderFlow(
         "openai-codex", "resolve_codex_runtime_credentials", "get_codex_auth_status",
         terminal_refresh_codes=_OAUTH_GRANT_DEAD_CODES | {"codex_refresh_failed", "codex_auth_missing_refresh_token"},
@@ -1999,7 +1793,6 @@ def _is_terminal_refresh_error(exc: Exception, provider: str) -> bool:
     return OAUTH_PROVIDER_FLOWS[provider].is_terminal_refresh_error(exc)
 
 
-_is_terminal_nous_refresh_error = partial(_is_terminal_refresh_error, provider="niki")
 _is_terminal_xai_oauth_refresh_error = partial(_is_terminal_refresh_error, provider="xai-oauth")
 _is_terminal_codex_oauth_refresh_error = partial(
     _is_terminal_refresh_error, provider="openai-codex")
@@ -2017,6 +1810,54 @@ def _codex_pool_rate_limited_status() -> Optional[dict[str, Any]]:
         "error": (rate_limit.get("message")
                   or "Codex provider quota exhausted; retry after the usage limit resets."),
         "reset_at": rate_limit.get("reset_at")}
+
+
+def _pool_first_oauth_status(
+    provider_id: str, *, is_expiring: Callable[[str, int], bool], auth_mode: str,
+    resolve: Callable[[], dict[str, Any]],
+    on_pool_miss: Optional[Callable[[], Optional[dict[str, Any]]]] = None) -> dict[str, Any]:
+    """Status snapshot for a store-backed OAuth provider (Codex, xAI).
+
+    Pool first (where `niki auth` / `niki model` store device_code tokens), then
+    *on_pool_miss* for a pool-derived degraded status, then the legacy state via *resolve*.
+
+    The pool read is an observation (``peek``), not a lease: ``select()`` refreshes an expiring
+    single-use token and, when that speculative POST fails transiently, benches the entry with a
+    persisted cooldown — every credential-gated listing (``/model`` picker, doctor) then shows the
+    provider as unconfigured while the runtime resolver still serves it. Refreshing stays with the
+    runtime resolver reached through *resolve*, whose failures persist nothing.
+    """
+    try:
+        from agent.credential_pool import load_pool
+        pool = load_pool(provider_id)
+        if pool and pool.has_credentials():
+            entry = pool.peek()
+            if entry is not None:
+                api_key = str(
+                    getattr(entry, "runtime_api_key", None) or getattr(entry, "access_token", ""))
+                if api_key and not is_expiring(api_key, 0):
+                    return {
+                        "logged_in": True, "auth_store": str(_auth_file_path()),
+                        "last_refresh": getattr(entry, "last_refresh", None),
+                        "auth_mode": auth_mode,
+                        "source": f"pool:{getattr(entry, 'label', 'unknown')}", "api_key": api_key,
+                        # The host this entry's key belongs to, so a caller never pairs it with
+                        # another provider default (#121486).
+                        "base_url": str(getattr(entry, "runtime_base_url", None)
+                                        or getattr(entry, "base_url", None) or "").rstrip("/")}
+            if on_pool_miss is not None and (degraded := on_pool_miss()):
+                return degraded
+    except Exception:
+        pass
+    try:
+        creds = resolve()
+        return {
+            "logged_in": True, "auth_store": str(_auth_file_path()),
+            "last_refresh": creds.get("last_refresh"),
+            "auth_mode": creds.get("auth_mode"), "source": creds.get("source"),
+            "api_key": creds.get("api_key"), "base_url": creds.get("base_url") or ""}
+    except AuthError as exc:
+        return {"logged_in": False, "auth_store": str(_auth_file_path()), "error": str(exc)}
 
 
 def get_codex_auth_status() -> dict[str, Any]:
@@ -2464,21 +2305,11 @@ def logout_command(args) -> None:
     if not target:
         print("No provider is currently logged in.")
         return
-    if target == "niki":
-        from niki_cli.anon_auth import FREE_TIER_NOT_SIGNED_IN, is_guest_state
-        if is_guest_state(get_provider_auth_state("niki")):
-            # Free tier is not a login; there is nothing to log out of and nothing is cleared.
-            print(FREE_TIER_NOT_SIGNED_IN)
-            return
     should_reset_config = _should_reset_config_provider_on_logout(target)
     provider_name = get_auth_provider_display_name(target)
     if not (clear_provider_auth(target) or should_reset_config):
         print(f"No auth state found for {provider_name}.")
         return
-    if target == "niki":
-        # A profile logout must not be re-adopted from the cross-profile store on the next boot.
-        from niki_cli.auth_niki import _clear_shared_nous_state
-        _clear_shared_nous_state("logout")
     if should_reset_config:
         _reset_config_provider()
     print(f"Logged out of {provider_name}.")

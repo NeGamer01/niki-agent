@@ -3,7 +3,6 @@ resolved through the module object so test patches on ``niki_cli.setup.<name>`` 
 
 import logging
 from tools import tool_backend_helpers
-from niki_cli import niki_subscription
 
 logger = logging.getLogger("niki_cli.setup")
 
@@ -206,16 +205,14 @@ def _print_setup_summary(config: dict, niki_home):
         print()
         _setup.print_warning("No inference provider is configured — Niki cannot chat yet.")
         _setup._info("  Finish this one step with either of:",
-              "    niki model            (pick any provider/model)",
-              "    niki setup --portal   (Niki Portal OAuth, no API key)")
+              "    niki model            (pick any provider/model)")
 
     print()
     _setup.print_header("Tool Availability Summary")
 
     tool_status = []
-    subscription_features = niki_subscription.get_nous_subscription_features(config)
     for build in _TOOL_ROW_BUILDERS:
-        row = build(config, subscription_features)
+        row = build(config, None)
         tool_status.extend(row if isinstance(row, list) else [] if row is None else [row])
 
     available_count = sum(1 for _, avail, _ in tool_status if avail)

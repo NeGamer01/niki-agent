@@ -16,34 +16,16 @@ _VALID_MODAL_MODES = {"auto", "direct", "managed"}
 
 
 def managed_nous_tools_enabled(*, force_fresh: bool = False) -> bool:
-    """Coarse gate: entitled to the Niki Tool Gateway (paid Portal access OR a live free
-    pool). Fails closed on unknown/error — never blocks startup. Callers narrow per category
-    via ``tool_gateway_entitled_for``; ``force_fresh`` is for flows needing a just-bought grant."""
-    try:
-        from niki_cli.niki_account import get_nous_portal_account_info
-        # Branched call, not ``force_fresh=force_fresh``: tests stub the reader with zero-arg lambdas.
-        account_info = (get_nous_portal_account_info(force_fresh=True) if force_fresh
-                        else get_nous_portal_account_info())
-        return bool(account_info.logged_in) and account_info.tool_gateway_entitled
-    except Exception:
-        return False
+    """The Niki Tool Gateway was removed; always False."""
+    return False
 
 
 def niki_tool_gateway_unavailable_message(capability: str = "the Niki Tool Gateway", *,
                                           force_fresh: bool = False) -> str:
-    """Return account-aware guidance for an unavailable Niki Tool Gateway path."""
-    try:
-        from niki_cli.niki_account import (
-            format_nous_portal_entitlement_message, get_nous_portal_account_info)
-        message = format_nous_portal_entitlement_message(
-            get_nous_portal_account_info(force_fresh=force_fresh), capability=capability,
-            in_chat=True)
-        if message:
-            return message
-    except Exception:
-        pass
-    return (f"{capability} is unavailable. Run `niki model` to refresh your "
-            "Niki Portal login and billing status.")
+    """The Niki Tool Gateway was removed; always reports unavailable."""
+    return f"{capability} is unavailable (the Niki Tool Gateway was removed)."
+
+
 
 
 def normalize_browser_cloud_provider(value: object | None) -> str:
@@ -74,21 +56,15 @@ def has_direct_modal_credentials() -> bool:
 
 
 def resolve_modal_backend_state(modal_mode: object | None, *, has_direct: bool,
-                                managed_ready: bool,
+                                managed_ready: bool = False,
                                 managed_enabled: bool | None = None) -> dict[str, Any]:
-    """Resolve direct vs managed Modal backend: ``direct``/``managed`` are exclusive; ``auto``
-    prefers managed when available, else direct."""
+    """Resolve the Modal backend: only direct credentials are supported (the managed gateway
+    was removed)."""
     requested_mode = coerce_modal_mode(modal_mode)
-    if managed_enabled is None:
-        managed_enabled = managed_nous_tools_enabled()
-    managed_ok = managed_enabled and managed_ready
-    exclusive = {"managed": "managed" if managed_ok else None,
-                 "direct": "direct" if has_direct else None}
-    selected_backend = exclusive.get(
-        requested_mode, "managed" if managed_ok else "direct" if has_direct else None)
+    selected_backend = "direct" if has_direct else None
     return {"requested_mode": requested_mode, "mode": requested_mode, "has_direct": has_direct,
-            "managed_ready": managed_ready,
-            "managed_mode_blocked": requested_mode == "managed" and not managed_enabled,
+            "managed_ready": False,
+            "managed_mode_blocked": requested_mode == "managed",
             "selected_backend": selected_backend}
 
 

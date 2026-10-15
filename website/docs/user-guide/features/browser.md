@@ -37,7 +37,7 @@ Key capabilities:
 ## Setup
 
 :::tip Niki Subscribers
-If you have a paid [Niki Portal](https://portal.nousresearch.com) subscription, you can use browser automation through the **[Tool Gateway](tool-gateway.md)** without any separate API keys. New installs can run `niki setup --portal` to log in and turn on every gateway tool at once; existing installs can pick **Niki Subscription** as the browser provider via `niki model` or `niki tools`.
+If you have a paid Niki Portal subscription, you can use browser automation through the **[Tool Gateway](tool-gateway.md)** without any separate API keys. New installs can run `niki setup --portal` to log in and turn on every gateway tool at once; existing installs can pick **Niki Subscription** as the browser provider via `niki model` or `niki tools`.
 :::
 
 ### Browser Use cloud mode

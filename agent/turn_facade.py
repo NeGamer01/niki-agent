@@ -44,10 +44,6 @@ class TurnFacadeMixin:
         from agent.aux_accounting import reset_accounting_context, set_accounting_context
         from agent.auxiliary_client import scoped_runtime_main
         from agent.conversation_loop import run_conversation
-        from agent.portal_tags import (
-            reset_affinity_scope, reset_conversation_context, set_affinity_scope,
-            set_conversation_context,
-        )
         from agent.prompt_cache_scope import declared_conversation_scope_safe
         from agent.relay_cwd import resolve_relay_scope_cwds
         from agent.review_idle_queue import QUEUE as _review_queue
@@ -127,11 +123,8 @@ class TurnFacadeMixin:
                     parent_session_id=getattr(self, "_parent_session_id", None) or "",
                 )
                 task_started = True
-            # Ambient Niki Portal tagging: every LLM call in this turn (loop, compression,
-            # vision, MoA, review forks) inherits `conversation=<root>`; host-declared
-            # affinity scope falls back to it; accounting handles route aux usage to the session.
-            token = set_conversation_context(self._conversation_root_id())
-            affinity_token = set_affinity_scope(declared_conversation_scope_safe(self))
+            token = None
+            affinity_token = None
             # Publish the session accounting handles the same way so auxiliary calls record their token
             # usage into session_model_usage (task dimension) — the fix for aux spend being invisible in
             # analytics (issue #23270).
@@ -209,11 +202,7 @@ class TurnFacadeMixin:
                         self._relay_pending_turn_id = None
                     if acct_token is not None:
                         reset_accounting_context(acct_token)
-                    if token is not None:
-                        reset_conversation_context(token)
-                    if affinity_token is not None:
-                        reset_affinity_scope(affinity_token)
-                    # Balance note_turn_started so the idle queue's live-turn count cannot leak.
+                        affinity_token = None
                     with suppress(Exception):
                         _review_queue.note_turn_finished()
 

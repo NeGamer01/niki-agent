@@ -3193,7 +3193,7 @@
  },
  "base-url:niki": {
   "api_mode": "chat_completions",
-  "base_url": "https://inference-api.nousresearch.com/v1",
+  "base_url": "https://inference-api.example.com/v1",
   "high": {
    "extra_body": {
     "reasoning": {
@@ -8218,7 +8218,7 @@
  },
  "niki": {
   "api_mode": "chat_completions",
-  "base_url": "https://inference-api.nousresearch.com/v1",
+  "base_url": "https://inference-api.example.com/v1",
   "high": {
    "extra_body": {
     "reasoning": {

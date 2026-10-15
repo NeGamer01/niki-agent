@@ -38,7 +38,6 @@ from tools.image_generation_catalog import (
     UPSCALER_FACTOR, UPSCALER_GUIDANCE_SCALE, UPSCALER_MODEL, UPSCALER_NEGATIVE_PROMPT,
     UPSCALER_NUM_INFERENCE_STEPS, UPSCALER_RESEMBLANCE, UPSCALER_SAFETY_CHECKER, VALID_ASPECT_RATIOS,
 )
-from tools.managed_tool_gateway import resolve_managed_tool_gateway
 from tools.tool_backend_helpers import (
     NIKI_MANAGED_PROVIDER, fal_key_is_configured, managed_nous_tools_enabled,
     niki_tool_gateway_unavailable_message, read_selection, selection_error)
@@ -51,46 +50,8 @@ _managed_fal_client_config = None
 _managed_fal_client_lock = threading.Lock()
 
 
-# --- Managed FAL gateway (Niki Subscription) ---
-def _resolve_managed_fal_gateway():
-    """Managed gateway config for the stored `niki tools` selection, or ``None`` for direct FAL.
-
-    ``"niki"`` (or legacy ``use_gateway: true``) → managed ONLY (unreachable = selection-naming
-    error, never a silent FAL_KEY fallback). Other stored provider → direct ONLY (missing FAL_KEY
-    = error naming the selection). Never configured → autodetect: direct if FAL_KEY, else managed.
-    """
-    selected = read_selection("image_gen")
-    if selected == NIKI_MANAGED_PROVIDER:
-        gateway = resolve_managed_tool_gateway("fal-queue")
-        if gateway is None:
-            raise ValueError(selection_error(
-                "image_gen", NIKI_MANAGED_PROVIDER,
-                "the Niki Tool Gateway is not available (not entitled or unreachable)"))
-        return gateway
-    if selected is not None:
-        if fal_key_is_configured():
-            return None
-        raise ValueError(selection_error("image_gen", selected, "FAL_KEY is not set"))
-    # Never-configured category: legacy credential autodetect (do NOT persist).
-    return None if fal_key_is_configured() else resolve_managed_tool_gateway("fal-queue")
 
 
-def _get_managed_fal_client(managed_gateway):
-    """Reuse the managed FAL client so its internal httpx.Client is not leaked per call."""
-    global _managed_fal_client, _managed_fal_client_config
-    client_config = (managed_gateway.gateway_origin.rstrip("/"), managed_gateway.niki_user_token)
-    with _managed_fal_client_lock:
-        if _managed_fal_client is None or _managed_fal_client_config != client_config:
-            # Resolved on this module so monkeypatching ``image_generation_tool.fal_client`` still applies.
-            _managed_fal_client = _ManagedFalSyncClient(
-                _load_fal_client(), key=managed_gateway.niki_user_token,
-                queue_run_origin=managed_gateway.gateway_origin)
-            _managed_fal_client_config = client_config
-        return _managed_fal_client
-
-
-class ImageGenerationInterrupted(Exception):
-    """Raised when the user interrupts while a FAL job is in flight."""
 
 
 def _wait_fal_result(handler, *, poll_seconds: float = 0.5):
@@ -117,6 +78,11 @@ def _wait_fal_result(handler, *, poll_seconds: float = 0.5):
     if error_box:
         raise error_box[0]
     return result_box[0] if result_box else None
+
+
+def _resolve_managed_fal_gateway():
+    """The managed gateway was removed; always ``None`` (direct FAL credentials only)."""
+    return None
 
 
 def _submit_fal_request(model: str, arguments: dict[str, Any]):

@@ -13,7 +13,7 @@ After a dependency change, reactivate the checkout and restart Niki.
 Niki Agent supports both text-to-speech output and voice message transcription across all messaging platforms.
 
 :::tip Niki Subscribers
-If you have a paid [Niki Portal](https://portal.nousresearch.com) subscription, OpenAI TTS is available through the **[Tool Gateway](tool-gateway.md)** without a separate OpenAI API key. New installs can run `niki setup --portal` to log in and turn on every gateway tool at once; existing installs can pick **Niki Subscription** for just TTS via `niki model` or `niki tools`.
+If you have a paid Niki Portal subscription, OpenAI TTS is available through the **[Tool Gateway](tool-gateway.md)** without a separate OpenAI API key. New installs can run `niki setup --portal` to log in and turn on every gateway tool at once; existing installs can pick **Niki Subscription** for just TTS via `niki model` or `niki tools`.
 :::
 
 ## Text-to-Speech

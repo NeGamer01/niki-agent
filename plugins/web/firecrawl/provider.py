@@ -13,7 +13,6 @@ from typing import Any, Dict, List, Optional
 import httpx
 
 from plugins.web._common import BaseWebSearchProvider, keyless_extract, keyless_search, search_fail, search_ok, setup_schema
-from tools import managed_tool_gateway as _gateway
 from tools import tool_backend_helpers as _backend_helpers
 from tools.url_safety import is_safe_url
 # Module-level (cheap import) so tests can monkeypatch the policy gate on this module.
@@ -134,13 +133,10 @@ class _KeylessFirecrawlClient:
         return self._post("/v2/scrape", payload)
 
 
-def _get_firecrawl_gateway_url() -> str:
-    return _gateway.build_vendor_gateway_url("firecrawl")
-
 
 def _is_tool_gateway_ready() -> bool:
-    """True when gateway URL + Niki Subscriber token are available."""
-    return _gateway.resolve_managed_tool_gateway("firecrawl", token_reader=_gateway.peek_nous_access_token) is not None
+    """The managed gateway was removed; always False."""
+    return False
 
 
 def check_firecrawl_api_key() -> bool:
@@ -182,11 +178,6 @@ def _get_firecrawl_client(capability: Optional[str] = None) -> Any:
     selected = read_web_capability_selection(capability)
     direct_config = _get_direct_firecrawl_config()
 
-    def _managed():
-        gw = _gateway.resolve_managed_tool_gateway("firecrawl", token_reader=_gateway.read_nous_access_token)
-        if gw is None:
-            return None
-        return "sdk", {"api_key": gw.niki_user_token, "api_url": gw.gateway_origin}, ("tool-gateway", gw.gateway_origin, gw.niki_user_token)
 
     def _unconfigured_message() -> str:
         message = "Web tools are not configured. Set FIRECRAWL_API_KEY for cloud Firecrawl or set FIRECRAWL_API_URL for a self-hosted Firecrawl instance."

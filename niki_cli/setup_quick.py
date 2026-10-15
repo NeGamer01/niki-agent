@@ -35,106 +35,10 @@ def _reload_config_into(config: dict, *, dict_only: bool = False) -> None:
         config.update(refreshed)
 
 
-def _run_nous_flow(config: dict, *, context: str, cancel_exc: tuple, cancel_lines: tuple, print_error) -> bool:
-    """Run ``_model_flow_niki`` (login, model pick, provider switch, Tool Gateway opt-in) — the
-    single source of truth shared with ``niki model``. False when cancelled or failed (the
-    message is already printed)."""
-    from niki_cli.setup import _info
-    try:
-        from niki_cli.model_setup_flows import _model_flow_niki
-        _model_flow_niki(config)
-        return True
-    except cancel_exc:
-        # _login_niki raises SystemExit(130)/(1) on cancel/failure; the expired-session re-login
-        # path inside _model_flow_niki only catches Exception, so SystemExit would kill the CLI.
-        _info(*cancel_lines)
-    except Exception as exc:
-        logger.debug("_model_flow_niki error during %s: %s", context, exc)
-        print_error(exc)
-    return False
 
 
-def _run_portal_one_shot(config: dict) -> None:
-    """One-shot Niki Portal setup (``niki setup --portal`` / ``niki portal``)."""
-    from niki_cli.setup import _info, _print_banner, _record_setup_completed, print_error, print_info, print_success
-    _print_banner("│     ☤ Niki Setup — Niki Portal (one-shot)             │")
-    _info(None, "  One subscription, 300+ models, plus the Tool Gateway:",
-          "    web search, image generation, TTS, browser automation",
-          "    — all routed through your Niki Portal sub.", None,
-          "  Sign up: https://portal.nousresearch.com/manage-subscription", None)
-
-    def _on_error(exc: Exception) -> None:
-        from niki_cli.auth_error_copy import provider_setup_failure_lines
-        print()
-        lead, *rest = provider_setup_failure_lines(exc, retry_command="niki portal")
-        print_error(f"  {lead}")
-        for line in rest:
-            print_info(f"  {line}")
-
-    if not _run_nous_flow(config, context="`niki portal`", cancel_exc=(KeyboardInterrupt, EOFError, SystemExit),
-                          cancel_lines=(None, "  Setup cancelled.", "  You can retry later with `niki portal`."),
-                          print_error=_on_error):
-        return
-
-    # Re-sync from disk so a caller's later save_config(config) can't clobber the login save.
-    with contextlib.suppress(Exception):
-        _reload_config_into(config, dict_only=True)
-    print()
-    print_success("Portal setup complete.")
-    _info("  Run `niki portal info` to inspect routing.", "  Run `niki` to start chatting.")
-    _record_setup_completed(config)
 
 
-def _run_first_time_quick_setup(config: dict, niki_home, is_existing: bool):
-    """Streamlined first-time setup via Niki Portal: OAuth, model, terminal & messaging;
-    everything else gets defaults."""
-    from niki_cli.setup import (
-        _apply_default_agent_settings, _info, print_header, print_info, _print_setup_summary, print_success,
-        print_warning, prompt_choice, save_config, setup_gateway, setup_terminal_backend
-    )
-    # Step 1: Niki Portal — OAuth login + model selection (provider set to "niki" by the save).
-    print_header("Niki Portal", gap=True)
-    _info("One subscription, 300+ models, plus the Tool Gateway:",
-          "  web search, image generation, TTS, browser automation.",
-          "Sign up: https://portal.nousresearch.com/manage-subscription", None)
-
-    def _on_error(exc: Exception) -> None:
-        from niki_cli.auth_error_copy import provider_setup_failure_lines
-        lead, *rest = provider_setup_failure_lines(exc, retry_command="niki model")
-        print_warning(lead)
-        for line in rest:
-            print_info(line)
-
-    _run_nous_flow(config, context="quick setup", cancel_exc=(KeyboardInterrupt, EOFError),
-                   cancel_lines=(None, "Niki Portal setup cancelled."), print_error=_on_error)
-    # The wizard's later save_config(config) must not clobber the login/model save.
-    _reload_config_into(config)
-
-    # Step 2: Terminal Backend; Step 3: defaults for everything else.
-    setup_terminal_backend(config)
-    _apply_default_agent_settings(config)
-    save_config(config)
-
-    # Step 4: Offer messaging gateway setup
-    print()
-    gateway_choice = prompt_choice("Connect a messaging platform? (Telegram, Discord, etc.)", [
-        "Set up messaging now (recommended)", "Skip — set up later with 'niki setup gateway'",
-    ], 0)
-    if gateway_choice == 0:
-        setup_gateway(config)
-        save_config(config)
-    else:
-        # Messaging is optional; service persistence still requires explicit consent.
-        from niki_cli.gateway_setup_service import ensure_gateway_service
-        ensure_gateway_service(context="setup", interactive=True, config=config)
-    print()
-    print_success("Setup complete! You're ready to go.")
-    _info(None, "  Configure all settings:    niki setup")
-    if gateway_choice != 0:
-        print_info("  Connect Telegram/Discord:  niki setup gateway")
-    _print_macos_fda_tip()
-    print()
-    _print_setup_summary(config, niki_home)
 
 
 def _print_macos_fda_tip() -> None:

@@ -447,8 +447,7 @@ async def _start_gateway_shutdown_tail(
             logger.debug("Control socket stop failed (non-fatal)", exc_info=True)
 
     def _stop_keepalive() -> None:
-        from niki_cli.niki_auth_keepalive import stop_nous_auth_keepalive
-        stop_nous_auth_keepalive()
+        pass
 
     _best_effort(_stop_keepalive)
 
@@ -795,8 +794,7 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
             return record_startup()
 
         def _start_keepalive() -> None:
-            from niki_cli.niki_auth_keepalive import start_nous_auth_keepalive
-            start_nous_auth_keepalive()
+            pass
 
         _unclean_exit = _best_effort(_lifecycle_record_startup, "Lifecycle ledger startup record failed: %s")
         _best_effort(_start_keepalive, "Niki auth keepalive did not start: %s")

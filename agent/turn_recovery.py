@@ -101,18 +101,6 @@ def _image_error_max_dimension(error: Exception) -> Optional[int]:
     return max_dimension if 512 <= max_dimension <= 8000 else None
 
 
-def _try_refresh_nous_paid_entitlement_credentials(agent) -> bool:
-    """Refresh Niki runtime credentials after a fresh paid-entitlement check."""
-    try:
-        from niki_cli.niki_account import get_nous_portal_account_info
-
-        if get_nous_portal_account_info(force_fresh=True).paid_service_access is not True:
-            return False
-        return agent._try_refresh_nous_client_credentials(force=True)
-    except Exception:
-        return False
-
-
 def _repair_transport_credentials(agent: Any) -> bool:
     """Strip non-ASCII from ``_client_kwargs["default_headers"]`` and the API key.
 
@@ -325,43 +313,6 @@ def recover_before_classification(
     return False, active_system_prompt
 
 
-def _print_nous_401_diagnostics(agent: Any, api_error: Exception) -> None:
-    """Niki 401 that survived a credential refresh: likely Portal OAuth expired/revoked,
-    no credits, or agent key blocked."""
-    from agent.conversation_loop import _print_nous_entitlement_guidance
-    from niki_constants import display_niki_home
-    _body_text = ""
-    try:
-        _body = getattr(api_error, "body", None) or getattr(api_error, "response", None)
-        if _body is not None:
-            _body_text = str(_body)[:200]
-    except Exception:
-        pass
-    _plines(agent, "🔐 Niki 401 — Portal authentication failed.")
-    if _body_text:
-        _plines(agent, f"   Response: {_body_text}")
-    try:
-        from niki_cli.anon_auth import is_anonymous_agent
-        if is_anonymous_agent(agent):
-            # The free tier has no credits, no agent key and no auth.json to inspect: its session
-            # ended and could not be replaced. The two doors are a sign-in or another provider.
-            _plines(agent, "   Your session ended and Niki couldn't start a new one.",
-                    "   Sign in with a Niki account (it's free), or switch providers with /model.")
-            return
-    except Exception:
-        pass
-    if not _print_nous_entitlement_guidance(agent, "Niki model access"):
-        _plines(agent, "   Most likely: Portal OAuth expired, account out of credits, or agent key revoked.")
-    _plines(
-        agent,
-        "   Troubleshooting:",
-        "     • Re-authenticate: niki auth add niki",
-        "     • Check credits / billing: https://portal.nousresearch.com",
-        f"     • Verify stored credentials: {display_niki_home()}/auth.json",
-        "     • Switch providers temporarily: /model <model> --provider openrouter",
-    )
-
-
 def _print_anthropic_401_diagnostics(agent: Any, key: Any) -> None:
     """Anthropic 401 that survived a credential refresh: show auth method + fixes."""
     from agent.anthropic_credentials import _is_oauth_token
@@ -423,16 +374,6 @@ def _refresh_credentials_after_401(
         if agent._try_refresh_vertex_client_credentials():
             agent._buffer_vprint("🔐 Vertex AI token refreshed after 401. Retrying request...")
             return True
-    if (
-        agent.api_mode in ("chat_completions", "anthropic_messages")
-        and agent.provider == "niki"
-        and not _retry.niki_auth_retry_attempted
-    ):
-        _retry.niki_auth_retry_attempted = True
-        if agent._try_refresh_nous_client_credentials(force=True):
-            agent._buffer_vprint("🔐 Niki agent key refreshed after 401. Retrying request...")
-            return True
-        _print_nous_401_diagnostics(agent, api_error)
     if _is_copilot_provider(agent) and not _retry.copilot_auth_retry_attempted:
         _retry.copilot_auth_retry_attempted = True
         if agent._try_refresh_copilot_client_credentials():
@@ -541,56 +482,6 @@ def _recover_format_errors(
     return False
 
 
-_WELCOME_ROUTE_HEAL_COPY = {
-    "anon_on_paid_host": "Reconnected to the free model's own route.",
-    "named_on_welcome_host": "Reconnected to your Niki account's own route.",
-    "session_expired": "Renewed the connection to the free model.",
-}
-
-
-def _recover_welcome_tier(agent: Any, classified: Any, _retry: TurnRetryState) -> bool:
-    """Two one-shot repairs for the Niki free tier, both silent on the wire and named once in chat.
-
-    ``model_not_free``: the session asked the welcome host for a model it does not serve; move
-    to the first alternate the gateway named (its own model) and retry, instead of failing the
-    turn. ``anon_on_paid_host`` / ``named_on_welcome_host``: this process is pointed at the other
-    identity's host (a stale route); re-read the credentials, which heals the URL, and retry. The
-    refresh reports False when the store yields the same route, so a user-set
-    ``NIKI_INFERENCE_BASE_URL`` falls straight through to the terminal copy. ``session_expired``
-    (403 ``invalid jwt``): the same forced refresh re-exchanges the free credential.
-
-    Reads the CLASSIFIER's context (``classified.error_context``): that is where
-    ``_nous_welcome_tier`` parks ``welcome_refusal`` / ``welcome_route``. The turn's other context
-    (``extract_api_error_context``) never carries them."""
-    ctx = getattr(classified, "error_context", None) or {}
-    refusal = ctx.get("welcome_refusal") if isinstance(ctx, dict) else None
-    if isinstance(refusal, dict) and refusal.get("reason") == "model_not_free" and not _retry.welcome_model_switch_attempted:
-        _retry.welcome_model_switch_attempted = True
-        alternates = [a for a in (refusal.get("alternates") or []) if isinstance(a, str) and a]
-        requested = str(getattr(agent, "model", "") or "")
-        target = alternates[0] if alternates else None
-        if target and target != requested:
-            try:
-                agent.model = target
-                agent._nous_model_switch = (requested, target)
-            except Exception:
-                return False
-            _vlines(agent, f"↪️  {requested} isn't available without signing in; using {target} for now. Retrying...")
-            logger.info("%sNous free tier: moved %s -> %s after model_not_free", agent.log_prefix, requested, target)
-            return True
-    route = ctx.get("welcome_route") if isinstance(ctx, dict) else None
-    if route in _WELCOME_ROUTE_HEAL_COPY and not _retry.welcome_route_heal_attempted:
-        _retry.welcome_route_heal_attempted = True
-        try:
-            healed = bool(agent._try_refresh_nous_client_credentials(force=True))
-        except Exception:
-            healed = False
-        if healed:
-            _vlines(agent, f"🔐 {_WELCOME_ROUTE_HEAL_COPY[route]} Retrying request...")
-            return True
-    return False
-
-
 def _clamp_to_affordable_budget(agent: Any, api_error: Exception, classified: Any, _retry: TurnRetryState) -> bool:
     """A credit-limited 402 (OpenRouter: "...requested up to 65536 tokens, but can only afford
     56272") means the account has credit and the output cap was too large: retry ONCE with the
@@ -624,17 +515,15 @@ def recover_after_classification(
 ) -> tuple[bool, bool]:
     """One-shot recovery chain that runs AFTER ``classify_api_error`` and before the
     generic retry path. Order is load-bearing (each branch may ``return`` early):
-    welcome-tier repair → credit-limited 402 output-cap clamp → ``reasoning.context`` opt-out → Niki paid-entitlement refresh →
+    credit-limited 402 output-cap clamp → ``reasoning.context`` opt-out →
     Codex stale-reasoning strip on 401 ``token_expired`` → credential-pool rotation → image shrink → multimodal-tool-content strip → corrupt-image
     strip → Anthropic OAuth 1M-beta disable → per-provider 401 credential refresh →
     format-recovery strips.
-    Returns ``(retry_now, recovered_with_pool)``; the latter feeds the Niki rate-limit guard."""
-    from agent.conversation_loop import _is_nous_inference_route
-
+    Returns ``(retry_now, recovered_with_pool)``."""
     # The credit-limited 402 clamp runs before pool rotation, which would bench a credential
     # that still has credit. A ``reasoning.context`` 400 is classified reasoning_mandatory, whose rung
     # would drop the whole reasoning config; omit only the all_turns opt-in, ahead of it.
-    if _recover_welcome_tier(agent, classified, _retry) or _clamp_to_affordable_budget(
+    if _clamp_to_affordable_budget(
         agent, api_error, classified, _retry
     ) or (agent.api_mode == "codex_responses" and _reject_all_turns(agent, api_error)):
         return True, False
@@ -647,18 +536,6 @@ def recover_after_classification(
         agent, _retry, messages, api_messages
     ):
         return True, False
-
-    if (
-        classified.reason == FailoverReason.billing
-        and _is_nous_inference_route(
-            getattr(agent, "provider", "") or "", getattr(agent, "base_url", "") or ""
-        )
-        and not _retry.niki_paid_entitlement_refresh_attempted
-    ):
-        _retry.niki_paid_entitlement_refresh_attempted = True
-        if _try_refresh_nous_paid_entitlement_credentials(agent):
-            _vlines(agent, "🔐 Niki paid access verified — refreshed runtime credentials and retrying request...")
-            return True, False
 
     recovered_with_pool, _retry.has_retried_429 = agent._recover_with_credential_pool(
         status_code=status_code, has_retried_429=_retry.has_retried_429,
@@ -843,14 +720,12 @@ def _print_nonretryable_auth_guidance(
     agent: Any, classified: Any, *, status_code: Optional[int], provider: Any, base_url: Any, model: Any,
 ) -> None:
     """Actionable guidance for a terminal auth / billing error."""
-    from agent.conversation_loop import _print_billing_or_entitlement_guidance, _print_nous_entitlement_guidance
+    from agent.conversation_loop import _print_billing_or_entitlement_guidance
 
     if classified.reason == FailoverReason.billing and _print_billing_or_entitlement_guidance(
         agent, capability="model access", provider=provider, base_url=str(base_url),
         model=model, unverified=classified.billing_unverified,
     ):
-        return
-    if provider == "niki" and _print_nous_entitlement_guidance(agent, "Niki model access"):
         return
     if provider in {"openai-codex", "xai-oauth", "niki"} and status_code == 401:
         if provider == "openai-codex":
@@ -868,24 +743,6 @@ def _print_nonretryable_auth_guidance(
                 "   💡 xAI OAuth token was rejected (HTTP 401). To fix:",
                 "      re-authenticate with xAI Grok OAuth (SuperGrok / Premium+) from `niki model`.",
             )
-        else:  # niki
-            _vlines(
-                agent,
-                "   💡 Niki Portal OAuth token was rejected (HTTP 401). Your token may be",
-                "      expired, revoked, or your account may be out of credits. To fix:",
-                "      1. Re-authenticate: niki portal",
-                "      2. Check your portal account: https://portal.nousresearch.com",
-            )
-            # ``:free`` is OpenRouter slug syntax; Niki Portal will reject the model
-            # name even after a successful re-auth.
-            if isinstance(model, str) and model.endswith(":free"):
-                _vlines(
-                    agent,
-                    f"      ⚠️  Note: `{model}` looks like an OpenRouter slug (`:free` suffix).",
-                    "         Niki Portal won't recognize that model name. Either switch to a",
-                    f"         Niki catalog model, or run `/model openrouter:{model}` to use OpenRouter.",
-                )
-        return
     from niki_cli.auth_plugin_providers import plugin_refresh_hook
     if status_code == 401 and plugin_refresh_hook(str(provider or "")) is not None:
         # A plugin OAuth grant the pool could not refresh: the fix is a fresh sign-in, not a key.
@@ -903,16 +760,8 @@ def _print_nonretryable_auth_guidance(
 
 
 def _welcome_tier_guidance(classified: Any, *, model: Any, in_chat: bool, door: bool = True) -> str:
-    """Copy for a Niki free-tier refusal the classifier parsed (``welcome_refusal`` /
-    ``welcome_route`` in ``error_context``); empty for every other error."""
-    ctx = getattr(classified, "error_context", None) or {}
-    refusal, route = ctx.get("welcome_refusal"), ctx.get("welcome_route")
-    if not refusal and not route:
-        return ""
-    from niki_cli.anon_auth import welcome_refusal_copy, welcome_route_refusal_copy
-    if refusal:
-        return welcome_refusal_copy(refusal, model=str(model or ""), in_chat=in_chat, door=door)
-    return welcome_route_refusal_copy(str(route), in_chat=in_chat, door=door)
+    """Portal free tier dihapus: selalu kosong (copy generik yang dipakai)."""
+    return ""
 
 
 # Closed table: every card kind the desktop has copy for. An unknown gateway reason lands on
@@ -950,19 +799,10 @@ def _stamp_free_tier(result: dict[str, Any], kind: str, message: str) -> dict[st
 
 
 def _welcome_outage_copy(agent: Any, base_url: Any, classified: Any) -> str:
-    """On the Niki free tier, a transport / server failure that outlived every retry reads as one
-    plain sentence (the free model is having trouble) rather than the technical summary. Empty
-    for every other route and for rate limits / billing, which have their own copy."""
-    from niki_cli.anon_auth import FREE_TIER_OUTAGE_COPY, on_free_model
-    # Not ``unknown``: that is the classifier's catch-all for status-less local failures, which
-    # are not the free model's trouble.
-    if on_free_model(agent, base_url) and classified.reason in (
-            FailoverReason.timeout, FailoverReason.overloaded, FailoverReason.server_error):
-        return FREE_TIER_OUTAGE_COPY
+    """Portal free tier dihapus: selalu kosong."""
     return ""
 
 
-# Terminal status label per non-retryable reason (default names the HTTP status).
 _NONRETRYABLE_LABELS = {
     FailoverReason.content_policy_blocked: "The provider's safety filter refused this request",
     FailoverReason.upstream_blocked: "A firewall/CDN in front of the provider blocked this request",
@@ -1128,10 +968,10 @@ def max_retries_exhausted_result(
     """Terminal path once retries, transport recovery and fallback all failed: flush the
     trace, emit the billing / rate-limit / generic status, print stream-drop or thinking-timeout
     guidance (the latter wins), persist, build the result with ``failure_reason`` /
-    ``failure_retryable`` / ``billing_block``."""
+    ``failure_retryable``."""
     # Result/guidance helpers stay in the loop module (tests import + patch them there).
     from agent.conversation_loop import (
-        _billing_block_dict, _billing_or_entitlement_message, _billing_terminal_label,
+        _billing_or_entitlement_message, _billing_terminal_label,
         _print_billing_or_entitlement_guidance,
     )
 
@@ -1204,10 +1044,6 @@ def max_retries_exhausted_result(
         _final_response = _billing_terminal_label(_final_summary, _billing_unverified)
         if _billing_guidance:
             _final_response += f"\n\n{_billing_guidance}"
-        # Structured recovery descriptor so every surface renders the same link + label.
-        _billing_block = _billing_block_dict(
-            provider, base_url, model, _billing_guidance, unverified=_billing_unverified
-        )
     else:
         # Every surface reads final_response (the 💡 lines above are CLI-only), so the chat
         # text carries the plain what-happened + next step itself.
@@ -1240,8 +1076,6 @@ def max_retries_exhausted_result(
         "failure_retryable": bool(classified.retryable),
         # True when the billing verdict rests on an ambiguous body.
         "billing_unverified": _billing_unverified,
-        # Present only for billing walls: (provider, billing_url, is_niki, message).
-        "billing_block": _billing_block,
     })
     # Retry-exhaustion after partial delivery (#119001): the text was already
     # shown, so keep it as the reply (marked failed) instead of an error-only
@@ -1371,9 +1205,6 @@ def interruptible_backoff_sleep(
         _touch_counter += 1
         if _touch_counter % 150 == 0:  # 150 × 0.2s = 30s
             agent._touch_activity(f"{activity_label}, {int(sleep_end - time.time())}s remaining")
-    # A long wait can outlive a short-lived credential (the free tier's JWT lives 15 minutes), and
-    # the per-iteration pre-expiry adoption does not run between retries.
-    agent._adopt_nous_key_before_expiry()
     return None
 
 
@@ -1413,8 +1244,6 @@ def compute_error_backoff(
         LIVE_RETRY_WAIT_CAP_S, RETRY_AFTER_CAP_S, adaptive_rate_limit_backoff, jittered_backoff,
         provider_retry_after_seconds,
     )
-    from niki_cli.anon_auth import on_free_model
-
     # Respect Retry-After on every retryable provider error, not just 429s. Retryable
     # 5xx responses (e.g. Cloudflare 520/524) also carry the header or a structured
     # ``retry_after`` problem-detail body field; ignoring either turns an origin
@@ -1430,7 +1259,7 @@ def compute_error_backoff(
             retry_count, base_url=str(base_url), model=model, error=api_error, default_wait=wait_time,
         )
     _reset = reset_hint(api_error) if _adaptive else ""
-    _free_busy = is_rate_limited and on_free_model(agent, base_url)
+    _free_busy = False  # portal free tier dihapus
     _wait_reason = ("The free model is busy" if _free_busy
                     else "Provider overloaded" if is_zai_coding_overload and not is_rate_limited else "Rate limited")
     if _adaptive:
@@ -1473,12 +1302,7 @@ def free_tier_cooldown_ends_turn(agent: Any, api_error: Exception, base_url: Any
     ``niki chat -q``), waits out its ``Retry-After``: a paid bucket reopens on time, and
     ``fallback.min_switch_reset_seconds`` relies on that wait."""
     from agent.retry_utils import LIVE_RETRY_WAIT_CAP_S, provider_retry_after_seconds
-    from agent.session_source import is_attended
-    from niki_cli.anon_auth import on_free_model
-    if not (on_free_model(agent, base_url) and is_attended(agent)):
-        return False
-    cooldown = provider_retry_after_seconds(api_error)
-    return cooldown is not None and cooldown > LIVE_RETRY_WAIT_CAP_S
+    return False  # portal free tier dihapus
 
 
 def _codex_soft_failure_error(response: Any) -> dict[str, Any]:
@@ -1728,40 +1552,8 @@ def activate_codex_app_server_fallback(agent: Any, result: dict[str, Any]) -> bo
 
 
 def _is_genuine_nous_rate_limit(agent: Any, api_error: Exception, error_context: Any, classified: Any = None) -> bool:
-    """Record a genuine account-level Niki 429 to the cross-session breaker; upstream
-    capacity 429s (no exhausted bucket in headers or last-known state) are left alone.
-
-    *error_context* is the turn's (``extract_api_error_context``); *classified* brings the
-    classifier's own context, where a welcome-tier ``rate_limited`` refusal and its ``reset_at``
-    live. A long welcome reset is an exhausted allowance whatever the headers say, and the one
-    place the user is told that signing in lifts it."""
-    _genuine = False
-    try:
-        from agent.niki_rate_guard import (
-            is_genuine_nous_rate_limit, is_long_welcome_rate_limit, record_nous_rate_limit)
-        _err_resp = getattr(api_error, "response", None)
-        _err_hdrs = getattr(_err_resp, "headers", None) if _err_resp else None
-        from niki_cli.anon_auth import is_anonymous_agent
-        anonymous = is_anonymous_agent(agent)
-        _classified_ctx = getattr(classified, "error_context", None) or {}
-        # Only an anonymous request's fairshare body is an allowance verdict; named
-        # requests keep the exhausted-bucket rule, whatever their host or body says.
-        _genuine = (
-            (anonymous and is_long_welcome_rate_limit(_classified_ctx))
-            or is_genuine_nous_rate_limit(headers=_err_hdrs, last_known_state=agent._rate_limit_state))
-        if _genuine:
-            _merged = {**(error_context if isinstance(error_context, dict) else {}), **_classified_ctx}
-            record_nous_rate_limit(headers=_err_hdrs, error_context=_merged, anonymous=anonymous)
-        else:
-            logger.info(
-                "Niki 429 looks like upstream capacity "
-                "(no exhausted bucket in headers or "
-                "last-known state) -- not tripping "
-                "cross-session breaker."
-            )
-    except Exception:
-        pass
-    return _genuine
+    """Portal dihapus: tidak ada lagi 429 genuine khusus Niki."""
+    return False
 
 
 def route_classified_error(

@@ -1092,9 +1092,7 @@ def _auth_store_logged_in(auth_file: Path, registry, strict_profile_scope: bool)
 
 
 def _has_any_provider_configured(*, strict_profile_scope: bool = False) -> bool:
-    """Check if at least one inference provider is usable. Never creates one: the Niki free tier
-    counts only once its identity exists, and the boot bootstrap (``niki_cli.free_tier_bootstrap``)
-    creates it at boot (a first connector use can too); ``cmd_chat`` runs the bootstrap before asking.
+    """Check if at least one inference provider is usable. Never creates one.
 
     ``strict_profile_scope``: the caller has bound a NAMED profile's home and
     secret scope and wants an answer for that profile only — launch-process
@@ -1854,7 +1852,6 @@ cmd_dump = _forward_command("cmd_dump", "niki_cli.dump", "run_dump", doc='Dump s
 cmd_debug = _forward_command("cmd_debug", "niki_cli.debug", "run_debug", doc='Debug tools (share report, etc.).')
 cmd_skin = _forward_command("cmd_skin", "niki_cli.skin_cmd", "skin_command", doc='Skin management (list / use / set).')
 cmd_import = _forward_command("cmd_import", "niki_cli.backup", "run_import", forward_return=True, doc='Restore a Niki backup from a zip file.')
-cmd_dashboard_register = _forward_command("cmd_dashboard_register", "niki_cli.dashboard_register", "cmd_dashboard_register", doc='Register a self-hosted dashboard OAuth client with Niki Portal.')
 cmd_gateway_enroll = _forward_command("cmd_gateway_enroll", "niki_cli.gateway_enroll", "cmd_gateway_enroll", doc='Enroll a self-hosted gateway with a relay connector.')
 cmd_prompt_size = _forward_command("cmd_prompt_size", "niki_cli.prompt_size", "cmd_prompt_size", doc='Show a byte/char breakdown of the system prompt + tool schemas.')
 cmd_pairing = _forward_command("cmd_pairing", "niki_cli.pairing", "pairing_command")
@@ -2783,7 +2780,7 @@ _BUILTIN_SUBCOMMANDS = frozenset(
         "dump", "egress", "fallback", "gateway", "hooks", "import", "import-agent", "insights",
         "gui", "desktop", "kanban", "login", "logout", "logs", "lsp", "mcp", "memory", "migrate", "moa",
         "journey", "memory-graph", "learning",
-        "model", "monitoring", "pairing", "pause", "peer", "pets", "plugins", "portal", "profile",
+        "model", "monitoring", "pairing", "pause", "peer", "pets", "plugins", "profile",
         "project", "proxy",
         "prompt-size",
         "resume",
@@ -3376,8 +3373,6 @@ def _build_cli_parser():
     from niki_cli.subcommands.peer import build_peer_parser
     build_peer_parser(subparsers)
 
-    from niki_cli.portal_cli import add_parser as _add_portal_parser
-    _add_portal_parser(subparsers)
 
     from niki_cli.kanban import build_parser as _build_kanban_parser
     _build_kanban_parser(subparsers).set_defaults(func=cmd_kanban)
@@ -3428,7 +3423,6 @@ def _build_cli_parser():
     build_dashboard_parser(
         subparsers,
         cmd_dashboard=cmd_dashboard,
-        cmd_dashboard_register=cmd_dashboard_register,
     )
     # "desktop" is canonical (Niki-Setup.exe tells users to run it, so it
     # must be the name --help shows); "gui" is a deprecated alias.

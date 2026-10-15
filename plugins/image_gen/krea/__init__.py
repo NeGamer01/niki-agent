@@ -124,38 +124,13 @@ def _resolve_model(explicit: Optional[str] = None) -> tuple[str, dict[str, Any]]
 
 
 def _resolve_managed_krea_gateway():
-    """Managed gateway config on the managed path, else ``None``. Managed when the stored
-    ``image_gen`` selection is ``niki`` (or legacy ``use_gateway: true``), or never-configured with
-    no ``KREA_API_KEY``; an explicit vendor selection pins direct. Never raises (discovery scans)."""
-    try:
-        from tools.managed_tool_gateway import resolve_managed_tool_gateway
-        from tools.tool_backend_helpers import NIKI_MANAGED_PROVIDER, read_selection
-    except Exception as exc:
-        logger.debug("Managed Krea gateway resolution unavailable: %s", exc)
-        return None
-    try:
-        selected = read_selection("image_gen")
-    except Exception:
-        selected = None
-    if selected is not None and selected != NIKI_MANAGED_PROVIDER:
-        return None
-    if selected is None and get_secret("KREA_API_KEY"):
-        return None
-    try:
-        return resolve_managed_tool_gateway("krea")
-    except Exception as exc:
-        logger.debug("Managed Krea gateway resolution failed: %s", exc)
-        return None
+    """The managed gateway was removed; always ``None``."""
+    return None
 
 
 def _managed_krea_gateway_ready() -> bool:
-    """Cheap, offline-friendly probe for managed Krea availability."""
-    try:
-        from tools.managed_tool_gateway import is_managed_tool_gateway_ready
-
-        return bool(is_managed_tool_gateway_ready("krea"))
-    except Exception:
-        return False
+    """The managed gateway was removed; always False."""
+    return False
 
 
 def _resolve_creativity(value: Optional[str]) -> str:

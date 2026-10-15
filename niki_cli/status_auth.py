@@ -5,10 +5,6 @@ module object so tests that monkeypatch that module keep working."""
 from datetime import datetime, timezone, UTC
 
 from niki_cli.auth import AuthError
-from niki_cli.niki_account import (
-    format_nous_portal_entitlement_message, get_nous_portal_account_info)
-from niki_cli.niki_subscription import get_nous_subscription_features
-from tools.tool_backend_helpers import managed_nous_tools_enabled
 from niki_cli import config
 from niki_time import safe_strftime
 
@@ -101,82 +97,19 @@ def _render_auth_providers(ctx):
     _status._section("Auth Providers")
     from niki_cli import auth
     try:
-        # Read-only display: the refresh-free snapshot, so `niki status` never performs an OAuth
-        # refresh or burns a single-use refresh token.
-        niki_status = auth.get_nous_auth_status_local()
         statuses = {getter: getattr(auth, getter)() for _, getter, _, _ in _OAUTH_BLOCKS[:3]}
     except Exception:
-        niki_status, statuses = {}, {}
+        statuses = {}
     # xAI OAuth is guarded separately so an import failure there cannot disrupt the other rows.
     try:
         statuses["get_xai_oauth_auth_status"] = auth.get_xai_oauth_auth_status() or {}
     except Exception:
         statuses["get_xai_oauth_auth_status"] = {}
 
-    info = None
-    if any(niki_status.get(k) for k in ("logged_in", "access_token", "portal_base_url",
-                                        "inference_credential_present", "error_code")):
-        try:
-            info = get_nous_portal_account_info()
-        except Exception:
-            pass
-    ctx.niki_account_info = info
-    ctx.niki_logged_in = logged_in = bool(niki_status.get("logged_in") or (info and info.logged_in))
-    ctx.niki_inference_present = inference = bool(
-        niki_status.get("inference_credential_present") or (info and info.inference_credential_present)
-    )
-    if niki_status.get("free_tier"):
-        # Free tier: never rendered as an account login (no account ids, no refresh row).
-        from niki_cli.anon_auth import FREE_TIER_LABEL, GUEST_MODEL, UPGRADE_HINT
-        _status._row("Niki Portal", True, f"{FREE_TIER_LABEL} · {GUEST_MODEL}")
-        _status._detail("", UPGRADE_HINT)
-        inference_url = niki_status.get("inference_base_url")
-        if inference_url:
-            _status._detail("Inference:", inference_url)
-        for name, getter, hint, rows in _OAUTH_BLOCKS:
-            _oauth_block(name, statuses.get(getter, {}), hint, rows)
-        return
-    niki_error = niki_status.get("error")
-    _status._row("Niki Portal", logged_in,
-         "logged in" if logged_in else "not logged in (Niki inference key configured)" if inference
-         else "not logged in (run: niki portal)")
-    portal_url = niki_status.get("portal_base_url") or "(unknown)"
-    inference_url = niki_status.get("inference_base_url") or (info.inference_base_url if info else None)
-    for label, value, show in (
-        ("Portal URL:", portal_url, logged_in or portal_url != "(unknown)" or niki_error),
-        ("Inference:", inference_url, inference and inference_url),
-        ("Access exp:", _format_iso_timestamp(niki_status.get("access_expires_at")),
-         logged_in or niki_status.get("access_expires_at")),
-        ("Key exp:", _format_iso_timestamp(niki_status.get("agent_key_expires_at")),
-         logged_in or inference or niki_status.get("agent_key_expires_at")),
-        ("Refresh:", "yes" if niki_status.get("has_refresh_token") else "no",
-         logged_in or niki_status.get("has_refresh_token")),
-        ("Error:", niki_error, niki_error)):
-        if show:
-            _status._detail(label, value)
     for name, getter, hint, rows in _OAUTH_BLOCKS:
         _oauth_block(name, statuses.get(getter, {}), hint, rows)
 
 
-def _render_nous_gateway(ctx):
-    if managed_nous_tools_enabled():
-        features = get_nous_subscription_features(ctx.config)
-        _status._section("Niki Tool Gateway")
-        print("  Niki Portal   ✓ managed tools available" if features.niki_auth_present
-              else "  Niki Portal   ✗ not logged in")
-        for f in features.items():
-            state = next((text(f) for match, text in _FEATURE_STATES if match(f, features.niki_auth_present)),
-                         "not configured")
-            _status._row(f.label, f.available or f.active or f.managed_by_niki, state, 15, " ")
-    elif ctx.niki_logged_in or ctx.niki_inference_present:
-        # Niki OAuth without entitlement, or an opaque inference key without Portal account
-        # information, cannot enable the Tool Gateway.
-        _status._section("Niki Tool Gateway")
-        message = format_nous_portal_entitlement_message(
-            ctx.niki_account_info, capability="managed web, image, TTS, STT, browser, and Modal tools"
-        )
-        for line in (message or "").splitlines():
-            print(f"  {line}")
 
 
 def _render_apikey_providers(ctx):

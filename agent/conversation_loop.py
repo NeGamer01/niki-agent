@@ -479,20 +479,6 @@ def _ra():
     return run_agent
 
 
-def _nous_entitlement_message(capability: str) -> str:
-    try:
-        from niki_cli.niki_account import (
-            format_nous_portal_entitlement_message,
-            get_nous_portal_account_info,
-        )
-        account_info = get_nous_portal_account_info(force_fresh=True)
-        return format_nous_portal_entitlement_message(
-            account_info, capability=capability, in_chat=True
-        ) or ""
-    except Exception:
-        return ""
-
-
 def _print_guidance(agent, message: str) -> bool:
     """Print each line of ``message`` as a 💡 hint; False when there is nothing to print."""
     if not message:
@@ -500,10 +486,6 @@ def _print_guidance(agent, message: str) -> bool:
     for line in message.splitlines():
         agent._vprint(f"{agent.log_prefix}   💡 {line}", force=True, diagnostic=True)
     return True
-
-
-def _print_nous_entitlement_guidance(agent, capability: str) -> bool:
-    return _print_guidance(agent, _nous_entitlement_message(capability))
 
 
 def _system_prompt_for_hooks(api_kwargs: Any, request_messages: Any) -> Any:
@@ -519,18 +501,9 @@ def _system_prompt_for_hooks(api_kwargs: Any, request_messages: Any) -> Any:
     return system_prompt
 
 
-def _is_nous_inference_route(provider: str, base_url: str) -> bool:
-    return (provider or "").strip().lower() == "niki" or base_url_host_matches(
-        str(base_url or ""), "inference-api.nousresearch.com"
-    )
-
-
 def _billing_or_entitlement_message(
     *, capability: str, provider: str, base_url: str, model: str, unverified: bool = False
 ) -> str:
-    if _is_nous_inference_route(provider, base_url):
-        return _nous_entitlement_message(capability)
-
     provider_label = (provider or "").strip() or "the selected provider"
     model_label = (model or "").strip() or "the selected model"
 
@@ -565,34 +538,11 @@ def _billing_or_entitlement_message(
             switch,
         ])
 
-    # Provider-agnostic billing URL so every text surface shows the same actionable link.
-    try:
-        from agent.billing_links import build_billing_block
-        _link = build_billing_block(provider=provider, base_url=base_url, model=model)
-        provider_label = _link.provider_label or provider_label
-        billing_url = _link.billing_url
-    except Exception:
-        billing_url = None
     return "\n".join([
         f"{provider_label} reported that billing, credits, or account entitlement is exhausted for {model_label}.",
         "Add credits or update billing with that provider, then retry.",
-        *([f"{provider_label} billing: {billing_url}"] if billing_url else []),
         "You can switch providers temporarily with /model <model> --provider <provider>.",
     ])
-
-
-def _billing_block_dict(provider, base_url, model, message="", *, unverified: bool = False) -> Optional[dict]:
-    """Best-effort structured billing descriptor (None if billing_links is unavailable)."""
-    try:
-        from agent.billing_links import build_billing_block
-        block = build_billing_block(
-            provider=provider, base_url=str(base_url), model=model, message=message
-        ).to_dict()
-    except Exception:
-        return None
-    if block is not None and unverified:
-        block["unverified"] = True  # every surface rendering the block can hedge too (#82154)
-    return block
 
 
 def _billing_terminal_label(summary: str, unverified: bool) -> str:
@@ -626,7 +576,6 @@ def _billing_failure_result(
         # Classifier's own retry verdict so the UI shows Retry only when a re-run can differ.
         "failure_retryable": bool(classified.retryable),
         "billing_unverified": unverified,
-        "billing_block": _billing_block_dict(provider, base_url, model, guidance, unverified=unverified),
     }
 
 

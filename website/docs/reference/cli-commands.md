@@ -96,7 +96,6 @@ The install also ships `niki-agent`, a minimal runner that sends one query and e
 | `niki mcp` | Manage MCP server configurations and run Niki as an MCP server. |
 | `niki connectors` | List, connect, rename and disconnect hosted connector accounts. |
 | `niki plugins` | Manage Niki Agent plugins (install, enable, disable, remove). |
-| `niki portal` | Niki Portal status, subscription link, and Tool Gateway routing. See [Tool Gateway](../user-guide/features/tool-gateway.md). |
 | `niki tools` | Configure enabled tools per platform. |
 | `niki computer-use` | Install or check the Computer Use (cua-driver) backend (macOS/Windows/Linux). |
 | `niki pets` | Browse, install, and select [petdex](../user-guide/features/pets.md) animated pets shown across the CLI, TUI, and desktop app. Subcommands: `list`, `install`, `select`, `show`, `off`, `scale`, `remove`, `doctor`. |
@@ -422,21 +421,6 @@ Options:
 | `--reconfigure` | Backwards-compat alias — bare `niki setup` on an existing install now does this by default. |
 | `--portal` | One-shot Niki Portal setup: log in via OAuth, set Niki as the inference provider, and opt into the [Tool Gateway](../user-guide/features/tool-gateway.md). Skips the rest of the wizard. |
 
-## `niki portal`
-
-```bash
-niki portal [status|open|tools]
-```
-
-Inspect Niki Portal auth, Tool Gateway routing, and reach the subscription page. Subcommand-less invocation runs `status`.
-
-| Subcommand | Description |
-|------------|-------------|
-| `status` (default) | Portal auth state + per-tool Tool Gateway routing summary. Also shown when no subcommand is given. |
-| `open` | Open `portal.nousresearch.com/manage-subscription` in your default browser. |
-| `tools` | List every Tool Gateway partner (Firecrawl, FAL, OpenAI TTS, Browser Use, Modal) and which are routed via Niki. |
-
-For configuration of the gateway itself, see [Tool Gateway](../user-guide/features/tool-gateway.md). For the one-shot setup path, see `niki setup --portal` above.
 
 ## `niki whatsapp`
 

@@ -105,12 +105,8 @@ def _is_deepseek_anthropic_endpoint(base_url: str | None) -> bool:
 
 
 def _is_nous_portal_endpoint(base_url: str | None) -> bool:
-    """Niki Portal's Anthropic Messages route (Bearer JWT, verbatim catalog ids, native
-    thinking-signature replay). Trusted hosts only: prod ``inference-api.nousresearch.com`` or the
-    operator-set ``NIKI_INFERENCE_BASE_URL`` host (exact hostname equality, so neither lookalike
-    domains nor sibling hosts of the override match)."""
-    if base_url_host_matches(base_url or "", "inference-api.nousresearch.com"):
-        return True
+    """Legacy Niki Portal endpoint check. The Portal was removed; this now only honours
+    the operator-set ``NIKI_INFERENCE_BASE_URL`` host, if any."""
     try:
         from niki_cli.auth import _nous_inference_env_override
         override = _nous_inference_env_override()

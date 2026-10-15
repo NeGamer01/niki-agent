@@ -408,7 +408,6 @@ the API server and webhook endpoints) with its live connection status.
 A consolidated administration panel for installation-wide operations:
 
 - **Host** — live system stats: OS / kernel, architecture, hostname, Python and Niki versions, CPU core count + utilization, memory, disk usage of the Niki home, uptime, and load average. (CPU/memory/disk come from `psutil` when installed; identity fields are always shown.) The Niki version shows an **update-status badge** (up to date / N commits behind) and a **Check for updates** button. When an update is available on a git install, an **Update now** button opens a confirmation dialog — showing how many commits you'll pull — before running `niki update` in the background. On Docker/Nix installs the dashboard can't apply the update in place, so it shows the correct out-of-band command instead.
-- **Niki Portal** — login status, the active inference provider, and the Tool Gateway routing table (which tools run via the Portal vs. locally), with a link to manage your subscription. Read-only mirror of `niki portal`.
 - **Skill curator** — the background skill-maintenance status (active / paused, interval, last run) with pause/resume and a run-now button. Mirrors `niki curator`.
 - **Gateway** — start, stop, and restart the messaging gateway, with live status (running/stopped, PID, state)
 - **Memory** — pick the external memory provider (or built-in only), and reset the built-in `MEMORY.md` / `USER.md` stores
@@ -702,7 +701,7 @@ To use the Niki provider you need an OAuth client ID (shape `agent:{id}`). There
   # …writes NIKI_DASHBOARD_OAUTH_CLIENT_ID to ~/.niki/.env
   ```
 
-- **GUI — the Local Dashboards page.** Open [`/local-dashboards`](https://portal.nousresearch.com/local-dashboards) in the Niki Portal to register, name, manage, and revoke self-hosted dashboards from the browser. Copy the resulting `agent:{id}` client ID into `NIKI_DASHBOARD_OAUTH_CLIENT_ID` (env) or `dashboard.oauth.client_id` (config.yaml). This is also where you revoke a dashboard registered via the CLI.
+- **GUI — the Local Dashboards page.** Open `/local-dashboards` in the Niki Portal to register, name, manage, and revoke self-hosted dashboards from the browser. Copy the resulting `agent:{id}` client ID into `NIKI_DASHBOARD_OAUTH_CLIENT_ID` (env) or `dashboard.oauth.client_id` (config.yaml). This is also where you revoke a dashboard registered via the CLI.
 
 #### Configuration
 
@@ -1065,7 +1064,7 @@ The provider implements the [Niki Portal OAuth contract v1](https://github.com/N
 
 1. User hits `/` without a session cookie → gate redirects to `/login`.
 2. Login page shows a "Continue with NeGamer01" button → `/auth/login?provider=niki`.
-3. Server stashes PKCE state in a short-lived cookie, redirects user to `https://portal.nousresearch.com/oauth/authorize?…`.
+3. Server stashes PKCE state in a short-lived cookie, redirects user to `/oauth/authorize?…`.
 4. User authenticates with Portal, lands at `/auth/callback?code=…&state=…`.
 5. Server exchanges the code for an access token at `POST /api/oauth/token`, verifies the JWT signature against the Portal's JWKS (`/.well-known/jwks.json`), and sets the `niki_session_at` cookie.
 6. User is redirected to `/` (or to the original deep-link path via the `next=` query parameter).

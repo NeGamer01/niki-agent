@@ -72,33 +72,14 @@ class BrowserUseBrowserProvider(CloudBrowserProvider):
         return self._get_config_or_none(refresh_token=False) is not None
 
     def _get_config_or_none(self, *, refresh_token: bool = True) -> Optional[dict[str, Any]]:
-        # Lazy: managed_tool_gateway pulls in the Niki auth stack direct-key users never need.
-        from tools.managed_tool_gateway import peek_nous_access_token, resolve_managed_tool_gateway
-        from tools.tool_backend_helpers import NIKI_MANAGED_PROVIDER, read_selection
+        from tools.tool_backend_helpers import read_selection
 
-        def _managed_config() -> Optional[dict[str, Any]]:
-            # Keep availability scans off the synchronous OAuth refresh path.
-            managed = resolve_managed_tool_gateway(
-                "browser-use", token_reader=None if refresh_token else peek_nous_access_token)
-            if managed is None:
-                return None
-            return {
-                "api_key": managed.niki_user_token,
-                "base_url": managed.gateway_origin.rstrip("/"),
-                "managed_mode": True,
-            }
-
-        api_key = get_secret("BROWSER_USE_API_KEY")
-        selected = read_selection("browser")
+        api_key = self._get_api_key()
         direct = {"api_key": api_key, "base_url": _BASE_URL, "managed_mode": False}
 
-        # Strict: "niki" (or legacy use_gateway: true) → managed ONLY; any other stored selection →
-        # direct ONLY (no silent managed fallback); never-configured → direct if present, else managed.
-        if selected == NIKI_MANAGED_PROVIDER:
-            return _managed_config()
-        if selected is not None:
-            return direct if api_key else None
-        return direct if api_key else _managed_config()
+        # Direct credentials only (the managed gateway was removed).
+        return direct if api_key else None
+
 
     def _get_config(self) -> dict[str, Any]:
         from tools.tool_backend_helpers import (

@@ -175,9 +175,7 @@ def creds():
     if PROVIDER == "anthropic":
         key = ARGS.api_key or os.environ.get("ANTHROPIC_API_KEY") or sys.exit("ANTHROPIC_API_KEY or --api-key required")
         return dict(api_key=key, base_url="https://api.anthropic.com", provider="anthropic")
-    from niki_cli.auth_niki import resolve_nous_runtime_credentials
-    c = resolve_nous_runtime_credentials()
-    return dict(api_key=c["api_key"], base_url=c.get("base_url") or "https://inference-api.nousresearch.com/v1", provider="niki")
+    return dict(api_key="dummy", base_url="https://api.anthropic.com", provider="anthropic")
 CRED = creds()
 WORKDIR = tempfile.mkdtemp(prefix="cacheprobe-")
 # seed ~35K tokens of file content so the loop's context grows fast and realistically (tool results, not user text)

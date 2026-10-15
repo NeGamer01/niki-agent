@@ -2140,7 +2140,7 @@ telemetry:
   shared_metrics:
     enabled: false
     send: false
-    # endpoint: https://telemetry.nousresearch.com/v1/telemetry
+    # endpoint: https://example.com/v1/telemetry
 
 
 # =============================================================================
@@ -2206,7 +2206,6 @@ updates:
 # dashboard:
 #   oauth:
 #     client_id: ""    # agent:{instance_id}; Portal provisions this at deploy
-#     portal_url: ""   # blank → default https://portal.nousresearch.com
 #
 #   # Force the absolute base URL the OAuth callback (and any other public
 #   # URL the dashboard hands to external systems) is built from. Set this

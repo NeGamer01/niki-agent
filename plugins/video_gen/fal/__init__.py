@@ -231,21 +231,8 @@ def _load_fal_client() -> Any:
 
 
 def _resolve_managed_fal_video_gateway():
-    """Resolve the FAL video route from the stored ``video_gen`` selection: ``"niki"`` → managed only (unentitled ⇒
-    selection-naming error); other stored provider → direct only (missing FAL_KEY ⇒ error); never-configured → autodetect."""
-    from tools.managed_tool_gateway import resolve_managed_tool_gateway
-    from tools.tool_backend_helpers import NIKI_MANAGED_PROVIDER, fal_key_is_configured, read_selection, selection_error
-    selected = read_selection("video_gen")
-    if selected == NIKI_MANAGED_PROVIDER:
-        gateway = resolve_managed_tool_gateway("fal-queue")
-        if gateway is None:
-            raise ValueError(selection_error("video_gen", NIKI_MANAGED_PROVIDER, "the Niki Tool Gateway is not available (not entitled or unreachable)"))
-        return gateway
-    if selected is not None:
-        if not fal_key_is_configured():
-            raise ValueError(selection_error("video_gen", selected, "FAL_KEY is not set"))
-        return None
-    return None if fal_key_is_configured() else resolve_managed_tool_gateway("fal-queue")
+    """The managed gateway was removed; always ``None`` (direct FAL credentials only)."""
+    return None
 
 
 def _fal_video_available() -> bool:

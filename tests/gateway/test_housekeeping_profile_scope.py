@@ -39,7 +39,7 @@ def _profile(home: Path, base_url: str) -> None:
     (home / ".env").write_text(f"NIKI_INFERENCE_BASE_URL={base_url}\n", encoding="utf-8")
     (home / "auth.json").write_text(json.dumps({"version": 1, "providers": {"niki": {
         "access_token": "x.y.z", "refresh_token": "r", "expires_at": 0,
-        "portal_base_url": "https://portal.nousresearch.com", "client_id": "c"}}}), encoding="utf-8")
+        "portal_base_url": "https://example.com", "client_id": "c"}}}), encoding="utf-8")
 
 
 @pytest.fixture

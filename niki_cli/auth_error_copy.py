@@ -94,7 +94,7 @@ def _classify(exc: BaseException, rules: Sequence[_Rule], other: str) -> str:
 
 
 def sign_in_failure_lines(
-    exc: BaseException, *, service_host: str = "portal.nousresearch.com", retry_command: str = "niki portal",
+    exc: BaseException, *, service_host: str = "", retry_command: str = "niki auth",
 ) -> list:
     """Lines to print when a device-code / browser sign-in fails for any non-timeout reason."""
     from niki_cli.observability.shared_metrics_setup import note_sign_in_failure

@@ -432,7 +432,7 @@ async def test_internal_event_never_reuses_prompt_pin_from_another_privacy_polic
 # config reads are substituted), not the ``_capture`` stub above.
 # ---------------------------------------------------------------------------
 
-_WELCOME = "https://welcome-api.nousresearch.com/v1"
+_WELCOME = "https://welcome-api.example.com/v1"
 
 
 class _TurnAgent:

@@ -93,9 +93,9 @@ class TestNousModelReasoningCapabilities:
         from niki_cli.models_reasoning_caps import niki_catalog_url
 
         monkeypatch.setenv(
-            "NIKI_INFERENCE_BASE_URL", "https://staging.nousresearch.com/v1"
+            "NIKI_INFERENCE_BASE_URL", "https://staging.example.com/v1"
         )
-        assert niki_catalog_url() == "https://staging.nousresearch.com/v1/models"
+        assert niki_catalog_url() == "https://staging.example.com/v1/models"
 
         monkeypatch.delenv("NIKI_INFERENCE_BASE_URL")
         assert niki_catalog_url().endswith("/v1/models")

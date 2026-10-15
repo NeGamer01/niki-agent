@@ -33,7 +33,6 @@ os.environ["NIKI_QUIET"] = "1"  # suppress our modules' startup chatter
 
 from niki_cli.cli_agent_setup_mixin import CLIAgentSetupMixin
 from niki_cli.cli_commands_mixin import CLICommandsMixin
-from niki_cli.cli_billing_mixin import CLIBillingMixin
 from niki_cli.cli_loops_mixin import CLILoopsMixin
 from niki_cli.cli_info_mixin import CLIInfoMixin
 from niki_cli.cli_terminal_mixin import CLITerminalMixin
@@ -875,7 +874,7 @@ from niki_cli.cli_chat_turn_mixin import CLIChatTurnMixin
 _PASTE_REF_RE = re.compile(r'\[Pasted text #\d+: \d+ lines \u2192 (.+?)\]')
 
 
-class NikiCLI(CLIInitMixin, CLITuiRuntimeMixin, CLIProcessNotificationsMixin, CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin, CLITuiMixin, CLIStatusBarMixin, CLIVoiceMixin, CLIModelSwitchMixin, CLISessionMixin, CLIStreamMixin, CLIModalMixin, CLITerminalMixin, CLIInfoMixin, CLILoopsMixin, CLIChatTurnMixin):
+class NikiCLI(CLIInitMixin, CLITuiRuntimeMixin, CLIProcessNotificationsMixin, CLIAgentSetupMixin, CLICommandsMixin, CLITuiMixin, CLIStatusBarMixin, CLIVoiceMixin, CLIModelSwitchMixin, CLISessionMixin, CLIStreamMixin, CLIModalMixin, CLITerminalMixin, CLIInfoMixin, CLILoopsMixin, CLIChatTurnMixin):
     """Interactive REPL for the Niki Agent."""
 
     # Seeded -q first message (see _should_seed_interactive); run() re-creates

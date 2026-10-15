@@ -125,7 +125,7 @@ def test_long_session_replays_every_turns_reasoning_to_the_portal(tmp_path) -> N
     h = Home(tmp_path)
     answers: list[str] = []
     with FakeChatVariantServer(script) as srv:
-        h.write(_impersonated_config("inference-api.nousresearch.com"), dotenv={"OPENAI_API_KEY": "sk-fake"})
+        h.write(_impersonated_config("example.com"), dotenv={"OPENAI_API_KEY": "sk-fake"})
         gw = TuiGateway(h, _proxy_env(srv))
         try:
             created = gw.call("session.create", {"cols": 120})
@@ -135,7 +135,7 @@ def test_long_session_replays_every_turns_reasoning_to_the_portal(tmp_path) -> N
         finally:
             gw.close()
         records = srv.main_records()
-    assert records and {r["host"] for r in records} == {"inference-api.nousresearch.com"}, "precondition: impersonated"
+    assert records and {r["host"] for r in records} == {"example.com"}, "precondition: impersonated"
     replayed = [_assistant_field(r["body"], "reasoning_details") for r in records]
     assert replayed == [[_rd(str(i), "r" * 1000) for i in range(n)] for n in range(turns)], (
         f"Portal requests did not replay every earlier turn's reasoning_details: {replayed}")

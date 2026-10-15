@@ -177,10 +177,6 @@ _DESKTOP_MCP_DISCOVERY_DELAY_S = 1.0
 
 
 def _probe_install_before_state_db() -> None:
-    from niki_cli.anon_auth import on_local_desktop_backend
-
-    if not on_local_desktop_backend():
-        return
     try:
         from niki_cli.install_state import probe
 
@@ -835,13 +831,6 @@ def _no_auth_provider_message(host: str) -> str:
     unconfigured provider is not reported as merely "no providers".
     """
     skip_reasons: list[str] = []
-    try:
-        from plugins.dashboard_auth import niki as _nous_plugin
-
-        if _nous_plugin.LAST_SKIP_REASON:
-            skip_reasons.append(f"  • niki: {_nous_plugin.LAST_SKIP_REASON}")
-    except Exception:
-        pass
 
     if host in _LOOPBACK_HOST_VALUES:
         public_url = ""
@@ -1382,12 +1371,6 @@ def start_server(
 
     import uvicorn
 
-    try:
-        from niki_cli.niki_auth_keepalive import start_nous_auth_keepalive
-
-        start_nous_auth_keepalive()
-    except Exception as exc:
-        _log.debug("Niki auth keepalive did not start: %s", exc)
 
     _configure_auth_gate(host, allow_public, ssh_session_token, ssh_owner_nonce)
 

@@ -3,7 +3,6 @@
 import logging
 from typing import Any
 
-from agent.portal_tags import get_affinity_scope, get_conversation_context
 from agent.prompt_cache_scope import GROK_AGGREGATOR_MODEL_PREFIXES, is_fork_cache_scope
 from agent.reasoning_effort import codex_supported_efforts
 from agent.transports.codex import _cache_scope_from_session_id
@@ -41,7 +40,7 @@ def _sticky_key(session_id: str | None) -> str | None:
     """Declared routing scope, then ambient conversation, then explicit session_id.
     Aux call sites (compression, titles, vision, MoA…) pass no ``session_id``,
     so the ambient lineage ROOT keeps them pinned to their conversation."""
-    return _cache_scope_from_session_id(get_affinity_scope() or get_conversation_context() or session_id)
+    return _cache_scope_from_session_id(session_id)
 
 
 # OpenAI speed tiers. Niki Portal serves them as distinct slugs (``-fast``/``-flex``); OpenRouter

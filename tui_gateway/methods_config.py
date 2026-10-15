@@ -56,8 +56,7 @@ _READINESS_SHARE_WAIT_SECONDS = 4.0
 # Kept well under a second: a joiner occupies its shared RPC worker for at most
 # the grace, so overlapping polls still cannot starve the pool (#65151).
 _READINESS_JOIN_GRACE_SECONDS = 0.5
-# setup.status's probe legitimately blocks on the boot bootstrap's record
-# (free_tier_bootstrap.SETUP_READY_WAIT_SECONDS = 8s): its join budget must
+# setup.status's probe may block briefly; its join budget must
 # cover that wait or every boot poll would answer the retryable error.
 _READINESS_STATUS_SHARE_WAIT_SECONDS = 12.0
 # Retryable-transient code for "the probe is still running / outlived its
@@ -381,40 +380,13 @@ def _readiness_check(rid, params, probe, *, probe_key, wait_seconds):
 
 @method("setup.status")
 def _(rid, params: dict) -> dict:
-    """Loose provider check; ``profile`` (optional) scopes it to that profile's home.
-
-    For the launch profile the answer is the boot bootstrap's record (``free_tier_bootstrap``):
-    the call blocks up to ``SETUP_READY_WAIT_SECONDS`` for it, so a client's first poll lands after
-    the free-tier identity exists (or has been refused) rather than racing the mint. A record that
-    says ``False`` is reconciled with the config files first (``reconcile_record``): a provider
-    added after boot — the Models page, a picker key, ``niki setup`` from a shell — flips it
-    without a restart. If the record
-    is still missing after the wait, or a named profile is asked about, today's live probe answers.
-    The record's fields ride along additively (``ready``, ``free_tier_account``, ``free_tier_route``,
-    ``other_providers``)."""
+    """Loose provider check; ``profile`` (optional) scopes it to that profile's home."""
     try:
-        from niki_cli.anon_auth import free_tier_route
         from niki_cli.main import _has_any_provider_configured
-        from niki_cli.free_tier_bootstrap import wait_for_record
 
         def probe(profile, scoped):
-            record = None if profile else wait_for_record()
-            if record is None:
-                # ``ready`` = this process's boot bootstrap has settled (a named profile has no
-                # record of its own; the launch record says whether the free tier is minted).
-                # Since one host backend serves every profile (#118246), the desktop's
-                # named-profile probe lands here too.
-                launch = wait_for_record() if profile else None
-                return {"provider_configured": bool(_has_any_provider_configured(strict_profile_scope=bool(profile))),
-                        **({"ready": True, "free_tier_account": launch.free_tier_account,
-                            "free_tier_route": free_tier_route()} if launch is not None else {}),
-                        **scoped}
-            # ``failure_fields`` rides along only when the free-tier mint did not happen: the code,
-            # the sentence, and whether / when a retry can succeed (``free_tier.provision``).
-            return {"provider_configured": record.provider_configured, "ready": True,
-                    "free_tier_account": record.free_tier_account, "free_tier_route": record.free_tier_route,
-                    "other_providers": record.other_providers,
-                    "inference_provider": record.inference_provider, **record.failure_fields(), **scoped}
+            return {"provider_configured": bool(_has_any_provider_configured(strict_profile_scope=bool(profile))),
+                    "ready": True, **scoped}
         return _readiness_check(rid, params, probe, probe_key="status",
                                 wait_seconds=_READINESS_STATUS_SHARE_WAIT_SECONDS)
     except Exception as e:
@@ -468,13 +440,8 @@ def _(rid, params: dict) -> dict:
             if not (callable(api_key) or api_key_text in {"aws-sdk", "no-key-required"}
                     or has_usable_secret(api_key_text) or bool(runtime.get("command"))):
                 return fail(f"No usable credentials found for {blamed}.", runtime.get("source"))
-            from niki_cli.anon_auth import route_is_welcome_host
-            # free_tier_route is keyed on the SELECTED route (the welcome host serves only niki/welcome), not
-            # on profile state: a paid Niki key beside a free-tier identity must not read as free.
             return {"ok": True, "provider": runtime.get("provider"), "model": model,
-                    "source": runtime.get("source"),
-                    "free_tier_route": provider == "niki" and route_is_welcome_host(runtime.get("base_url")),
-                    **scoped}
+                    "source": runtime.get("source"), **scoped}
         return _readiness_check(rid, params, probe, probe_key=f"runtime:{requested or ''}",
                                 wait_seconds=_READINESS_SHARE_WAIT_SECONDS)
     except Exception as e:
@@ -501,42 +468,6 @@ def _safe_client_label(label: str) -> str:
     return safe.lstrip(".").strip()
 
 
-@method("diagnostics.share_niki")
-def _(rid, params: dict) -> dict:
-    """Upload a redacted debug bundle to Niki-internal diagnostics storage — same collection +
-    force-redaction pipeline as ``niki debug share --niki``; redaction is NOT client-controllable
-    and consent lives with the CALLER (privacy notice first). Structured ``ok``/``error`` envelope so
-    upload failures render inline. Optional: ``error_context`` (-> ``error-context.txt``),
-    ``extra_files`` ({label -> text}), ``log_lines`` (default 200); all force-redacted."""
-    # Outside the try: the except path needs it, and agent.redact is a hard dependency.
-    from niki_cli.debug_redaction import redact_debug_support_text
-
-    try:
-        from niki_cli.debug import build_nous_bundle, collect_share_bundle
-        from niki_cli.diagnostics_upload import share_to_niki
-        log_lines = params.get("log_lines")
-        if not isinstance(log_lines, int) or not (10 <= log_lines <= 2000):
-            log_lines = 200
-        bundle = collect_share_bundle(log_lines=log_lines, redact=True)
-        # Redact complete client values before applying their support-upload caps.
-        error_context = params.get("error_context")
-        if isinstance(error_context, str) and error_context.strip():
-            bundle["error-context.txt"] = _redact_client_text(error_context.strip(), 8_000)
-        # Bounded: at most 4 files, 512KB each, sanitized labels — not an arbitrary upload surface.
-        extra_files = params.get("extra_files")
-        for label, text in list(extra_files.items())[:4] if isinstance(extra_files, dict) else ():
-            safe_label = _safe_client_label(label) if isinstance(label, str) else ""
-            if safe_label and isinstance(text, str) and text.strip():
-                bundle[f"client/{safe_label}"] = _redact_client_text(text, 524_288)
-        res = share_to_niki(build_nous_bundle(bundle, redact=True))
-        view_url = res.get("viewUrl") or res.get("view_url")
-        upload_id = res.get("id")
-        if not view_url and not upload_id:  # an upload the user can't reference is useless to support
-            return _ok(rid, {"ok": False, "error": "upload succeeded but returned no view URL or id"})
-        return _ok(rid, {"ok": True, "view_url": view_url, "upload_id": upload_id,
-                         "expires_at": res.get("expiresAt") or res.get("expires_at")})
-    except Exception as e:
-        return _ok(rid, {"ok": False, "error": redact_debug_support_text(e)})
 
 
 def register(server) -> None:

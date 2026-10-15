@@ -142,9 +142,6 @@ def _external_process_cli_command(provider_id: str, default: str) -> str:
 # the Anthropic credential-status card and the synthetic ``claude-code`` row.
 # ``flow``: ``device_code`` = show code + URL + poll; ``external`` = delegated to a terminal/CLI.
 _OAUTH_PROVIDER_CATALOG: tuple[dict[str, Any], ...] = (
-    # status_fn None → dispatched via auth.get_<provider>_auth_status.
-    {"id": "niki", "name": "Niki Portal", "flow": "device_code", "cli_command": "niki auth add niki",
-     "docs_url": "https://portal.nousresearch.com", "status_fn": None},
     {"id": "openai-codex", "name": "ChatGPT or Codex Subscription", "flow": "device_code",
      "cli_command": "niki auth add openai-codex", "docs_url": "https://platform.openai.com/docs",
      "status_fn": None},
@@ -219,7 +216,7 @@ def _oauth_poller(label: str):
 
 
 def _record_sign_in_state(sess: dict[str, Any], state: Any) -> None:
-    """Write one ``anon_auth.SignInState`` onto the dashboard session, under the sessions lock.
+    """Write one sign-in state onto the dashboard session, under the sessions lock.
 
     The whole desktop mapping lives here: the state carries its own copy, so nothing below turns a
     reason into a string. ``completed`` deliberately leaves ``status`` on ``"pending"`` so the
@@ -272,91 +269,8 @@ def _record_sign_in_state(sess: dict[str, Any], state: Any) -> None:
         sess["error_message"] = state.copy
 
 
-@_oauth_poller("niki")
-def _nous_promotion_poller(session_id: str, sess: dict[str, Any]) -> None:
-    """Drain the sign-in the start route began: one shared flow, rendered onto the session.
-
-    The generator was created and advanced to its ``Code`` state by ``_start_nous_device_code``, so
-    it is already holding the transfer's codes and its HTTP client. Nothing here is wrapped in
-    ``_profile_scope``: that context manager holds a process-global lock and swaps module
-    attributes across its ``yield``, and this loop can last the sign-in code's whole expiry. The
-    generator scopes its own short config/auth-store sections instead.
-    """
-    gen = sess.get("_sign_in")
-    if gen is None:
-        return
-    try:
-        for state in gen:
-            _record_sign_in_state(sess, state)
-    finally:
-        with contextlib.suppress(Exception):
-            gen.close()     # unwinds the suspended HTTP client if we leave early
 
 
-@_oauth_poller("niki")
-def _nous_plain_poller(session_id: str, sess: dict[str, Any]) -> None:
-    """Background poller for a plain Niki device-code login (no free-tier identity to transfer).
-
-    A sign-in that carries the free tier's connectors runs through ``anon_auth.run_sign_in`` and
-    ``_nous_promotion_poller`` instead; this is the "connect another Niki account" path.
-    """
-    from niki_cli.web_server_profiles import _profile_scope
-    from niki_cli.auth import _poll_for_token, persist_nous_credentials, refresh_nous_oauth_from_state
-    from niki_cli import anon_auth
-    import httpx
-    portal_base_url, client_id = sess["portal_base_url"], sess["client_id"]
-
-    def _cancelled() -> bool:
-        # The user abandoned this sign-in (DELETE /sessions/{id}) while this thread was blocked
-        # on the portal: nothing it learns afterwards may reach the auth store.
-        with _oauth_sessions_lock:
-            if sess.get("cancelled"):
-                sess["status"] = "cancelled"
-                return True
-            return False
-
-    with httpx.Client(timeout=httpx.Timeout(15.0), headers={"Accept": "application/json"}) as client:
-        token_data = _poll_for_token(
-            client=client, portal_base_url=portal_base_url, client_id=client_id,
-            device_code=sess["device_code"], expires_in=max(60, int(sess["expires_at"] - time.time())),
-            poll_interval=sess["interval"],
-        )
-    if _cancelled():
-        return
-    # Same post-processing as _nous_device_code_login (validate/refresh JWT)
-    now = datetime.now(UTC)
-    token_ttl = int(token_data.get("expires_in") or 0)
-    auth_state = {
-        "portal_base_url": portal_base_url,
-        "inference_base_url": token_data.get("inference_base_url"),
-        "client_id": client_id,
-        "scope": token_data.get("scope") or sess.get("scope"),
-        "token_type": token_data.get("token_type", "Bearer"),
-        "access_token": token_data["access_token"],
-        "refresh_token": token_data.get("refresh_token"),
-        "obtained_at": now.isoformat(),
-        "expires_at": (
-            datetime.fromtimestamp(now.timestamp() + token_ttl, tz=UTC).isoformat()
-            if token_ttl else None
-        ),
-        "expires_in": token_ttl,
-    }
-    # The profile comes from the poller's own session dict: a cancel or the 15-minute sweep drops
-    # the registry entry, and a lookup by id would then save into the dashboard's launch profile.
-    with _profile_scope(sess.get("profile")):
-        full_state = refresh_nous_oauth_from_state(auth_state, timeout_seconds=15.0, force_refresh=False)
-        # The final cancellation check and the save share the session lock, so a cancel cannot
-        # land between them.
-        with _oauth_sessions_lock:
-            if sess.get("cancelled"):
-                sess["status"] = "cancelled"
-                return
-            persist_nous_credentials(full_state)
-        # A config left on the free tier's route by a retired identity still has to move.
-        settled = anon_auth.settle_after_upgrade(full_state)
-    with _oauth_sessions_lock:
-        sess["account_email"] = None
-        sess["model"] = settled.get("model") or None
 
 
 @_oauth_poller("minimax")

@@ -49,7 +49,7 @@ PHASE="all"
 UPDATE_METHOD=""
 INSTALL_REF=""
 UPDATE_REF=""
-DMG_URL="https://hermes-assets.nousresearch.com/Hermes-Setup.dmg"
+DMG_URL="https://hermes-assets.example.com/Hermes-Setup.dmg"
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --phase)

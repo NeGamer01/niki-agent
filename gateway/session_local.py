@@ -245,9 +245,8 @@ def _lazy_model(authority, policy):
             or str(policy.provider or '').strip().lower() not in {'', 'auto'}):
         return model
     from gateway.session_authorities import owner_scope
-    from niki_cli.anon_auth import GUEST_MODEL, free_tier_route
     with owner_scope(authority):
-        return GUEST_MODEL if free_tier_route() else model
+        return model
 
 
 def _reasoning_fields(agent, policy, model, authority=None, override=None):

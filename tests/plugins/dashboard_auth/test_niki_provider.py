@@ -160,7 +160,7 @@ class TestPluginRegister:
         ctx.register_dashboard_auth_provider.assert_called_once()
         registered = ctx.register_dashboard_auth_provider.call_args.args[0]
         assert isinstance(registered, niki_plugin.NousDashboardAuthProvider)
-        assert registered._portal_url == "https://portal.nousresearch.com"
+        assert registered._portal_url == "https://example.com"
         # Skip reason cleared on successful registration.
         assert niki_plugin.LAST_SKIP_REASON == ""
 
@@ -173,7 +173,7 @@ class TestPluginRegister:
         ctx = MagicMock()
         niki_plugin.register(ctx)
         registered = ctx.register_dashboard_auth_provider.call_args.args[0]
-        assert registered._portal_url == "https://portal.nousresearch.com"
+        assert registered._portal_url == "https://example.com"
 
 # ---------------------------------------------------------------------------
 # Plugin entry point: config.yaml + env-override precedence
@@ -223,7 +223,7 @@ class TestConfigYamlSource:
         assert registered._client_id == "agent:from-config"
         # Defaults to production portal URL when neither config nor env
         # specifies one.
-        assert registered._portal_url == "https://portal.nousresearch.com"
+        assert registered._portal_url == "https://example.com"
 
     def test_env_overrides_config_client_id(self, patch_config, monkeypatch):
         """Env wins. Critical for Fly.io: the Portal injects

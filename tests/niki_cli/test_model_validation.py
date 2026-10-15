@@ -687,8 +687,8 @@ class TestValidateRequestedModelNousPortalRecommendations:
         api_models = api_models if api_models is not None else ["inclusionai/ling-2.6-flash"]
         probe_payload = {
             "models": api_models,
-            "probed_url": "https://portal.nousresearch.com/v1/models",
-            "resolved_base_url": "https://portal.nousresearch.com/v1",
+            "probed_url": "https://example.com/v1/models",
+            "resolved_base_url": "https://example.com/v1",
             "suggested_base_url": None,
             "used_fallback": False,
         }
@@ -701,7 +701,7 @@ class TestValidateRequestedModelNousPortalRecommendations:
         with patch("niki_cli.models.fetch_api_models", return_value=api_models), \
              patch("niki_cli.models.probe_api_models", return_value=probe_payload), \
              patch("niki_cli.models.fetch_nous_recommended_models", side_effect=_fetch_portal), \
-             patch("niki_cli.models._resolve_nous_portal_url", return_value="https://portal.nousresearch.com"), \
+             patch("niki_cli.models._resolve_nous_portal_url", return_value="https://example.com"), \
              patch("niki_cli.models._model_in_provider_catalog", return_value=False):
             return validate_requested_model(model, "niki")
 

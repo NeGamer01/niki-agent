@@ -8,11 +8,9 @@ from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 
-#: Production ingest endpoint. Overridable through config only — deliberately NOT by an
-#: environment variable: AGENTS.md reserves NIKI_* for secrets, and an inherited variable
-#: could silently redirect consented metrics to any host with nothing visible in config.
-#: Tests and the staging E2E write this key into a throwaway profile instead.
-DEFAULT_ENDPOINT = "https://telemetry.nousresearch.com/v1/telemetry"
+#: No built-in ingest endpoint: this personal fork never phones home. Sending only
+#: happens when the owner configures their own endpoint in config (telemetry.shared_metrics.endpoint).
+DEFAULT_ENDPOINT = ""
 
 _LOCAL_HOSTS = frozenset({"localhost", "127.0.0.1", "::1", "[::1]"})
 

@@ -248,8 +248,7 @@ class GatewayAgentCacheMixin:
 
     def _is_intentional_model_switch(self, session_key: str, agent: Any, config_model: str) -> bool:
         """True when *agent* running a model other than *config_model* is deliberate: a /model session
-        override names that model, or the Niki gateway moved the session off the ``niki/welcome``
-        alias that *config_model* still carries (``anon_auth.apply_model_switch``)."""
+        override names that model."""
         override = self._session_model_override(session_key)
         if override is not None and override.get("model") == agent.model:
             return True
@@ -287,10 +286,6 @@ class GatewayAgentCacheMixin:
             from niki_cli.model_normalize import _AGGREGATOR_PROVIDERS, normalize_model_for_provider
             if provider and provider not in _AGGREGATOR_PROVIDERS:
                 model = normalize_model_for_provider(model, provider)
-        # The Niki welcome host runs its one model whatever the chat configured (pin_model_for_route).
-        with suppress(Exception):
-            from niki_cli.anon_auth import pin_model_for_route
-            model = pin_model_for_route(provider, primary.get("base_url", getattr(agent, "base_url", None)), model)
         return model
 
     def _release_running_agent_state(

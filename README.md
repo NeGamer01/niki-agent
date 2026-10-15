@@ -21,7 +21,7 @@
 
 **The self-improving AI agent built by [NeGamer01](https://nousresearch.com).** It's the only agent with a built-in learning loop — it creates skills from experience, improves them during use, nudges itself to persist knowledge, searches its own past conversations, and builds a deepening model of who you are across sessions. Run it on a $5 VPS, a GPU cluster, or serverless infrastructure that costs nearly nothing when idle. It's not tied to your laptop — talk to it from Telegram while it works on a cloud VM.
 
-Use any model you want — [Niki Portal](https://portal.nousresearch.com), OpenRouter, OpenAI, your own endpoint, and [many others](https://github.com/NeGamer01/niki-agent/docs/integrations/providers). Switch with `niki model` — no code changes, no lock-in.
+Use any model you want — OpenRouter, OpenAI, your own endpoint, and [many others](https://github.com/NeGamer01/niki-agent/docs/integrations/providers). Switch with `niki model` — no code changes, no lock-in.
 
 <table>
 <tr><td><b>A real terminal interface</b></td><td>Full TUI with multiline editing, slash-command autocomplete, conversation history, interrupt-and-redirect, and streaming tool output.</td></tr>
@@ -125,23 +125,6 @@ niki doctor       # Diagnose any issues
 📖 **[Full documentation →](https://github.com/NeGamer01/niki-agent/docs/)**
 
 ---
-
-## Skip the API-key collection — Niki Portal
-
-Niki works with whatever provider you want — that's not changing. But if you'd rather not collect five separate API keys for the model, web search, image generation, TTS, and a cloud browser, **[Niki Portal](https://portal.nousresearch.com)** covers all of them under one subscription:
-
-- **300+ models** — pick any of them with `/model <name>`
-- **Tool Gateway** — web search, image generation (FAL), text-to-speech (OpenAI), cloud browser (Browser Use), all routed through your sub. No extra accounts.
-
-One command from a fresh install:
-
-```bash
-niki setup --portal
-```
-
-That logs you in via OAuth, sets Niki as your provider, and turns on the Tool Gateway. Check what's wired up any time with `niki portal info`. Full details on the [Tool Gateway docs page](https://github.com/NeGamer01/niki-agent/docs/user-guide/features/tool-gateway).
-
-You can still bring your own keys per-tool whenever you want — the gateway is per-backend, not all-or-nothing.
 
 ---
 

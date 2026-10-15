@@ -59,7 +59,7 @@ const localConnection = {
 beforeEach(() => {
   getConnectionConfig.mockResolvedValue(localConnection)
   saveConnectionConfig.mockResolvedValue(localConnection)
-  cloudStatus.mockResolvedValue({ portalBaseUrl: 'https://portal.nousresearch.com', signedIn: true })
+  cloudStatus.mockResolvedValue({ portalBaseUrl: 'https://example.com', signedIn: true })
   cloudDiscover.mockResolvedValue({ agents: [], org: null })
   Object.defineProperty(window, 'nikiDesktop', {
     configurable: true,
@@ -635,7 +635,7 @@ describe('GatewaySettings', () => {
     getConnectionConfig.mockResolvedValue({
       ...localConnection,
       mode: 'cloud',
-      remoteUrl: 'https://portal.nousresearch.com'
+      remoteUrl: 'https://example.com'
     })
 
     render(<GatewaySettings />)
@@ -660,7 +660,7 @@ describe('GatewaySettings', () => {
     getConnectionConfig.mockResolvedValue({
       ...localConnection,
       mode: 'cloud',
-      remoteUrl: 'https://portal.nousresearch.com'
+      remoteUrl: 'https://example.com'
     })
 
     render(<GatewaySettings />)
@@ -685,7 +685,7 @@ describe('GatewaySettings', () => {
     getConnectionConfig.mockResolvedValue({
       ...localConnection,
       mode: 'cloud',
-      remoteUrl: 'https://portal.nousresearch.com'
+      remoteUrl: 'https://example.com'
     })
 
     render(<GatewaySettings />)

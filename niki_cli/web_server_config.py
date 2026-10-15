@@ -651,11 +651,10 @@ def _apply_nous_gateway_defaults(cfg: dict) -> list:
     *unconfigured* tools through the Niki Tool Gateway. Purely additive — tools with a direct
     key or explicit backend are skipped. Failures never block saving the assignment."""
     try:
-        from niki_cli.niki_subscription import apply_nous_managed_defaults
         from niki_cli.tools_config import _get_platform_tools
 
         enabled = _get_platform_tools(cfg, "cli", include_default_mcp_servers=False)
-        return sorted(apply_nous_managed_defaults(cfg, enabled_toolsets=enabled, force_fresh=True))
+        return sorted(enabled)
     except Exception:
         _log.debug("apply_nous_managed_defaults skipped", exc_info=True)
         return []
@@ -755,7 +754,6 @@ def _prepare_main_assignment(cfg: dict, provider: str, model: str, base_url: str
 def _apply_main_assignment_sync(cfg: dict, provider: str, model: str, base_url: str, api_key: str,
                                 prepared: "Optional[tuple[str, ModelSwitchResult]]" = None) -> dict:
     from niki_cli.config import save_config
-    from niki_cli.free_tier_bootstrap import reconcile_record
     base_url, result = prepared or _prepare_main_assignment(cfg, provider, model, base_url, api_key)
     provider, model = result.target_provider, result.new_model
     provider_entry = _provider_entry(cfg, provider)
@@ -775,8 +773,6 @@ def _apply_main_assignment_sync(cfg: dict, provider: str, model: str, base_url: 
     save_config(cfg)
     if new_provider in {"custom", "local"} and base_url and not endpoint_already_known:
         _register_custom_endpoint(base_url, api_key, model)
-    # The serve process's boot record may still say "nothing configured"; the chat gates on it.
-    reconcile_record()
 
     return {
         "ok": True,

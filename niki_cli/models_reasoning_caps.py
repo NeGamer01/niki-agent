@@ -1,8 +1,7 @@
 """Per-model reasoning capabilities from OpenRouter-schema ``/v1/models`` catalogs.
 
-Split out of ``niki_cli.models``. OpenRouter and
-Niki Portal share one implementation parametrized by :class:`_CapsSource`; the per-source module
-globals (``_openrouter_reasoning_caps_cache``, ``_nous_caps_disk_checked``, ...) stay defined on
+Split out of ``niki_cli.models``. The per-source module
+globals (``_openrouter_reasoning_caps_cache``, ...) stay defined on
 ``niki_cli.models`` — tests reset them there — and are read/written by attribute name.
 
 Tri-state contract for callers deciding whether to emit reasoning controls: a dict with
@@ -245,8 +244,7 @@ def refresh_reasoning_caps_async(provider: Optional[str]) -> None:
     rejects. Called from the conversation loop's reasoning_mandatory recovery so the profile guard
     is right again on the next request; no-op for providers without a catalog.
     """
-    src = {"niki": _NOUS_CAPS, "niki-portal": _NOUS_CAPS, "negamer01": _NOUS_CAPS,
-           "openrouter": _OPENROUTER_CAPS}.get(str(provider or "").strip().lower())
+    src = {"openrouter": _OPENROUTER_CAPS}.get(str(provider or "").strip().lower())
     if src is not None:
         _warm_reasoning_caps_async(lambda: _fetch_caps(src, force=True))
 
@@ -258,28 +256,6 @@ _OPENROUTER_CAPS = _CapsSource(
     "_openrouter_caps_disk_checked", "_openrouter_caps_warm_started",
     lambda: _OPENROUTER_CATALOG_URL,
 )
-# Niki Portal serves OpenRouter's catalog schema, so the same parser and contract apply. Its own
-# cache because the two catalogs list different models (and different capabilities for shared ids).
-_NOUS_CAPS = _CapsSource(
-    "_nous_reasoning_caps_cache", "_nous_reasoning_caps_failed_at",
-    "_nous_caps_disk_checked", "_nous_caps_warm_started",
-    lambda: niki_catalog_url(), per_profile=True,
-)
-
-
-def niki_catalog_url() -> str:
-    """The Portal ``/v1/models`` URL for the endpoint we actually talk to (``NIKI_INFERENCE_BASE_URL``
-    → resolved credential base → prod), so a staging profile reads staging's capabilities."""
-    from niki_cli.models_pricing import _resolve_nous_pricing_credentials
-    return f"{_resolve_nous_pricing_credentials()[1]}/v1/models"
-
-
-# Live-catalog metadata first (ported from PrimeIntellect-ai/prime-agent#1258): OpenRouter's /v1/models
-# entries advertise reasoning support via supported_parameters + a reasoning object, which covers every
-# routed vendor without a hand-maintained prefix list. The static prefix allowlist repeatedly went
-# stale one vendor at a time (nvidia/ missing → #75386; same class as tencent/, xiaomi/ additions before
-# it) — metadata makes new vendors work without a code change. One catalog fetch per process, cached;
-# unknown (catalog unreachable / unlisted model) falls back to the static list.
 def openrouter_model_reasoning_capabilities(
     model_id: Optional[str], *, timeout: float = 6.0, allow_fetch: bool = False,
 ) -> Optional[dict[str, Any]]:
@@ -288,12 +264,6 @@ def openrouter_model_reasoning_capabilities(
     return _model_caps(_OPENROUTER_CAPS, model_id, timeout=timeout, allow_fetch=allow_fetch)
 
 
-def niki_model_reasoning_capabilities(
-    model_id: Optional[str], *, timeout: float = 6.0, allow_fetch: bool = False,
-) -> Optional[dict[str, Any]]:
-    """Niki Portal counterpart of :func:`openrouter_model_reasoning_capabilities`; warm the cache
-    with :func:`warm_nous_reasoning_caps_async` from hot paths."""
-    return _model_caps(_NOUS_CAPS, model_id, timeout=timeout, allow_fetch=allow_fetch)
 
 
 def warm_openrouter_reasoning_caps_async() -> None:
@@ -301,6 +271,3 @@ def warm_openrouter_reasoning_caps_async() -> None:
     _warm_caps_async(_OPENROUTER_CAPS)
 
 
-def warm_nous_reasoning_caps_async() -> None:
-    """Niki Portal counterpart of :func:`warm_openrouter_reasoning_caps_async`."""
-    _warm_caps_async(_NOUS_CAPS)

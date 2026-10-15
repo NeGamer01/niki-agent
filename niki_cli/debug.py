@@ -525,8 +525,6 @@ def run_debug_share(args):
                 print(body)
         return
 
-    if getattr(args, "niki", False):
-        return _run_debug_share_niki(args, log_lines=log_lines, redact=redact)
     print(_PRIVACY_NOTICE)
     if not _confirm_upload(args):
         return
@@ -557,61 +555,9 @@ def run_debug_share(args):
               "\nShare these links with the Niki team for support.")
 
 
-_NOUS_PRIVACY_NOTICE = """\
-⚠️  --niki: This uploads your debug bundle to Niki-INTERNAL storage (AWS S3),
-    NOT a public paste service. The following is included:
-  • System info (OS, Python/Niki version, provider, which API keys are
-    configured — NOT the actual keys)
-  • Full agent.log, gateway.log, and desktop.log (up to 512 KB each — likely
-    contains conversation content, tool outputs, and file paths), plus
-    update.log and desktop-update-handoff.log when present (update/hand-off
-    output — the root cause of update failures)
-
-  • The bundle is viewable only by Niki staff (and allowlisted Discord mods)
-    via a Google-login-gated viewer.
-  • It is NOT a public paste — there is no public URL to the contents.
-  • It auto-deletes after 14 days.
-"""
 
 
-def _run_debug_share_niki(args, *, log_lines: int, redact: bool) -> None:
-    """``niki debug share --niki``: gzip the same bundle into the Niki envelope → Niki-S3."""
-    from niki_cli.diagnostics_upload import share_to_niki
-    print(_NOUS_PRIVACY_NOTICE)
-    if not _confirm_upload(args):
-        return
-    if not redact:
-        print("⚠️  --no-redact is set: secrets in your logs will NOT be redacted before upload.\n")
-    print("Collecting debug report...")
-    _best_effort_sweep_expired_pastes()
-    bundle = collect_share_bundle(log_lines=log_lines, redact=redact)
-    if redact:
-        logger.info("niki debug share --niki: applied force-mode redaction before upload")
-    print("Uploading to Niki diagnostics storage...")
-    try:
-        res = share_to_niki(build_nous_bundle(bundle, redact=redact))
-    except Exception as exc:
-        from pm.network import edge_block
 
-        error = redact_debug_support_text(exc)
-        cause = edge_block(exc) or "The Niki diagnostics service may be unavailable or not yet provisioned"
-        print(f"\nNous upload failed: {error}\n\n{cause}.\n"
-              "Run `niki debug share --local` to print the report instead, "
-              "or `niki debug share` to upload to a public paste service.\n", file=sys.stderr)
-        sys.exit(1)
-    view_url = res.get("viewUrl") or res.get("view_url")
-    expires_at = res.get("expiresAt") or res.get("expires_at")
-    print("\nDebug bundle uploaded to Niki (private):")
-    print(f"  View URL  {view_url}" if view_url
-          else f"  (no view URL returned; upload id: {res.get('id', '?')})")
-    print(f"\n⏱  Auto-deletes at {expires_at} (14-day retention)." if expires_at
-          else "\n⏱  Auto-deletes after 14 days.")
-    print("\nShare this private link with the Niki team — only Niki staff "
-          "(via Google login) can open it.\n"
-          "\nPick up the discussion in:\n"
-          "  GitHub Issues        https://github.com/NeGamer01/niki-agent/issues\n"
-          "  Niki Portal Support  https://portal.nousresearch.com/help\n"
-          "  Discord              https://discord.gg/NeGamer01")
 
 
 def run_debug_delete(args):
@@ -659,8 +605,6 @@ Options (share):
   --lines N    Number of log lines to include (default: 200)
   --expire N   dpaste.com fallback retention in days (default: 1)
   --local      Print report locally instead of uploading
-  --niki       Upload to Niki-internal storage (private, staff-only,
-               auto-deletes in 14 days) instead of a public paste
   --no-redact  Disable upload-time secret redaction (default: redact)
 
 Options (delete):

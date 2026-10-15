@@ -9,8 +9,6 @@ from typing import Dict, List, NoReturn, Optional, Set
 from niki_cli.cli_output import print_info as _print_info
 from niki_cli.colors import Colors, color
 from niki_cli.config import cfg_get, load_config, save_config, get_env_value
-from niki_cli.niki_subscription import (
-    NousSubscriptionFeatures, apply_nous_managed_defaults, get_nous_subscription_features)
 from niki_cli.platforms import PLATFORMS as _PLATFORMS_REGISTRY
 from niki_cli.toolset_scope import (
     _TOOLSET_PLATFORM_RESTRICTIONS, toolset_allowed_for_platform as _toolset_allowed_for_platform)
@@ -217,7 +215,6 @@ def _row(name: str, badge: str = "", tag: str = "", env_vars: list = (), **marke
     return row
 
 
-_NOUS = {"requires_nous_auth": True}
 _OPENAI_VOICE_KEY = _key("VOICE_TOOLS_OPENAI_KEY", "OpenAI API key", "https://platform.openai.com/api-keys")
 _ELEVENLABS_KEY = _key("ELEVENLABS_API_KEY", "ElevenLabs API key", "https://elevenlabs.io/app/settings/api-keys")
 _DEEPINFRA_KEY = _key("DEEPINFRA_API_KEY", "DeepInfra API key", "https://deepinfra.com/dash/api_keys")
@@ -227,8 +224,6 @@ TOOL_CATEGORIES = {
         "name": "Text-to-Speech", "icon": "🔊",
         "providers": [
             _row("Microsoft Edge TTS", "★ recommended · free", "Good quality, no API key needed", tts_provider="edge"),
-            _row("Niki Subscription", "subscription", "Managed OpenAI TTS billed to your subscription", tts_provider="openai",
-                 **_NOUS, managed_nous_feature="tts", override_env_vars=["VOICE_TOOLS_OPENAI_KEY", "OPENAI_API_KEY"]),
             _row("OpenAI TTS", "paid", "High quality voices", [_OPENAI_VOICE_KEY], tts_provider="openai"),
             _row("xAI TTS", tag="Grok voices — uses xAI Grok OAuth or XAI_API_KEY", tts_provider="xai", post_setup="xai_grok"),
             _row("ElevenLabs", "paid", "Most natural voices", [_ELEVENLABS_KEY], tts_provider="elevenlabs"),
@@ -250,9 +245,6 @@ TOOL_CATEGORIES = {
         "providers": [
             _row("Local Whisper", "★ recommended · free", "faster-whisper on-device, no API key", stt_provider="local",
                  post_setup="faster_whisper"),
-            _row("Niki Subscription", "subscription", "Managed OpenAI transcription billed to your subscription",
-                 stt_provider="openai", **_NOUS, managed_nous_feature="stt",
-                 override_env_vars=["VOICE_TOOLS_OPENAI_KEY", "OPENAI_API_KEY"]),
             _row("OpenAI", "paid", "whisper-1, gpt-4o-transcribe, gpt-transcribe", [_OPENAI_VOICE_KEY], stt_provider="openai"),
             _row("Groq", "free tier", "whisper-large-v3-turbo, whisper-large-v3 — very fast",
                  [_key("GROQ_API_KEY", "Groq API key", "https://console.groq.com/keys")], stt_provider="groq"),
@@ -268,12 +260,9 @@ TOOL_CATEGORIES = {
         "name": "Web Search & Extract", "setup_title": "Select Search Provider",
         "setup_note": "A free DuckDuckGo search skill is also included — skip this if you don't need a premium provider.",
         "icon": "🔍",
-        # Provider rows come from plugins.web.<vendor> via _plugin_web_search_providers(). Only the two
-        # non-provider firecrawl setup-flow rows live here: managed via Niki subscription, and self-hosted.
+        # Provider rows come from plugins.web.<vendor> via _plugin_web_search_providers(). Only the
+        # non-provider firecrawl self-hosted setup-flow row lives here.
         "providers": [
-            {"name": "Niki Subscription", "badge": "subscription", "tag": "Managed web search and extract billed to your subscription",
-             "web_backend": "firecrawl", "env_vars": [], **_NOUS, "managed_nous_feature": "web",
-             "override_env_vars": ["FIRECRAWL_API_KEY", "FIRECRAWL_API_URL", "PERPLEXITY_API_KEY"]},
             {"name": "Firecrawl Self-Hosted", "badge": "free · self-hosted", "tag": "Run your own Firecrawl instance (Docker)",
              "web_backend": "firecrawl",
              "env_vars": [_key("FIRECRAWL_API_URL", "Your Firecrawl instance URL (e.g., http://localhost:3002)")]},
@@ -282,23 +271,16 @@ TOOL_CATEGORIES = {
     "image_gen": {
         "name": "Image Generation", "icon": "🎨",
         # Provider rows (FAL, OpenAI, OpenAI Codex, xAI, Krea, …) come from plugins.image_gen.<vendor> via
-        # _plugin_image_gen_providers(). Only the managed "Niki Subscription" row lives here: ONE row for the
-        # FAL, Krea and Portal gateways, whose union catalog is `imagegen_backend: "niki"`; the stored model id
-        # picks the gateway at run time (tools/image_generation_managed.py).
+        # _plugin_image_gen_providers() at runtime.
         "providers": [
-            _row("Niki Subscription", "subscription",
-                 "Managed image generation (FAL, Krea 2, Niki Portal models) billed to your subscription", **_NOUS,
-                 managed_nous_feature="image_gen", override_env_vars=["FAL_KEY"], imagegen_backend="niki"),
         ],
     },
     "video_gen": {
         "name": "Video Generation", "icon": "🎬",
-        # Mirrors image_gen: managed FAL video billed via the Niki Portal. Plugin-backed rows (FAL BYOK, xAI, …)
+        # Mirrors image_gen: plugin-backed rows (FAL BYOK, xAI, …)
         # are injected at runtime by ``_plugin_video_gen_providers()`` in ``_visible_providers``. Picking this row
         # sets video_gen.provider = "fal" + use_gateway so the FAL plugin routes through the managed queue gateway.
         "providers": [
-            _row("Niki Subscription", "subscription", "Managed FAL video generation billed to your subscription", **_NOUS,
-                 managed_nous_feature="video_gen", override_env_vars=["FAL_KEY"], video_gen_plugin_name="fal"),
         ],
     },
     "x_search": {
@@ -333,9 +315,6 @@ TOOL_CATEGORIES = {
             # Cloud hook installs only the agent-browser CLI: Browser Use hosts its own Chromium, so the
             # local-Chromium install and readiness gate must not apply (with "agent_browser" this row read
             # "needs setup" forever on machines without a local Chromium build).
-            _row("Niki Subscription (Browser Use cloud)", "subscription", "Managed Browser Use billed to your subscription",
-                 browser_provider="browser-use", **_NOUS, managed_nous_feature="browser",
-                 override_env_vars=["BROWSER_USE_API_KEY"], post_setup="browserbase"),
             _row("Camofox", "free · local", "Anti-detection browser (Firefox/Camoufox)",
                  [_key("CAMOFOX_URL", "Camofox server URL", "https://github.com/jo-inc/camofox-browser", default="http://localhost:9377")],
                  browser_provider="camofox", post_setup="camofox"),
@@ -756,7 +735,7 @@ def _provider_env_ready(provider: dict) -> bool:
 
 
 def _toolset_has_keys(
-    ts_key: str, config: dict | None = None, *, force_fresh: bool = False, features: Optional[NousSubscriptionFeatures] = None,
+    ts_key: str, config: dict | None = None, *, force_fresh: bool = False,
 ) -> bool:
     """Check if a toolset's required API keys are configured."""
     if config is None:
@@ -767,12 +746,6 @@ def _toolset_has_keys(
             return resolve_vision_provider_client()[1] is not None
         except Exception:
             return False
-    if ts_key in {"web", "image_gen", "video_gen", "tts", "stt", "browser"}:
-        if features is None:
-            features = get_nous_subscription_features(config, force_fresh=force_fresh)
-        feature = features.features.get(ts_key)
-        if feature and (feature.available or feature.managed_by_niki):
-            return True
     # Provider-aware categories first: a no-key provider (Local Browser, Edge TTS) counts as configured.
     cat = TOOL_CATEGORIES.get(ts_key)
     if cat:
@@ -993,8 +966,7 @@ def _first_install_flow(config: dict, enabled_platforms: list[str]) -> None:
         current_enabled = _current_platform_tools(config, pkey)
         new_enabled = _prompt_toolset_checklist(pinfo["label"], current_enabled - _DEFAULT_OFF_TOOLSETS, pkey)
         _print_toolset_diff(*_checklist_diff(new_enabled, current_enabled, pkey))
-        auto_configured = apply_nous_managed_defaults(config, enabled_toolsets=new_enabled, force_fresh=True)
-        for ts_key in sorted(auto_configured):
+        for ts_key in sorted(new_enabled):
             label = next((l for k, l, _ in CONFIGURABLE_TOOLSETS if k == ts_key), ts_key)
             print(color(f"  ✓ {label}: using your Niki subscription defaults", Colors.GREEN))
         # Walk through ALL selected tools with provider options or key requirements, so browser (Local vs

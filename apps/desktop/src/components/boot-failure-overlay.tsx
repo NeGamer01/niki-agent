@@ -420,12 +420,6 @@ export function BootFailureOverlay() {
     // buttons (not URLs buried in the hint prose) so localized hints can't
     // drift the links.
     actions = [
-      {
-        key: 'portal',
-        label: copy.cloudDownCheckPortal,
-        onClick: () => openExternalLink('https://portal.nousresearch.com'),
-        icon: <ExternalLink />
-      },
       localAction,
       { ...retryAction, variant: 'secondary' },
       {

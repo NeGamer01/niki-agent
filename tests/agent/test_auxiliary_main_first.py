@@ -274,7 +274,7 @@ class TestResolveVisionMainFirst:
         """
         niki_client = MagicMock()
         niki_client.api_key = "jwt-test"
-        niki_client.base_url = "https://inference-api.nousresearch.com/v1"
+        niki_client.base_url = "https://example.com/v1"
 
         def fake_try_niki(vision=False):
             seen["vision"] = vision

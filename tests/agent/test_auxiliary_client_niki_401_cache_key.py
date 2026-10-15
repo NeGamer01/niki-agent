@@ -14,7 +14,7 @@ import pytest
 import agent.auxiliary_client as ac
 
 
-NIKI_BASE_URL = "https://inference-api.nousresearch.com/v1"
+NIKI_BASE_URL = "https://example.com/v1"
 
 
 @pytest.fixture(autouse=True)

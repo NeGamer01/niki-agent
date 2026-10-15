@@ -304,48 +304,6 @@ def _ask(prompt: str, reader: Callable[[str], str] | None = None) -> str | None:
         return None
 
 
-def _add_nous_oauth_credential(args, provider: str) -> PooledCredential:
-    """``niki auth add niki --type oauth``: shared-credential import, else device-code login."""
-    custom_label = (getattr(args, "label", None) or "").strip() or None
-    timeout = getattr(args, "timeout", None) or 15.0
-
-    def _persist(creds: dict, what: str) -> PooledCredential:
-        # `--label` is embedded into providers.niki so label_from_token doesn't overwrite it on every
-        # subsequent load_pool("niki").
-        entry = auth_mod.persist_nous_credentials(creds, label=custom_label)
-        shown_label = entry.label if entry is not None else label_from_token(
-            creds.get("access_token", ""), f"{provider}-oauth-1")
-        print(f'{what} {provider} OAuth {"device-code " if what == "Saved" else ""}credentials: "{shown_label}"')
-        return entry
-
-    # Codex-style auto-import: a shared Niki credential at <niki-root>/shared/niki_auth.json
-    # (written by any previous login) makes `niki --profile <name> auth add niki --type oauth`
-    # a one-tap operation for multi-profile users.
-    from niki_cli.anon_auth import is_guest_state
-
-    if (shared := auth_mod._read_shared_nous_state()) and not is_guest_state(shared):
-        try:
-            found = f"Found existing Niki OAuth credentials at {auth_mod._nous_shared_store_path()}"
-        except RuntimeError:
-            found = "Found existing shared Niki OAuth credentials"
-        print()
-        print(found)
-        do_import = _ask("Import these credentials? [Y/n]: ")
-        if do_import is None or do_import.lower() in {"", "y", "yes"}:
-            print("Rehydrating Niki session from shared credentials...")
-            rehydrated = auth_mod._try_import_shared_nous_state(timeout_seconds=timeout)
-            if rehydrated is not None:
-                return _persist(rehydrated, "Imported")
-            # Expired refresh_token, portal down, etc. — fall through to device-code.
-            print("Could not refresh shared credentials — falling back to device-code login.")
-
-    creds = auth_mod._nous_device_code_login(
-        portal_base_url=getattr(args, "portal_url", None),
-        inference_base_url=getattr(args, "inference_url", None),
-        client_id=getattr(args, "client_id", None), scope=getattr(args, "scope", None),
-        open_browser=not getattr(args, "no_browser", False), timeout_seconds=timeout,
-        insecure=bool(getattr(args, "insecure", False)), ca_bundle=getattr(args, "ca_bundle", None))
-    return _persist(creds, "Saved")
 
 
 def _unsuppress_provider_sources(provider: str) -> None:
@@ -419,8 +377,6 @@ def auth_add_command(args) -> None:
 def _add_credential(args, provider: str, pool, requested_type: str) -> PooledCredential:
     if requested_type == AUTH_TYPE_API_KEY:
         return _add_api_key_credential(args, provider, pool)
-    if provider == "niki":
-        return _add_nous_oauth_credential(args, provider)
 
     spec = _OAUTH_ADD_SPECS.get(provider)
     if spec is None:
@@ -500,15 +456,8 @@ def auth_priority_command(args) -> None:
     _report_priority(provider, pool, moved, requested, "Set", "to")
 
 
-def _free_tier_lines() -> tuple[str, str]:
-    """The two-line free-tier rendering shared by every auth display surface (R-USR-1)."""
-    from niki_cli.anon_auth import FREE_TIER_LABEL, GUEST_MODEL, UPGRADE_HINT
-    return f"{FREE_TIER_LABEL} · {GUEST_MODEL}", UPGRADE_HINT
 
 
-def _is_free_tier_entry(entry) -> bool:
-    from niki_cli.anon_auth import is_guest_state
-    return is_guest_state(getattr(entry, "extra", None))
 
 
 def auth_list_command(args) -> None:
@@ -527,13 +476,6 @@ def auth_list_command(args) -> None:
         if not entries:
             continue
         current = pool.peek()
-        if provider == "niki" and all(_is_free_tier_entry(e) for e in entries):
-            # The free tier is not a credential the user added; never list it as one.
-            label, hint = _free_tier_lines()
-            print(f"{provider}: {label}")
-            print(f"  {hint}")
-            print()
-            continue
         print(f"{provider} ({len(entries)} credentials):")
         for idx, entry in enumerate(entries, start=1):
             marker = "← " if current is not None and entry.id == current.id else "  "
@@ -685,12 +627,6 @@ def auth_status_command(args) -> None:
         load_pool(provider)  # runs the forked-grant heal first so the report reflects the consolidated grant
     status = auth_mod.get_auth_status(provider)
     _print_oauth_heal_notices()
-    if status.get("free_tier"):
-        # Free tier: not an account login, so no account fields; point at the upgrade path.
-        label, hint = _free_tier_lines()
-        print(f"{provider}: {label}")
-        print(f"  {hint}")
-        return
     if not status.get("logged_in"):
         reason = status.get("error")
         print(f"{provider}: logged out" + (f" ({reason})" if reason else ""))
@@ -891,18 +827,6 @@ def _interactive_strategy() -> None:
     print(f"Set {provider} strategy to: {strategy}")
 
 
-def auth_upgrade_command(args) -> None:
-    """``niki auth upgrade``: sign the free tier into a Niki account, keeping its connectors."""
-    from niki_cli.anon_auth import upgrade_guest
-    code = upgrade_guest(args)
-    if code:
-        raise SystemExit(code)
-
-
-_AUTH_ACTIONS = {
-    "add": auth_add_command, "list": auth_list_command, "remove": auth_remove_command,
-    "reset": auth_reset_command, "priority": auth_priority_command, "refresh": auth_refresh_command, "status": auth_status_command,
-    "logout": auth_logout_command, "upgrade": auth_upgrade_command}
 
 
 def auth_command(args) -> None:

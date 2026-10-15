@@ -12,8 +12,6 @@ from niki_cli.cli_output import (
 )
 from niki_cli.colors import Colors, color
 from niki_cli.config import cfg_get, get_env_value, load_config, save_config, save_env_value
-from niki_cli.niki_account import format_nous_portal_entitlement_message
-from niki_cli.niki_subscription import MANAGED_FEATURE_COVERAGE_CATEGORY, NousSubscriptionFeatures
 from tools.tool_backend_helpers import NIKI_MANAGED_PROVIDER, fal_key_is_configured
 from tools.transcription_common import STT_MODEL_CATALOG, STT_MODEL_CONFIG_KEY
 from utils import base_url_hostname, is_truthy_value
@@ -575,8 +573,7 @@ def _managed_image_catalog(config: dict):
 # metadata}, default_model)); a TOOL_CATEGORIES row tagged `imagegen_backend: "<name>"` selects the catalog at
 # picker time. "niki" is the single managed row: one catalog spanning the FAL, Krea and Portal gateways.
 IMAGEGEN_BACKENDS = {
-    "fal": {"display": "FAL.ai", "config_key": "image_gen", "catalog_fn": _fal_model_catalog},
-    "niki": {"display": "Niki Subscription", "config_key": "image_gen", "catalog_fn": _managed_image_catalog}}
+    "fal": {"display": "FAL.ai", "config_key": "image_gen", "catalog_fn": _fal_model_catalog}}
 
 
 def _plugin_model_catalog(registry_module: str, plugin_name: str):
@@ -834,78 +831,6 @@ def _nous_provider_gate(provider: dict, config: dict, managed_feature, *, force_
     entitled gate."""
     from niki_cli.tools_config import get_nous_subscription_features
 
-    if managed_feature:
-        from niki_cli.niki_subscription import ensure_nous_portal_access
-
-        if not ensure_nous_portal_access(
-            capability=f"{provider.get('name', 'the Niki Tool Gateway')}",
-            coverage_category=MANAGED_FEATURE_COVERAGE_CATEGORY.get(managed_feature)):
-            _print_warning("  Not enabled — Niki Portal access is required for this backend.")
-            return False
-        return True
-
-    if provider.get("requires_nous_auth"):
-        features = get_nous_subscription_features(config, force_fresh=force_fresh)
-        entitled = bool(features.account_info and features.account_info.paid_service_access is True)
-        if not features.niki_auth_present or not entitled:
-            message = format_nous_portal_entitlement_message(
-                features.account_info, capability=f"{provider.get('name', 'Niki Subscription')}")
-            _print_warning(f"  {message or 'Niki Subscription is only available after logging into Niki Portal.'}")
-            return False
-    return True
-
-
-def _finish_provider_selection(provider: dict, config: dict, managed_feature) -> None:
-    """Model pickers that follow a provider pick: plugin image/video gen, in-tree FAL, STT."""
-    for section in ("image_gen", "video_gen"):
-        plugin_name = provider.get(f"{section}_plugin_name")
-        if plugin_name:
-            _select_plugin_gen_provider(section, plugin_name, config, use_gateway=bool(managed_feature))
-            return
-    backend = provider.get("imagegen_backend")
-    if backend:
-        _configure_imagegen_model(backend, config)
-        # "niki" for the managed row (the picked model id chooses the FAL / Krea / Portal gateway at run time),
-        # "fal" for BYOK, drop legacy use_gateway — never clobber a managed pick back onto direct keys.
-        _select_into(config, "image_gen", "provider", "fal", managed_feature)
-    # STT rows prompt for a model after the pick (skipped for managed rows — the gateway pins it).
-    if provider.get("stt_provider") and not managed_feature:
-        _configure_stt_model(provider["stt_provider"], config)
-
-
-def _print_provider_selection(provider: dict, managed_feature, *, reconfigure: bool) -> None:
-    """Status lines announcing which backend/provider keys a pick writes."""
-    if reconfigure and provider.get("tts_provider"):
-        _print_success(f"  TTS provider set to: {provider['tts_provider']}")
-    if provider.get("stt_provider"):
-        _print_success(f"  STT provider set to: {provider['stt_provider']}")
-    if "browser_provider" in provider:
-        bp = provider["browser_provider"]
-        if reconfigure and managed_feature:
-            _print_success(f"  Browser cloud provider set to: {bp or 'niki'}")
-        elif bp == "local":
-            _print_success("  Browser set to local mode")
-        elif bp:
-            _print_success(f"  Browser cloud provider set to: {bp}")
-    if provider.get("browser_backend"):
-        _print_success("  Browser set to Browser Use (browser_exec via CLI 3.0)")
-    if provider.get("browser_engine") and provider["browser_engine"] != "auto":
-        _print_success(f"  Browser engine set to: {provider['browser_engine']}")
-    if provider.get("web_backend"):
-        tier = f" ({provider['web_tier']} tier)" if reconfigure and provider.get("web_tier") else ""
-        backend = NIKI_MANAGED_PROVIDER if managed_feature else provider["web_backend"]
-        _print_success(f"  Web backend set to: {backend}{tier}")
-    if reconfigure and provider.get("computer_use_backend"):
-        _print_success(f"  Computer Use backend set to: {provider['computer_use_backend']}")
-
-
-def _show_portal_hint(provider: dict, config: dict, managed_feature, force_fresh: bool) -> bool:
-    """True when a BYOK row shares its category with a Niki-managed sibling and the user is not authed to
-    Niki — a single dim hint tells them the key is avoidable via a Portal subscription."""
-    from niki_cli.tools_config import TOOL_CATEGORIES, get_nous_subscription_features
-
-    if managed_feature or provider.get("requires_nous_auth"):
-        return False
     try:
         for _cat in TOOL_CATEGORIES.values():
             _providers = _cat.get("providers", [])

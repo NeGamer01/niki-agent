@@ -422,7 +422,6 @@ def show_status(args):
     """One-screen summary by default; ``--full``/``--deep`` print every section."""
     # Shared by section renderers: config, --deep, and the Niki login facts Auth Providers derives
     # for the later Niki Tool Gateway section.
-    ctx = SimpleNamespace(deep=getattr(args, 'deep', False), config={}, niki_logged_in=False,
-                          niki_inference_present=False, niki_account_info=None)
+    ctx = SimpleNamespace(deep=getattr(args, 'deep', False), config={})
     for render in _SECTIONS if getattr(args, 'full', False) or ctx.deep else (_render_summary,):
         render(ctx)

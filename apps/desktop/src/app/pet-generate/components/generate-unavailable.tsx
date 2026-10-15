@@ -28,10 +28,7 @@ export function GenerateUnavailable({ onSetup }: GenerateUnavailableProps) {
         Set up image generation
       </Button>
       <p className="flex flex-wrap items-center justify-center gap-x-1.5 text-[0.6875rem] text-(--ui-text-tertiary)">
-        <span>Grab a key from</span>
-        <ExternalLink href="https://portal.nousresearch.com" showExternalIcon={false}>
-          Niki Portal
-        </ExternalLink>
+        <span>Configure an API key to generate images</span>
         <span>·</span>
         <ExternalLink
           className="opacity-40 transition-opacity hover:opacity-100"

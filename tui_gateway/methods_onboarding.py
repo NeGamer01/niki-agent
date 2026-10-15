@@ -32,24 +32,17 @@ def _run_state(*, assume_fresh: bool = False) -> dict:
     remote backends answer at once and run onboarding only from Settings. On the local backend the
     answer comes from the boot computation (``onboarding_due``); ``--fresh-install`` asks live."""
     from niki_cli import onboarding_due
-    from niki_cli.anon_auth import on_local_desktop_backend
     from niki_cli.onboarding_run import should_run
 
-    if not on_local_desktop_backend():
-        return {"run": should_run(assume_fresh=assume_fresh), "eligible": False, **_active_run()}
+    return {"run": should_run(assume_fresh=assume_fresh), "eligible": False, **_active_run()}
     due = _due_now(assume_fresh=True) if assume_fresh else onboarding_due.read(_due_now, stamp=_due_stamp)
     return {**due, **_active_run()}
 
 
 def _due_now(*, assume_fresh: bool = False) -> dict[str, bool]:
     from niki_cli.onboarding_run import should_run
-    from niki_cli.welcome_trial import inference_available
 
-    # Read in the default profile, where onboarding runs, not the launch profile.
-    home = _profile_home("default")
-    with _session_profile_runtime_scope({"profile_home": str(home) if home else None}):
-        eligible = inference_available(assume_fresh=assume_fresh)
-    return {"run": should_run(assume_fresh=assume_fresh), "eligible": eligible}
+    return {"run": should_run(assume_fresh=assume_fresh), "eligible": False}
 
 
 def _due_stamp() -> tuple:
@@ -64,17 +57,8 @@ def _due_stamp() -> tuple:
     home = Path(_profile_home("default") or get_default_niki_root())
     managed = managed_scope.get_managed_dir()
     paths = (get_default_niki_root() / "config.yaml", home / "config.yaml", home / ".env", home / "auth.json",
-             *_shared_nous_store(), *((managed / "config.yaml", managed / ".env") if managed else ()))
+             *((managed / "config.yaml", managed / ".env") if managed else ()))
     return tuple(file_signature(st) if (st := _stat(path)) else None for path in paths)
-
-
-def _shared_nous_store() -> tuple[Path, ...]:
-    """The shared Niki store as ``_read_shared_nous_state`` finds it: none when the test seat belt trips."""
-    from niki_cli.auth_niki import _nous_shared_store_path
-    try:
-        return (_nous_shared_store_path(),)
-    except RuntimeError:
-        return ()
 
 
 def _stat(path):
@@ -88,15 +72,11 @@ def start_due_boot() -> None:
     """Serve boot, desktop's local backend: work out the due answer off the RPC path, after the setup
     bootstrap has recorded a fresh install and kept an existing guest's trial."""
     from agent.memory_provider import spawn_context_thread
-    from niki_cli import free_tier_bootstrap, onboarding_due
-    from niki_cli.anon_auth import on_local_desktop_backend
+    from niki_cli import onboarding_due
 
-    if not on_local_desktop_backend():
-        return
     finish = onboarding_due.begin_boot(_due_stamp)
 
     def compute() -> dict[str, bool]:
-        free_tier_bootstrap.wait_for_record()
         return _due_now()
 
     # finish() marks the boot done even when compute raises, so no reader waits on a dead thread.
@@ -124,20 +104,10 @@ class _NoModelForTheRun(Exception):
 
 
 def _claim_before_run(scope: dict, *, assume_fresh: bool):
-    """Claim the welcome trial with ``onboarding.run: true`` already on disk, so a crash after the claim
-    makes this machine read as used still opens onboarding next launch. The run's chat comes after:
-    a refused claim (error 5079) leaves no guest and no chat, and the install still due. A blocked claim
-    (another install took the trial since the due check) with no trial or provider to run on is error
-    5080, with no chat either: the desktop lands on provider setup and sign-in, not a chat that fails."""
-    from niki_cli import anon_auth
+    """Mark the onboarding run; the chat runs on the configured provider."""
     from niki_cli.onboarding_run import set_run
-    from niki_cli.welcome_trial import claim_desktop_free_tier, provider_configured
     set_run(True)
-    with _session_profile_runtime_scope(scope):
-        claimed = claim_desktop_free_tier(assume_fresh=assume_fresh)
-        if claimed is None and not (anon_auth.free_inference_active() or provider_configured()):
-            raise _NoModelForTheRun("The welcome trial is not available here, and no provider is set up.")
-    return claimed
+    return None
 
 
 @method("onboarding.start")
@@ -147,7 +117,6 @@ def _(rid, params: dict) -> dict:
     from agent.onboarding_record import advance, load, open_session_ids, start
     from agent.onboarding_text import CHAT_TITLE, opening_prompt
     from niki_cli.auth_constants import AuthError
-    from niki_cli import free_tier_bootstrap
     # The app's once-per-launch start: closing the app mid-run does not count, so that run's chat goes
     # and the run starts over. A second window or a reconnect sends no flag and gets the run back.
     fresh_launch = bool(params.get("fresh_launch"))
@@ -199,9 +168,6 @@ def _(rid, params: dict) -> dict:
         except Exception as e:
             logger.exception("onboarding.start failed")
             return _err(rid, 5078, str(e))
-        if claimed is not None:
-            # Outside the default-profile scope: setup.status serves the launch profile's record.
-            free_tier_bootstrap.refresh_record()
         _withdraw_setup_cards([] if fresh_launch else replaced)
         resumed = _methods["session.resume"](rid, {**_ONBOARDING_PROFILE, "session_id": stored, "source": "desktop"})
         if "error" in resumed:

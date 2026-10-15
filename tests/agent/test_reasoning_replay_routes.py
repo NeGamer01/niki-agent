@@ -38,7 +38,7 @@ def _wire(provider, base_url, model="m", rejected=()):
     ("custom", "https://api.cerebras.ai/v1", "m", set()),
     ("fireworks", "https://api.fireworks.ai/inference/v1", "m", {"reasoning_content"}),
     # OpenRouter-format gateways, incl. the Portal (#118182 does not reproduce)
-    ("niki", "https://inference-api.nousresearch.com/v1", "z-ai/glm-5.3",
+    ("niki", "https://example.com/v1", "z-ai/glm-5.3",
      {"reasoning_content", "reasoning", "reasoning_details"}),
     ("kilocode", "https://api.kilo.ai/api/gateway", "m", {"reasoning_content", "reasoning", "reasoning_details"}),
     ("novita", "https://api.novita.ai/openai/v1", "m", {"reasoning_content", "reasoning_details"}),
@@ -76,7 +76,7 @@ class _Rejection(Exception):
 
 def _agent(model, db=None):
     return SimpleNamespace(
-        provider="niki", model=model, base_url="https://inference-api.nousresearch.com/v1",
+        provider="niki", model=model, base_url="https://example.com/v1",
         api_mode="chat_completions", _force_ascii_payload=False, _image_rejecting_models=set(),
         log_prefix="", _vprint=lambda *a, **k: None, session_id="s1" if db else None, _session_db=db,
     )
@@ -105,7 +105,7 @@ def test_named_field_rejection_strips_once_per_model_and_never_loops(tmp_path):
     assert not rejected_reasoning_carriers(lane)
 
     assert _recover(lane, body, sent) is True
-    rejected = lane._reasoning_rejecting_routes[("niki", "inference-api.nousresearch.com", "z-ai/glm-5.3-flash:US")]
+    rejected = lane._reasoning_rejecting_routes[("niki", "example.com", "z-ai/glm-5.3-flash:US")]
     assert rejected == {"reasoning", "reasoning_details"}
     # The retry re-shapes the same api_messages for the narrowed route: reasoning_content survives.
     route = reasoning_replay_route("chat_completions", "niki", lane.model, lane.base_url, rejected=rejected)

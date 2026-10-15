@@ -159,9 +159,6 @@ async def standalone_lifespan(app: "FastAPI"):
     # Records who carries inference for setup.status / free_tier.status and broadcasts `setup.ready`
     # (no identity is created at boot). Off-thread; the desktop's first setup.status waits on the
     # record (bounded) instead.
-    from niki_cli.free_tier_bootstrap import start_background_bootstrap
-
-    start_background_bootstrap()
     # The desktop's onboarding due answer, worked out after that bootstrap and before it is asked.
     # Through the server: methods_* functions run with the server's globals (``bind_module``).
     tui_gateway.server.start_due_boot()

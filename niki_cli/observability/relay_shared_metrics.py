@@ -14,7 +14,6 @@ from time import monotonic_ns
 from typing import Any, Callable
 
 from agent import relay_runtime
-from agent.portal_tags import get_conversation_context
 from niki_cli.version_info import get_version_info
 
 from .shared_metrics import SharedMetricsStore
@@ -1030,8 +1029,8 @@ class _Runtime:
 
     @staticmethod
     def _cold_key(session_id: str) -> str:
-        """The conversation (lineage root survives compression rotation), else the session."""
-        return get_conversation_context() or session_id
+        """The session."""
+        return session_id
 
     def _announce_cold(self, key: str) -> bool:
         """Expect the next read of ``key`` to be cold; False when a break was already announced."""

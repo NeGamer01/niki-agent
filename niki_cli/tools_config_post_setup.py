@@ -357,9 +357,13 @@ def _agent_browser_installed() -> bool:
     """True when everything ``_run_post_setup("agent_browser")`` installs is present: the agent-browser CLI
     *and* the Chromium build it drives (or the Lightpanda engine, which needs no Chromium), so "Run
     setup" flips to installed only when re-running it would be a no-op."""
-    from niki_cli.niki_subscription import _local_browser_runnable
-
-    return _local_browser_runnable()
+    try:
+        from tools.browser_tool_install import _find_agent_browser, _chromium_installed
+        from tools.browser_tool_lightpanda_fallback import _using_lightpanda_engine
+        _find_agent_browser(validate=False)
+        return _using_lightpanda_engine() or _chromium_installed()
+    except Exception:
+        return False
 
 
 def _camofox_installed() -> bool:
@@ -380,8 +384,12 @@ def _lightpanda_installed() -> bool:
 def _cloud_agent_browser_installed() -> bool:
     """Installed-check for the ``browserbase`` hook: cloud providers host their own Chromium, so
     presence of the agent-browser CLI is the whole contract."""
-    from niki_cli.niki_subscription import _has_agent_browser
-    return _has_agent_browser()
+    try:
+        from tools.browser_tool_install import _find_agent_browser
+        _find_agent_browser(validate=False)
+        return True
+    except (ImportError, OSError):
+        return False
 
 
 # post_setup_key -> predicate(): True when the install side-effect is satisfied. Used by

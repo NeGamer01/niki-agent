@@ -756,14 +756,6 @@ def _get_portal_status_sync():
         auth = {}
 
     features = []
-    try:
-        from niki_cli.niki_subscription import get_nous_subscription_features
-        feats = get_nous_subscription_features(cfg)
-        if feats is not None:
-            features = [{"label": getattr(feat, "label", ""), "state": _feature_state(feat)}
-                        for feat in feats.items()]
-    except Exception:
-        _log.exception("portal features failed")
 
     model_cfg = cfg.get("model") if isinstance(cfg.get("model"), dict) else {}
     return {
@@ -773,7 +765,6 @@ def _get_portal_status_sync():
         # Free tier: a token exists, so logged_in stays true for callers that only ask "is there a
         # credential"; surfaces that render an account must branch on free_tier first.
         "free_tier": bool(auth.get("free_tier")), "account_tier": auth.get("account_tier"),
-        "subscription_url": "https://portal.nousresearch.com/manage-subscription",
         "features": features}
 
 

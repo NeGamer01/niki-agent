@@ -12,11 +12,9 @@ from typing import Any, Dict, Optional
 
 from tools.environments.docker import DockerEnvironment as _DockerEnvironment
 from tools.environments.local import LocalEnvironment as _LocalEnvironment
-from tools.environments.managed_modal import ManagedModalEnvironment as _ManagedModalEnvironment
 from tools.environments.modal import ModalEnvironment as _ModalEnvironment
 from tools.environments.singularity import SingularityEnvironment as _SingularityEnvironment
 from tools.environments.ssh import SSHEnvironment as _SSHEnvironment
-from tools.managed_tool_gateway import is_managed_tool_gateway_ready
 from tools.terminal_tool_config import _get_plugin_env_provider
 from tools.tool_backend_helpers import (has_direct_modal_credentials, managed_nous_tools_enabled,
                                         niki_tool_gateway_unavailable_message, resolve_modal_backend_state)
@@ -104,8 +102,7 @@ def _is_supported_vercel_runtime(runtime: str) -> bool:
 
 def _get_modal_backend_state(modal_mode: object | None) -> dict[str, Any]:
     """Resolve direct vs managed Modal backend selection."""
-    return resolve_modal_backend_state(modal_mode, has_direct=has_direct_modal_credentials(),
-                                       managed_ready=is_managed_tool_gateway_ready("modal"))
+    return resolve_modal_backend_state(modal_mode, has_direct=has_direct_modal_credentials())
 
 
 def _modal_unavailable_reason(modal_state: dict[str, Any]) -> tuple[str, str]:
@@ -176,7 +173,7 @@ def _build_modal_env(*, image, cwd, timeout, cc, task_id, **_):
     selected = modal_state["selected_backend"]
     if selected not in ("managed", "direct"):
         raise ValueError(_modal_unavailable_reason(modal_state)[1])
-    cls = _ManagedModalEnvironment if selected == "managed" else _ModalEnvironment
+    cls = _ModalEnvironment
     return cls(image=image, cwd=cwd, timeout=timeout, modal_sandbox_kwargs=sandbox_kwargs,
                persistent_filesystem=res["persistent_filesystem"], task_id=task_id)
 

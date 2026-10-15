@@ -12,7 +12,7 @@ Niki uses two kinds of model slots:
 This page covers configuring both from the dashboard. If you prefer config files or the CLI, jump to [Alternative methods](#alternative-methods) at the bottom. To run models on your own machine instead of a cloud provider, see [Local Models](./local-models.md).
 
 :::tip Fastest path: Niki Portal
-[Niki Portal](./features/tool-gateway.md) provides 300+ models under one subscription. On a fresh install, run `niki setup --portal` to log in and set Niki as your provider in one command. Inspect what's wired up with `niki portal info`.
+Connect any provider below with your own API key.
 
 - Portal subscribers also get **10% off token-billed providers**.
 :::

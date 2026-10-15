@@ -1683,13 +1683,7 @@ def run_kanban_goal_loop(
             _log(f"kanban goal loop: task {task_id} status={status!r}; stopping")
             return _result("stopped", f"status={status}")
 
-        from agent.portal_tags import get_affinity_scope, reset_affinity_scope, set_affinity_scope
-        affinity_token = None if get_affinity_scope() else set_affinity_scope(f"kanban:{task_id}")
-        try:
-            verdict, reason, _parse_failed, _wait, _transport_failed = judge_goal(goal_text, last_response)
-        finally:
-            if affinity_token is not None:
-                reset_affinity_scope(affinity_token)
+        verdict, reason, _parse_failed, _wait, _transport_failed = judge_goal(goal_text, last_response)
         if _transport_failed:
             _log(f"kanban goal loop: judge transport failed on turn {turns_used}; stopping")
             return _result("stopped", "judge transport failure")

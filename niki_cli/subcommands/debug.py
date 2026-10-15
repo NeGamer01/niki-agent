@@ -22,7 +22,6 @@ Examples:
     niki debug share --expire 30  Keep dpaste.com fallback pastes for 30 days
     niki debug share --local      Print report locally (no upload)
     niki debug share --no-redact  Disable upload-time secret redaction
-    niki debug share --niki       Upload to Niki-internal storage (private)
     niki debug delete <url>       Delete a previously uploaded paste
 """)
     debug_sub = debug_parser.add_subparsers(dest="debug_command")
@@ -50,13 +49,6 @@ Examples:
             "are normally run through agent.redact.redact_sensitive_text "
             "with force=True before upload so credentials are not leaked "
             "into the public paste service.")
-    share_parser.add_argument(
-        "--niki", action="store_true",
-        help="Upload the debug bundle to Niki-internal storage (AWS S3) instead "
-            "of a public paste service. The bundle is private — viewable only "
-            "by Niki staff (and allowlisted Discord mods) via a Google-login-"
-            "gated viewer — and auto-deletes after 14 days. Still force-redacts "
-            "secrets unless --no-redact is also passed.")
     delete_parser = debug_sub.add_parser(
         "delete", help="Delete a paste uploaded by 'niki debug share'")
     delete_parser.add_argument(

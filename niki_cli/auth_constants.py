@@ -1,7 +1,7 @@
 """Shared constants, the lazy ``httpx`` proxy and :class:`AuthError` for the auth package.
 
 Pure leaf: imports nothing from ``niki_cli.auth`` so the per-provider modules
-(``auth_niki``, ``auth_codex``, ...) can import it at module scope without cycles."""
+(``auth_codex``, ...) can import it at module scope without cycles."""
 
 from __future__ import annotations
 
@@ -52,15 +52,12 @@ AUTH_STORE_VERSION = 1
 AUTH_LOCK_TIMEOUT_SECONDS = 15.0
 
 # Niki Portal defaults
-DEFAULT_NOUS_PORTAL_URL = "https://portal.nousresearch.com"
-DEFAULT_NOUS_INFERENCE_URL = "https://inference-api.nousresearch.com/v1"
 # The free tier's (anonymous account) inference host. NAS hands it to the client on every token
 # exchange (``inference_base_url``); this literal is the fallback when that field is absent or fails
 # the host allowlist, because the paid host cross-refuses an anonymous JWT with a 400.
-DEFAULT_NOUS_WELCOME_URL = "https://welcome-api.nousresearch.com/v1"
 DEFAULT_NOUS_CLIENT_ID = "niki-cli"
 # On every guest minted since the welcome trial: True when the desktop's first install claimed it
-# (``niki_cli.welcome_trial``), False for a connector mint. Absent = minted before the trial existed.
+# False for a connector mint. Absent = minted before the trial existed.
 WELCOME_CLAIM_FLAG = "welcome_claim"
 NIKI_INFERENCE_INVOKE_SCOPE = "inference:invoke"
 NIKI_BILLING_MANAGE_SCOPE = "billing:manage"

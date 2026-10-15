@@ -53,7 +53,7 @@ sidebar_position: 1
 
 ### Niki Portal
 
-[Niki Portal](https://portal.nousresearch.com) 是 NeGamer01 的统一订阅网关，也是**运行 Niki Agent 的推荐方式**。一次 OAuth 登录即可访问 300+ 前沿智能体模型（Claude、GPT、Gemini、DeepSeek、Qwen、Kimi、GLM、MiniMax、Grok 等）以及 [Tool Gateway](../user-guide/features/tool-gateway.md)（网页搜索、图像生成、TTS、浏览器自动化）——费用从你的 Niki 订阅中扣除，无需单独管理各提供商账户。
+Niki Portal 是 NeGamer01 的统一订阅网关，也是**运行 Niki Agent 的推荐方式**。一次 OAuth 登录即可访问 300+ 前沿智能体模型（Claude、GPT、Gemini、DeepSeek、Qwen、Kimi、GLM、MiniMax、Grok 等）以及 [Tool Gateway](../user-guide/features/tool-gateway.md)（网页搜索、图像生成、TTS、浏览器自动化）——费用从你的 Niki 订阅中扣除，无需单独管理各提供商账户。
 
 ```bash
 niki setup --portal     # 全新安装——一条命令完成 OAuth + 提供商 + 网关配置
@@ -61,7 +61,6 @@ niki model              # 已有安装——从列表中选择"Niki Portal"
 niki portal info        # 随时查看登录状态和路由信息
 ```
 
-还没有订阅？前往 [portal.nousresearch.com/manage-subscription](https://portal.nousresearch.com/manage-subscription) 购买。
 
 **完整详情：** 参见专属的 [Niki Portal 集成页面](./niki-portal.md)（订阅内容、模型目录、故障排查）以及分步指南[使用 Niki Portal 运行 Niki Agent](../guides/run-niki-with-niki-portal.md)。
 

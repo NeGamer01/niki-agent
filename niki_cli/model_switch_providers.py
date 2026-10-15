@@ -23,7 +23,7 @@ logger = logging.getLogger("niki_cli.model_switch")
 # Rows never capped by max_models: aggregators whose full catalogs (70+ models) must stay visible, and
 # rows that are already a curated list (Niki = curated + Portal picks, OpenRouter = curated ∩ live),
 # where the cap only cut the bottom "Free tier" block and the Portal's appended recommendations.
-_UNCAPPED_PICKER_PROVIDERS: frozenset[str] = frozenset({"opencode-zen", "opencode-go", "niki", "openrouter"})
+_UNCAPPED_PICKER_PROVIDERS: frozenset[str] = frozenset({"opencode-zen", "opencode-go", "openrouter"})
 
 
 def _save_discovered_models_to_config(
@@ -447,70 +447,8 @@ def _aws_live_or_curated_ids(slug: str, curated: dict, *fallback_keys: str,
         return _first_curated(curated, fallback_keys or (slug,)) or []
 
 
-def _nous_picker_model_ids(curated: dict, force_fresh_nous_tier: bool) -> list:
-    """Niki serves a huge live catalog; the picker shows ONLY the curated agentic list, augmented
-    with the Portal's free/paid recommendations and paid-tier sale models, then narrowed by org
-    policy. Mirrors ``_model_flow_niki`` so GUI pickers match the CLI. A failed
-    recommendation fetch still yields a policy-filtered curated list."""
-    model_ids = curated.get("niki", [])
-    try:
-        from niki_cli.models_pricing import get_pricing_for_provider
-        from niki_cli.models import (
-            check_nous_free_tier,
-            union_with_nous_on_sale_models,
-            union_with_portal_free_recommendations,
-            union_with_portal_paid_recommendations,
-        )
-        from niki_cli.auth import get_provider_auth_state
-        # Cache-only: a cold cache must not hold the picker open. The Portal unions only append ids;
-        # the on-sale union reads the rows the background prewarm filled under the same key the
-        # fetcher registers (base + credential fingerprint), so a logged-in account's cached_only
-        # read finds them.
-        pricing = get_pricing_for_provider("niki", cached_only=True) or {}
-        try:
-            portal = (get_provider_auth_state("niki") or {}).get("portal_base_url", "") or ""
-        except Exception:
-            portal = ""
-        if check_nous_free_tier(force_fresh=force_fresh_nous_tier):
-            model_ids, _ = union_with_portal_free_recommendations(model_ids, pricing, portal)
-        else:
-            model_ids, _ = union_with_portal_paid_recommendations(model_ids, pricing, portal)
-            model_ids = union_with_nous_on_sale_models(model_ids, pricing)
-    except Exception:
-        pass
-    try:
-        from niki_cli.models_pricing import niki_policy_allowed_ids, restrict_to_nous_policy
-        model_ids = restrict_to_nous_policy(model_ids, niki_policy_allowed_ids(), rescue_empty=True)
-    except Exception:
-        pass
-    return model_ids
 
 
-def _free_tier_nous_row(row: dict) -> dict | None:
-    """The one free-tier rule for a Niki picker row, shared by every row builder.
-
-    ``row`` carries at least ``name`` and ``models``. A guest identity carrying inference turns
-    it into "Niki · free tier" with the single model ``niki/welcome`` (the welcome host serves
-    nothing else). A guest that ``niki.guest: false`` has switched off yields ``None``: no Niki
-    row at all, since there is nothing selectable. A real account (or no Niki state) passes the
-    row through untouched. Builders that compute the full catalog lazily should pass
-    ``models=[]`` and only compute when the returned row still has no models."""
-    from niki_cli import anon_auth
-    if not anon_auth.has_guest():
-        return row
-    if not anon_auth.guest_allowed():
-        return None
-    if not anon_auth.free_inference_active():
-        return row  # a guest without the welcome trial here: the row is whatever real Niki login exists
-    out = dict(row)
-    out["name"] = anon_auth.FREE_TIER_LABEL
-    out["models"] = [anon_auth.GUEST_MODEL]
-    out["total_models"] = 1
-    # The explicit flag every consumer keys on (pricing, badges): never the display name. It also
-    # tells the picker this is the free tier's identity, distinct from ``free_tier`` (an account on
-    # the free plan) which pricing sets from the Portal's entitlement read.
-    out["free_tier_row"] = True
-    return out
 
 
 def _cap_models(model_ids: list, max_models: int | None, slug: str = "") -> list:
@@ -690,9 +628,7 @@ def _collect_authed_provider_slugs(
         if has_creds or _auth_store_has_provider(cp.slug) or _pool_usable(cp.slug):
             _emit(cp.slug, cp.slug)
 
-    # Niki excluded: its picker branch builds from the curated list and never reads the
-    # api_key-only cache entry a prefetch would write.
-    return [s for s in slugs if s != "niki"]
+    return slugs
 
 
 @dataclass
@@ -760,10 +696,6 @@ class _PickerBuild:
             "slug": slug, "name": name, "is_current": is_current, "is_user_defined": False,
             "models": _cap_models(model_ids, self.max_models, slug if uncapped_ok else ""),
             "total_models": len(model_ids), "source": source}
-        if slug == "niki":
-            # Free-tier identity: one row "Niki · free tier" / niki/welcome, or no row when
-            # niki.guest is off. Still marks the slug seen so a later lap cannot re-emit it.
-            row = _free_tier_nous_row(row)
         if row is not None:
             self.results.append(row)
         self.seen_slugs.add(slug.lower())
@@ -927,12 +859,6 @@ def _lap_overlay_rows(b: _PickerBuild, data: dict, user_providers: dict) -> None
         elif overlay.auth_type == "aws_sdk":
             model_ids = _aws_live_or_curated_ids(niki_slug, b.curated, niki_slug, pid,
                                                  non_blocking=b.non_blocking_catalogs)
-        elif niki_slug == "niki":
-            # A guest identity never needs the Portal catalog: add_builtin_row pins niki/welcome
-            # (or drops the row when niki.guest is off), so only a real account fetches.
-            tier_row = _free_tier_nous_row({"name": get_label(niki_slug), "models": []})
-            real_account = tier_row is not None and not tier_row["models"]
-            model_ids = _nous_picker_model_ids(b.curated, b.force_fresh_nous_tier) if real_account else []
         else:
             model_ids = _live_or_curated_ids(niki_slug, b.curated, niki_slug, pid,
                                              non_blocking=b.non_blocking_catalogs)
@@ -1185,7 +1111,7 @@ def _build_curated_lists(current_provider: str, current_base_url: str, current_m
     """Curated model lists keyed by niki provider id, plus the dynamic ones (niki manifest,
     Ollama Cloud, LM Studio live probe). ``non_blocking`` (GUI read path) takes cached Ollama Cloud
     ids and warms them in the background rather than waiting on an 8s probe (#114215)."""
-    from niki_cli.models import OPENROUTER_MODELS, _PROVIDER_MODELS, get_curated_nous_model_ids
+    from niki_cli.models import OPENROUTER_MODELS, _PROVIDER_MODELS
     curated: dict[str, list[str]] = dict(_PROVIDER_MODELS)
     curated["openrouter"] = [mid for mid, _ in OPENROUTER_MODELS]
     # Plugin profiles without a static row: their fallback_models are the curated floor, so the
@@ -1194,8 +1120,6 @@ def _build_curated_lists(current_provider: str, current_base_url: str, current_m
     for _pp in list_providers():
         if _pp.fallback_models and not curated.get(_pp.name):
             curated[_pp.name] = list(_pp.fallback_models)
-    # Remote manifest so new Portal models surface without a release; in-repo snapshot fallback.
-    curated["niki"] = get_curated_nous_model_ids()
     if "ollama-cloud" not in curated:
         from niki_cli.models import fetch_ollama_cloud_models
         # Read path: cache only; the row's own SWR refresh (cached_provider_model_ids) warms it.

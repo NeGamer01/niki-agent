@@ -9,7 +9,6 @@ import shutil
 from pathlib import Path
 from tools import tool_backend_helpers
 from tools.environments.docker import docker_runtime_name, find_docker
-from niki_cli import niki_subscription
 
 logger = logging.getLogger("niki_cli.setup")
 
@@ -165,12 +164,8 @@ def _setup_backend_singularity(config: dict) -> None:
 def _setup_backend_modal(config: dict) -> None:
     _setup.print_success("Terminal backend: Modal")
     _setup.print_info("Serverless cloud sandboxes. Each session gets its own container.")
-    from tools.managed_tool_gateway import is_managed_tool_gateway_ready
     from tools.tool_backend_helpers import normalize_modal_mode
-    managed_modal_available = bool(
-        tool_backend_helpers.managed_nous_tools_enabled()
-        and niki_subscription.get_nous_subscription_features(config).niki_auth_present
-        and is_managed_tool_gateway_ready("modal"))
+    managed_modal_available = False
     modal_mode = normalize_modal_mode(_setup.cfg_get(config, "terminal", "modal_mode"))
     use_managed_modal = False
     if managed_modal_available:

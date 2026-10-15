@@ -148,8 +148,7 @@ export function makeNousCloudBackendDownError(baseUrl: string, error: unknown): 
   const err = new Error(
     `Niki Cloud agent ${hostname} is down ` +
       `(HTTP ${serverError.statusCode}: server-side fault). ` +
-      'Check https://portal.nousresearch.com for backend status, ' +
-      'or switch to Local mode in Settings → Gateway. ' +
+      'Switch to Local mode in Settings → Gateway. ' +
       'You can also reach out on Discord at discord.gg/NeGamer01 ' +
       'for immediate assistance. ' +
       `Original detail: ${detail}`

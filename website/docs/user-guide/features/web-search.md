@@ -45,7 +45,7 @@ A fresh install with **no web credentials at all** gets working `web_search` and
 **Choosing free vs paid explicitly:** in `niki tools`, Exa, Parallel, and Keenable each appear as two rows — **Free (keyless)** and **Paid (API key)**. Picking Free pins that vendor's anonymous endpoint (even if you later add a key); picking Paid pins the keyed path (a missing key then errors instead of silently downgrading to the free tier). The selection is stored as `web.provider_tier.<name>: free|paid`; leave it unset for auto (key present → paid, otherwise the keyless ring).
 
 :::tip Niki Subscribers
-If you have a paid [Niki Portal](https://portal.nousresearch.com) subscription, web search and extract are available through the **[Tool Gateway](tool-gateway.md)** as managed web search — no API key needed. New installs can run `niki setup --portal` to log in and turn on all gateway tools at once; existing installs can flip just web via `niki tools`.
+If you have a paid Niki Portal subscription, web search and extract are available through the **[Tool Gateway](tool-gateway.md)** as managed web search — no API key needed. New installs can run `niki setup --portal` to log in and turn on all gateway tools at once; existing installs can flip just web via `niki tools`.
 :::
 
 ---

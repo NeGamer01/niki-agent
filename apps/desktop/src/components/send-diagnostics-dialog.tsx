@@ -27,7 +27,6 @@ import { $sendDiagnostics, confirmSendDiagnostics, dismissSendDiagnostics } from
 
 const SUPPORT_LINKS = [
   { key: 'github', url: 'https://github.com/NeGamer01/niki-agent/issues' },
-  { key: 'portal', url: 'https://portal.nousresearch.com/help' },
   { key: 'discord', url: 'https://discord.gg/NeGamer01' }
 ] as const
 

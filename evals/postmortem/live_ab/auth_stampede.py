@@ -43,7 +43,7 @@ class H(BaseHTTPRequestHandler):
         else:
             if os.environ.get("TRACE401"):
                 import traceback; sys.stderr.write("401 path: "+self.path+"\n")
-            body = json.dumps({"error": {"type": "authentication_error", "message": "Your API key is invalid, blocked or out of funds. Please go visit the portal to sort that out: https://portal.nousresearch.com "}}).encode()
+            body = json.dumps({"error": {"type": "authentication_error", "message": "Your API key is invalid, blocked or out of funds. Please check your API key configuration. "}}).encode()
             with lock: hits["401"] += 1
             self.send_response(401)
         self.send_header("content-type", "application/json"); self.send_header("content-length", str(len(body))); self.end_headers(); self.wfile.write(body)
@@ -54,8 +54,6 @@ base = f"http://127.0.0.1:{srv.server_address[1]}/v1"
 
 import niki_cli.auth as auth_mod
 auth_mod.resolve_nous_runtime_credentials = lambda **kw: {"api_key": FRESH, "base_url": base}
-import niki_cli.niki_auth_keepalive as ka
-ka.start_nous_auth_keepalive = lambda **kw: None  # thread itself is out of scope here; we test adoption
 
 from run_agent import AIAgent
 

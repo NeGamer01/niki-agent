@@ -10,7 +10,7 @@ Python dependency commands on this page use a
 [PM-prepared source checkout](../reference/package-management.md#developer-workflow).
 After a dependency change, reactivate the checkout and restart Niki.
 
-[Niki Cloud](https://portal.nousresearch.com/cloud) runs hosted Niki Agent instances for you. Normally you manage them from the `/agents` page in the [Niki Portal](../integrations/niki-portal.md). This guide connects your **local** Niki Agent to the Portal's MCP server so you can manage those cloud instances by just asking — "list my cloud agents", "restart the stopped one", "what's it costing me" — without leaving your terminal.
+Niki Cloud runs hosted Niki Agent instances for you. Normally you manage them from the `/agents` page in the [Niki Portal](../integrations/niki-portal.md). This guide connects your **local** Niki Agent to the Portal's MCP server so you can manage those cloud instances by just asking — "list my cloud agents", "restart the stopped one", "what's it costing me" — without leaving your terminal.
 
 It's a standard [MCP](../user-guide/features/mcp.md) server hosted by NeGamer01, gated by the same OAuth login you already use for the Portal. Once connected, Niki gets two tools it can call on your behalf.
 
@@ -32,7 +32,7 @@ Every call runs against **your** org with your Portal identity, and membership i
 
 ## Prerequisites
 
-- A [Niki Portal](../integrations/niki-portal.md) account with [Niki Cloud](https://portal.nousresearch.com/cloud) access (at least one instance, or the ability to create one).
+- A [Niki Portal](../integrations/niki-portal.md) account with Niki Cloud access (at least one instance, or the ability to create one).
 - MCP support installed. If you used the standard install script it's already there; otherwise:
 
   ```bash
@@ -45,7 +45,7 @@ You do **not** need a separate API key or client secret — the server uses OAut
 ## Step 1: add the server
 
 ```bash
-niki mcp add --url https://portal.nousresearch.com/mcp --auth oauth niki-cloud
+niki mcp add --url /mcp --auth oauth niki-cloud
 ```
 
 `--auth oauth` tells Niki this is an OAuth-protected HTTP server. On first connect Niki:
@@ -112,7 +112,7 @@ After `niki mcp add`, the server lives in `~/.niki/config.yaml`:
 ```yaml
 mcp_servers:
   niki-cloud:
-    url: "https://portal.nousresearch.com/mcp"
+    url: "/mcp"
     auth: oauth
 ```
 
@@ -125,7 +125,7 @@ The server exposes both read (`agents`) and mutating (`agent`) tools. If you wan
 ```yaml
 mcp_servers:
   niki-cloud:
-    url: "https://portal.nousresearch.com/mcp"
+    url: "/mcp"
     auth: oauth
     tools:
       include: [agents]
@@ -146,7 +146,7 @@ The stored client registration no longer matches the server (for example, you co
 ```bash
 niki mcp remove niki-cloud
 rm -f ~/.niki/mcp-tokens/niki-cloud.*
-niki mcp add --url https://portal.nousresearch.com/mcp --auth oauth niki-cloud
+niki mcp add --url /mcp --auth oauth niki-cloud
 ```
 
 ### The tools aren't showing up after adding the server

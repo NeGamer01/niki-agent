@@ -7,9 +7,9 @@ import pytest
 
 
 @pytest.mark.parametrize('provider,host,expected', [
-    ('niki', 'https://welcome-api.nousresearch.com/v1', True),
-    ('niki', 'https://inference-api.nousresearch.com/v1', False),
-    ('custom', 'https://welcome-api.nousresearch.com/v1', False),
+    ('niki', 'https://welcome-api.example.com/v1', True),
+    ('niki', 'https://example.com/v1', False),
+    ('custom', 'https://welcome-api.example.com/v1', False),
 ])
 def test_readiness_reports_selected_free_route(monkeypatch, provider, host, expected):
     from niki_cli.runtime_readiness import check_runtime_readiness

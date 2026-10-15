@@ -721,8 +721,7 @@ def _dispatch_bridge_tool(function_name: str, function_args: dict[str, Any],
     except Exception:
         current_defs = []
     args = function_args or {}
-    from tools.managed_gateway_identity import CallRef
-    call = CallRef(turn_id=ids.turn_id, tool_call_id=ids.tool_call_id) if ids else None
+    call = None
     if function_name == ts.TOOL_SEARCH_NAME:
         return ts.dispatch_tool_search(args, current_tool_defs=current_defs, call=call), None
     if function_name == ts.TOOL_DESCRIBE_NAME:

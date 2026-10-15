@@ -14,7 +14,6 @@ You need at least one way to connect to an LLM. Use `niki model` to switch provi
 
 | Provider | Setup |
 |----------|-------|
-| **Niki Portal** | `niki model` (OAuth, subscription-based) |
 | **OpenAI Codex** | `niki model` → **ChatGPT or Codex Subscription** (ChatGPT OAuth, uses Codex models) |
 | **GitHub Copilot** | `niki model` (OAuth device code flow, `COPILOT_GITHUB_TOKEN`, `GH_TOKEN`, or `gh auth token`) |
 | **GitHub Copilot ACP** | `niki model` (spawns local `copilot --acp --stdio`) |
@@ -71,53 +70,6 @@ In the `model:` config section, you can use either `default:` or `model:` as the
 :::
 
 
-### Niki Portal
-
-[Niki Portal](https://portal.nousresearch.com) is NeGamer01's unified subscription gateway and **the recommended way to run Niki Agent**. One OAuth login covers 300+ frontier agentic models (Claude, GPT, Gemini, DeepSeek, Qwen, Kimi, GLM, MiniMax, Grok, ...) plus the [Tool Gateway](../user-guide/features/tool-gateway.md) (web search, image generation, TTS, browser automation) — billed against your Niki subscription instead of separate per-provider accounts.
-
-```bash
-niki setup --portal     # fresh install — OAuth + provider + gateway in one command
-niki model              # existing install — pick "Niki Portal" from the list
-niki portal info        # inspect login + routing at any time
-```
-
-Don't have a subscription yet? Get one at [portal.nousresearch.com/manage-subscription](https://portal.nousresearch.com/manage-subscription).
-
-**For full details:** see the dedicated [Niki Portal integration page](./niki-portal.md) (what's in the subscription, model catalog, troubleshooting) and the step-by-step [Run Niki Agent with Niki Portal guide](../guides/run-niki-with-niki-portal.md).
-
-**Client identification.** Every Portal request from Niki Agent carries a `client=niki-client-v<version>` tag (e.g. `client=niki-client-v0.13.0`) auto-aligned to your installed release. This is sent on all Portal pathways — main chat loop, auxiliary calls, compression summarizer, web extraction — and lets Portal-side telemetry distinguish Niki traffic from other clients. No config required; the tag updates automatically when you `niki update`.
-
-**JWT auth (automatic).** Niki prefers scoped `inference:invoke` JWTs for Portal requests with the legacy opaque session-key path as a fallback. No configuration is required — credentials are managed by the OAuth flow and rotate transparently. Revoked refresh tokens are quarantined to avoid replay loops.
-
-
-:::info Codex Note
-The OpenAI Codex provider authenticates via device code by default (open a URL, enter a code). Organizations that disable the device-code grant can opt in to the browser authorization-code + PKCE flow instead: `niki auth add openai-codex --browser` (one login) or `auth.codex_login_flow: browser` in `config.yaml` (every Codex login, including `niki model`). That flow listens on `http://localhost:1455/auth/callback` — the redirect URI registered for the Codex client, so the port is fixed; if it is already taken (a Codex CLI sign-in in progress) Niki says so and falls back to device code. Over SSH the listener needs a tunnel (`ssh -N -L 1455:127.0.0.1:1455 user@host`, see [OAuth over SSH](../guides/oauth-over-ssh.md)). Niki stores the resulting credentials in its own auth store under `~/.niki/auth.json` and can import existing Codex CLI credentials from `~/.codex/auth.json` when present. No Codex CLI installation is required. Automatic adoption of the Codex CLI login (when Niki' own refresh fails) is controlled by `auth.adopt_external_logins` — see [Borrowed CLI logins](../user-guide/security.md#borrowed-cli-logins).
-
-If a token refresh fails with a terminal error (HTTP 4xx, `invalid_grant`, revoked grant, etc.), Niki marks the refresh token as dead and stops replaying it so you don't see a flood of identical auth failures. The next request surfaces a typed re-auth message instead. Run `niki auth add openai-codex` (or `niki model` → **ChatGPT or Codex Subscription**) to start a fresh login (device code, or `--browser` for the loopback PKCE flow); the quarantine clears on the next successful exchange.
-
-Device login can fail with `[SSL: UNEXPECTED_EOF_WHILE_READING]` or a TLS handshake timeout on Python/OpenSSL 3.5+ when a middlebox rejects post-quantum groups such as X25519MLKEM768 (curl may still work). A one-off dropped connection is not fatal: while waiting for your browser approval Niki keeps polling through up to six consecutive transport errors (and retries the device-code request and token exchange twice) before giving up, so only a persistently broken network surfaces this error. Niki does not change default TLS policy. Point `OPENSSL_CONF` at a config that restricts `Groups` to classic curves before running `niki model`, or diagnose with TLS 1.2:
-
-```ini
-openssl_conf = openssl_init
-
-[openssl_init]
-ssl_conf = ssl_sect
-
-[ssl_sect]
-system_default = system_default_sect
-
-[system_default_sect]
-Groups = x25519:secp256r1:secp384r1:x448
-```
-:::
-
-:::warning
-Even when using Niki Portal, Codex, or a custom endpoint, some tools (vision, web summarization, MoA) use a separate "auxiliary" model. By default (`auxiliary.*.provider: "auto"`), Niki routes these tasks to your **main chat model** — the same model you picked in `niki model`. You can override each task individually to route it to a cheaper/faster model (e.g. Gemini Flash on OpenRouter) — see [Auxiliary Models](../user-guide/configuration.md#auxiliary-models).
-:::
-
-:::tip Niki Tool Gateway
-Paid Niki Portal subscribers also get access to the **[Tool Gateway](../user-guide/features/tool-gateway.md)** — web search, image generation, TTS, and browser automation routed through your subscription. No extra API keys needed. On a fresh install, `niki setup --portal` logs you in, sets Niki as your provider, and turns the gateway on in one command. Existing users can enable it from `niki model` or per-tool from `niki tools`. Inspect routing at any time with `niki portal info`.
-:::
 
 ### Two Commands for Model Management
 

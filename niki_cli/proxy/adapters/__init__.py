@@ -3,11 +3,10 @@
 from typing import Dict, Type
 
 from niki_cli.proxy.adapters.base import UpstreamAdapter
-from niki_cli.proxy.adapters.niki_portal import NousPortalAdapter
 from niki_cli.proxy.adapters.xai import XAIGrokAdapter
 
 # Keyed by the ``niki proxy start --provider <name>`` value.
-ADAPTERS: dict[str, type[UpstreamAdapter]] = {"niki": NousPortalAdapter, "xai": XAIGrokAdapter}
+ADAPTERS: dict[str, type[UpstreamAdapter]] = {"xai": XAIGrokAdapter}
 
 
 def get_adapter(name: str) -> UpstreamAdapter:
