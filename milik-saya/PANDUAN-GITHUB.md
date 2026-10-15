@@ -30,26 +30,26 @@ itu atas namamu juga:
 git commit --amend --reset-author --no-edit
 ```
 
-## 2. Buat repo kosong di GitHub
+## 2. Repo GitHub tujuan (SUDAH dibuat)
 
-Di github.com: **New repository** → nama: `niki-agent` → **jangan**
-centang “Add a README / .gitignore / license” (repo harus kosong) →
-Create.
+Repo: https://github.com/NeGamer01/niki-agent — publik, dibuat
+15 Okt 2026, dan terverifikasi masih KOSONG (size 0, belum ada branch).
+Jadi tidak ada yang akan tertimpa oleh push pertama ini.
 
 ## 3. Hubungkan & push
 
 ```bash
 cd niki-agent
-git remote add origin https://github.com/USERNAME-KAMU/niki-agent.git
+git remote add origin https://github.com/NeGamer01/niki-agent.git
 git branch -M main
 git push -u origin main
 ```
 
-Ganti `USERNAME-KAMU` dengan username GitHub kamu. Push pertama besar
+Ganti `NeGamer01` dengan username GitHub kamu. Push pertama besar
 (repo ±344 MB sebelum kompresi) — biarkan sampai selesai, jangan
 ditutup di tengah.
 
-Alternatif SSH: `git@github.com:USERNAME-KAMU/niki-agent.git`
+Alternatif SSH: `git@github.com:NeGamer01/niki-agent.git`
 
 ## 4. Setelah push
 
