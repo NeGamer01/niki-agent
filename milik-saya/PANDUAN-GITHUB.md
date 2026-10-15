@@ -1,9 +1,18 @@
 # PANDUAN — Commit & Push Niki Agent ke GitHub Saya
 
-Repo lokal di folder ini SUDAH di-git-init dan SUDAH ada commit awal
-“Niki Agent” (cek: `git log --oneline`). Tinggal push ke akun GitHub
-kamu. Tidak ada file di atas 50 MB di repo ini, jadi push biasa aman
+Repo ini SUDAH di-git-init dan SUDAH ada commit “Niki Agent”
+(cek: `git log --oneline`). Tinggal push ke akun GitHub kamu.
+Tidak ada file di atas 50 MB di repo ini, jadi push biasa aman
 (batas GitHub per file 100 MB).
+
+Kalau kamu menerima repo ini sebagai file `niki-agent.bundle`,
+pulihkan dulu repo + commit-nya persis seperti aslinya:
+
+```bash
+git clone niki-agent.bundle niki-agent
+cd niki-agent
+git log --oneline   # commit Niki Agent harus muncul
+```
 
 ## 1. Atur identitas git kamu (sekali)
 
