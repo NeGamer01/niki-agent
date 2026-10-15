@@ -21,7 +21,6 @@ const buildOverlayState = (): OverlayState => ({
   agents: false,
   agentsInitialHistoryIndex: 0,
   approval: null,
-  billing: null,
   clarify: null,
   confirm: null,
   connection: null,
@@ -39,7 +38,6 @@ const buildOverlayState = (): OverlayState => ({
   vaultUnlock: null,
   sessions: false,
   skillsHub: false,
-  subscription: null,
   sudo: null
 })
 
@@ -49,7 +47,6 @@ export const $overlayState = atom<OverlayState>(buildOverlayState())
 const BLOCKING_KEYS = [
   'agents',
   'approval',
-  'billing',
   'clarify',
   'confirm',
   'connection',
@@ -62,7 +59,6 @@ const BLOCKING_KEYS = [
   'secret',
   'sessions',
   'skillsHub',
-  'subscription',
   'sudo',
   'vaultCode',
   'vaultSaveLogin',

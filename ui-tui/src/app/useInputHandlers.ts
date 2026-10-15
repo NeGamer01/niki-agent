@@ -312,14 +312,6 @@ export function useInputHandlers(ctx: InputHandlerContext): InputHandlerResult {
       return patchOverlayState({ petPicker: false })
     }
 
-    if (overlay.billing) {
-      return patchOverlayState({ billing: null })
-    }
-
-    if (overlay.subscription) {
-      return patchOverlayState({ subscription: null })
-    }
-
     if (overlay.skillsHub) {
       return patchOverlayState({ skillsHub: false })
     }
@@ -509,11 +501,9 @@ export function useInputHandlers(ctx: InputHandlerContext): InputHandlerResult {
       // through to the wheel / PageUp / Shift+arrow handlers below.
       const promptOverlay =
         overlay.approval ||
-        overlay.billing ||
         overlay.clarify ||
         overlay.confirm ||
-        overlay.connection ||
-        overlay.subscription
+        overlay.connection
 
       const fallThroughForScroll = promptOverlay && shouldFallThroughForScroll(key)
 

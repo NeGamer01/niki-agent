@@ -124,6 +124,9 @@ karena agen ini dipakai pribadi.
 - Sisa kata "portal"/"nousresearch" yang BUKAN fitur: library portalocker,
   React createPortal, LICENSE (wajib MIT), contributors/, alamat repo
   eksternal pihak ketiga (image sandbox), dan file lock yang belum dibuat
-  ulang. Definisi tipe internal billing yang tak terpakai masih ada di
-  ui-tui/src/app/interfaces.ts (tidak terlihat pengguna, tidak terhubung
-  ke backend mana pun).
+  ulang. Definisi tipe internal billing/subscription yang tak terpakai di
+  ui-tui (interfaces.ts, overlayStore, useInputHandlers, gatewayTypes)
+  sudah ikut dibersihkan pada commit lanjutan 16 Okt 2026. Yang masih ada
+  hanyalah definisi tipe wire generik di paket apps/shared (kontrak
+  gateway hasil generate + dialog "kredit habis" generik untuk semua
+  provider, bukan fitur Portal).

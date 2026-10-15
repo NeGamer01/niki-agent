@@ -90,26 +90,10 @@ export interface SlashExecResponse {
   warning?: string
 }
 
-// ── Remote Spending (Phase 2b) ───────────────────────────────────────
+// ── Usage data ────────────────────────────────────────────────────────
 
-// Wire shapes now live in @niki/shared for reuse by TypeScript clients.
-export type {
-  BillingAutoReload,
-  BillingBlock,
-  BillingCardInfo,
-  BillingChargeResponse,
-  BillingChargeStatusResponse,
-  BillingErrorPayload,
-  BillingMonthlyCap,
-  BillingMutationResponse,
-  BillingStateResponse,
-  SubscriptionPreviewResponse,
-  SubscriptionStateResponse,
-  SubscriptionTierOption,
-  SubscriptionUpgradeResponse,
-  UsageBarData,
-  UsageModelData
-} from '@niki/shared/billing'
+// Wire shapes live in @niki/shared for reuse by TypeScript clients.
+export type { UsageBarData, UsageModelData } from '@niki/shared/billing'
 
 // ── Config ───────────────────────────────────────────────────────────
 
