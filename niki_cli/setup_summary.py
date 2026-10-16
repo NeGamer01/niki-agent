@@ -210,9 +210,18 @@ def _print_setup_summary(config: dict, niki_home):
     print()
     _setup.print_header("Tool Availability Summary")
 
+    try:
+        from niki_cli.tools_config import get_nous_subscription_features
+        feats = get_nous_subscription_features(config)
+    except Exception:
+        feats = None
+
     tool_status = []
     for build in _TOOL_ROW_BUILDERS:
-        row = build(config, None)
+        try:
+            row = build(config, feats)
+        except Exception:
+            continue  # Ringkasan bersifat informatif; jangan pernah menggagalkan wizard.
         tool_status.extend(row if isinstance(row, list) else [] if row is None else [row])
 
     available_count = sum(1 for _, avail, _ in tool_status if avail)

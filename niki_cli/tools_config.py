@@ -734,19 +734,56 @@ def _provider_env_ready(provider: dict) -> bool:
     return all(get_env_value(e["key"]) for e in provider.get("env_vars", []))
 
 
+class _FeatureStatus:
+    """Status satu kategori fitur. Portal sudah dihapus: tidak ada kategori yang
+    dikelola langganan (managed_by_niki selalu False); available/current_provider
+    dihitung dari provider yang benar-benar terkonfigurasi oleh pengguna."""
+
+    def __init__(self, available: bool = False, current_provider=None):
+        self.managed_by_niki = False
+        self.available = available
+        self.active = available
+        self.current_provider = current_provider
+        self.direct_override = False
+
+
 class NousSubscriptionFeatures:
     """Status langganan Portal — fitur Portal sudah dihapus dari Niki Agent, jadi
-    statusnya selalu netral: tidak ada akun, tidak ada hak langganan. Bertahan
-    sebagai bentuk data agar pemanggil lama (tools_config_providers, dashboard,
-    api_server) tetap berjalan tanpa cabang Portal."""
+    tidak ada akun dan tidak ada hak langganan. Status per kategori dihitung dari
+    konfigurasi nyata pengguna agar pemanggil lama (ringkasan setup,
+    tools_config_providers, dashboard, api_server) tetap berjalan jujur."""
 
     account_info = None
     niki_auth_present = False
 
+    def __init__(self, config=None):
+        self.features: dict = {}
+        self.web = self._status(config, "web")
+        self.browser = self._status(config, "browser")
+        self.image_gen = self._status(config, "image_gen")
+        self.video_gen = self._status(config, "video_gen")
+        self.tts = self._status(config, "tts")
+        self.modal = _FeatureStatus()
+
+    @staticmethod
+    def _status(config, key: str) -> _FeatureStatus:
+        try:
+            if config is None:
+                return _FeatureStatus()
+            cat = TOOL_CATEGORIES.get(key)
+            if not cat:
+                return _FeatureStatus()
+            for provider in _visible_providers(cat, config):
+                if _provider_env_ready(provider):
+                    return _FeatureStatus(True, provider.get("name"))
+        except Exception:
+            pass
+        return _FeatureStatus()
+
 
 def get_nous_subscription_features(config=None, *, force_fresh: bool = False) -> NousSubscriptionFeatures:
-    """Dulu membaca status langganan Portal; kini selalu netral (lihat kelas di atas)."""
-    return NousSubscriptionFeatures()
+    """Dulu membaca status langganan Portal; kini status nyata dari konfigurasi."""
+    return NousSubscriptionFeatures(config)
 
 
 def _toolset_has_keys(
