@@ -246,7 +246,10 @@ rm -f "$OUT_ABS/index.json" "$OUT_ABS/SHA256SUMS" "$WORK/resolved.txt" "$WORK/bu
 # [d] Resolve the real graph from the tag's own lock.
 log "Resolving dependency graph from the tag's uv.lock"
 ( cd "$REPO_ROOT" && python3 -m pm.build_env --source "$WORK/tree" \
-    --extra acp --export-requirements "$WORK/req.txt" ) \
+    --extra acp --extra anthropic --extra bedrock --extra mistral \
+    --extra azure-identity --extra vertex --extra exa --extra ddgs \
+    --extra parallel-web --extra firecrawl --extra fal --extra edge-tts \
+    --extra telegram --export-requirements "$WORK/req.txt" ) \
     || fail "PM requirements export failed (frozen lock at $REF)"
 # Host parsing needs packaging too. Use the release lock, not runner packages.
 PACKAGING_SPEC="$(python3 - "$WORK/tree/uv.lock" <<'PY'

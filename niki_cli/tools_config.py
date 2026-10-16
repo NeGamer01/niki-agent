@@ -976,6 +976,9 @@ def _checklist_diff(new_enabled: set[str], prev: set[str], platform: str) -> tup
 
 def _first_install_flow(config: dict, enabled_platforms: list[str]) -> None:
     """Fresh install: one checklist per platform, no menu, keys prompted for every enabled tool."""
+    # Portal/langganan sudah dihapus: tidak ada toolset yang terkonfigurasi otomatis oleh
+    # langganan, jadi semua toolset yang bisa dikonfigurasi melewati prompt provider/kunci.
+    auto_configured: set[str] = set()
     for pkey in enabled_platforms:
         pinfo = PLATFORMS[pkey]
         current_enabled = _current_platform_tools(config, pkey)
@@ -983,7 +986,7 @@ def _first_install_flow(config: dict, enabled_platforms: list[str]) -> None:
         _print_toolset_diff(*_checklist_diff(new_enabled, current_enabled, pkey))
         for ts_key in sorted(new_enabled):
             label = next((l for k, l, _ in CONFIGURABLE_TOOLSETS if k == ts_key), ts_key)
-            print(color(f"  ✓ {label}: using your Niki subscription defaults", Colors.GREEN))
+            print(color(f"  ✓ {label}: enabled", Colors.GREEN))
         # Walk through ALL selected tools with provider options or key requirements, so browser (Local vs
         # Browserbase), TTS (Edge vs OpenAI vs ElevenLabs), etc. are shown even when a free provider exists.
         _configure_list(
