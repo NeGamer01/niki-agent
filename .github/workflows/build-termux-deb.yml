@@ -1,0 +1,88 @@
+name: Build Paket Termux (.deb)
+
+# Build paket Termux Niki Agent dari repo ini sendiri, di runner ARM64
+# asli milik GitHub (bukan emulasi) — jauh lebih cepat daripada build
+# lokal di mesin x86. Hasilnya berupa artefak .deb yang siap diunduh
+# dan di-install di Termux:  pkg install ./niki-agent_<versi>_aarch64.deb
+#
+# Cara menjalankan: tab Actions → "Build Paket Termux (.deb)" →
+# Run workflow → isi tag rilis (default v1.0.0) → Run.
+# Otomatis juga berjalan setiap ada tag v* baru yang di-push.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag rilis yang dibangun (harus sudah ada di repo)"
+        required: true
+        default: "v1.0.0"
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build-termux-deb:
+    name: Build .deb Termux (ARM64 asli)
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 350
+    steps:
+      - name: Tentukan tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.tag.outputs.tag }}
+          fetch-depth: 0
+
+      - name: Periksa lingkungan
+        run: |
+          uname -m
+          docker --version
+          python3 --version
+          df -h .
+
+      - name: Stage payload (Python, Node, uv versi Termux)
+        run: |
+          mkdir -p build/payload build/out
+          scripts/termux/build_cpython.sh build/payload
+          scripts/termux/build_node.sh    build/payload
+          scripts/termux/build_uv.sh      build/payload
+
+      - name: Bangun wheelhouse (wheel Python untuk Android)
+        run: |
+          scripts/termux/termux_build.sh \
+            --repo . --tag "${{ steps.tag.outputs.tag }}" --out build/out
+
+      - name: Masukkan kode aplikasi + wheelhouse ke payload
+        run: |
+          git archive "${{ steps.tag.outputs.tag }}" -o build/app.tar
+          mkdir -p build/payload/app
+          tar -xf build/app.tar -C build/payload/app
+          cp -r build/out/wheelhouse build/payload/
+
+      - name: Rakit .deb (termasuk uji install otomatis)
+        run: |
+          scripts/termux/build_deb.sh \
+            --repo . --tag "${{ steps.tag.outputs.tag }}" \
+            --payload build/payload --out build/out
+          ls -lh build/out/*.deb
+
+      - name: Unggah paket jadi
+        uses: actions/upload-artifact@v4
+        with:
+          name: niki-agent-termux-${{ steps.tag.outputs.tag }}
+          path: |
+            build/out/*.deb
+            build/out/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 90

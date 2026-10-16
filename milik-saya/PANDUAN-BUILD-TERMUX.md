@@ -35,6 +35,29 @@ dari server proyek lain pada saat install.
 
 ---
 
+## Jalur cepat (disarankan): build di GitHub Actions
+
+Repo ini sekarang punya workflow **“Build Paket Termux (.deb)”**
+(`.github/workflows/build-termux-deb.yml`) yang menjalankan seluruh
+pipeline di bawah pada **mesin ARM64 asli milik GitHub** — bukan emulasi,
+jadi jauh lebih cepat daripada build di komputer x86 (yang bisa berjam-jam
+karena semua kompilasi ARM-nya diemulasi). Gratis untuk repo publik.
+
+Caranya:
+
+1. Buka repo → tab **Actions** → pilih **Build Paket Termux (.deb)**.
+2. Klik **Run workflow**, isi tag `v1.0.0`, klik **Run**.
+3. Tunggu sampai job hijau. Di bagian bawah halaman run itu, unduh
+   artefak `niki-agent-termux-v1.0.0` — isinya file
+   `niki-agent_1.0.0_aarch64.deb`.
+4. Lanjut ke **Langkah 6** di bawah (install di HP).
+
+Kalau jalur cepat ini berhasil, Langkah 1–5 versi lokal tidak perlu
+kamu jalankan. Sisanya di panduan ini tetap berguna sebagai jalur manual
+dan untuk memahami isi pipeline-nya.
+
+---
+
 ## Langkah 1 — Ambil repo & masuk ke tag rilis
 
 Versi paket ditentukan oleh **tag git**, bukan file versi. Tag `v1.0.0`
