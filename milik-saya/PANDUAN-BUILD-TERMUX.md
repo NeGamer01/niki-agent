@@ -78,7 +78,7 @@ lalu `git push origin v1.0.1`) dan checkout tag itu sebelum build.
 mkdir -p build/payload build/out
 scripts/termux/build_cpython.sh build/payload
 scripts/termux/build_node.sh    build/payload
-scripts/termux/build_uv.sh      build/payload
+bash scripts/termux/build_uv.sh      build/payload
 ```
 
 Ketiganya men-stage paket bionik yang terkunci di `pm/lock.json` ke dalam
@@ -111,7 +111,7 @@ Setelah ini `build/payload/` berisi `python/`, `node/`, `app/`, dan
 ## Langkah 5 — Rakit paket .deb (sekaligus diuji otomatis)
 
 ```bash
-scripts/termux/build_deb.sh --repo . --tag v1.0.0 --payload build/payload --out build/out
+bash scripts/termux/build_deb.sh --repo . --tag v1.0.0 --payload build/payload --out build/out
 ```
 
 Hasil akhir: **`build/out/niki-agent_1.0.0_aarch64.deb`**.

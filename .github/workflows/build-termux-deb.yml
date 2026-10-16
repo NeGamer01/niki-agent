@@ -56,7 +56,7 @@ jobs:
           mkdir -p build/payload build/out
           scripts/termux/build_cpython.sh build/payload
           scripts/termux/build_node.sh    build/payload
-          scripts/termux/build_uv.sh      build/payload
+          bash scripts/termux/build_uv.sh      build/payload
 
       - name: Bangun wheelhouse (wheel Python untuk Android)
         run: |
@@ -72,7 +72,7 @@ jobs:
 
       - name: Rakit .deb (termasuk uji install otomatis)
         run: |
-          scripts/termux/build_deb.sh \
+          bash scripts/termux/build_deb.sh \
             --repo . --tag "${{ steps.tag.outputs.tag }}" \
             --payload build/payload --out build/out
           ls -lh build/out/*.deb

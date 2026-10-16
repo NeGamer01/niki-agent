@@ -44,7 +44,7 @@ Assemble the payload and the wheelhouse:
 mkdir -p build/payload build/out
 scripts/termux/build_cpython.sh build/payload
 scripts/termux/build_node.sh    build/payload
-scripts/termux/build_uv.sh      build/payload
+bash scripts/termux/build_uv.sh      build/payload
 scripts/termux/termux_build.sh  --repo . --tag v1.0.0 --out build/out
 git archive v1.0.0 -o build/app.tar
 mkdir -p build/payload/app && tar -xf build/app.tar -C build/payload/app
@@ -55,7 +55,7 @@ Assemble and smoke-test the `.deb` (the builder installs it into a fresh
 pinned Termux container image and runs the installed-package checks):
 
 ```bash
-scripts/termux/build_deb.sh --repo . --tag v1.0.0 --payload build/payload --out build/out
+bash scripts/termux/build_deb.sh --repo . --tag v1.0.0 --payload build/payload --out build/out
 # → build/out/niki-agent_1.0.0_aarch64.deb
 ```
 
