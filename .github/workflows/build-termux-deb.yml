@@ -23,6 +23,11 @@ on:
 permissions:
   contents: write
 
+# gh CLI dipakai skrip build (gerbang rilis di termux_build.sh) — token
+# harus tersedia di SEMUA langkah, bukan hanya langkah pembuatan rilis.
+env:
+  GH_TOKEN: ${{ github.token }}
+
 jobs:
   build-termux-deb:
     name: Build .deb Termux (ARM64 asli)
