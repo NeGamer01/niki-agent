@@ -772,7 +772,6 @@ from datetime import datetime
 
 from niki_cli.model_setup_flows import (
     _model_flow_openrouter,
-    _model_flow_niki,
     _model_flow_openai_codex,
     _model_flow_xai_oauth,
     _model_flow_qwen_oauth,
@@ -1888,7 +1887,6 @@ _PROVIDER_MODEL_FLOWS = {
     "openrouter": lambda c, m, a: _model_flow_openrouter(c, m),
     "moa": lambda c, m, a: _model_flow_moa(c, m),
     "ai-gateway": lambda c, m, a: _model_flow_ai_gateway(c, m),
-    "niki": lambda c, m, a: _model_flow_niki(c, m, args=a),
     "openai-codex": lambda c, m, a: _model_flow_openai_codex(c, m),
     "xai-oauth": lambda c, m, a: _model_flow_xai_oauth(c, m, args=a),
     "qwen-oauth": lambda c, m, a: _model_flow_qwen_oauth(c, m),
@@ -1959,7 +1957,7 @@ def _resolve_active_provider(config, model_cfg, effective_provider, custom_provi
             if exc.code == "no_provider_configured":
                 # The picker that is about to open IS the fix; a warning that says
                 # "run `niki model`" from inside `niki model` is circular.
-                print("No provider is set up yet — pick one below. (Niki Portal works without an API key.)")
+                print("No provider is set up yet — pick one below.")
             elif effective_provider == "auto":
                 print(f"Warning: {format_auth_error(exc)} Falling back to auto provider detection.")
             active = None  # no provider yet; default to first in list
