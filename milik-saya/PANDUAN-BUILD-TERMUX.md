@@ -74,16 +74,23 @@ lalu `git push origin v1.0.1`) dan checkout tag itu sebelum build.
 
 ## Langkah 2 — Susun payload (Python, Node, uv versi Termux)
 
+Penting: payload yang di-stage dan keluaran wheelhouse tinggal di
+**direktori yang sama** (`build/out`). Skrip wheelhouse mencari Python
+hasil staging di dalam folder keluarannya sendiri, dan menaruh `app/`
+serta `wheelhouse/` di sana juga.
+
 ```bash
-mkdir -p build/payload build/out
-scripts/termux/build_cpython.sh build/payload
-scripts/termux/build_node.sh    build/payload
-bash scripts/termux/build_uv.sh      build/payload
+mkdir -p build/out
+scripts/termux/build_cpython.sh build/out
+scripts/termux/build_node.sh    build/out
+bash scripts/termux/build_uv.sh build/out
 ```
 
 Ketiganya men-stage paket bionik yang terkunci di `pm/lock.json` ke dalam
-`build/payload/` (dengan verifikasi digest). Aman dijalankan ulang:
-yang sudah ter-stage dan terverifikasi akan dilewati.
+`build/out/` (dengan verifikasi digest). Aman dijalankan ulang:
+yang sudah ter-stage dan terverifikasi akan dilewati. (Dua skrip terakhir
+memang dipanggil lewat `bash` — berkasnya tidak executable sejak dari
+sumbernya, dan CI asalnya juga memanggilnya begitu.)
 
 ## Langkah 3 — Bangun wheelhouse (semua wheel Python untuk Android)
 
@@ -93,28 +100,24 @@ scripts/termux/termux_build.sh --repo . --tag v1.0.0 --out build/out
 
 Skrip ini menjalankan separuh pekerjaannya di dalam kontainer Termux
 yang ter-pin, karena wheel-nya harus bionik (biner glibc tidak bisa jalan
-di HP). Hasilnya: folder `build/out/wheelhouse/` + `index.json` +
-`SHA256SUMS`.
+di HP). Ia juga menaruh salinan kode aplikasi dari tag ke
+`build/out/app/`. Hasil akhirnya di `build/out`: folder `wheelhouse/`
++ `index.json` + `SHA256SUMS`, berdampingan dengan `python/`, `node/`,
+`uv/`, dan `app/` — persis yang diminta langkah berikutnya.
 
-## Langkah 4 — Masukkan kode aplikasi & wheelhouse ke payload
+Syarat gerbang skrip ini: tag harus sudah ada di origin **dan** sudah ada
+GitHub Release untuk tag itu (diperiksa lewat `gh release view`). Buat
+dulu dari halaman repo → Releases → Draft a new release, pilih tag-nya,
+terbitkan. (Di jalur GitHub Actions, langkah ini sudah otomatis.)
 
-```bash
-git archive v1.0.0 -o build/app.tar
-mkdir -p build/payload/app
-tar -xf build/app.tar -C build/payload/app
-cp -r build/out/wheelhouse build/payload/
-```
-
-Setelah ini `build/payload/` berisi `python/`, `node/`, `app/`, dan
-`wheelhouse/` — persis yang diminta langkah berikutnya.
-
-## Langkah 5 — Rakit paket .deb (sekaligus diuji otomatis)
+## Langkah 4 — Rakit paket .deb (sekaligus diuji otomatis)
 
 ```bash
-bash scripts/termux/build_deb.sh --repo . --tag v1.0.0 --payload build/payload --out build/out
+mkdir -p build/dist
+bash scripts/termux/build_deb.sh --repo . --tag v1.0.0 --payload build/out --out build/dist
 ```
 
-Hasil akhir: **`build/out/niki-agent_1.0.0_aarch64.deb`**.
+Hasil akhir: **`build/dist/niki-agent_1.0.0_aarch64.deb`**.
 
 Skrip ini tidak punya jalan pintas: paket selalu di-install ke image
 Termux segar di dalam Docker dan diuji (`validate_installed.py`) sebelum

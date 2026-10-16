@@ -8,6 +8,12 @@ name: Build Paket Termux (.deb)
 # Cara menjalankan: tab Actions → "Build Paket Termux (.deb)" →
 # Run workflow → isi tag rilis (default v1.0.0) → Run.
 # Otomatis juga berjalan setiap ada tag v* baru yang di-push.
+#
+# Tata letak penting (sesuai skrip build): payload yang di-stage dan
+# keluaran wheelhouse tinggal di DIREKTORI YANG SAMA (build/out) —
+# termux_build.sh mencari python hasil staging di dalam folder --out,
+# dan menaruh sendiri app/ + wheelhouse/ di sana. build_deb.sh lalu
+# membaca folder yang sama sebagai --payload.
 
 on:
   workflow_dispatch:
@@ -50,8 +56,6 @@ jobs:
           fetch-depth: 0
 
       - name: Pastikan GitHub Release untuk tag ini ada
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           TAG="${{ steps.tag.outputs.tag }}"
           if gh release view "$TAG" >/dev/null 2>&1; then
@@ -69,44 +73,36 @@ jobs:
           python3 --version
           df -h .
 
-      - name: Stage payload (Python, Node, uv versi Termux)
+      - name: Stage payload ke folder keluaran (Python, Node, uv versi Termux)
         run: |
-          mkdir -p build/payload build/out
-          scripts/termux/build_cpython.sh build/payload
-          scripts/termux/build_node.sh    build/payload
-          bash scripts/termux/build_uv.sh      build/payload
+          mkdir -p build/out
+          scripts/termux/build_cpython.sh build/out
+          scripts/termux/build_node.sh    build/out
+          bash scripts/termux/build_uv.sh build/out
 
       - name: Bangun wheelhouse (wheel Python untuk Android)
         run: |
           scripts/termux/termux_build.sh \
             --repo . --tag "${{ steps.tag.outputs.tag }}" --out build/out
 
-      - name: Masukkan kode aplikasi + wheelhouse ke payload
-        run: |
-          git archive "${{ steps.tag.outputs.tag }}" -o build/app.tar
-          mkdir -p build/payload/app
-          tar -xf build/app.tar -C build/payload/app
-          cp -r build/out/wheelhouse build/payload/
-
       - name: Rakit .deb (termasuk uji install otomatis)
         run: |
+          mkdir -p build/dist
           bash scripts/termux/build_deb.sh \
             --repo . --tag "${{ steps.tag.outputs.tag }}" \
-            --payload build/payload --out build/out
-          ls -lh build/out/*.deb
+            --payload build/out --out build/dist
+          ls -lh build/dist/*.deb
 
       - name: Unggah paket jadi
         uses: actions/upload-artifact@v4
         with:
           name: niki-agent-termux-${{ steps.tag.outputs.tag }}
           path: |
-            build/out/*.deb
+            build/dist/*.deb
             build/out/SHA256SUMS
           if-no-files-found: error
           retention-days: 90
 
       - name: Lampirkan .deb ke GitHub Release
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload "${{ steps.tag.outputs.tag }}" build/out/*.deb --clobber
+          gh release upload "${{ steps.tag.outputs.tag }}" build/dist/*.deb --clobber

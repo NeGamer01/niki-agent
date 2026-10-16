@@ -38,25 +38,29 @@ cd niki-agent
 git checkout v1.0.0        # a release tag must exist; versions come from tags
 ```
 
-Assemble the payload and the wheelhouse:
+Assemble the payload and the wheelhouse — note the staged payload and
+the build output share **one directory** (`build/out`); the wheelhouse
+builder looks for the staged Python inside its own output folder, and
+stages the application tree there itself:
 
 ```bash
-mkdir -p build/payload build/out
-scripts/termux/build_cpython.sh build/payload
-scripts/termux/build_node.sh    build/payload
-bash scripts/termux/build_uv.sh      build/payload
+mkdir -p build/out build/dist
+scripts/termux/build_cpython.sh build/out
+scripts/termux/build_node.sh    build/out
+bash scripts/termux/build_uv.sh build/out
 scripts/termux/termux_build.sh  --repo . --tag v1.0.0 --out build/out
-git archive v1.0.0 -o build/app.tar
-mkdir -p build/payload/app && tar -xf build/app.tar -C build/payload/app
-cp -r build/out/wheelhouse build/payload/
 ```
+
+The wheelhouse step refuses to run until the tag exists on origin **and**
+a GitHub Release exists for it (create one under the repo's Releases if
+needed).
 
 Assemble and smoke-test the `.deb` (the builder installs it into a fresh
 pinned Termux container image and runs the installed-package checks):
 
 ```bash
-bash scripts/termux/build_deb.sh --repo . --tag v1.0.0 --payload build/payload --out build/out
-# → build/out/niki-agent_1.0.0_aarch64.deb
+bash scripts/termux/build_deb.sh --repo . --tag v1.0.0 --payload build/out --out build/dist
+# → build/dist/niki-agent_1.0.0_aarch64.deb
 ```
 
 ## Step 2 — Install on the phone
