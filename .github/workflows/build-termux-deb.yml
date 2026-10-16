@@ -73,6 +73,16 @@ jobs:
           python3 --version
           df -h .
 
+      - name: Cache wheelhouse (lewati pembangunan ulang 29 menit bila tidak berubah)
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/out/wheelhouse
+            build/out/index.json
+            build/out/SHA256SUMS
+            build/out/.work
+          key: termux-wheelhouse-${{ hashFiles('uv.lock', 'pyproject.toml', 'pm/lock.json', 'pm/pyproject.toml', 'pm/uv.lock', 'scripts/termux/build_config.sh', 'scripts/termux/build_wheels.py', 'scripts/termux/termux_build.sh', 'scripts/termux/retag_wheel.py', 'scripts/termux/python_linkage.py', 'scripts/termux/wheelhouse_cache.py', 'scripts/termux/build_environment.py', 'scripts/termux/termux-builder.Dockerfile') }}
+
       - name: Stage payload ke folder keluaran (Python, Node, uv versi Termux)
         run: |
           mkdir -p build/out
@@ -85,10 +95,10 @@ jobs:
           scripts/termux/termux_build.sh \
             --repo . --tag "${{ steps.tag.outputs.tag }}" --out build/out
 
-      - name: Rakit .deb (termasuk uji install otomatis)
+      - name: Bangun TUI + rakit .deb (termasuk uji install otomatis)
         run: |
           mkdir -p build/dist
-          bash scripts/termux/build_deb.sh \
+          python3 scripts/termux/build.py \
             --repo . --tag "${{ steps.tag.outputs.tag }}" \
             --payload build/out --out build/dist
           ls -lh build/dist/*.deb

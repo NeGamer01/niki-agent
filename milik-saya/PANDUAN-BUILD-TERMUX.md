@@ -114,8 +114,13 @@ terbitkan. (Di jalur GitHub Actions, langkah ini sudah otomatis.)
 
 ```bash
 mkdir -p build/dist
-bash scripts/termux/build_deb.sh --repo . --tag v1.0.0 --payload build/out --out build/dist
+python3 scripts/termux/build.py --repo . --tag v1.0.0 --payload build/out --out build/dist
 ```
+
+Skrip `build.py` adalah pengemudi resminya: ia membangun dulu antarmuka
+terminal (TUI) dari `ui-tui/`, lalu menyerahkan payload ke
+`build_deb.sh` beserta hasil TUI itu. (Memanggil `build_deb.sh`
+langsung akan ditolak: `--tui-product is required`.)
 
 Hasil akhir: **`build/dist/niki-agent_1.0.0_aarch64.deb`**.
 

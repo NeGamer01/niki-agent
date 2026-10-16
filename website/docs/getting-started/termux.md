@@ -59,9 +59,13 @@ Assemble and smoke-test the `.deb` (the builder installs it into a fresh
 pinned Termux container image and runs the installed-package checks):
 
 ```bash
-bash scripts/termux/build_deb.sh --repo . --tag v1.0.0 --payload build/out --out build/dist
+python3 scripts/termux/build.py --repo . --tag v1.0.0 --payload build/out --out build/dist
 # → build/dist/niki-agent_1.0.0_aarch64.deb
 ```
+
+(`build.py` is the driver: it builds the TUI product first, then hands
+the payload to `build_deb.sh`. Calling `build_deb.sh` directly is
+rejected — it requires the TUI product.)
 
 ## Step 2 — Install on the phone
 
