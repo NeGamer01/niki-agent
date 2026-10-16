@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, FrozenSet, Optional
 from urllib.parse import parse_qs, urlparse
 from niki_cli.auth_constants import (
-    AuthError, DEFAULT_NOUS_PORTAL_URL, DEVICE_AUTH_POLL_INTERVAL_CAP_SECONDS,
+    AuthError, DEVICE_AUTH_POLL_INTERVAL_CAP_SECONDS,
     DEVICE_CODE_GRANT_TYPE, OAUTH_OVER_SSH_DOCS_URL, httpx)
 from niki_cli.auth_error_copy import DeviceCodeExpired
 from utils import is_truthy_value
@@ -277,7 +277,7 @@ def _nous_device_auth_timeout_message(portal_base_url: str) -> str:
     cause is Portal sign-in failing in the opened browser tab (including the server-side CAPTCHA loop from
     20605), so point at the Portal login page and the retry command. See #20605.
     """
-    portal = (portal_base_url or DEFAULT_NOUS_PORTAL_URL).rstrip("/")
+    portal = portal_base_url.rstrip("/")
     return (
         "Timed out waiting for device authorization.\n"
         "  Portal sign-in is required before the device code can be approved.\n"

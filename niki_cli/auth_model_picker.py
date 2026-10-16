@@ -9,7 +9,6 @@ from __future__ import annotations
 import logging
 import subprocess
 from typing import Dict, List, Optional
-from niki_cli.auth_constants import DEFAULT_NOUS_PORTAL_URL
 
 logger = logging.getLogger("niki_cli.auth")
 
@@ -195,7 +194,7 @@ def _prompt_model_selection(
     _RESET = "\033[0m"
 
     menu_title = rows.menu_title()
-    _upgrade_url = (portal_url or DEFAULT_NOUS_PORTAL_URL).rstrip("/")
+    _upgrade_url = portal_url.rstrip("/")
     n = len(ordered)
 
     # Try arrow-key menu first, fall back to number input.
@@ -204,7 +203,7 @@ def _prompt_model_selection(
         choices = [rows.segments(mid) for mid in ordered] + [_CUSTOM_LABEL, _SKIP_LABEL]
 
         unavailable_footer = unavailable_message.strip()
-        if not unavailable_footer and _unavailable:
+        if not unavailable_footer and _unavailable and _upgrade_url:
             unavailable_footer = f"Upgrade at {_upgrade_url} for paid models"
 
         # Header/legend + unavailable block go in the description so they survive the curses clear.
