@@ -2155,7 +2155,7 @@ from . import (
     session_compression as _session_compression, model_switch as _model_switch,
     compute_host_bridge as _compute_host_bridge, session_workdir as _session_workdir,
     session_lifecycle as _session_lifecycle, session_reaper as _session_reaper,
-    session_transports as _session_transports, prompt_turn as _prompt_turn, billing_view as _billing_view,
+    session_transports as _session_transports, prompt_turn as _prompt_turn,
     methods_browser_control as _methods_browser_control, methods_bot_relay as _methods_bot_relay,
     methods_complete as _methods_complete, methods_config as _methods_config,
     methods_config_set as _methods_config_set, methods_images as _methods_images,
@@ -2177,7 +2177,7 @@ for _m in (
     _methods_complete_helpers, _methods_slash, _methods_voice, _methods_browser,
     _methods_browser_control, _methods_session, _methods_prompt, _methods_config,
     _methods_config_set, _methods_complete, _methods_tools, _methods_tools_plugin_servers, _methods_profiles, _methods_images,
-    _methods_bot_relay, _prompt_turn, _billing_view, _methods_projects, _methods_session_foreign,
+    _methods_bot_relay, _prompt_turn, _methods_projects, _methods_session_foreign,
     _methods_session_control, _methods_subagents, _methods_vault, _methods_connectors,
     _methods_connectors_account, _methods_display, _methods_display_watch, _methods_onboarding,
     _methods_i18n, _methods_machine, _methods_shared_metrics, _methods_plugin_catalog):
