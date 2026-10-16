@@ -187,6 +187,13 @@ export class GatewayClient extends EventEmitter {
   private localGeneration = 0
   private recoveryAttempts: number[] = []
   isCanonical = false
+
+  /** Canonical transport to a gateway THIS client bootstrapped locally (the bundled
+   * standalone TUI): there is no desktop shell to run the first-run setup check, so
+   * the lifecycle must do it itself. */
+  get isLocalCanonical(): boolean {
+    return this.isCanonical && this.localStarted
+  }
   private creationContract?: CreationContract
   private describedSkin?: Record<string, unknown>
   private describeFlight?: Promise<void>

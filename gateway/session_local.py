@@ -184,8 +184,12 @@ def stage_local_session(authority, actor, params, *, trusted_policy=None, truste
             import json
             policy = replace(policy, request_json=json.dumps(
                 {**json.loads(policy.request_json), 'model_requested': raw_model}, sort_keys=True))
-        if policy.model is None:
-            policy = replace(policy, model=_resolve_gateway_model(policy.config()))
+        if not policy.model:
+            # No model configured yet (fresh install): pin the ``auto`` placeholder so the
+            # stored policy satisfies restore_policy; the agent build then surfaces the
+            # proper "No LLM provider configured" error that drives the first-run setup
+            # screen, instead of the session dying here as storage_unavailable.
+            policy = replace(policy, model=_resolve_gateway_model(policy.config()) or 'auto')
     request_id = params.get('request_id', uuid.uuid4().hex)
     if not isinstance(request_id, str) or not request_id or len(request_id) > 256:
         raise RuntimeStoreError('invalid_params')
