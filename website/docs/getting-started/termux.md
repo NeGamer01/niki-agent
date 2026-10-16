@@ -47,7 +47,11 @@ stages the application tree there itself:
 mkdir -p build/out build/dist
 scripts/termux/build_cpython.sh build/out
 scripts/termux/build_node.sh    build/out
+python3 scripts/termux/stage_runtime_libs.py build/out
 bash scripts/termux/build_uv.sh build/out
+for tool in npm ffmpeg ripgrep; do
+  bash scripts/termux/termux_pkg_build.sh "$tool" "$tool" build/out
+done
 scripts/termux/termux_build.sh  --repo . --tag v1.0.0 --out build/out
 ```
 

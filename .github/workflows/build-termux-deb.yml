@@ -83,15 +83,21 @@ jobs:
             build/out/.work
           key: termux-wheelhouse-${{ hashFiles('uv.lock', 'pyproject.toml', 'pm/lock.json', 'pm/pyproject.toml', 'pm/uv.lock', 'scripts/termux/build_config.sh', 'scripts/termux/build_wheels.py', 'scripts/termux/termux_build.sh', 'scripts/termux/retag_wheel.py', 'scripts/termux/python_linkage.py', 'scripts/termux/wheelhouse_cache.py', 'scripts/termux/build_environment.py', 'scripts/termux/termux-builder.Dockerfile') }}
 
-      - name: Stage payload ke folder keluaran (Python, Node, uv versi Termux)
+      - name: Stage payload lengkap ke folder keluaran
         run: |
           mkdir -p build/out
           scripts/termux/build_cpython.sh build/out
           scripts/termux/build_node.sh    build/out
+          python3 scripts/termux/stage_runtime_libs.py build/out
           bash scripts/termux/build_uv.sh build/out
+          for tool in npm ffmpeg ripgrep; do
+            bash scripts/termux/termux_pkg_build.sh "$tool" "$tool" build/out
+          done
+          ls build/out
 
       - name: Bangun wheelhouse (wheel Python untuk Android)
         run: |
+          echo "Wheel ter-restore dari cache: $(ls build/out/wheelhouse 2>/dev/null | wc -l)"
           scripts/termux/termux_build.sh \
             --repo . --tag "${{ steps.tag.outputs.tag }}" --out build/out
 

@@ -83,8 +83,15 @@ serta `wheelhouse/` di sana juga.
 mkdir -p build/out
 scripts/termux/build_cpython.sh build/out
 scripts/termux/build_node.sh    build/out
+python3 scripts/termux/stage_runtime_libs.py build/out
 bash scripts/termux/build_uv.sh build/out
+for tool in npm ffmpeg ripgrep; do
+  bash scripts/termux/termux_pkg_build.sh "$tool" "$tool" build/out
+done
 ```
+
+Payload yang lengkap berisi: `python/ node/ uv/ npm/ ffmpeg/ ripgrep/
+runtime-libs/` — perakit `.deb` menolak mulai bila satu pun kurang.
 
 Ketiganya men-stage paket bionik yang terkunci di `pm/lock.json` ke dalam
 `build/out/` (dengan verifikasi digest). Aman dijalankan ulang:
