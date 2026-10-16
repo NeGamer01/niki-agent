@@ -734,8 +734,23 @@ def _provider_env_ready(provider: dict) -> bool:
     return all(get_env_value(e["key"]) for e in provider.get("env_vars", []))
 
 
+class NousSubscriptionFeatures:
+    """Status langganan Portal — fitur Portal sudah dihapus dari Niki Agent, jadi
+    statusnya selalu netral: tidak ada akun, tidak ada hak langganan. Bertahan
+    sebagai bentuk data agar pemanggil lama (tools_config_providers, dashboard,
+    api_server) tetap berjalan tanpa cabang Portal."""
+
+    account_info = None
+    niki_auth_present = False
+
+
+def get_nous_subscription_features(config=None, *, force_fresh: bool = False) -> NousSubscriptionFeatures:
+    """Dulu membaca status langganan Portal; kini selalu netral (lihat kelas di atas)."""
+    return NousSubscriptionFeatures()
+
+
 def _toolset_has_keys(
-    ts_key: str, config: dict | None = None, *, force_fresh: bool = False,
+    ts_key: str, config: dict | None = None, *, force_fresh: bool = False, features=None,
 ) -> bool:
     """Check if a toolset's required API keys are configured."""
     if config is None:

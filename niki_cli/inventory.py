@@ -715,11 +715,22 @@ def _apply_pricing(rows: list[dict], *, force_fresh_nous_tier: bool = False, cac
         compute_sale_discount,
         get_pricing_for_provider,
     )
-    from niki_cli.models import (
-        check_nous_free_tier,
-        get_cached_nous_free_tier,
-        partition_nous_models_by_tier,
-    )
+    try:
+        from niki_cli.models import (
+            check_nous_free_tier,
+            get_cached_nous_free_tier,
+            partition_nous_models_by_tier,
+        )
+    except ImportError:
+        # Portal/free-tier Nous sudah dihapus: tidak ada tingkatan gratis yang mengunci model.
+        def check_nous_free_tier(**_kwargs):
+            return False
+
+        def get_cached_nous_free_tier():
+            return False
+
+        def partition_nous_models_by_tier(models, _pricing, free_tier=False):
+            return (list(models), [])
 
     niki_free_tier: Optional[bool] = None  # resolved once (cached in models.py for the TTL window)
 
