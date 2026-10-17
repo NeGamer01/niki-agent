@@ -157,6 +157,22 @@ def _keyless_backend() -> Optional[str]:
 
 
 
+def _managed_web_search() -> bool:
+    """True when web_search is on the managed Niki route: the stored ``niki`` selection (a
+    ``web.search_backend: niki`` pin, else the shared one). A stored vendor selection never is.
+
+    The Niki Tool Gateway was removed, so the gateway-backed branches of upstream's check are
+    gone too: only the persisted selection can still route search to the managed label, and that
+    label now resolves to the keyless tier instead of a managed call (#niki-rebrand)."""
+    search_pin = _configured_backend("search_backend")
+    if search_pin:
+        return search_pin == NIKI_MANAGED_PROVIDER
+    selected = read_selection("web")
+    if selected is not None:
+        return selected == NIKI_MANAGED_PROVIDER
+    return False
+
+
 def _get_search_backend() -> str:
     """Backend for web_search: ``web.search_backend`` (strict, no probe) > ``web.backend`` > autodetect.
     The managed Niki route (a ``niki`` pin or shared selection) serves search from Perplexity (extract

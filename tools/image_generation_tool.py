@@ -54,6 +54,27 @@ _managed_fal_client_lock = threading.Lock()
 
 
 
+def _get_managed_fal_client(managed_gateway):
+    """Reuse the managed FAL client so its internal httpx.Client is not leaked per call.
+
+    The Niki Tool Gateway was removed, so this cached client is never built in practice — the
+    definition is kept because ``_submit_fal_request`` still names it on the managed branch,
+    which is only reachable when a caller patches ``_resolve_managed_fal_gateway`` in tests."""
+    global _managed_fal_client, _managed_fal_client_config
+    client_config = (managed_gateway.gateway_origin.rstrip("/"), getattr(managed_gateway, "nous_user_token", None))
+    with _managed_fal_client_lock:
+        if _managed_fal_client is None or _managed_fal_client_config != client_config:
+            _managed_fal_client = _ManagedFalSyncClient(
+                _load_fal_client(), key=managed_gateway.nous_user_token,
+                queue_run_origin=managed_gateway.gateway_origin)
+            _managed_fal_client_config = client_config
+        return _managed_fal_client
+
+
+class ImageGenerationInterrupted(Exception):
+    """Raised when the user interrupts while a FAL job is in flight."""
+
+
 def _wait_fal_result(handler, *, poll_seconds: float = 0.5):
     """Interrupt-aware ``handler.get()``: the SDK blocks 30-60s, hiding user interrupts.
 

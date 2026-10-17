@@ -407,6 +407,10 @@ def _fetch_kilocode_pricing_for_provider(*, force_refresh: bool = False) -> dict
 
 
 
+_OPENROUTER_PRICING_BASE = "https://openrouter.ai/api"
+_FIREWORKS_PRICING_KEY = "models.dev/fireworks"
+
+
 def _ai_gateway_pricing_scope() -> str:
     from niki_constants import AI_GATEWAY_BASE_URL
     return AI_GATEWAY_BASE_URL.rstrip("/")
@@ -486,6 +490,16 @@ def _cached_only_pricing(normalized: str) -> dict[str, dict[str, str]]:
     if cache_key is None and normalized in ("openrouter", "ai-gateway", "fireworks"):
         cache_key = _STATIC_PRICING_SCOPES[normalized]()
     return (_cached_catalog(cache_key) or {}) if cache_key else {}
+
+
+# Static endpoint identity per provider; dynamic ones (deepinfra) are resolved in pricing_cache_scope.
+_STATIC_PRICING_SCOPES = {
+    "openrouter": lambda: _OPENROUTER_PRICING_BASE,
+    "ai-gateway": _ai_gateway_pricing_scope,
+    "novita": _novita_pricing_scope,
+    "kilocode": _kilo_pricing_scope,
+    "fireworks": lambda: _FIREWORKS_PRICING_KEY,
+}
 
 
 def get_pricing_for_provider(

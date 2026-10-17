@@ -909,6 +909,27 @@ _AI_GATEWAY_HEADERS = {
 }
 
 
+# Set at resolve time — True if the auxiliary client points to the Niki inference API
+auxiliary_is_nous: bool = False
+
+# _OPENROUTER_MODEL MUST stay a :free SKU (matching the free_only warning): this lane engages
+# silently, and a paid default meant spend the user never opted into. User-configured values
+# are honored untouched (_warn_paid_lane_once fires).
+_OPENROUTER_MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free"
+_NOUS_MODEL = "google/gemini-3.6-flash"
+_NOUS_DEFAULT_BASE_URL = "https://inference-api.nousresearch.com/v1"
+_ANTHROPIC_DEFAULT_BASE_URL = "https://api.anthropic.com"
+_AUTH_JSON_PATH = get_niki_home() / "auth.json"
+_AUTH_JSON_PATH_AT_IMPORT = _AUTH_JSON_PATH
+
+
+def _refresh_nous_recommended_model(*, vision: bool, stale_model: Optional[str]) -> Optional[str]:
+    """The Nous Portal was removed; no recommended-model refresh exists. Returns the static
+    default when it differs from *stale_model* (None otherwise) so callers keep working."""
+    default = _NOUS_MODEL
+    return default if default.strip().lower() != (stale_model or "").strip().lower() else None
+
+
 def _auth_json_path():
     """Active profile's ``auth.json`` at call time (a patched ``_AUTH_JSON_PATH`` still wins). The
     import-time constant is the LAUNCH profile's; under multiplexing a secondary's auxiliary calls
@@ -2983,6 +3004,16 @@ def _is_payment_error(exc: Exception) -> bool:
     return status == 402 or (
         status in {403, 404, 429, None} and _contains_any(str(exc).lower(), _PAYMENT_KEYWORDS)
     )
+
+
+_RATE_LIMIT_KEYWORDS = (
+    "rate limit", "rate_limit", "too many requests", "try again", "retry after", "resets in"
+)
+_RATE_LIMIT_BILLING_KEYWORDS = (
+    "credits", "insufficient funds", "billing", "payment required", "can only afford",
+    "out of funds", "run out of funds", "balance_depleted", "no usable credits",
+    "model_not_supported_on_free_tier", "not available on the free tier", "isn't available on the free tier",
+)
 
 
 def _is_overloaded_error(exc: Exception) -> bool:
@@ -6167,6 +6198,10 @@ def _contains_profile_reasoning_fields(value: Any) -> bool:
         str(key).strip().lower() in _PROFILE_REASONING_KEYS or _contains_profile_reasoning_fields(nested)
         for key, nested in value.items()
     )
+
+
+_NVIDIA_PROVIDER_NAMES = {"nvidia", "nvidia-nim", "nim", "build-nvidia", "nemotron"}
+_GEMINI_NATIVE_PROVIDER_NAMES = {"gemini", "google", "google-gemini", "google-ai-studio"}
 
 
 def _is_gemini_native_route(provider_norm: str, effective_base: str) -> bool:

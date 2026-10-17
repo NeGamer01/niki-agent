@@ -179,6 +179,10 @@ def _get_firecrawl_client(capability: Optional[str] = None) -> Any:
     direct_config = _get_direct_firecrawl_config()
 
 
+    def _managed():
+        """The managed gateway was removed; no managed Firecrawl route exists (direct config only)."""
+        return None
+
     def _unconfigured_message() -> str:
         message = "Web tools are not configured. Set FIRECRAWL_API_KEY for cloud Firecrawl or set FIRECRAWL_API_URL for a self-hosted Firecrawl instance."
         if _backend_helpers.managed_nous_tools_enabled():
